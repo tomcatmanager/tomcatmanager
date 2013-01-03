@@ -56,7 +56,7 @@ Usage
 When you use the web based manager application included with the tomcat
 distribution, you typically access it via the url
 http://localhost:8080/manager/html. Script access to the same application is
-from http://localhost:8080/manager, and that's the URL you must use.
+from http://localhost:8080/manager.
 
 This script can either be used in command line mode or interactive mode. To
 use interactive mode you can do:
