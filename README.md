@@ -1,19 +1,28 @@
 tomcat-manager
 --------------
 
-If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a bunch of ways to get your war files there, you can use the manager application in your browser, or you can use Cargo and its plugins for ant and maven. Here's a python script that can do it from the command line.
+If you use Apache Tomcat for any sort of development work you’ve probably
+deployed lots of applications to it. There are a bunch of ways to get your war
+files there, you can use the manager application in your browser, or you can
+use [Cargo](http://cargo.codehaus.org) and its plugins for ant and maven.
+Here's a python script that can do it from the command line by talking to the
+web based manager application included with Tomcat.
+
 
 Download and Install
 --------------------
 
-On OS X, *nix, or *BSD, put the script in `~/bin` and rename it to `tomcat-manager`.
+On OS X, *nix, or *BSD, put the script in `~/bin` and rename it to
+`tomcat-manager`.
 
-If you use Windows, rename it to `tomcat-manager.py` and put it in your path somewhere.  See http://docs.python.org/3.3/using/windows.html for more details.
+If you use Windows, rename it to `tomcat-manager.py` and put it in your path
+somewhere. See http://docs.python.org/3.3/using/windows.html for more details.
 
 Tomcat Configuration
 --------------------
 
-Prior to version 6.0.30, you need a user in `tomcat-users.xml` with access to the `manager` role.  So you might have something like this:
+Prior to version 6.0.30, you need a user in `tomcat-users.xml` with access to
+the `manager` role. So you might have something like this:
 
 	<tomcat-users>
 	.....
@@ -21,14 +30,17 @@ Prior to version 6.0.30, you need a user in `tomcat-users.xml` with access to th
 		<user username="admin" password="newenglandclamchowder" roles="manager"/>
 	</tomcat-users>
 
-From 6.0.30 onwards, the roles required to use the web based manager application were changed from the single `manager` role to the following four roles:
+From 6.0.30 onwards, the roles required to use the web based manager
+application were changed from the single `manager` role to the following four
+roles:
 
 - manager-gui
 - manager-script
 - manager-jmx
 - manager-status
 
-Therefore, in order to use the `tomcat-manager` script, you need a user in `tomcat-users.xml` with access to the `manager-script` role:
+Therefore, in order to use the `tomcat-manager` script, you need a user in
+`tomcat-users.xml` with access to the `manager-script` role:
 
 	<tomcat-users>
 	.....
@@ -41,9 +53,13 @@ Therefore, in order to use the `tomcat-manager` script, you need a user in `tomc
 Usage
 -----
 
-When you use the web based manager application included with the tomcat distribution, you typically access it via the url http://localhost:8080/manager/html.  Script access to the same application is from http://localhost:8080/manager, and that's the URL you must use.
+When you use the web based manager application included with the tomcat
+distribution, you typically access it via the url
+http://localhost:8080/manager/html. Script access to the same application is
+from http://localhost:8080/manager, and that's the URL you must use.
 
-This script can either be used in command line mode or interactive mode. To use interactive mode you can do:
+This script can either be used in command line mode or interactive mode. To
+use interactive mode you can do:
 
     $ tomcat-manager
 	tomcat-manager> connect http://localhost:8080/manager admin newenglandclamchowder
@@ -78,8 +94,16 @@ To see all of the valid commands, use interactive mode, like this:
 	==========================
 	license  commandline
 
-	tomcat-manager> exit
+For help on a particular command:
+
+	$ tomcat-manager
+	tomcat-manager> help connect
+	usage: connect url [username] [password]
+	tomcat-manager>
+
 
 License
 -------
-Check the LICENSE file.  It's the MIT License, which means you can do whatever you want, as long as you keep the copyright notice.
+
+Check the LICENSE file. It's the MIT License, which means you can do whatever
+you want, as long as you keep the copyright notice.
