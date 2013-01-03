@@ -325,6 +325,8 @@ class InteractiveTomcatManager(cmd.Cmd):
 		except urllib2.HTTPError, e:
 			if e.code == 401:
 				self.__printerror("login failed")
+			if e.code == 403:
+				self.__printerror("login failed")
 			elif e.code == 404:
 				self.__printerror("tomcat manager not found at %s" % url)
 			else:
