@@ -10,8 +10,38 @@ On OS X, *nix, or *BSD, put the script in `~/bin` and rename it to `tomcat-manag
 
 If you use Windows, rename it to `tomcat-manager.py` and put it in your path somewhere.  See http://docs.python.org/3.3/using/windows.html for more details.
 
+Tomcat Configuration
+--------------------
+
+Prior to version 6.0.30, you need a user in `tomcat-users.xml` with access to the `manager` role.  So you might have something like this:
+
+	<tomcat-users>
+	.....
+		<role rolename="manager"/>
+		<user username="admin" password="newenglandclamchowder" roles="manager"/>
+	</tomcat-users>
+
+From 6.0.30 onwards, the roles required to use the web based manager application were changed from the single `manager` role to the following four roles:
+
+- manager-gui
+- manager-script
+- manager-jmx
+- manager-status
+
+Therefore, in order to use the `tomcat-manager` script, you need a user in `tomcat-users.xml` with access to the `manager-script` role:
+
+	<tomcat-users>
+	.....
+		<role rolename="manager-script"/>
+		<user username="admin" password="newenglandclamchowder" roles="manager-script"/>
+	</tomcat-users>
+
+
+
 Usage
 -----
+
+When you use the web based manager application included with the tomcat distribution, you typically access it via the url http://localhost:8080/manager/html.  Script access to the same application is from http://localhost:8080/manager, and that's the URL you must use.
 
 This script can either be used in command line mode or interactive mode. To use interactive mode you can do:
 
@@ -52,4 +82,4 @@ To see all of the valid commands, use interactive mode, like this:
 
 License
 -------
-Check the LICENSE file, but it's the MIT License, which means you can do whatever you want, as long as you keep the copyright notice.
+Check the LICENSE file.  It's the MIT License, which means you can do whatever you want, as long as you keep the copyright notice.
