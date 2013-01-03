@@ -40,7 +40,7 @@ Command Line Use
 	mypass for authentication, and run command with any supplied
 	arguments.  For a list of commands enter the interactive
 	shell and type "help".  For a list of the arguments for any
-	command, enter the interactive shell and type "help {command}"
+	command, enter the interactive shell and type "help \{command\}"
 
 
 Interactive Use
