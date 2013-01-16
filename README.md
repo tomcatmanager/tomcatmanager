@@ -102,6 +102,34 @@ For help on a particular command:
 	tomcat-manager>
 
 
+Features
+--------
+This script can perform all of the same functions that can be done with the web based tomcat-admin application included with tomcat.  The following functions are available:
+
+*   *serverinfo* - give some information about the tomcat server, including JVM version, OS Architecture and version, and Tomcat version
+
+*   *sessions* - display active sessions for a particular tomcat application, with a breakdown of session inactivity by time
+
+*   *list* - show all applications running inside the tomcat server
+
+*   *deploy* - install a local war file in the tomcat server
+
+*   *undeploy* - stop execution of and remove a tomcat application from the tomcat server
+
+*   *start* - start a tomcat application that has already been deployed in the tomcat server
+
+*   *stop* - stop execution of a tomcat application but leave it deployed in the tomcat server
+
+*   *reload* - stop and start a tomcat application
+
+There are a few commands that don't do anything to Tomcat, but are necessary for utilization of the script:
+
+*   *connect* - link to an instance of the tomcat manager by url, user and password
+
+*   *help* - get help about a particular command, including usage and parameters
+
+*   *exit* - if you are in interactive mode, exit back to the command line
+
 License
 -------
 
