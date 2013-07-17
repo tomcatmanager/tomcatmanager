@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2007, Jared Crapo
@@ -93,20 +93,21 @@ import cmd
 import getopt
 import sys
 import traceback
-import urllib
-import urllib2
+import urllib.request
+import urllib.parse
+import codecs
 import getpass
 
 #
 #
-versionString="0.3"
+versionString="0.4"
 class Usage(Exception):
 	def __init__(self, msg):
 		self.message = msg
 
-class ExtendedRequest(urllib2.Request):
+class ExtendedRequest(urllib.request.Request):
 	def __init__(self, url, data=None, headers={}, origin_req_host=None, unverifiable=False):
-		urllib2.Request.__init__(self, url, data, headers, origin_req_host,  unverifiable)
+		urllib.request.Request.__init__(self, url, data, headers, origin_req_host,  unverifiable)
 		self.method = None
 
 	def get_method(self):
@@ -133,16 +134,15 @@ class TomcatManager:
 		self.__managerURL = url
 		self.__userid = userid
 		self.__password = password
-		###self.apps = []
 		self.hasConnected = False
 		
 		if userid and password:
-			self.__passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+			self.__passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
 			self.__passman.add_password(None, self.__managerURL, self.__userid, self.__password)
-			self.__auth_handler = urllib2.HTTPBasicAuthHandler(self.__passman)
-			self.__opener = urllib2.build_opener(self.__auth_handler)
+			self.__auth_handler = urllib.request.HTTPBasicAuthHandler(self.__passman)
+			self.__opener = urllib.request.build_opener(self.__auth_handler)
 		else:
-			self.__opener = urllib2.build_opener()
+			self.__opener = urllib.request.build_opener()
 
 
 	def _execute(self, cmd, params=None, data=None, headers={}, method=None):
@@ -153,16 +153,17 @@ class TomcatManager:
 		"""
 		url = self.__managerURL + "/" + cmd
 		if params:
-			url = url + "?%s" % urllib.urlencode(params)
+			url = url + "?%s" % urllib.parse.urlencode(params)
 		req = ExtendedRequest(url, data, headers)
 		if method:
 			req.method = method
 		response = self.__opener.open(req)
-		status = response.next().rstrip()
+		content = codecs.iterdecode(response,"utf-8")
+		status = next(content).rstrip()
 		self.hasConnected = True
 		if not status[:4] == "OK -":
 			raise TomcatException(status)
-		return response
+		return content
 
 
 	def list(self):
@@ -224,7 +225,7 @@ class TomcatManager:
 		response = self._execute("reload", {'path': path})
 
 	def sessions(self, path):
-		"""return a the sessions in an application
+		"""return a list of the sessions in an application
 		
 		tm = TomcatManager(url)
 		print tm.sessions("/myappname")
@@ -241,7 +242,7 @@ class TomcatManager:
 		
 		Arguments:
 		path     the path on the server to deploy this war to
-		fileobj  an opened file object, from which the war file will be read
+		fileobj  a file object opened for binary reading, from which the war file will be read
 		update   whether to update the existing path (default False)
 		tag      a tag for this application (default None)
 		 
@@ -290,10 +291,11 @@ class InteractiveTomcatManager(cmd.Cmd):
 		otherwise, just run the command
 		
 		"""
-		try:
-			return func(*args)
-		except:
-			self.__printexception()
+
+#		try:
+		return func(*args)
+#		except:
+#			self.__printexception()
 
 	def do_connect(self, args):
 		"""connect to an instance of the manager application"""
@@ -320,22 +322,22 @@ class InteractiveTomcatManager(cmd.Cmd):
 			self.__printstatus("connected to tomcat manager at %s" % url)
 		except ValueError:
 			self.help_connect()
-		except TomcatException:
-			self.__printexception()
-		except urllib2.HTTPError, e:
+		except urllib.request.HTTPError as e:
 			if e.code == 401:
 				self.__printerror("login failed")
-			if e.code == 403:
+			elif e.code == 403:
 				self.__printerror("login failed")
 			elif e.code == 404:
 				self.__printerror("tomcat manager not found at %s" % url)
 			else:
 				self.__printexception()
+		except TomcatException:
+			self.__printexception()
 		except:
 			self.__printexception()
 
 	def help_connect(self):
-		print "usage: connect url [username] [password]"
+		print("usage: connect url [username] [password]")
 
 	def do_list(self, args):
 		"""list the applications on the server"""
@@ -346,33 +348,31 @@ class InteractiveTomcatManager(cmd.Cmd):
 			cw = [30, 7, 8]
 			fmt = "%30s %7s %8s"
 			dashes = "---------------------------------------"
-			print fmt % ("Path".ljust(cw[0]),"Status".ljust(cw[1]),"Sessions".ljust(cw[2]))
-			print fmt % (dashes[:cw[0]], dashes[:cw[1]], dashes[:cw[2]])
+			print(fmt % ("Path".ljust(cw[0]),"Status".ljust(cw[1]),"Sessions".ljust(cw[2])))
+			print(fmt % (dashes[:cw[0]], dashes[:cw[1]], dashes[:cw[2]]))
 			for app in apps:
 				path, status, session = app[:3]
-				print fmt % (app[0].ljust(cw[0]), app[1].ljust(cw[1]), app[2].ljust(cw[2]))
+				print(fmt % (app[0].ljust(cw[0]), app[1].ljust(cw[1]), app[2].ljust(cw[2])))
 		else:
 			self.__printerror(self.__MSG_NotConnected)
 
 	def help_list(self):
-		print "Usage: list"
-		print "list installed applications"
+		print("Usage: list")
+		print("list installed applications")
 
 	def do_serverinfo(self, args):
 		if args:
 			self.help_list()
 		elif self.__tm and self.__tm.hasConnected:
 			info = self.docmd(self.__tm.serverinfo)
-			keys = info.keys()
-			keys.sort()
-			for key in keys:
-				print "%s: %s" % (key, info[key])
+			for key,value in iter(sorted(info.items())):
+				print("%s: %s" % (key, value))
 		else:
 			self.__printerror(self.__MSG_NotConnected)
 	
 	def help_serverinfo(self):
-		print "Usage: serverinfo"
-		print "show information about the server"
+		print("Usage: serverinfo")
+		print("show information about the server")
 
 	def do_start(self, args):
 		"""start an application"""
@@ -387,8 +387,8 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 	def help_start(self):
 		"""print help for the start command"""
-		print "Usage: start {path}"
-		print "start the application at {path}"
+		print("Usage: start {path}")
+		print("start the application at {path}")
 
 	def do_stop(self, args):
 		"""stop an application"""
@@ -402,8 +402,8 @@ class InteractiveTomcatManager(cmd.Cmd):
 			self.__printerror(self.__MSG_NotConnected)
 
 	def help_stop(self):
-		print "Usage: stop {path}"
-		print "stop the application at {path}"
+		print("Usage: stop {path}")
+		print("stop the application at {path}")
 
 	def do_reload(self, args):
 		"""reload an application"""
@@ -417,8 +417,8 @@ class InteractiveTomcatManager(cmd.Cmd):
 			self.__printerror(self.__MSG_NotConnected)
 
 	def help_reload(self):
-		print "Usage: reload {path}"
-		print "reload the application at {path}"
+		print("Usage: reload {path}")
+		print("reload the application at {path}")
 		
 	def do_sessions(self, args):
 		"""display the sessions in an application"""
@@ -427,15 +427,17 @@ class InteractiveTomcatManager(cmd.Cmd):
 				app, = args.split()
 				sesslist = self.docmd(self.__tm.sessions, app)
 				for line in sesslist:
-					print line
+					print(line)
+			except TomcatException:
+				self.__printexception()
 			except ValueError:
 				self.help_sessions()
 		else:
 			self.__printerror(self.__MSG_NotConnected)
 
 	def help_sessions(self):
-		print "Usage: sessions {path}"
-		print "display the sessions in the application at {path}"
+		print("Usage: sessions {path}")
+		print("display the sessions in the application at {path}")
 
 	def do_deploy(self, args):
 		if self.__tm and self.__tm.hasConnected:
@@ -459,7 +461,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 					tag = args[3]
 				except IndexError:
 					tag = None
-				fileobj = open(filename)
+				fileobj = open(filename, "rb")
 				self.docmd(self.__tm.deployWAR, path, fileobj, update, tag)
 			else:
 				self.help_deploy()
@@ -467,7 +469,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 			self.__printerror(self.__MSG_NotConnected)
 	
 	def help_deploy(self):
-		print """Usage: deploy {path} {warfile} [update]
+		print("""Usage: deploy {path} {warfile} [update]
 deploy a local war file at path
   path    = the path on the server to deploy the application
   warfile = path on the local machine to a war file to deploy
@@ -475,7 +477,7 @@ deploy a local war file at path
   update  = optional parameter - default value is false
             use 'true' or 'yes' to undeploy the application
             before deploying it
-"""
+""")
 
 	def do_undeploy(self, args):
 		"""undeploy an application"""
@@ -489,12 +491,12 @@ deploy a local war file at path
 			self.__printerror(self.__MSG_NotConnected)
 
 	def help_undeploy(self):
-		print "Usage: undeploy {path}"
-		print "undeploy the application at {path}"
+		print("Usage: undeploy {path}")
+		print("undeploy the application at {path}")
 
 	def do_exit(self, args):
 		"""exit the interactive manager"""
-		print
+		print()
 		return -1
 
 	def do_quit(self, args):
@@ -503,13 +505,14 @@ deploy a local war file at path
 
 	def do_EOF(self, args):
 		"""Exit on the end-of-file character"""
+		print()
 		return self.do_exit(args)
 	
 	def help_commandline(self):
-		print __doc__
+		print(__doc__)
 
 	def help_license(self):
-		print """
+		print("""
 Copyright (c) 2007, Jared Crapo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -529,35 +532,35 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"""
+""")
 
 	def help_help(self):
-		print "get a life"
+		print("get a life")
 
 	def emptyline(self):
 		"""Do nothing on an empty line"""
 		pass
 
 	def default(self, line):
-		print "unknown command: " + line
+		print("unknown command: " + line)
 
 	def __printexception(self):
 		if self.debugFlag:
 			self.__printerror(traceback.format_exc())
 		else:
-			etype, evalue = sys.exc_info()[:2]
+			etype, evalue, etraceback = sys.exc_info()
 			self.__printerror(traceback.format_exception_only(etype, evalue))
 
 	def __printerror(self, msg):
 		if isinstance(msg, list):
 			for line in msg:
-				print line,
+				print(line)
 		else:
-			print msg
+			print(msg)
 
 	def __printstatus(self, msg):
 		if self.debugFlag:
-			print msg
+			print(msg)
 
 
 #
@@ -573,7 +576,7 @@ def main(argv=None):
 	try:
 		try:
 			opts, args = getopt.getopt(argv[1:], shortopts, longopts)
-		except getopt.error, msg:
+		except getopt.error as msg:
 			raise Usage(msg)
 	
 		# process options
@@ -585,10 +588,10 @@ def main(argv=None):
 		debugFlag = False
 		for opt, parm in opts:
 			if opt in ("-h", "--help"):
-				print >>sys.stderr, __doc__
+				print(__doc__, file=sys.stderr)
 				return 0
 			elif opt in ("--version"):
-				print >>sys.stderr, "tomcat-manager " + versionString
+				print("tomcat-manager " + versionString, file=sys.stderr)
 				return 0
 			elif opt in ("--debug"):
 				debugFlag = True
@@ -616,9 +619,9 @@ def main(argv=None):
 			else:
 				itm.cmdloop()
 
-	except Usage, err:
-		print >>sys.stderr, err.message
-		print >>sys.stderr, "for help use --help"
+	except Usage as err:
+		print(err.message, file=sys.stderr)
+		print("for help use --help", file=sys.stderr)
 		return 2
 
 

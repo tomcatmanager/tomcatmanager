@@ -12,6 +12,9 @@ web based manager application included with Tomcat.
 Download and Install
 --------------------
 
+Requires python 3.0 or newer.  If you need python 2.x support, try the python2.x
+branch.
+
 On OS X, *nix, or *BSD, put the script in `~/bin` and rename it to
 `tomcat-manager`.
 
