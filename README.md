@@ -125,6 +125,8 @@ This script can perform all of the same functions that can be done with the web 
 
 *   *reload* - stop and start a tomcat application
 
+*   *resources* - show the JNDI resources configured in tomcat
+
 There are a few commands that don't do anything to Tomcat, but are necessary for utilization of the script:
 
 *   *connect* - link to an instance of the tomcat manager by url, user and password
