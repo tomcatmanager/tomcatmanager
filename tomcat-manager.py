@@ -271,6 +271,20 @@ class TomcatManager:
 		"""
 		response = self._execute("undeploy", {'path': path})
 
+	def resources(self,type=None):
+		"""list the global JNDI resources available for use in resource links for config files
+		
+		Arguments:
+		type	a fully qualified Java class name of the resource type you are interested in
+				if passed empty, resources of all types will be returned
+		"""
+		response = self._execute("resources", {'type': type})
+		resources = []
+		for line in response:
+			resources.append(line.rstrip())
+		return resources
+
+
 #
 #
 class InteractiveTomcatManager(cmd.Cmd):
@@ -437,7 +451,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 	def help_sessions(self):
 		print("Usage: sessions {path}")
-		print("display the sessions in the application at {path}")
+		print("display the currently active sessions in the application at {path}")
 
 	def do_deploy(self, args):
 		if self.__tm and self.__tm.hasConnected:
@@ -493,6 +507,28 @@ deploy a local war file at path
 	def help_undeploy(self):
 		print("Usage: undeploy {path}")
 		print("undeploy the application at {path}")
+
+	def do_resources(self, args):
+		if self.__tm and self.__tm.hasConnected:
+			resourcelist = None
+			args = args.split()
+			if len(args) == 0:
+				resourcelist = self.docmd(self.__tm.resources)
+			elif len(args) == 1:
+				resourcelist = self.docmd(self.__tm.resources,args[0])
+			else:
+				self.help_resources()
+			if resourcelist:
+				for line in resourcelist:
+					print(line)
+		else:
+			self.__printerror(self.__MSG_NotConnected)
+		
+	def help_resources(self):
+		print("""Usage: resources [class_name]
+list global jndi resources
+  class_name  = optional fully qualified Java class name of the resource type you want
+""")
 
 	def do_exit(self, args):
 		"""exit the interactive manager"""
