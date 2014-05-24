@@ -112,7 +112,7 @@ class ExtendedRequest(urllib.request.Request):
 
 	def get_method(self):
 		if self.method == None:
-			if self.has_data():
+			if self.data:
 				return "POST"
 			else:
 				return "GET"
