@@ -67,21 +67,21 @@ use interactive mode you can do:
     $ tomcat-manager
 	tomcat-manager> connect http://localhost:8080/manager/text admin newenglandclamchowder
 	tomcat-manager> list
-	Path                           Status  Sessions
-	------------------------------ ------- --------
-	/manager                       running 114     
-	/                              running 0       
-	/host-manager                  running 0
+	Path                     Status  Sessions Directory
+	------------------------ ------- -------- ------------------------------------
+	/                        running        0 ROOT
+	/manager                 running       14 /usr/share/tomcat7-admin/manager
+	/host-manager            running        0 /usr/share/tomcat7-admin/host-manager
 	tomcat-manager> exit
 
 Command line mode might look like:
 
 	$ tomcat-manager --user=admin --password=newenglandclamchowder http://localhost:8080/manager/text list
-	Path                           Status  Sessions
-	------------------------------ ------- --------
-	/manager                       running 117     
-	/                              running 0       
-	/host-manager                  running 0
+	Path                     Status  Sessions Directory
+	------------------------ ------- -------- ------------------------------------
+	/                        running        0 ROOT
+	/manager                 running       17 /usr/share/tomcat7-admin/manager
+	/host-manager            running        0 /usr/share/tomcat7-admin/host-manager
 
 To see all of the valid commands, use interactive mode, like this:
 
