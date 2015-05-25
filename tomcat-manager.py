@@ -174,6 +174,11 @@ class TomcatManager:
 		
 		apps is a list of tuples: (path, status, sessions, directory)
 		
+		path - the relative URL where this app is deployed on the server
+		status - whether the app is running or not
+		sessions - number of currently active sessions
+		directory - the directory on the server where this app resides
+		
 		"""
 		response = self._execute("list")
 		apps = []
@@ -359,14 +364,16 @@ class InteractiveTomcatManager(cmd.Cmd):
 			self.help_list()
 		elif self.__tm and self.__tm.hasConnected:
 			apps = self.docmd(self.__tm.list)
-			cw = [30, 7, 8]
-			fmt = "%30s %7s %8s"
-			dashes = "---------------------------------------"
-			print(fmt % ("Path".ljust(cw[0]),"Status".ljust(cw[1]),"Sessions".ljust(cw[2])))
-			print(fmt % (dashes[:cw[0]], dashes[:cw[1]], dashes[:cw[2]]))
+			cw = [24, 7, 8, 36]
+			# build the format string from the column widths so we only
+			# have the column widths hardcoded in one place
+			fmt = " ".join(list(map(lambda x: "%"+str(x)+"s",cw)))
+			dashes = "-"*80
+			print(fmt % ("Path".ljust(cw[0]), "Status".ljust(cw[1]), "Sessions".rjust(cw[2]), "Directory".ljust(cw[3])))
+			print(fmt % (dashes[:cw[0]], dashes[:cw[1]], dashes[:cw[2]], dashes[:cw[3]]))
 			for app in apps:
-				path, status, session = app[:3]
-				print(fmt % (app[0].ljust(cw[0]), app[1].ljust(cw[1]), app[2].ljust(cw[2])))
+				path, status, session, directory = app[:4]
+				print(fmt % (app[0].ljust(cw[0]), app[1].ljust(cw[1]), app[2].rjust(cw[2]), app[3].ljust(cw[3])))
 		else:
 			self.__printerror(self.__MSG_NotConnected)
 
