@@ -246,6 +246,26 @@ class TomcatManager:
 		"""
 		return self._execute_list("threaddump")
 
+	def findleaks(self):
+		"""find apps that leak memory
+		
+		This command triggers a full garbage collection on the server. Use with
+		extreme caution on production systems.
+		
+		Explicity triggering a full garbage collection from code is documented to be
+		unreliable. Furthermore, depending on the jvm, there are options to disable
+		explicit GC triggering, like ```-XX:+DisableExplicitGC```. If you want to make
+		sure this command triggered a full GC, you will have to verify using something
+		like GC logging or JConsole.
+		
+		tm = TomcatManager(url)
+		leakers = tm.findleaks()
+
+		returns a list of apps that are leaking memory. An empty list means no leaking
+		apps were found.
+		"""
+		return self._execute_list("findleaks", {'statusLine': 'true'})
+
 	def stop(self, path):
 		"""stop an application
 		
@@ -369,10 +389,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		
 		"""
 
-#		try:
 		return func(*args)
-#		except:
-#			self.__printexception()
 
 	def do_connect(self, args):
 		"""connect to an instance of the manager application"""
@@ -494,6 +511,23 @@ class InteractiveTomcatManager(cmd.Cmd):
 	def help_threaddump(self):
 		print("Usage: threaddump")
 		print("show a jvm thread dump")
+
+	def do_findleaks(self, args):
+		if args:
+			self.help_findleaks()
+		elif self.__tm and self.__tm.hasConnected:
+			info = self.docmd(self.__tm.findleaks)
+			for line in info:
+				print(line)
+		else:
+			self.__printerror(self.__MSG_NotConnected)	
+	
+	def help_findleaks(self):
+		print("Usage: findleaks")
+		print("find apps that leak memory")
+		print("")
+		print("CAUTION: this triggers a full garbage collection on the server")
+		print("Use with extreme caution on production systems")
 
 	def do_start(self, args):
 		"""start an application"""
