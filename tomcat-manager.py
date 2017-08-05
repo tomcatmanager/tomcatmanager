@@ -233,7 +233,7 @@ class TomcatManager:
 		"""return a list of the sessions in an application
 		
 		tm = TomcatManager(url)
-		print tm.sessions("/myappname")
+		print(tm.sessions("/myappname"))
 		
 		"""
 		response = self._execute("sessions", {'path': path})
