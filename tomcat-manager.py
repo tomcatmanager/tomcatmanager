@@ -213,7 +213,6 @@ class TomcatManager:
 		"""
 		return self._execute_list("sslConnectorCiphers")
 
-
 	def threaddump(self):
 		"""get a jvm thread dump
 
@@ -274,8 +273,8 @@ class TomcatManager:
 	def list(self):
 		"""return a list of all applications currently installed
 		
-		tm = TomcatManager(url)
-		apps = tm.list()
+			tm = TomcatManager(url)
+			apps = tm.list()
 		
 		apps is a list of tuples: (path, status, sessions, directory)
 		
@@ -295,36 +294,32 @@ class TomcatManager:
 	def stop(self, path):
 		"""stop an application
 		
-		tm = TomcatManager(url)
-		tm.stop("/myappname")
-		
+			tm = TomcatManager(url)
+			tm.stop("/myappname")
 		"""
 		response = self._execute("stop", {'path': path})
 
 	def start(self, path):
 		"""start a stopped application
 		
-		tm = TomcatManager(url)
-		tm.start("/myappname")
-		
+			tm = TomcatManager(url)
+			tm.start("/myappname")
 		"""
 		response = self._execute("start", {'path': path})
 
 	def reload(self, path):
 		"""reload an application
 		
-		tm = TomcatManager(url)
-		tm.reload("/myappname")
-		
+			tm = TomcatManager(url)
+			tm.reload("/myappname")
 		"""
 		response = self._execute("reload", {'path': path})
 
 	def sessions(self, path):
 		"""return a list of the sessions in an application
 		
-		tm = TomcatManager(url)
-		print(tm.sessions("/myappname"))
-		
+			tm = TomcatManager(url)
+			print(tm.sessions("/myappname"))
 		"""
 		response = self._execute("sessions", {'path': path})
 		sessions = []
@@ -374,9 +369,8 @@ class TomcatManager:
 	def undeploy(self, path):
 		"""undeploy an application
 		
-		tm = TomcatManager(url)
-		tm.undeploy("/myappname")
-		
+			tm = TomcatManager(url)
+			tm.undeploy("/myappname")
 		"""
 		response = self._execute("undeploy", {'path': path})
 
@@ -392,7 +386,6 @@ class TomcatManager:
 		for line in response:
 			resources.append(line.rstrip())
 		return resources
-
 
 #
 #
@@ -415,7 +408,10 @@ class InteractiveTomcatManager(cmd.Cmd):
 		
 		"""
 
-		return func(*args)
+		try:
+			return func(*args)
+		except TomcatException:
+			self.__printexception()
 
 	def do_connect(self, args):
 		"""connect to an instance of the manager application"""
@@ -451,10 +447,11 @@ class InteractiveTomcatManager(cmd.Cmd):
 				self.__printerror("tomcat manager not found at %s" % url)
 			else:
 				self.__printexception()
-		except TomcatException:
-			self.__printexception()
-		except:
-			self.__printexception()
+#		except TomcatException:
+#			# catch this here because sometimes we call connect outside of the docmd loop
+#			self.__printexception()
+#		except:
+#			self.__printexception()
 
 	def help_connect(self):
 		print("usage: connect url [username] [password]")
@@ -749,7 +746,7 @@ list global jndi resources
 
 	def help_license(self):
 		print("""
-Copyright (c) 2007, Jared Crapo
+Copyright (c) 2007-2017, Jared Crapo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -771,14 +768,14 @@ THE SOFTWARE.
 """)
 
 	def help_help(self):
-		print("get a life")
+		print('here\'s a dollar, you\'ll have to buy a clue elsewhere')
 
 	def emptyline(self):
 		"""Do nothing on an empty line"""
 		pass
 
 	def default(self, line):
-		print("unknown command: " + line)
+		print('unknown command: ' + line)
 
 	def __printexception(self):
 		if self.debugFlag:
@@ -790,7 +787,7 @@ THE SOFTWARE.
 	def __printerror(self, msg):
 		if isinstance(msg, list):
 			for line in msg:
-				print(line)
+				print(line.rstrip())
 		else:
 			print(msg)
 
