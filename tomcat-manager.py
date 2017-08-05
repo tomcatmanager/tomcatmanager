@@ -242,6 +242,20 @@ class TomcatManager:
 			sessions.append(line.rstrip())
 		return sessions
 
+	def expire(self, path, idle):
+		"""expire sessions idle for longer than idle minutes
+		
+		Arguments:
+		path     the path to the app on the server whose sessions you want to expire
+		idle      sessions idle for more than this number of minutes will be expired
+		         use age=0 to expire all sessions
+		"""
+		response = self._execute("expire", {'path': path, 'idle': idle})
+		sessions = []
+		for line in response:
+			sessions.append(line.rstrip())
+		return sessions
+
 	def deployWAR(self, path, fileobj, update=False, tag=None):
 		"""read a WAR file from a local fileobj and deploy it at path
 		
@@ -459,6 +473,25 @@ class InteractiveTomcatManager(cmd.Cmd):
 	def help_sessions(self):
 		print("Usage: sessions {path}")
 		print("display the currently active sessions in the application at {path}")
+
+	def do_expire(self, args):
+		"""expire sessions idle for longer than idle minutes"""
+		if self.__tm and self.__tm.hasConnected:
+			try:
+				app,idle, = args.split()
+				sesslist = self.docmd(self.__tm.expire, app, idle)
+				for line in sesslist:
+					print(line)
+			except TomcatException:
+				self.__printexception()
+			except ValueError:
+				self.help_expire()
+		else:
+			self.__printerror(self.__MSG_NotConnected)
+
+	def help_expire(self):
+		print("Usage: expire {path} {idle}")
+		print("expire sessions idle for more than {idle} minutes in the application at {path}")
 
 	def do_deploy(self, args):
 		if self.__tm and self.__tm.hasConnected:
