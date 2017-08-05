@@ -201,7 +201,22 @@ class TomcatManager:
 			key, value = line.rstrip().split(":",1)
 			serverinfo[key] = value.lstrip()
 		return serverinfo
-	
+
+	def vminfo(self):
+		"""get diagnostic information about the JVM
+		
+				
+		tm = TomcatManager(url)
+		sinfo = tm.vminfo()
+		
+		returns a list of JVM information
+		"""
+		response = self._execute("vminfo")
+		vminfo = []
+		for line in response:
+			vminfo.append(line.rstrip())
+		return vminfo
+
 	def stop(self, path):
 		"""stop an application
 		
@@ -397,7 +412,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 	def do_serverinfo(self, args):
 		if args:
-			self.help_list()
+			self.help_serverinfo()
 		elif self.__tm and self.__tm.hasConnected:
 			info = self.docmd(self.__tm.serverinfo)
 			for key,value in iter(sorted(info.items())):
@@ -408,6 +423,20 @@ class InteractiveTomcatManager(cmd.Cmd):
 	def help_serverinfo(self):
 		print("Usage: serverinfo")
 		print("show information about the server")
+
+	def do_vminfo(self, args):
+		if args:
+			self.help_vminfo()
+		elif self.__tm and self.__tm.hasConnected:
+			vminfo = self.docmd(self.__tm.vminfo)
+			for line in vminfo:
+				print(line)
+		else:
+			self.__printerror(self.__MSG_NotConnected)	
+	
+	def help_vminfo(self):
+		print("Usage: vminfo")
+		print("show information about the jvm")
 
 	def do_start(self, args):
 		"""start an application"""
