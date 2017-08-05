@@ -144,11 +144,11 @@ class TomcatManager:
 		else:
 			self.__opener = urllib.request.build_opener()
 
-
 	def _execute(self, cmd, params=None, data=None, headers={}, method=None):
 		"""execute a tomcat command and check status returning a file obj for further processing
 		
-		fobj = _execute(url)
+		tm = TomcatManager(url)
+		fobj = tm._execute(url)
 		
 		"""
 		url = self.__managerURL + "/" + cmd
@@ -165,7 +165,19 @@ class TomcatManager:
 			raise TomcatException(status)
 		return content
 
-
+	def _execute_list(self, cmd, params=None, data=None, headers={}, method=None):
+		"""execute a tomcat command, and return the results as a python list, one line
+		per list item
+		
+		tm = TomcatManager(url)
+		output = tm._execute_list("vminfo")
+		"""
+		response = self._execute(cmd, params, data, headers, method)
+		output = []
+		for line in response:
+			output.append(line.rstrip())
+		return output	
+	
 	def list(self):
 		"""return a list of all applications currently installed
 		
@@ -209,13 +221,9 @@ class TomcatManager:
 		tm = TomcatManager(url)
 		vminfo = tm.vminfo()
 		
-		returns a list of JVM information
+		returns an array of JVM information
 		"""
-		response = self._execute("vminfo")
-		vminfo = []
-		for line in response:
-			vminfo.append(line.rstrip())
-		return vminfo
+		return self._execute_list("vminfo")
 
 	def sslConnectorCiphers(self):
 		"""get SSL/TLS ciphers configured for each connector
@@ -225,11 +233,7 @@ class TomcatManager:
 		
 		returns a list of JVM information
 		"""
-		response = self._execute("sslConnectorCiphers")
-		sslinfo = []
-		for line in response:
-			sslinfo.append(line.rstrip())
-		return sslinfo
+		return self._execute_list("sslConnectorCiphers")
 
 	def stop(self, path):
 		"""stop an application
