@@ -133,7 +133,7 @@ class TomcatManager:
 		self.__managerURL = url
 		self.__userid = userid
 		self.__password = password
-		self.hasConnected = False
+		self.has_connected = False
 		
 		if userid and password:
 			self.__passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
@@ -159,7 +159,7 @@ class TomcatManager:
 		response = self.__opener.open(req)
 		content = codecs.iterdecode(response, 'utf-8')
 		status = next(content).rstrip()
-		self.hasConnected = True
+		self.has_connected = True
 		if not status[:4] == 'OK -':
 			raise TomcatException(status)
 		return content
@@ -263,7 +263,7 @@ class TomcatManager:
 		req = ExtendedRequest(url)
 		response = self.__opener.open(req)
 		content = codecs.iterdecode(response, 'utf-8')
-		self.hasConnected = True
+		self.has_connected = True
 		status = []
 		for line in content:
 			status.append(line.rstrip())
@@ -406,7 +406,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		self.prompt = prog_name + '>'
 		self.tomcat_manager = None
 		self.__MSG_NotConnected = 'not connected'
-		self.debugFlag = False
+		self.debug_flag = False
 		self.exit_code = None
 
 	def docmd(self, func, *args):
@@ -470,7 +470,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_serverinfo()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.hasConnected:
+		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.serverinfo)
 			for key,value in iter(sorted(info.items())):
@@ -488,7 +488,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_vminfo()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.hasConnected:
+		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.vminfo)
 			for line in info:
@@ -506,7 +506,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_sslConnectorCiphers()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.hasConnected:
+		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.sslConnectorCiphers)
 			for line in info:
@@ -524,7 +524,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_threaddump()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.hasConnected:
+		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.threaddump)
 			for line in info:
@@ -542,7 +542,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_findleaks()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.hasConnected:
+		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.findleaks)
 			for line in info:
@@ -563,7 +563,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_status()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.hasConnected:
+		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.status)
 			for line in info:
@@ -582,7 +582,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_list()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.hasConnected:
+		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			apps = self.docmd(self.tomcat_manager.list)
 			cw = [24, 7, 8, 36]
 			# build the format string from the column widths so we only
@@ -605,7 +605,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 	def do_start(self, args):
 		"""start an application"""
-		if self.tomcat_manager and self.tomcat_manager.hasConnected:
+		if self.tomcat_manager and self.tomcat_manager.has_connected:
 			try:
 				app, = args.split()
 				self.exit_code = 0
@@ -624,7 +624,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 	def do_stop(self, args):
 		"""stop an application"""
-		if self.tomcat_manager and self.tomcat_manager.hasConnected:
+		if self.tomcat_manager and self.tomcat_manager.has_connected:
 			try:
 				app, = args.split()
 				self.exit_code = 0
@@ -643,7 +643,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 	def do_reload(self, args):
 		"""reload an application"""
-		if self.tomcat_manager and self.tomcat_manager.hasConnected:
+		if self.tomcat_manager and self.tomcat_manager.has_connected:
 			try:
 				app, = args.split()
 				self.exit_code = 0
@@ -662,7 +662,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		
 	def do_sessions(self, args):
 		"""display the sessions in an application"""
-		if self.tomcat_manager and self.tomcat_manager.hasConnected:
+		if self.tomcat_manager and self.tomcat_manager.has_connected:
 			try:
 				app, = args.split()
 				self.exit_code = 0
@@ -682,7 +682,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 	def do_expire(self, args):
 		"""expire sessions idle for longer than idle minutes"""
-		if self.tomcat_manager and self.tomcat_manager.hasConnected:
+		if self.tomcat_manager and self.tomcat_manager.has_connected:
 			try:
 				app,idle, = args.split()
 				self.exit_code = 0
@@ -702,7 +702,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		print("expire sessions idle for more than {idle} minutes in the application at {path}")
 
 	def do_deploy(self, args):
-		if self.tomcat_manager and self.tomcat_manager.hasConnected:
+		if self.tomcat_manager and self.tomcat_manager.has_connected:
 			args = args.split()
 			if len(args) >= 2 and len(args) <= 4:
 				path = args[0]
@@ -750,7 +750,7 @@ deploy a local war file at path
 
 	def do_undeploy(self, args):
 		"""undeploy an application"""
-		if self.tomcat_manager and self.tomcat_manager.hasConnected:
+		if self.tomcat_manager and self.tomcat_manager.has_connected:
 			try:
 				app, = args.split()
 				self.exit_code = 0
@@ -768,7 +768,7 @@ deploy a local war file at path
 		print("undeploy the application at {path}")
 
 	def do_resources(self, args):
-		if self.tomcat_manager and self.tomcat_manager.hasConnected:
+		if self.tomcat_manager and self.tomcat_manager.has_connected:
 			resourcelist = None
 			args = args.split()
 			self.exit_code = 0
@@ -858,7 +858,7 @@ THE SOFTWARE.
 		print('unknown command: ' + line)
 
 	def __printexception(self):
-		if self.debugFlag:
+		if self.debug_flag:
 			self.__printerror(traceback.format_exc())
 		else:
 			etype, evalue, etraceback = sys.exc_info()
@@ -872,7 +872,7 @@ THE SOFTWARE.
 			print(msg)
 
 	def __printstatus(self, msg):
-		if self.debugFlag:
+		if self.debug_flag:
 			print("--" + msg, file=sys.stderr)
 
 
@@ -903,7 +903,7 @@ def main(argv=None):
 		print("--" + str(args), file=sys.stderr)
 	
 	itm = InteractiveTomcatManager()
-	itm.debugFlag = args.debug
+	itm.debug_flag = args.debug
 
 	if args.manager_url:
 		if args.command:
