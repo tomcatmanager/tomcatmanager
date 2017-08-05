@@ -1,46 +1,32 @@
 # tomcat-manager
 
-If you use Apache Tomcat for any sort of development work you’ve probably
-deployed lots of applications to it. There are a bunch of ways to get your war
-files there, you can use the manager application in your browser, or you can
-use [Cargo](http://cargo.codehaus.org) and its plugins for ant and maven.
-Here's a python script that can do it from the command line by talking to the
-web based manager application included with Tomcat.
+If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a bunch of ways to get your war files there:
+
+  - use the [Tomcat Manager](https://tomcat.apache.org/tomcat-8.5-doc/manager-howto.html) application in your browser
+  - use the [Tomcat Ant Tasks](https://wiki.apache.org/tomcat/AntDeploy) included with Tomcat
+  - use [Cargo](https://codehaus-cargo.github.io/) and its plugins for ant and maven
+
+Here's another way. I've created a python script that can do it from the command line by talking to Tomcat Manager application.
 
 
 # Download and Install
 
-Requires python 3.0 or newer.  If you need python 2.x support, try the python2.x
-branch.
+Requires python 3.0 or newer.  If you need python 2.x support, try the python2.x branch.
 
-On OS X, *nix, or *BSD, put the script in `~/bin` and rename it to
-`tomcat-manager`.
+On macOS, *nix, or *BSD, put the script in `~/bin` and rename it to `tomcat-manager`.
 
-If you use Windows, rename it to `tomcat-manager.py` and put it in your path
-somewhere. See [http://docs.python.org/3.3/using/windows.html](http://docs.python.org/3.3/using/windows.html) for more details.
+If you use Windows, rename it to `tomcat-manager.py` and put it in your path somewhere. See [http://docs.python.org/3.3/using/windows.html](http://docs.python.org/3.3/using/windows.html) for more details.
 
 # Tomcat Configuration
 
-Prior to version 6.0.30, you need a user in `tomcat-users.xml` with access to
-the `manager` role. So you might have something like this:
-
-	<tomcat-users>
-	.....
-		<role rolename="manager"/>
-		<user username="admin" password="newenglandclamchowder" roles="manager"/>
-	</tomcat-users>
-
-From 6.0.30 onwards, the roles required to use the web based manager
-application were changed from the single `manager` role to the following four
-roles:
+Users wishing to utilize the Tomcat Manager application must authenticate with the manager application, and also must be assigned at least one of the following roles:
 
  - manager-gui
  - manager-script
  - manager-jmx
  - manager-status
 
-Therefore, in order to use the `tomcat-manager` script, you need a user in
-`tomcat-users.xml` with access to the `manager-script` role:
+To use the `tomcat-manager` script, you need a user in `tomcat-users.xml` with access to the `manager-script` role:
 
 	<tomcat-users>
 	.....
@@ -50,13 +36,8 @@ Therefore, in order to use the `tomcat-manager` script, you need a user in
 
 # Connecting to tomcat
 
-When you use the web based manager application included with the tomcat distribution, you
-typically access it via the url `http://localhost:8080/manager/html`. This script requires a similar http connection, but the URL is different.
+When you use the web based manager application included with the tomcat distribution, you typically access it via the url `http://localhost:8080/manager/html`. This script requires a similar http connection, but the URL is different.
 
-### tomcat 6
-If you can access the web based tomcat manager application at `http://localhost:8080/manager/html`, then you should use `http://localhost:8080/manager` for this script.
-
-### tomcat 7
 If you can access the web based tomcat manager application at `http://localhost:8080/manager/html`, then you should use `http://localhost:8080/manager/text` for this script.
 
 # Usage
@@ -109,31 +90,22 @@ For help on a particular command:
 
 This script can perform all of the same functions that can be done with the web based tomcat-admin application included with tomcat.  The following functions are available:
 
- *   *serverinfo* - give some information about the tomcat server, including JVM version, OS Architecture and version, and Tomcat version
+ -   ****serverinfo**** - give some information about the tomcat server, including JVM version, OS Architecture and version, and Tomcat version
+ -   **sessions** - display active sessions for a particular tomcat application, with a breakdown of session inactivity by time
+ -   **list** - show all applications running inside the tomcat server
+ -   **deploy** - install a local war file in the tomcat server
+ -   **undeploy** - stop execution of and remove a tomcat application from the tomcat server
+ -   **start** - start a tomcat application that has already been deployed in the tomcat server
+ -   **stop** - stop execution of a tomcat application but leave it deployed in the tomcat server
+ -   **reload** - stop and start a tomcat application
+ -   **resources** - show the JNDI resources configured in tomcat
 
- *   *sessions* - display active sessions for a particular tomcat application, with a breakdown of session inactivity by time
-
- *   *list* - show all applications running inside the tomcat server
-
- *   *deploy* - install a local war file in the tomcat server
-
- *   *undeploy* - stop execution of and remove a tomcat application from the tomcat server
-
- *   *start* - start a tomcat application that has already been deployed in the tomcat server
-
- *   *stop* - stop execution of a tomcat application but leave it deployed in the tomcat server
-
- *   *reload* - stop and start a tomcat application
-
- *   *resources* - show the JNDI resources configured in tomcat
 
 There are a few commands that don't do anything to Tomcat, but are necessary for utilization of the script:
 
- *   *connect* - link to an instance of the tomcat manager by url, user and password
-
- *   *help* - get help about a particular command, including usage and parameters
-
- *   *exit* - if you are in interactive mode, exit back to the command line
+ -   **connect** - link to an instance of the tomcat manager by url, user and password
+ -   **help** - get help about a particular command, including usage and parameters
+ -   **exit** - if you are in interactive mode, exit back to the command line
 
 # License
 
