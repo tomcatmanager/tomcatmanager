@@ -207,7 +207,7 @@ class TomcatManager:
 		
 				
 		tm = TomcatManager(url)
-		sinfo = tm.vminfo()
+		vminfo = tm.vminfo()
 		
 		returns a list of JVM information
 		"""
@@ -216,6 +216,20 @@ class TomcatManager:
 		for line in response:
 			vminfo.append(line.rstrip())
 		return vminfo
+
+	def sslConnectorCiphers(self):
+		"""get SSL/TLS ciphers configured for each connector
+
+		tm = TomcatManager(url)
+		vminfo = tm.vminfo()
+		
+		returns a list of JVM information
+		"""
+		response = self._execute("sslConnectorCiphers")
+		sslinfo = []
+		for line in response:
+			sslinfo.append(line.rstrip())
+		return sslinfo
 
 	def stop(self, path):
 		"""stop an application
@@ -437,6 +451,20 @@ class InteractiveTomcatManager(cmd.Cmd):
 	def help_vminfo(self):
 		print("Usage: vminfo")
 		print("show information about the jvm")
+
+	def do_sslConnectorCiphers(self, args):
+		if args:
+			self.help_sslConnectorCiphers()
+		elif self.__tm and self.__tm.hasConnected:
+			sslinfo = self.docmd(self.__tm.sslConnectorCiphers)
+			for line in sslinfo:
+				print(line)
+		else:
+			self.__printerror(self.__MSG_NotConnected)	
+	
+	def help_sslConnectorCiphers(self):
+		print("Usage: sslConnectorCiphers")
+		print("show SSL/TLS ciphers configured for each connector")
 
 	def do_start(self, args):
 		"""start an application"""
