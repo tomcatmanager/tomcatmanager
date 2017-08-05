@@ -9,7 +9,7 @@ If you use Apache Tomcat for any sort of development work you’ve probably depl
 Here's another way. I've created a python script that can do it from the command line by talking to Tomcat Manager application.
 
 
-# Download and Install
+## Download and Install
 
 Requires python 3.0 or newer.  If you need python 2.x support, try the python2.x branch.
 
@@ -17,7 +17,7 @@ On macOS, *nix, or *BSD, put the script in `~/bin` and rename it to `tomcat-mana
 
 If you use Windows, rename it to `tomcat-manager.py` and put it in your path somewhere. See [http://docs.python.org/3.3/using/windows.html](http://docs.python.org/3.3/using/windows.html) for more details.
 
-# Tomcat Configuration
+## Tomcat Configuration
 
 Users wishing to utilize the Tomcat Manager application must authenticate with the manager application, and also must be assigned at least one of the following roles:
 
@@ -34,13 +34,13 @@ To use the `tomcat-manager` script, you need a user in `tomcat-users.xml` with a
 		<user username="admin" password="newenglandclamchowder" roles="manager-script"/>
 	</tomcat-users>
 
-# Connecting to tomcat
+## Connecting to tomcat
 
 When you use the web based manager application included with the tomcat distribution, you typically access it via the url `http://localhost:8080/manager/html`. This script requires a similar http connection, but the URL is different.
 
 If you can access the web based tomcat manager application at `http://localhost:8080/manager/html`, then you should use `http://localhost:8080/manager` for this script.
 
-# Usage
+## Usage
 
 This script can either be used in command line mode or interactive mode. To
 use interactive mode you can do:
@@ -69,14 +69,19 @@ To see all of the valid commands, use interactive mode:
 	$ tomcat-manager
 	tomcat-manager> help
 
-	Documented commands (type help {command}):
+
+	Documented commands (type help <topic>):
 	========================================
-	EOF      deploy  help  quit    serverinfo  start  undeploy
-	connect  exit    list  reload  sessions    stop 
+	EOF      exit_code  license  resources            start       undeploy
+	connect  expire     list     serverinfo           status      version
+	deploy   findleaks  quit     sessions             stop        vminfo
+	exit     help       reload   sslConnectorCiphers  threaddump
 
 	Miscellaneous help topics:
 	==========================
-	license  commandline
+	commandline
+
+
 
 For help on a particular command:
 
@@ -86,28 +91,37 @@ For help on a particular command:
 	tomcat-manager>
 
 
-# Features
+## Features
 
-This script can perform all of the same functions that can be done with the web based tomcat-admin application included with tomcat. The following functions are available:
+The following functions from the [Tomcat Manager](https://tomcat.apache.org/tomcat-8.5-doc/manager-howto.html) web application are available:
 
- -   ****serverinfo**** - give some information about the tomcat server, including JVM version, OS Architecture and version, and Tomcat version
- -   **sessions** - display active sessions for a particular tomcat application, with a breakdown of session inactivity by time
- -   **list** - show all applications running inside the tomcat server
- -   **deploy** - install a local war file in the tomcat server
- -   **undeploy** - stop execution of and remove a tomcat application from the tomcat server
- -   **start** - start a tomcat application that has already been deployed in the tomcat server
- -   **stop** - stop execution of a tomcat application but leave it deployed in the tomcat server
- -   **reload** - stop and start a tomcat application
- -   **resources** - show the JNDI resources configured in tomcat
+ - **list** - show all applications running inside the tomcat server
+ - **deploy** - install a local war file in the tomcat server
+ - **undeploy** - stop execution of and remove a tomcat application from the tomcat server
+ - **start** - start a tomcat application that has already been deployed in the tomcat server
+ - **stop** - stop execution of a tomcat application but leave it deployed in the tomcat server
+ - **reload** - stop and start a tomcat application
+ - **sessions** - display active sessions for a particular tomcat application, with a breakdown of session inactivity by time
+ - **expire** - expire idle sessions
+ - **serverinfo** - give some information about the tomcat server, including JVM version, OS Architecture and version, and Tomcat version
+ - **status** - get XML document with details of tomcat server
+ - **resources** - show the JNDI resources configured in tomcat
+ - **findleaks** - find tomcat apps that are leaking memory
+ - **sslConnectorCiphers** - show SSL/TLS ciphers configured for each connector
+ - **threaddump** - show a jvm thread dump
+ - **vminfo** - show information about the jvm
 
 
-There are a few commands that don't do anything to Tomcat, but are necessary for utilization of the script:
+There are a few commands that don't do anything to Tomcat, but are necessary for or enhance the operation of the script:
 
- -   **connect** - link to an instance of the tomcat manager by url, user and password
- -   **help** - get help about a particular command, including usage and parameters
- -   **exit** - if you are in interactive mode, exit back to the command line
+ - **connect** - link to an instance of the tomcat manager by url, user and password
+ - **exit_code** - show the value of the exit_code variable, similar to $? in sh/ksh/bash
+ - **version** show the version information about this script
+ - **help** - get help about a particular command, including usage and parameters
+ - **exit** - if you are in interactive mode, exit back to the command line
+ - **quit** - same as exit
 
-# License
+## License
 
 Check the LICENSE file. It's the MIT License, which means you can do whatever
 you want, as long as you keep the copyright notice.

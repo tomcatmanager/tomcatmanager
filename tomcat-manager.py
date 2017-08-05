@@ -405,7 +405,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		cmd.Cmd.__init__(self)
 		self.prompt = prog_name + '>'
 		self.tomcat_manager = None
-		self.__MSG_NotConnected = 'not connected'
+		self.__MSG_not_connected = 'not connected'
 		self.debug_flag = False
 		self.exit_code = None
 
@@ -477,7 +477,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				print("%s: %s" % (key, value))
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)
+			self.__printerror(self.__MSG_not_connected)
 	
 	def help_serverinfo(self):
 		self.exit_code = 0
@@ -495,7 +495,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				print(line)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)	
+			self.__printerror(self.__MSG_not_connected)	
 	
 	def help_vminfo(self):
 		self.exit_code = 0
@@ -513,7 +513,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				print(line)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)	
+			self.__printerror(self.__MSG_not_connected)	
 	
 	def help_sslConnectorCiphers(self):
 		self.exit_code = 0
@@ -531,7 +531,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				print(line)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)	
+			self.__printerror(self.__MSG_not_connected)	
 	
 	def help_threaddump(self):
 		self.exit_code = 0
@@ -549,7 +549,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				print(line)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)	
+			self.__printerror(self.__MSG_not_connected)	
 	
 	def help_findleaks(self):
 		self.exit_code = 0
@@ -570,7 +570,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				print(line)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)	
+			self.__printerror(self.__MSG_not_connected)	
 	
 	def help_status(self):
 		self.exit_code = 0
@@ -596,7 +596,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				print(fmt % (app[0].ljust(cw[0]), app[1].ljust(cw[1]), app[2].rjust(cw[2]), app[3].ljust(cw[3])))
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)
+			self.__printerror(self.__MSG_not_connected)
 
 	def help_list(self):
 		self.exit_code = 0
@@ -615,7 +615,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)
+			self.__printerror(self.__MSG_not_connected)
 
 	def help_start(self):
 		self.exit_code = 0
@@ -634,7 +634,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)
+			self.__printerror(self.__MSG_not_connected)
 
 	def help_stop(self):
 		self.exit_code = 0
@@ -653,7 +653,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)
+			self.__printerror(self.__MSG_not_connected)
 
 	def help_reload(self):
 		self.exit_code = 0
@@ -674,7 +674,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)
+			self.__printerror(self.__MSG_not_connected)
 
 	def help_sessions(self):
 		print("Usage: sessions {path}")
@@ -694,7 +694,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)
+			self.__printerror(self.__MSG_not_connected)
 
 	def help_expire(self):
 		self.exit_code = 0
@@ -734,7 +734,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)
+			self.__printerror(self.__MSG_not_connected)
 	
 	def help_deploy(self):
 		self.exit_code = 0
@@ -760,7 +760,7 @@ deploy a local war file at path
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)
+			self.__printerror(self.__MSG_not_connected)
 
 	def help_undeploy(self):
 		self.exit_code = 0
@@ -784,7 +784,7 @@ deploy a local war file at path
 					print(line)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_NotConnected)
+			self.__printerror(self.__MSG_not_connected)
 		
 	def help_resources(self):
 		self.exit_code = 0
@@ -793,6 +793,13 @@ list global jndi resources
   class_name  = optional fully qualified Java class name of the resource type you want
 """)
 
+	def do_version(self, args):
+		self.exit_code = 0
+		print(version_string)
+	
+	def help_version(self):
+		self.exit_code = 0
+		print('show version information')
 
 	def do_exit(self, args):
 		"""exit the interactive manager"""
@@ -814,13 +821,13 @@ list global jndi resources
 
 	def help_exit_code(self):
 		self.exit_code = 0
-		print('show the value of the exit_code variable')
+		print('show the value of the exit_code variable, similar to $? in sh/ksh/bash')
 				
 	def help_commandline(self):
 		self.exit_code = 0
 		print(__doc__)
 
-	def help_license(self):
+	def do_license(self, args):
 		self.exit_code = 0
 		print("""
 Copyright (c) 2007-2017, Jared Crapo
@@ -844,6 +851,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """)
 
+	def help_license(self):
+		self.exit_code = 0
+		print("show license information")
 
 	def help_help(self):
 		self.exit_code = 0
