@@ -127,9 +127,9 @@ class TomcatException(Exception):
 		return self.message
 
 class TomcatManager:
-	"""A wrapper around the tomcat manager application
+	"""A wrapper around the tomcat manager web application
 	
-"""
+	"""
 	def __init__(self, url="http://localhost:8080/manager", userid=None, password=None):
 		self.__managerURL = url
 		self.__userid = userid
@@ -145,23 +145,23 @@ class TomcatManager:
 			self.__opener = urllib.request.build_opener()
 
 	def _execute(self, cmd, params=None, data=None, headers={}, method=None):
-		"""execute a tomcat command and check status returning a file obj for further processing
+		"""execute a tomcat command and check status returning a file obj
+		for further processing
 		
-		tm = TomcatManager(url)
-		fobj = tm._execute(url)
-		
+			tm = TomcatManager(url)
+			fobj = tm._execute(url)
 		"""
-		url = self.__managerURL + "/" + cmd
+		url = self.__managerURL + '/text/' + cmd
 		if params:
-			url = url + "?%s" % urllib.parse.urlencode(params)
+			url = url + '?%s' % urllib.parse.urlencode(params)
 		req = ExtendedRequest(url, data, headers)
 		if method:
 			req.method = method
 		response = self.__opener.open(req)
-		content = codecs.iterdecode(response,"utf-8")
+		content = codecs.iterdecode(response, 'utf-8')
 		status = next(content).rstrip()
 		self.hasConnected = True
-		if not status[:4] == "OK -":
+		if not status[:4] == 'OK -':
 			raise TomcatException(status)
 		return content
 
@@ -169,8 +169,8 @@ class TomcatManager:
 		"""execute a tomcat command, and return the results as a python list, one line
 		per list item
 		
-		tm = TomcatManager(url)
-		output = tm._execute_list("vminfo")
+			tm = TomcatManager(url)
+			output = tm._execute_list("vminfo")
 		"""
 		response = self._execute(cmd, params, data, headers, method)
 		output = []
@@ -178,6 +178,99 @@ class TomcatManager:
 			output.append(line.rstrip())
 		return output	
 	
+	def serverinfo(self):
+		"""get information about the server
+		
+			tm = TomcatManager(url)
+			sinfo = tm.serverinfo()
+		
+		returns a dictionary of server information items
+		"""
+		response = self._execute("serverinfo")
+		serverinfo = {}
+		for line in response:
+			key, value = line.rstrip().split(":",1)
+			serverinfo[key] = value.lstrip()
+		return serverinfo
+
+	def vminfo(self):
+		"""get diagnostic information about the JVM
+				
+			tm = TomcatManager(url)
+			vminfo = tm.vminfo()
+		
+		returns an array of JVM information
+		"""
+		return self._execute_list("vminfo")
+
+	def sslConnectorCiphers(self):
+		"""get SSL/TLS ciphers configured for each connector
+
+			tm = TomcatManager(url)
+			vminfo = tm.vminfo()
+		
+		returns a list of JVM information
+		"""
+		return self._execute_list("sslConnectorCiphers")
+
+
+	def threaddump(self):
+		"""get a jvm thread dump
+
+			tm = TomcatManager(url)
+			dump = tm.threaddump()
+		
+		returns a list, one line of the thread dump per list item		
+		"""
+		return self._execute_list("threaddump")
+
+	def findleaks(self):
+		"""find apps that leak memory
+		
+		This command triggers a full garbage collection on the server. Use with
+		extreme caution on production systems.
+		
+		Explicity triggering a full garbage collection from code is documented to be
+		unreliable. Furthermore, depending on the jvm, there are options to disable
+		explicit GC triggering, like ```-XX:+DisableExplicitGC```. If you want to make
+		sure this command triggered a full GC, you will have to verify using something
+		like GC logging or JConsole.
+		
+			tm = TomcatManager(url)
+			leakers = tm.findleaks()
+
+		returns a list of apps that are leaking memory. An empty list means no leaking
+		apps were found.
+		"""
+		return self._execute_list("findleaks", {'statusLine': 'true'})
+
+	def status(self):
+		"""get server status information in XML format
+		
+		Uses the '/manager/status/all?XML=true' command
+		
+		Tomcat 8 doesn't include application info in the XML, even though the docs
+		say it does.
+		
+			tm = TomcatManager(url)
+			status = tm.status()
+		
+		returns a list, one line of the XML document per list item
+		"""
+		# this command isn't inside the /manager/text url, and it doesn't
+		# return and "OK -" first line status, so we can't use _execute()
+		url = self.__managerURL + '/status/all'
+		params = {'XML': 'true'}
+		url = url + "?%s" % urllib.parse.urlencode(params)
+		req = ExtendedRequest(url)
+		response = self.__opener.open(req)
+		content = codecs.iterdecode(response, 'utf-8')
+		self.hasConnected = True
+		status = []
+		for line in content:
+			status.append(line.rstrip())
+		return status
+		
 	def list(self):
 		"""return a list of all applications currently installed
 		
@@ -198,73 +291,6 @@ class TomcatManager:
 			apps.append(line.rstrip().split(":"))		
 		self.apps = apps
 		return apps
-
-	def serverinfo(self):
-		"""get information about the server
-		
-		tm = TomcatManager(url)
-		sinfo = tm.serverinfo()
-		
-		returns a dictionary of server information items
-		"""
-		response = self._execute("serverinfo")
-		serverinfo = {}
-		for line in response:
-			key, value = line.rstrip().split(":",1)
-			serverinfo[key] = value.lstrip()
-		return serverinfo
-
-	def vminfo(self):
-		"""get diagnostic information about the JVM
-		
-				
-		tm = TomcatManager(url)
-		vminfo = tm.vminfo()
-		
-		returns an array of JVM information
-		"""
-		return self._execute_list("vminfo")
-
-	def sslConnectorCiphers(self):
-		"""get SSL/TLS ciphers configured for each connector
-
-		tm = TomcatManager(url)
-		vminfo = tm.vminfo()
-		
-		returns a list of JVM information
-		"""
-		return self._execute_list("sslConnectorCiphers")
-
-
-	def threaddump(self):
-		"""get a jvm thread dump
-
-		tm = TomcatManager(url)
-		dump = tm.threaddump()
-		
-		returns a list, one line of the thread dump per list item		
-		"""
-		return self._execute_list("threaddump")
-
-	def findleaks(self):
-		"""find apps that leak memory
-		
-		This command triggers a full garbage collection on the server. Use with
-		extreme caution on production systems.
-		
-		Explicity triggering a full garbage collection from code is documented to be
-		unreliable. Furthermore, depending on the jvm, there are options to disable
-		explicit GC triggering, like ```-XX:+DisableExplicitGC```. If you want to make
-		sure this command triggered a full GC, you will have to verify using something
-		like GC logging or JConsole.
-		
-		tm = TomcatManager(url)
-		leakers = tm.findleaks()
-
-		returns a list of apps that are leaking memory. An empty list means no leaking
-		apps were found.
-		"""
-		return self._execute_list("findleaks", {'statusLine': 'true'})
 
 	def stop(self, path):
 		"""stop an application
@@ -433,29 +459,6 @@ class InteractiveTomcatManager(cmd.Cmd):
 	def help_connect(self):
 		print("usage: connect url [username] [password]")
 
-	def do_list(self, args):
-		"""list the applications on the server"""
-		if args:
-			self.help_list()
-		elif self.__tm and self.__tm.hasConnected:
-			apps = self.docmd(self.__tm.list)
-			cw = [24, 7, 8, 36]
-			# build the format string from the column widths so we only
-			# have the column widths hardcoded in one place
-			fmt = " ".join(list(map(lambda x: "%"+str(x)+"s",cw)))
-			dashes = "-"*80
-			print(fmt % ("Path".ljust(cw[0]), "Status".ljust(cw[1]), "Sessions".rjust(cw[2]), "Directory".ljust(cw[3])))
-			print(fmt % (dashes[:cw[0]], dashes[:cw[1]], dashes[:cw[2]], dashes[:cw[3]]))
-			for app in apps:
-				path, status, session, directory = app[:4]
-				print(fmt % (app[0].ljust(cw[0]), app[1].ljust(cw[1]), app[2].rjust(cw[2]), app[3].ljust(cw[3])))
-		else:
-			self.__printerror(self.__MSG_NotConnected)
-
-	def help_list(self):
-		print("Usage: list")
-		print("list installed applications")
-
 	def do_serverinfo(self, args):
 		if args:
 			self.help_serverinfo()
@@ -528,6 +531,43 @@ class InteractiveTomcatManager(cmd.Cmd):
 		print("")
 		print("CAUTION: this triggers a full garbage collection on the server")
 		print("Use with extreme caution on production systems")
+
+	def do_status(self, args):
+		if args:
+			self.help_status()
+		elif self.__tm and self.__tm.hasConnected:
+			info = self.docmd(self.__tm.status)
+			for line in info:
+				print(line)
+		else:
+			self.__printerror(self.__MSG_NotConnected)	
+	
+	def help_status(self):
+		print("Usage: status")
+		print("get server status information in XML format")
+
+	def do_list(self, args):
+		"""list the applications on the server"""
+		if args:
+			self.help_list()
+		elif self.__tm and self.__tm.hasConnected:
+			apps = self.docmd(self.__tm.list)
+			cw = [24, 7, 8, 36]
+			# build the format string from the column widths so we only
+			# have the column widths hardcoded in one place
+			fmt = " ".join(list(map(lambda x: "%"+str(x)+"s",cw)))
+			dashes = "-"*80
+			print(fmt % ("Path".ljust(cw[0]), "Status".ljust(cw[1]), "Sessions".rjust(cw[2]), "Directory".ljust(cw[3])))
+			print(fmt % (dashes[:cw[0]], dashes[:cw[1]], dashes[:cw[2]], dashes[:cw[3]]))
+			for app in apps:
+				path, status, session, directory = app[:4]
+				print(fmt % (app[0].ljust(cw[0]), app[1].ljust(cw[1]), app[2].rjust(cw[2]), app[3].ljust(cw[3])))
+		else:
+			self.__printerror(self.__MSG_NotConnected)
+
+	def help_list(self):
+		print("Usage: list")
+		print("list installed applications")
 
 	def do_start(self, args):
 		"""start an application"""

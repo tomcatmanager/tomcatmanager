@@ -38,7 +38,7 @@ To use the `tomcat-manager` script, you need a user in `tomcat-users.xml` with a
 
 When you use the web based manager application included with the tomcat distribution, you typically access it via the url `http://localhost:8080/manager/html`. This script requires a similar http connection, but the URL is different.
 
-If you can access the web based tomcat manager application at `http://localhost:8080/manager/html`, then you should use `http://localhost:8080/manager/text` for this script.
+If you can access the web based tomcat manager application at `http://localhost:8080/manager/html`, then you should use `http://localhost:8080/manager` for this script.
 
 # Usage
 
@@ -46,7 +46,7 @@ This script can either be used in command line mode or interactive mode. To
 use interactive mode you can do:
 
     $ tomcat-manager
-	tomcat-manager> connect http://localhost:8080/manager/text admin newenglandclamchowder
+	tomcat-manager> connect http://localhost:8080/manager admin newenglandclamchowder
 	tomcat-manager> list
 	Path                     Status  Sessions Directory
 	------------------------ ------- -------- ------------------------------------
@@ -57,14 +57,14 @@ use interactive mode you can do:
 
 Command line mode might look like:
 
-	$ tomcat-manager --user=admin --password=newenglandclamchowder http://localhost:8080/manager/text list
+	$ tomcat-manager --user=admin --password=newenglandclamchowder http://localhost:8080/manager list
 	Path                     Status  Sessions Directory
 	------------------------ ------- -------- ------------------------------------
 	/                        running        0 ROOT
 	/manager                 running       17 /usr/share/tomcat7-admin/manager
 	/host-manager            running        0 /usr/share/tomcat7-admin/host-manager
 
-To see all of the valid commands, use interactive mode, like this:
+To see all of the valid commands, use interactive mode:
 
 	$ tomcat-manager
 	tomcat-manager> help
@@ -88,7 +88,7 @@ For help on a particular command:
 
 # Features
 
-This script can perform all of the same functions that can be done with the web based tomcat-admin application included with tomcat.  The following functions are available:
+This script can perform all of the same functions that can be done with the web based tomcat-admin application included with tomcat. The following functions are available:
 
  -   ****serverinfo**** - give some information about the tomcat server, including JVM version, OS Architecture and version, and Tomcat version
  -   **sessions** - display active sessions for a particular tomcat application, with a breakdown of session inactivity by time
