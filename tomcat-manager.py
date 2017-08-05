@@ -235,6 +235,17 @@ class TomcatManager:
 		"""
 		return self._execute_list("sslConnectorCiphers")
 
+
+	def threaddump(self):
+		"""get a jvm thread dump
+
+		tm = TomcatManager(url)
+		dump = tm.threaddump()
+		
+		returns a list, one line of the thread dump per list item		
+		"""
+		return self._execute_list("threaddump")
+
 	def stop(self, path):
 		"""stop an application
 		
@@ -446,8 +457,8 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_vminfo()
 		elif self.__tm and self.__tm.hasConnected:
-			vminfo = self.docmd(self.__tm.vminfo)
-			for line in vminfo:
+			info = self.docmd(self.__tm.vminfo)
+			for line in info:
 				print(line)
 		else:
 			self.__printerror(self.__MSG_NotConnected)	
@@ -460,8 +471,8 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_sslConnectorCiphers()
 		elif self.__tm and self.__tm.hasConnected:
-			sslinfo = self.docmd(self.__tm.sslConnectorCiphers)
-			for line in sslinfo:
+			info = self.docmd(self.__tm.sslConnectorCiphers)
+			for line in info:
 				print(line)
 		else:
 			self.__printerror(self.__MSG_NotConnected)	
@@ -469,6 +480,20 @@ class InteractiveTomcatManager(cmd.Cmd):
 	def help_sslConnectorCiphers(self):
 		print("Usage: sslConnectorCiphers")
 		print("show SSL/TLS ciphers configured for each connector")
+
+	def do_threaddump(self, args):
+		if args:
+			self.help_threaddump()
+		elif self.__tm and self.__tm.hasConnected:
+			info = self.docmd(self.__tm.threaddump)
+			for line in info:
+				print(line)
+		else:
+			self.__printerror(self.__MSG_NotConnected)	
+	
+	def help_threaddump(self):
+		print("Usage: threaddump")
+		print("show a jvm thread dump")
 
 	def do_start(self, args):
 		"""start an application"""
