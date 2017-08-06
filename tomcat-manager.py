@@ -465,6 +465,9 @@ class InteractiveTomcatManager(cmd.Cmd):
 	def help_connect(self):
 		self.exit_code = 0
 		print("usage: connect url [username] [password]")
+		print("connect to a tomcat manager instance")
+		print("if you specify a username and no password, you will be prompted for the password")
+		print("if you don't specify a username or password, connect with no authentication")
 
 	def do_serverinfo(self, args):
 		if args:
@@ -481,7 +484,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 	
 	def help_serverinfo(self):
 		self.exit_code = 0
-		print("Usage: serverinfo")
+		print("usage: serverinfo")
 		print("show information about the server")
 
 	def do_vminfo(self, args):
@@ -920,7 +923,9 @@ def main(argv=None):
 			# we have a url and a command
 			# connect, and if successful, run the command
 			
-			if args.user and args.password:
+			if args.user:
+				if not args.password:
+					args.password = getpass.getpass()
 				itm.onecmd('connect %s %s %s' % (args.manager_url, args.user, args.password))
 				if itm.exit_code == 0:
 					itm.onecmd( '%s %s' % (args.command, ' '.join(args.arg)) )
@@ -934,7 +939,9 @@ def main(argv=None):
 		else:
 			# we have a url, but not a command
 			# connect, and if successful, enter the interactive command loop
-			if args.user and args.password:
+			if args.user:
+				if not args.password:
+					args.password = getpass.getpass()
 				itm.onecmd('connect %s %s %s' % (args.manager_url, args.user, args.password))
 				if itm.exit_code == 0:
 					itm.cmdloop()
