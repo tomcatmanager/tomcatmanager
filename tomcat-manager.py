@@ -56,11 +56,6 @@ Interactive Use
 		display version information and exit
 
 
-	tomcat-manager [--debug]
-
-		enter the interactive shell with debug mode enabled
-
-
 	tomcat-manager --user=userid, --password=mypass [--debug] manager_url
 
 		connect to the tomcat manager at manager_url, using userid and
@@ -71,7 +66,7 @@ Interactive Use
 	commands and their arguments.
 	
 	To view the license for this software, enter the interactive shell
-	and type "help license"
+	and type "license"
 
 
 Options
@@ -83,13 +78,12 @@ Options
 	--password, -p    the password to use for authentication
 	                  with the tomcat application
 	
-	--debug           display stack traces when errors occur
+	--debug           show additional debugging information
 	
-	--version         display version information and exit
+	--version         show the version information and exit
 	
-	--help, -h        display this help and exit
+	--help, -h        show command line usage
 """
-import cmd
 import argparse
 import sys
 import traceback
@@ -97,6 +91,12 @@ import urllib.request
 import urllib.parse
 import codecs
 import getpass
+
+# use cmd2 if it's available
+try:
+	import cmd2 as cmd
+except ImportError as e:
+	import cmd
 
 #
 #
@@ -402,27 +402,60 @@ class InteractiveTomcatManager(cmd.Cmd):
 	2 - improper usage
 	"""
 	def __init__(self):
-		cmd.Cmd.__init__(self)
+		super().__init__()
 		self.prompt = prog_name + '>'
 		self.tomcat_manager = None
 		self.__MSG_not_connected = 'not connected'
 		self.debug_flag = False
 		self.exit_code = None
+		# only relevant for cmd2, but doesn't hurt anything on cmd
+		self.allow_cli_args = False
+		
 
+	def pout(self, msg):
+		"""convenience method to print output"""
+		if isinstance(msg, list):
+			for line in msg:
+				print(line.rstrip(), file=self.stdout)
+		else:
+			print(msg, file=self.stdout)
+		
+	def perr(self, msg):
+		"""convenience method to print error messages"""
+		if isinstance(msg, list):
+			for line in msg:
+				print(line.rstrip(), file=sys.stderr)
+		else:
+			print(msg, file=sys.stderr)
+
+	def pdebug(self, msg):
+		"""convenience method to print debugging messages"""
+		if self.debug_flag:
+			if isinstance(msg, list):
+				for line in msg:
+					print("--" + line.rstrip(), file=self.stdout)
+			else:
+				print("--" + msg, file=self.stdout)
+	
+	def pexception(self):
+		if self.debug_flag:
+			self.perr(traceback.format_exc())
+		else:
+			etype, evalue, etraceback = sys.exc_info()
+			self.perr(traceback.format_exception_only(etype, evalue))	
+	
 	def docmd(self, func, *args):
 		"""call a function and return, printing any exceptions that occur
 		
 		You should set exit_code to 0 before calling this, assuming it completes
 		successfully. If it doesn't complete successfully, this will set exit_code
 		to 1.
-		
 		"""
-
 		try:
 			return func(*args)
 		except TomcatException:
 			self.exit_code = 1
-			self.__printexception()
+			self.pexception()
 
 	def do_connect(self, args):
 		"""connect to an instance of the manager application"""
@@ -446,7 +479,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 			self.tomcat_manager = TomcatManager(url, username, password)
 			apps = self.tomcat_manager.list()
-			self.__printstatus("connected to tomcat manager at %s" % url)
+			self.pdebug("connected to tomcat manager at %s" % url)
 			self.exit_code = 0
 		except ValueError:
 			self.help_connect()
@@ -454,20 +487,20 @@ class InteractiveTomcatManager(cmd.Cmd):
 		except urllib.request.HTTPError as e:
 			self.exit_code = 1
 			if e.code == 401:
-				self.__printerror("login failed")
+				self.perr("login failed")
 			elif e.code == 403:
-				self.__printerror("login failed")
+				self.perr("login failed")
 			elif e.code == 404:
-				self.__printerror("tomcat manager not found at %s" % url)
+				self.perr("tomcat manager not found at %s" % url)
 			else:
-				self.__printexception()
+				self.pexception()
 
 	def help_connect(self):
 		self.exit_code = 0
-		print("usage: connect url [username] [password]")
-		print("connect to a tomcat manager instance")
-		print("if you specify a username and no password, you will be prompted for the password")
-		print("if you don't specify a username or password, connect with no authentication")
+		self.pout("usage: connect url [username] [password]")
+		self.pout("connect to a tomcat manager instance")
+		self.pout("if you specify a username and no password, you will be prompted for the password")
+		self.pout("if you don't specify a username or password, connect with no authentication")
 
 	def do_serverinfo(self, args):
 		if args:
@@ -477,15 +510,15 @@ class InteractiveTomcatManager(cmd.Cmd):
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.serverinfo)
 			for key,value in iter(sorted(info.items())):
-				print("%s: %s" % (key, value))
+				self.pout("%s: %s" % (key, value))
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)
+			self.perr(self.__MSG_not_connected)
 	
 	def help_serverinfo(self):
 		self.exit_code = 0
-		print("usage: serverinfo")
-		print("show information about the server")
+		self.pout("usage: serverinfo")
+		self.pout("show information about the server")
 
 	def do_vminfo(self, args):
 		if args:
@@ -494,16 +527,15 @@ class InteractiveTomcatManager(cmd.Cmd):
 		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.vminfo)
-			for line in info:
-				print(line)
+			self.pout(info)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)	
+			self.perr(self.__MSG_not_connected)	
 	
 	def help_vminfo(self):
 		self.exit_code = 0
-		print("Usage: vminfo")
-		print("show information about the jvm")
+		self.pout("Usage: vminfo")
+		self.pout("show information about the jvm")
 
 	def do_sslConnectorCiphers(self, args):
 		if args:
@@ -512,16 +544,15 @@ class InteractiveTomcatManager(cmd.Cmd):
 		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.sslConnectorCiphers)
-			for line in info:
-				print(line)
+			self.pout(info)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)	
+			self.perr(self.__MSG_not_connected)	
 	
 	def help_sslConnectorCiphers(self):
 		self.exit_code = 0
-		print("Usage: sslConnectorCiphers")
-		print("show SSL/TLS ciphers configured for each connector")
+		self.pout("Usage: sslConnectorCiphers")
+		self.pout("show SSL/TLS ciphers configured for each connector")
 
 	def do_threaddump(self, args):
 		if args:
@@ -530,16 +561,15 @@ class InteractiveTomcatManager(cmd.Cmd):
 		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.threaddump)
-			for line in info:
-				print(line)
+			self.pout(info)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)	
+			self.perr(self.__MSG_not_connected)	
 	
 	def help_threaddump(self):
 		self.exit_code = 0
-		print("Usage: threaddump")
-		print("show a jvm thread dump")
+		self.pout("Usage: threaddump")
+		self.pout("show a jvm thread dump")
 
 	def do_findleaks(self, args):
 		if args:
@@ -548,19 +578,18 @@ class InteractiveTomcatManager(cmd.Cmd):
 		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.findleaks)
-			for line in info:
-				print(line)
+			self.pout(info)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)	
+			self.perr(self.__MSG_not_connected)	
 	
 	def help_findleaks(self):
 		self.exit_code = 0
-		print("Usage: findleaks")
-		print("find apps that leak memory")
-		print("")
-		print("CAUTION: this triggers a full garbage collection on the server")
-		print("Use with extreme caution on production systems")
+		self.pout("Usage: findleaks")
+		self.pout("find apps that leak memory")
+		self.pout("")
+		self.pout("CAUTION: this triggers a full garbage collection on the server")
+		self.pout("Use with extreme caution on production systems")
 
 	def do_status(self, args):
 		if args:
@@ -569,16 +598,15 @@ class InteractiveTomcatManager(cmd.Cmd):
 		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
 			info = self.docmd(self.tomcat_manager.status)
-			for line in info:
-				print(line)
+			self.pout(info)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)	
+			self.perr(self.__MSG_not_connected)	
 	
 	def help_status(self):
 		self.exit_code = 0
-		print("Usage: status")
-		print("get server status information in XML format")
+		self.pout("Usage: status")
+		self.pout("get server status information in XML format")
 
 	def do_list(self, args):
 		"""list the applications on the server"""
@@ -592,19 +620,19 @@ class InteractiveTomcatManager(cmd.Cmd):
 			# have the column widths hardcoded in one place
 			fmt = " ".join(list(map(lambda x: "%"+str(x)+"s",cw)))
 			dashes = "-"*80
-			print(fmt % ("Path".ljust(cw[0]), "Status".ljust(cw[1]), "Sessions".rjust(cw[2]), "Directory".ljust(cw[3])))
-			print(fmt % (dashes[:cw[0]], dashes[:cw[1]], dashes[:cw[2]], dashes[:cw[3]]))
+			self.pout( fmt % ("Path".ljust(cw[0]), "Status".ljust(cw[1]), "Sessions".rjust(cw[2]), "Directory".ljust(cw[3])) )
+			self.pout( fmt % (dashes[:cw[0]], dashes[:cw[1]], dashes[:cw[2]], dashes[:cw[3]]) )
 			for app in apps:
 				path, status, session, directory = app[:4]
-				print(fmt % (app[0].ljust(cw[0]), app[1].ljust(cw[1]), app[2].rjust(cw[2]), app[3].ljust(cw[3])))
+				self.pout( fmt % (app[0].ljust(cw[0]), app[1].ljust(cw[1]), app[2].rjust(cw[2]), app[3].ljust(cw[3])) )
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)
+			self.perr(self.__MSG_not_connected)
 
 	def help_list(self):
 		self.exit_code = 0
-		print("Usage: list")
-		print("list installed applications")
+		self.pout("Usage: list")
+		self.pout("list installed applications")
 
 	def do_start(self, args):
 		"""start an application"""
@@ -618,12 +646,12 @@ class InteractiveTomcatManager(cmd.Cmd):
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)
+			self.perr(self.__MSG_not_connected)
 
 	def help_start(self):
 		self.exit_code = 0
-		print("Usage: start {path}")
-		print("start the application at {path}")
+		self.pout("Usage: start {path}")
+		self.pout("start the application at {path}")
 
 	def do_stop(self, args):
 		"""stop an application"""
@@ -637,12 +665,12 @@ class InteractiveTomcatManager(cmd.Cmd):
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)
+			self.perr(self.__MSG_not_connected)
 
 	def help_stop(self):
 		self.exit_code = 0
-		print("Usage: stop {path}")
-		print("stop the application at {path}")
+		self.pout("Usage: stop {path}")
+		self.pout("stop the application at {path}")
 
 	def do_reload(self, args):
 		"""reload an application"""
@@ -656,12 +684,12 @@ class InteractiveTomcatManager(cmd.Cmd):
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)
+			self.perr(self.__MSG_not_connected)
 
 	def help_reload(self):
 		self.exit_code = 0
-		print("Usage: reload {path}")
-		print("reload the application at {path}")
+		self.pout("Usage: reload {path}")
+		self.pout("reload the application at {path}")
 		
 	def do_sessions(self, args):
 		"""display the sessions in an application"""
@@ -670,18 +698,17 @@ class InteractiveTomcatManager(cmd.Cmd):
 				app, = args.split()
 				self.exit_code = 0
 				sesslist = self.docmd(self.tomcat_manager.sessions, app)
-				for line in sesslist:
-					print(line)
+				self.pout(sesslist)
 			except ValueError:
 				self.help_sessions()
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)
+			self.perr(self.__MSG_not_connected)
 
 	def help_sessions(self):
-		print("Usage: sessions {path}")
-		print("display the currently active sessions in the application at {path}")
+		self.pout("Usage: sessions {path}")
+		self.pout("display the currently active sessions in the application at {path}")
 
 	def do_expire(self, args):
 		"""expire sessions idle for longer than idle minutes"""
@@ -690,19 +717,18 @@ class InteractiveTomcatManager(cmd.Cmd):
 				app,idle, = args.split()
 				self.exit_code = 0
 				sesslist = self.docmd(self.tomcat_manager.expire, app, idle)
-				for line in sesslist:
-					print(line)
+				self.pout(sesslist)
 			except ValueError:
 				self.help_expire()
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)
+			self.perr(self.__MSG_not_connected)
 
 	def help_expire(self):
 		self.exit_code = 0
-		print("Usage: expire {path} {idle}")
-		print("expire sessions idle for more than {idle} minutes in the application at {path}")
+		self.pout("Usage: expire {path} {idle}")
+		self.pout("expire sessions idle for more than {idle} minutes in the application at {path}")
 
 	def do_deploy(self, args):
 		if self.tomcat_manager and self.tomcat_manager.has_connected:
@@ -737,11 +763,11 @@ class InteractiveTomcatManager(cmd.Cmd):
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)
+			self.perr(self.__MSG_not_connected)
 	
 	def help_deploy(self):
 		self.exit_code = 0
-		print("""Usage: deploy {path} {warfile} [update]
+		self.pout("""Usage: deploy {path} {warfile} [update]
 deploy a local war file at path
   path    = the path on the server to deploy the application
   warfile = path on the local machine to a war file to deploy
@@ -763,12 +789,12 @@ deploy a local war file at path
 				self.exit_code = 2
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)
+			self.perr(self.__MSG_not_connected)
 
 	def help_undeploy(self):
 		self.exit_code = 0
-		print("Usage: undeploy {path}")
-		print("undeploy the application at {path}")
+		self.pout("Usage: undeploy {path}")
+		self.pout("undeploy the application at {path}")
 
 	def do_resources(self, args):
 		if self.tomcat_manager and self.tomcat_manager.has_connected:
@@ -783,26 +809,25 @@ deploy a local war file at path
 				self.help_resources()
 				self.exit_code = 2
 			if resourcelist:
-				for line in resourcelist:
-					print(line)
+				self.pout(resourcelist)
 		else:
 			self.exit_code = 1
-			self.__printerror(self.__MSG_not_connected)
+			self.perr(self.__MSG_not_connected)
 		
 	def help_resources(self):
 		self.exit_code = 0
-		print("""Usage: resources [class_name]
+		self.pout("""Usage: resources [class_name]
 list global jndi resources
   class_name  = optional fully qualified Java class name of the resource type you want
 """)
 
 	def do_version(self, args):
 		self.exit_code = 0
-		print(version_string)
+		self.pout(version_string)
 	
 	def help_version(self):
 		self.exit_code = 0
-		print('show version information')
+		self.pout('show version information')
 
 	def do_exit(self, args):
 		"""exit the interactive manager"""
@@ -820,19 +845,19 @@ list global jndi resources
 	def do_exit_code(self, args):
 		"""show the value of the exit_code variable"""
 		# don't set the exit code here, just show it
-		print(self.exit_code)
+		self.pout(self.exit_code)
 
 	def help_exit_code(self):
 		self.exit_code = 0
-		print('show the value of the exit_code variable, similar to $? in sh/ksh/bash')
+		self.pout('show the value of the exit_code variable, similar to $? in sh/ksh/bash')
 				
 	def help_commandline(self):
 		self.exit_code = 0
-		print(__doc__)
+		self.pout(__doc__)
 
 	def do_license(self, args):
 		self.exit_code = 0
-		print("""
+		self.pout("""
 Copyright (c) 2007-2017, Jared Crapo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -856,11 +881,11 @@ THE SOFTWARE.
 
 	def help_license(self):
 		self.exit_code = 0
-		print("show license information")
+		self.pout("show license information")
 
 	def help_help(self):
 		self.exit_code = 0
-		print('here\'s a dollar, you\'ll have to buy a clue elsewhere')
+		self.pout('here\'s a dollar, you\'ll have to buy a clue elsewhere')
 
 	def emptyline(self):
 		"""Do nothing on an empty line"""
@@ -868,29 +893,11 @@ THE SOFTWARE.
 
 	def default(self, line):
 		self.exit_code = 2
-		print('unknown command: ' + line)
-
-	def __printexception(self):
-		if self.debug_flag:
-			self.__printerror(traceback.format_exc())
-		else:
-			etype, evalue, etraceback = sys.exc_info()
-			self.__printerror(traceback.format_exception_only(etype, evalue))
-
-	def __printerror(self, msg):
-		if isinstance(msg, list):
-			for line in msg:
-				print(line.rstrip())
-		else:
-			print(msg)
-
-	def __printstatus(self, msg):
-		if self.debug_flag:
-			print("--" + msg, file=sys.stderr)
+		self.perr('unknown command: ' + line)
 
 
 #
-# for command line use, we define a nice main routine
+# entry point for command line
 def main(argv=None):
 
 	parser = argparse.ArgumentParser(description='Manage a tomcat server from the command line or an interactive shell')
@@ -913,7 +920,7 @@ def main(argv=None):
 
 	args = parser.parse_args()
 	if args.debug:
-		print("--" + str(args), file=sys.stderr)
+		print("--" + str(args))
 	
 	itm = InteractiveTomcatManager()
 	itm.debug_flag = args.debug
