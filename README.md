@@ -202,7 +202,15 @@ This launches a python interpreter, with our own objects available. From that py
 	>>> print(self.tomcat_manager.serverinfo())
 	{'Tomcat Version': 'Apache Tomcat/8.0.32 (Ubuntu)', 'OS Name': 'Linux', 'OS Version': '4.4.0-89-generic', 'OS Architecture': 'amd64', 'JVM Version': '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11', 'JVM Vendor': 'Oracle Corporation'}
 
-## License
 
-Check the LICENSE file. It's the MIT License, which means you can do whatever
-you want, as long as you keep the copyright notice.
+## Developing
+
+### Install in place
+
+To have setup.py deploy links to your source code:
+
+	$ python3 setup.py develop
+
+To remove the development links:
+
+	$ python3 setup.py develop --uninstall
