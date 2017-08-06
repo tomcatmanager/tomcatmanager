@@ -76,7 +76,7 @@ To see all of the valid commands, use interactive mode:
 	EOF      exit_code  license  resources            start       undeploy
 	connect  expire     list     serverinfo           status      version
 	deploy   findleaks  quit     sessions             stop        vminfo
-	exit     help       reload   sslConnectorCiphers  threaddump
+	exit     help       reload   sslconnectorciphers  threaddump
 
 	Miscellaneous help topics:
 	==========================
@@ -108,7 +108,7 @@ The following functions from the [Tomcat Manager](https://tomcat.apache.org/tomc
  - **status** - get XML document with details of tomcat server
  - **resources** - show the JNDI resources configured in tomcat
  - **findleaks** - find tomcat apps that are leaking memory
- - **sslConnectorCiphers** - show SSL/TLS ciphers configured for each connector
+ - **sslconnectorciphers** - show SSL/TLS ciphers configured for each connector
  - **threaddump** - show a jvm thread dump
  - **vminfo** - show information about the jvm
 

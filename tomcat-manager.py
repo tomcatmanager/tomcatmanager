@@ -537,9 +537,9 @@ class InteractiveTomcatManager(cmd.Cmd):
 		self.pout("Usage: vminfo")
 		self.pout("show information about the jvm")
 
-	def do_sslConnectorCiphers(self, args):
+	def do_sslconnectorciphers(self, args):
 		if args:
-			self.help_sslConnectorCiphers()
+			self.help_sslconnectorciphers()
 			self.exit_code = 2
 		elif self.tomcat_manager and self.tomcat_manager.has_connected:
 			self.exit_code = 0
@@ -549,9 +549,9 @@ class InteractiveTomcatManager(cmd.Cmd):
 			self.exit_code = 1
 			self.perr(self.__MSG_not_connected)	
 	
-	def help_sslConnectorCiphers(self):
+	def help_sslconnectorciphers(self):
 		self.exit_code = 0
-		self.pout("Usage: sslConnectorCiphers")
+		self.pout("Usage: sslconnectorciphers")
 		self.pout("show SSL/TLS ciphers configured for each connector")
 
 	def do_threaddump(self, args):
