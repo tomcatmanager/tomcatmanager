@@ -52,12 +52,15 @@ class TomcatManagerResponse:
 
 	def __init__(self, response=None):
 		self._response = response
+		self._status_code = None
+		self._status_message = None
+		self._result = None
 
 	@property
 	def response(self):
 		"""contains the requsts.Response object from our request"""
 		return self._response
-	
+
 	@response.setter
 	def response(self, value):
 		self._response = value
@@ -65,26 +68,27 @@ class TomcatManagerResponse:
 	@property
 	def status_code(self):
 		"""status of the tomcat manager command, can be 'OK' or 'FAIL'"""
-		if self._response:
-			statusline = self._response.text.splitlines()[0]
-			return statusline.split(' ', 1)[0]
-		else:
-			return None
+		return self._status_code
+
+	@status_code.setter
+	def status_code(self, value):
+		self._status_code = value
 
 	@property
 	def status_message(self):
-		if self._response:
-			statusline = self._response.text.splitlines()[0]
-			return statusline.split(' ',1)[1][2:]
-		else:
-			return None
+		return self._status_message
+	
+	@status_message.setter
+	def status_message(self, value):
+		self._status_message = value
 
 	@property
 	def result(self):
-		if self._response:
-			return self._response.text.splitlines()[1:]
-		else:
-			return None
+		return self._result
+
+	@result.setter
+	def result(self, value):
+		self._result = value
 
 	def raise_for_status(self):
 		"""raise exceptions if status is not ok
@@ -154,6 +158,12 @@ class TomcatManager:
 				auth=(self.__userid, self.__password),
 				params=params
 				)
+		# set the other attributes of the response object
+		statusline = tmr.response.text.splitlines()[0]
+		tmr.status_code = statusline.split(' ', 1)[0]
+		tmr.status_message = statusline.split(' ',1)[1][2:]
+		tmr.result = tmr.response.text.splitlines()[1:]
+
 		return tmr
 
 	def _execute_list(self, cmd, params=None, data=None, headers={}, method=None):
@@ -234,8 +244,11 @@ class TomcatManager:
 		tmr.server_info = serverinfo
 		return tmr
 
-	def status(self):
+	def status_xml(self):
 		"""get server status information in XML format
+		
+		we have lots of status stuff, so this method is named status_xml to try
+		and reduce confusion with status_code and status_message
 		
 		Uses the '/manager/status/all?XML=true' command
 		
@@ -243,25 +256,33 @@ class TomcatManager:
 		say it does.
 		
 			tm = TomcatManager(url)
-			tmr = tm.status()
-			status = tmr.result
+			tmr = tm.status_xml()
+			x = tmr.result
+			y = tmr.status_xml
 		
 		returns an instance of TomcatManagerResponse with the status xml document in
-		the result attribute
+		the result attribute and in the status_xml attribute
 		"""
-		# this command isn't inside the /manager/text url, and it doesn't
-		# return and "OK -" first line status, so we can't use _execute()
+		# this command isn't in the /manager/text url space, so we can't use _get()
 		url = self.__managerURL + '/status/all'
-		params = {'XML': 'true'}
-		url = url + "?%s" % urllib.parse.urlencode(params)
-		req = ExtendedRequest(url)
-		response = self.__opener.open(req)
-		content = codecs.iterdecode(response, 'utf-8')
-		self.has_connected = True
-		status = []
-		for line in content:
-			status.append(line.rstrip())
-		return status
+		tmr = TomcatManagerResponse()
+		tmr.response = requests.get(
+				url,
+				auth=(self.__userid, self.__password),
+				params={'XML': 'true'}
+				)
+		tmr.result = tmr.response.text.splitlines()
+		tmr.status_xml = tmr.result
+
+		# we have to force a status_code and a status_message
+		# because the server doesn't return them
+		if tmr.response.status_code == requests.codes.ok:
+			tmr.status_code = 'OK'
+			tmr.status_message = 'ok'
+		else:
+			tmr.status_code = 'FAIL'
+			tmr.status_message = 'fail'
+		return tmr
 
 	def vm_info(self):
 		"""get diagnostic information about the JVM

@@ -84,8 +84,11 @@ class TestManager(unittest.TestCase):
 		self.info_assertions(tmr)
 		assert_is_instance(tmr.server_info, dict)
 
-	def test_status(self):
-		xml = self.tm.status()
+	def test_status_xml(self):
+		tmr = self.tm.status_xml()
+		self.info_assertions(tmr)
+		assert_equal(tmr.result, tmr.status_xml)
+		xml = tmr.status_xml
 		assert_true(isinstance(xml, list))
 		assert_equal(xml[0][:6], '<?xml ')
 
