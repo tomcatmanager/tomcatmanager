@@ -47,6 +47,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 	VM_INFO_PATTERN = re.compile(r'^/manager/text/vminfo($|\?.*$)')
 	SSL_PATTERN = re.compile(r'^/manager/text/sslConnectorCiphers($|\?.*$)')
 	THREAD_DUMP_PATTERN = re.compile(r'^/manager/text/threaddump($|\?.*$)')
+	FIND_LEAKERS_PATTERN = re.compile(r'^/manager/text/findleaks($|\?.*$)')
 	# action commands
 	DEPLOY_PATTERN = re.compile(r'^/manager/text/deploy($|\?.*$)')
 	UNDEPLOY_PATTERN = re.compile(r'^/manager/text/undeploy($|\?.*$)')
@@ -77,6 +78,8 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 			self.get_ssl_connector_ciphers()
 		elif re.search(self.THREAD_DUMP_PATTERN, self.path):
 			self.get_thread_dump()
+		elif re.search(self.FIND_LEAKERS_PATTERN, self.path):
+			self.get_find_leakers()
 		
 
 		# the action commands
@@ -782,6 +785,19 @@ Full thread dump OpenJDK 64-Bit Server VM (25.131-b11 mixed mode):
 	at org.apache.catalina.startup.Bootstrap.start(Bootstrap.java:351)
 	at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:485)
 """)
+
+	def get_find_leakers(self):
+		# verify we have a path query string
+		url = urlparse(self.path)
+		qs = parse_qs(url.query)
+		status = ''
+		if 'statusLine' in qs:
+			if qs['statusLine'] == ['true']:
+				status = 'OK - Memory leaks found\n'
+		self.send_text(status + """/leaker1
+/leaker2
+/leaker1""")
+
 	
 	###
 	#
@@ -806,7 +822,7 @@ Full thread dump OpenJDK 64-Bit Server VM (25.131-b11 mixed mode):
 		url = urlparse(self.path)
 		qs = parse_qs(url.query)
 		if 'path' in qs:
-			path = qs['path']
+			path = qs['path'][0]
 			self.send_text('OK - Undeployed application at context path {path}'.format(path=path))
 		else:
 			self.send_fail('Invalid parameters supplied for command [/deploy]')

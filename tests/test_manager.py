@@ -89,24 +89,40 @@ class TestManager(unittest.TestCase):
 		self.info_assertions(tmr)
 		assert_equal(tmr.result, tmr.status_xml)
 		xml = tmr.status_xml
-		assert_true(isinstance(xml, list))
+		assert_is_instance(xml, list)
 		assert_equal(xml[0][:6], '<?xml ')
 
 	def test_vm_info(self):
 		tmr = self.tm.vm_info()
 		self.info_assertions(tmr)
+		assert_equal(tmr.result, tmr.vm_info)
 
 	def test_ssl_connector_ciphers(self):
 		tmr = self.tm.ssl_connector_ciphers()
 		self.info_assertions(tmr)
+		assert_equal(tmr.result, tmr.ssl_connector_ciphers)
 	
 	def test_thread_dump(self):
 		tmr = self.tm.thread_dump()
 		self.info_assertions(tmr)
-	
-	def test_findleaks(self):
-		pass
+		assert_equal(tmr.result, tmr.thread_dump)
 
+	def test_find_leakers(self):
+		tmr = self.tm.find_leakers()
+		# don't use info_assertions() because there might not be any leakers
+		assert_equal(tmr.status_code, 'OK', 'message from server: "{0}"'.format(tmr.status_message))
+		assert_is_not_none(tmr.status_message)
+		assert_true(len(tmr.status_message) > 0)
+		try:
+			tmr.raise_for_status()
+		except RequestException as err:
+			self.fail(err)
+		except tomcatmanager.TomcatException as err:
+			self.fail('TomcatException raised')
+		
+		assert_is_instance(tmr.leakers, list)
+		# make sure we don't have duplicates
+		assert_equal(len(tmr.leakers), len(set(tmr.leakers)))
 
 	###
 	#

@@ -146,7 +146,7 @@ class TomcatManager:
 			raise TomcatException(status)
 		return content
 	
-	def _get(self, cmd, params=None):
+	def _get(self, cmd, payload=None):
 		"""make an HTTP get request to the tomcat manager web app
 		
 		returns a TomcatManagerResponse object
@@ -156,14 +156,13 @@ class TomcatManager:
 		tmr.response = requests.get(
 				url,
 				auth=(self.__userid, self.__password),
-				params=params
+				params=payload
 				)
 		# set the other attributes of the response object
 		statusline = tmr.response.text.splitlines()[0]
 		tmr.status_code = statusline.split(' ', 1)[0]
 		tmr.status_message = statusline.split(' ',1)[1][2:]
 		tmr.result = tmr.response.text.splitlines()[1:]
-
 		return tmr
 
 	def _execute_list(self, cmd, params=None, data=None, headers={}, method=None):
@@ -203,7 +202,7 @@ class TomcatManager:
 	#
 	###
 	def list(self):
-		"""return a list of all applications currently installed
+		"""list of all applications currently installed
 		
 			tm = TomcatManager(url)
 			tmr = tm.list()
@@ -237,11 +236,11 @@ class TomcatManager:
 		attribute. The server_info attribute contains a dictionary		
 		"""
 		tmr = self._get("serverinfo")
-		serverinfo = {}
+		sinfo = {}
 		for line in tmr.result:
 			key, value = line.rstrip().split(":",1)
-			serverinfo[key] = value.lstrip()
-		tmr.server_info = serverinfo
+			sinfo[key] = value.lstrip()
+		tmr.server_info = sinfo
 		return tmr
 
 	def status_xml(self):
@@ -289,39 +288,48 @@ class TomcatManager:
 				
 			tm = TomcatManager(url)
 			tmr = tm.vm_info()
-			vminfo = tmr.result
+			x = tmr.result
+			y = tmr.vm_info
 		
 		returns an instance of TomcatManagerResponse with the virtual machine info in
-		the result attribute
+		the result attribute and in the vm_info attribute
 		"""
-		return self._get("vminfo")
+		tmr = self._get("vminfo")
+		tmr.vm_info = tmr.result
+		return tmr
 
 	def ssl_connector_ciphers(self):
 		"""get SSL/TLS ciphers configured for each connector
 
 			tm = TomcatManager(url)
 			tmr = tm.ssl_connector_ciphers()
-			sslinfo = tmr.result
+			x = tmr.result
+			y = tmr.ssl_connector_info
 		
 		returns an instance of TomcatManagerResponse with the ssl cipher info in the
-		result attribute
+		result attribute and in the ssl_connector_info attribute
 		"""
-		return self._get("sslConnectorCiphers")
+		tmr = self._get("sslConnectorCiphers")
+		tmr.ssl_connector_ciphers = tmr.result
+		return tmr
 
 	def thread_dump(self):
 		"""get a jvm thread dump
 
 			tm = TomcatManager(url)
 			tmr = tm.thread_dump()
-			dump = tmr.result
+			x = tmr.result
+			y = tmr.thread_dump
 		
 		returns an instance of TomcatManagerResponse with the thread dump in the result
-		attribute
+		attribute and in the thread_dump
 		"""
-		return self._get("threaddump")
+		tmr = self._get("threaddump")
+		tmr.thread_dump = tmr.result
+		return tmr
 
-	def find_leaks(self):
-		"""find apps that leak memory
+	def find_leakers(self):
+		"""list apps that leak memory
 		
 		This command triggers a full garbage collection on the server. Use with
 		extreme caution on production systems.
@@ -336,10 +344,22 @@ class TomcatManager:
 			tmr = tm.find_leaks()
 			leakers = tmr.leakers
 
-		returns a list of apps that are leaking memory. An empty list means no leaking
-		apps were found.
+		returns an instance of TomcatManagerResponse with an additional leakers
+		attribute. If leakers in an empty list, then no leaking apps were found.
+		
+		The tomcat manager documentation says that it can return duplicates in this
+		list if the app has been reloaded and was leaking both before and after the
+		reload. The list returned by the leakers attribute will have no duplicates in
+		it
+		
 		"""
-		return self._execute_list("findleaks", {'statusLine': 'true'})
+		tmr = self._get("findleaks", {'statusLine': 'true'})
+		leakers = []
+		for line in tmr.result:
+			leakers.append(line.rstrip())
+		# remove duplicates by changing it to a set, then back to a list		
+		tmr.leakers = list(set(leakers))
+		return tmr
 
 				
 	###
