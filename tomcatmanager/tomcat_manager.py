@@ -86,7 +86,7 @@ class TomcatManagerResponse:
 		else:
 			return None
 
-	def raise_for_status():
+	def raise_for_status(self):
 		"""raise exceptions if status is not ok
 		
 		first calls requests.Response.raise_for_status() which will
@@ -99,7 +99,9 @@ class TomcatManagerResponse:
 		stole idea from requests package
 		"""
 		self.response.raise_for_status()
-		
+		if self.status_code == 'FAIL':
+			raise TomcatException(self.status_message)
+
 
 class TomcatManager:
 	"""A wrapper around the tomcat manager web application
@@ -167,87 +169,70 @@ class TomcatManager:
 			output.append(line.rstrip())
 		return output	
 
+	###
+	#
+	# convenience and utility methods
+	#
+	###
 	def is_connected(self):
 		"""try and connect to the tomcat server using url and authentication
 		
 		returns true if successful, false otherwise
 		"""
-		url = self.__managerURL + '/text/list'
-		r = requests.get(url, auth=(self.__userid, self.__password))
+		tmr = self._get("list")
 		connected = False
-		if (r.status_code == requests.codes.ok):
-			status = r.text[:4]
-			if status == 'OK -':
+		if (tmr.response.status_code == requests.codes.ok):
+			if tmr.status_code == 'OK':
 				connected = True
 		return connected
+
+	###
+	#
+	# the info commands, i.e. commands that don't really do anything, they
+	# just return some information from the server
+	#
+	###
+	def list(self):
+		"""return a list of all applications currently installed
 		
-	def serverinfo(self):
+			tm = TomcatManager(url)
+			tmr = tm.list()
+			apps = tmr.apps
+		
+		returns an instance of TomcatManagerResponse with an additional apps
+		attribute
+		
+		apps is a list of tuples: (path, status, sessions, directory)
+		
+		path - the relative URL where this app is deployed on the server
+		status - whether the app is running or not
+		sessions - number of currently active sessions
+		directory - the directory on the server where this app resides		
+		"""
+		tmr = self._get("list")
+		apps = []
+		for line in tmr.result:
+			apps.append(line.rstrip().split(":"))		
+		tmr.apps = apps
+		return tmr
+		
+	def server_info(self):
 		"""get information about the server
 		
 			tm = TomcatManager(url)
 			tmr = tm.serverinfo()
-			tmr.serverinfo['OS Name']
+			tmr.server_info['OS Name']
 			
-		returns a TomcatManagerResponse with an additional serverinfo
-		attribute. The serverinfo attribute contains a dictionary		
+		returns an instance of TomcatManagerResponse with an additional server_info
+		attribute. The server_info attribute contains a dictionary		
 		"""
 		tmr = self._get("serverinfo")
 		serverinfo = {}
 		for line in tmr.result:
 			key, value = line.rstrip().split(":",1)
 			serverinfo[key] = value.lstrip()
-		tmr.serverinfo = serverinfo
+		tmr.server_info = serverinfo
 		return tmr
-
-	def vminfo(self):
-		"""get diagnostic information about the JVM
-				
-			tm = TomcatManager(url)
-			vminfo = tm.vminfo()
-		
-		returns an array of JVM information
-		"""
-		return self._get("vminfo")
-
-	def sslConnectorCiphers(self):
-		"""get SSL/TLS ciphers configured for each connector
-
-			tm = TomcatManager(url)
-			vminfo = tm.vminfo()
-		
-		returns a list of JVM information
-		"""
-		return self._execute_list("sslConnectorCiphers")
-
-	def threaddump(self):
-		"""get a jvm thread dump
-
-			tm = TomcatManager(url)
-			dump = tm.threaddump()
-		
-		returns a list, one line of the thread dump per list item		
-		"""
-		return self._execute_list("threaddump")
-
-	def findleaks(self):
-		"""find apps that leak memory
-		
-		This command triggers a full garbage collection on the server. Use with
-		extreme caution on production systems.
-		
-		Explicity triggering a full garbage collection from code is documented to be
-		unreliable. Furthermore, depending on the jvm, there are options to disable
-		explicit GC triggering, like ```-XX:+DisableExplicitGC```. If you want to make
-		sure this command triggered a full GC, you will have to verify using something
-		like GC logging or JConsole.
-		
-			tm = TomcatManager(url)
-			leakers = tm.findleaks()
-
-		returns a list of apps that are leaking memory. An empty list means no leaking
-		apps were found.
-		"""
-		return self._execute_list("findleaks", {'statusLine': 'true'})
 
 	def status(self):
 		"""get server status information in XML format
@@ -258,9 +243,11 @@ class TomcatManager:
 		say it does.
 		
 			tm = TomcatManager(url)
-			status = tm.status()
+			tmr = tm.status()
+			status = tmr.result
 		
-		returns a list, one line of the XML document per list item
+		returns an instance of TomcatManagerResponse with the status xml document in
+		the result attribute
 		"""
 		# this command isn't inside the /manager/text url, and it doesn't
 		# return and "OK -" first line status, so we can't use _execute()
@@ -275,30 +262,71 @@ class TomcatManager:
 		for line in content:
 			status.append(line.rstrip())
 		return status
+
+	def vm_info(self):
+		"""get diagnostic information about the JVM
+				
+			tm = TomcatManager(url)
+			tmr = tm.vm_info()
+			vminfo = tmr.result
 		
-	def list(self):
-		"""return a list of all applications currently installed
+		returns an instance of TomcatManagerResponse with the virtual machine info in
+		the result attribute
+		"""
+		return self._get("vminfo")
+
+	def ssl_connector_ciphers(self):
+		"""get SSL/TLS ciphers configured for each connector
+
+			tm = TomcatManager(url)
+			tmr = tm.ssl_connector_ciphers()
+			sslinfo = tmr.result
+		
+		returns an instance of TomcatManagerResponse with the ssl cipher info in the
+		result attribute
+		"""
+		return self._get("sslConnectorCiphers")
+
+	def thread_dump(self):
+		"""get a jvm thread dump
+
+			tm = TomcatManager(url)
+			tmr = tm.thread_dump()
+			dump = tmr.result
+		
+		returns an instance of TomcatManagerResponse with the thread dump in the result
+		attribute
+		"""
+		return self._get("threaddump")
+
+	def find_leaks(self):
+		"""find apps that leak memory
+		
+		This command triggers a full garbage collection on the server. Use with
+		extreme caution on production systems.
+		
+		Explicity triggering a full garbage collection from code is documented to be
+		unreliable. Furthermore, depending on the jvm, there are options to disable
+		explicit GC triggering, like ```-XX:+DisableExplicitGC```. If you want to make
+		sure this command triggered a full GC, you will have to verify using something
+		like GC logging or JConsole.
 		
 			tm = TomcatManager(url)
-			tmr = tm.list()
-			apps = tmr.apps
-		
-		apps is a list of tuples: (path, status, sessions, directory)
-		
-		path - the relative URL where this app is deployed on the server
-		status - whether the app is running or not
-		sessions - number of currently active sessions
-		directory - the directory on the server where this app resides
-		
-		"""
-		tmr = self._get("list")
-		apps = []
-		for line in tmr.result:
-			apps.append(line.rstrip().split(":"))		
-		tmr.apps = apps
-		return tmr
-				
+			tmr = tm.find_leaks()
+			leakers = tmr.leakers
 
+		returns a list of apps that are leaking memory. An empty list means no leaking
+		apps were found.
+		"""
+		return self._execute_list("findleaks", {'statusLine': 'true'})
+
+				
+	###
+	#
+	# the action commands, i.e. commands that actually effect some change on
+	# the server
+	#
+	###
 	def stop(self, path):
 		"""stop an application
 		

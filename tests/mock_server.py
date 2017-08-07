@@ -40,12 +40,16 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 
 	AUTH_KEY = base64.b64encode('{u}:{p}'.format(u=USERID, p=PASSWORD).encode('utf-8')).decode('utf-8')
 	TEXT_PATTERN = re.compile(r'^/manager/text/?$')
+	# info commands
 	LIST_PATTERN = re.compile(r'^/manager/text/list($|\?.*$)')
-	SERVERINFO_PATTERN = re.compile(r'^/manager/text/serverinfo($|\?.*$)')
+	SERVER_INFO_PATTERN = re.compile(r'^/manager/text/serverinfo($|\?.*$)')
+	STATUS_PATTERN = re.compile(r'^/manager/status(/|/all)?($|\?.*$)')
+	VM_INFO_PATTERN = re.compile(r'^/manager/text/vminfo($|\?.*$)')
+	SSL_PATTERN = re.compile(r'^/manager/text/sslConnectorCiphers($|\?.*$)')
+	THREAD_DUMP_PATTERN = re.compile(r'^/manager/text/threaddump($|\?.*$)')
+	# action commands
 	DEPLOY_PATTERN = re.compile(r'^/manager/text/deploy($|\?.*$)')
 	UNDEPLOY_PATTERN = re.compile(r'^/manager/text/undeploy($|\?.*$)')
-	STATUS_PATTERN = re.compile(r'^/manager/status(/|/all)?($|\?.*$)')
-	VMINFO_PATTERN = re.compile(r'^/manager/text/vminfo($|\?.*$)')
 
 	def log_message(self, format, *args):
 		"no logging for our mockup"
@@ -57,18 +61,29 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 		# handle request based on path
 		if re.search(self.TEXT_PATTERN, self.path):
 			self.send_fail('Unknown command')
-		elif re.search(self.LIST_PATTERN, self.path):
-			self.get_list()
-		elif re.search(self.SERVERINFO_PATTERN, self.path):
-			self.get_serverinfo()
 		elif re.search(self.DEPLOY_PATTERN, self.path):
 			self.send_fail('Invalid parameters supplied for command [/deploy]')
-		elif re.search(self.UNDEPLOY_PATTERN, self.path):
-			self.get_undeploy()
+
+		# the info commands
+		elif re.search(self.LIST_PATTERN, self.path):
+			self.get_list()
+		elif re.search(self.SERVER_INFO_PATTERN, self.path):
+			self.get_server_info()
 		elif re.search(self.STATUS_PATTERN, self.path):
 			self.get_status()
-		elif re.search(self.VMINFO_PATTERN, self.path):
-			self.get_vminfo()
+		elif re.search(self.VM_INFO_PATTERN, self.path):
+			self.get_vm_info()
+		elif re.search(self.SSL_PATTERN, self.path):
+			self.get_ssl_connector_ciphers()
+		elif re.search(self.THREAD_DUMP_PATTERN, self.path):
+			self.get_thread_dump()
+		
+
+		# the action commands
+		elif re.search(self.UNDEPLOY_PATTERN, self.path):
+			self.get_undeploy()
+
+		# fail if we don't recognize the path
 		else:
 			self.send_fail('Unknown command')
 
@@ -106,15 +121,19 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 		self.end_headers()
 		self.wfile.write(content.encode('utf-8'))
 
+	###
 	#
+	# the info commands, i.e. commands that don't really do anything, they
+	# just return some information from the server
 	#
+	###		
 	def get_list(self):
 		self.send_text("""OK - Listed applications for virtual host localhost
 /:running:0:ROOT
 /host-manager:running:0:/usr/share/tomcat8-admin/host-manager
 /manager:running:0:/usr/share/tomcat8-admin/manager""")
 
-	def get_serverinfo(self):
+	def get_server_info(self):
 		self.send_text("""OK - Server info
 Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
 OS Name: Linux
@@ -128,7 +147,7 @@ JVM Vendor: Oracle Corporation""")
 <status><jvm><memory free='22294576' total='36569088' max='129761280'/><memorypool name='CMS Old Gen' type='Heap memory' usageInit='22413312' usageCommitted='25165824' usageMax='89522176' usageUsed='13503656'/><memorypool name='Par Eden Space' type='Heap memory' usageInit='8912896' usageCommitted='10158080' usageMax='35782656' usageUsed='299600'/><memorypool name='Par Survivor Space' type='Heap memory' usageInit='1114112' usageCommitted='1245184' usageMax='4456448' usageUsed='473632'/><memorypool name='Code Cache' type='Non-heap memory' usageInit='2555904' usageCommitted='12713984' usageMax='251658240' usageUsed='12510656'/><memorypool name='Compressed Class Space' type='Non-heap memory' usageInit='0' usageCommitted='2621440' usageMax='1073741824' usageUsed='2400424'/><memorypool name='Metaspace' type='Non-heap memory' usageInit='0' usageCommitted='24903680' usageMax='-1' usageUsed='24230432'/></jvm><connector name='"http-nio-8080"'><threadInfo  maxThreads="200" currentThreadCount="10" currentThreadsBusy="1" /><requestInfo  maxTime="570" processingTime="2015" requestCount="868" errorCount="494" bytesReceived="0" bytesSent="1761440" /><workers><worker  stage="S" requestProcessingTime="1" requestBytesSent="0" requestBytesReceived="0" remoteAddr="192.168.13.22" virtualHost="192.168.13.66" method="GET" currentUri="/manager/status/all" currentQueryString="XML=true" protocol="HTTP/1.1" /><worker  stage="R" requestProcessingTime="0" requestBytesSent="0" requestBytesReceived="0" remoteAddr="&#63;" virtualHost="&#63;" method="&#63;" currentUri="&#63;" currentQueryString="&#63;" protocol="&#63;" /></workers></connector></status>
 		""")
 
-	def get_vminfo(self):
+	def get_vm_info(self):
 		self.send_text("""OK - VM info
 2017-08-07 00:55:24.199
 Runtime information:
@@ -492,7 +511,284 @@ Logger information:
   org.apache.tomcat.websocket: level=, parent=org.apache.tomcat
   org.apache.tomcat.websocket.WsWebSocketContainer: level=, parent=org.apache.tomcat.websocket
 """)
+
+	def get_ssl_connector_ciphers(self):
+		self.send_text("""OK - Connector / SSL Cipher information
+Connector[HTTP/1.1-8080]
+  SSL is not enabled for this connector""")
+
+	def get_thread_dump(self):
+		self.send_text("""OK - JVM thread dump
+2017-08-07 11:00:20.517
+Full thread dump OpenJDK 64-Bit Server VM (25.131-b11 mixed mode):
+
+"http-nio-8080-exec-10" Id=29 cpu=138306254 ns usr=90000000 ns blocked 0 for -1 ms waited 89 for -1 ms
+   java.lang.Thread.State: WAITING
+	at sun.misc.Unsafe.park(Native Method)
+	- waiting on (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@337a3b83)
+	at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2039)
+	at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:442)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:103)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:31)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-exec-9" Id=28 cpu=187396179 ns usr=140000000 ns blocked 1 for -1 ms waited 89 for -1 ms
+   java.lang.Thread.State: WAITING
+	at sun.misc.Unsafe.park(Native Method)
+	- waiting on (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@337a3b83)
+	at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2039)
+	at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:442)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:103)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:31)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-exec-8" Id=27 cpu=133198544 ns usr=100000000 ns blocked 1 for -1 ms waited 89 for -1 ms
+   java.lang.Thread.State: WAITING
+	at sun.misc.Unsafe.park(Native Method)
+	- waiting on (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@337a3b83)
+	at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2039)
+	at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:442)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:103)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:31)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-exec-7" Id=26 cpu=131936317 ns usr=100000000 ns blocked 0 for -1 ms waited 89 for -1 ms
+   java.lang.Thread.State: WAITING
+	at sun.misc.Unsafe.park(Native Method)
+	- waiting on (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@337a3b83)
+	at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2039)
+	at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:442)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:103)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:31)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-exec-6" Id=25 cpu=143839244 ns usr=110000000 ns blocked 0 for -1 ms waited 89 for -1 ms
+   java.lang.Thread.State: WAITING
+	at sun.misc.Unsafe.park(Native Method)
+	- waiting on (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@337a3b83)
+	at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2039)
+	at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:442)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:103)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:31)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-exec-5" Id=24 cpu=128710627 ns usr=90000000 ns blocked 0 for -1 ms waited 89 for -1 ms
+   java.lang.Thread.State: WAITING
+	at sun.misc.Unsafe.park(Native Method)
+	- waiting on (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@337a3b83)
+	at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2039)
+	at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:442)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:103)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:31)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-exec-4" Id=23 cpu=149398857 ns usr=120000000 ns blocked 0 for -1 ms waited 89 for -1 ms
+   java.lang.Thread.State: RUNNABLE
+	locks java.util.concurrent.ThreadPoolExecutor$Worker@370fb87a
+	at sun.management.ThreadImpl.dumpThreads0(Native Method)
+	at sun.management.ThreadImpl.dumpAllThreads(ThreadImpl.java:454)
+	at org.apache.tomcat.util.Diagnostics.getThreadDump(Diagnostics.java:440)
+	at org.apache.tomcat.util.Diagnostics.getThreadDump(Diagnostics.java:409)
+	at org.apache.catalina.manager.ManagerServlet.threadDump(ManagerServlet.java:562)
+	at org.apache.catalina.manager.ManagerServlet.doGet(ManagerServlet.java:376)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:622)
+	at javax.servlet.http.HttpServlet.service(HttpServlet.java:729)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:292)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:207)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:240)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:207)
+	at org.apache.catalina.filters.SetCharacterEncodingFilter.doFilter(SetCharacterEncodingFilter.java:108)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:240)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:207)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:213)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:106)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:614)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:141)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:79)
+	at org.apache.catalina.valves.AbstractAccessLogValve.invoke(AbstractAccessLogValve.java:616)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:88)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:522)
+	at org.apache.coyote.http11.AbstractHttp11Processor.process(AbstractHttp11Processor.java:1095)
+	at org.apache.coyote.AbstractProtocol$AbstractConnectionHandler.process(AbstractProtocol.java:672)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1504)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.run(NioEndpoint.java:1460)
+	- locked (a org.apache.tomcat.util.net.NioChannel@74ef881b) index 27 frame org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.run(NioEndpoint.java:1460)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-exec-3" Id=22 cpu=152105677 ns usr=110000000 ns blocked 0 for -1 ms waited 90 for -1 ms
+   java.lang.Thread.State: WAITING
+	at sun.misc.Unsafe.park(Native Method)
+	- waiting on (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@337a3b83)
+	at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2039)
+	at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:442)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:103)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:31)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-exec-2" Id=21 cpu=151189744 ns usr=120000000 ns blocked 0 for -1 ms waited 90 for -1 ms
+   java.lang.Thread.State: WAITING
+	at sun.misc.Unsafe.park(Native Method)
+	- waiting on (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@337a3b83)
+	at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2039)
+	at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:442)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:103)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:31)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-exec-1" Id=20 cpu=673613721 ns usr=610000000 ns blocked 1 for -1 ms waited 90 for -1 ms
+   java.lang.Thread.State: WAITING
+	at sun.misc.Unsafe.park(Native Method)
+	- waiting on (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject@337a3b83)
+	at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2039)
+	at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:442)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:103)
+	at org.apache.tomcat.util.threads.TaskQueue.take(TaskQueue.java:31)
+	at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1074)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1134)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-Acceptor-0" Id=18 cpu=155321259 ns usr=130000000 ns blocked 0 for -1 ms waited 0 for -1 ms (running in native)
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.ServerSocketChannelImpl.accept0(Native Method)
+	at sun.nio.ch.ServerSocketChannelImpl.accept(ServerSocketChannelImpl.java:422)
+	at sun.nio.ch.ServerSocketChannelImpl.accept(ServerSocketChannelImpl.java:250)
+	- locked (a java.lang.Object@3745a934) index 2 frame sun.nio.ch.ServerSocketChannelImpl.accept(ServerSocketChannelImpl.java:250)
+	at org.apache.tomcat.util.net.NioEndpoint$Acceptor.run(NioEndpoint.java:682)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-ClientPoller-1" Id=17 cpu=5006313716 ns usr=3470000000 ns blocked 6 for -1 ms waited 0 for -1 ms (running in native)
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)
+	at sun.nio.ch.EPollArrayWrapper.poll(EPollArrayWrapper.java:269)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(EPollSelectorImpl.java:93)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:86)
+	- locked (a sun.nio.ch.EPollSelectorImpl@43ffe3d1) index 3 frame sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:86)
+	at sun.nio.ch.SelectorImpl.select(SelectorImpl.java:97)
+	at org.apache.tomcat.util.net.NioEndpoint$Poller.run(NioEndpoint.java:1034)
+	at java.lang.Thread.run(Thread.java:748)
+
+"http-nio-8080-ClientPoller-0" Id=16 cpu=4738256595 ns usr=3130000000 ns blocked 7 for -1 ms waited 0 for -1 ms (running in native)
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)
+	at sun.nio.ch.EPollArrayWrapper.poll(EPollArrayWrapper.java:269)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(EPollSelectorImpl.java:93)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:86)
+	- locked (a sun.nio.ch.EPollSelectorImpl@68bb373e) index 3 frame sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:86)
+	at sun.nio.ch.SelectorImpl.select(SelectorImpl.java:97)
+	at org.apache.tomcat.util.net.NioEndpoint$Poller.run(NioEndpoint.java:1034)
+	at java.lang.Thread.run(Thread.java:748)
+
+"ContainerBackgroundProcessor[StandardEngine[Catalina]]" Id=15 cpu=4933522583 ns usr=3520000000 ns blocked 0 for -1 ms waited 15786 for -1 ms
+   java.lang.Thread.State: TIMED_WAITING
+	at java.lang.Thread.sleep(Native Method)
+	at org.apache.catalina.core.ContainerBase$ContainerBackgroundProcessor.run(ContainerBase.java:1344)
+	at java.lang.Thread.run(Thread.java:748)
+
+"NioBlockingSelector.BlockPoller-1" Id=12 cpu=4282428514 ns usr=2630000000 ns blocked 128 for -1 ms waited 0 for -1 ms (running in native)
+   java.lang.Thread.State: RUNNABLE
+	at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)
+	at sun.nio.ch.EPollArrayWrapper.poll(EPollArrayWrapper.java:269)
+	at sun.nio.ch.EPollSelectorImpl.doSelect(EPollSelectorImpl.java:93)
+	at sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:86)
+	- locked (a sun.nio.ch.EPollSelectorImpl@1626b026) index 3 frame sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:86)
+	at sun.nio.ch.SelectorImpl.select(SelectorImpl.java:97)
+	at org.apache.tomcat.util.net.NioBlockingSelector$BlockPoller.run(NioBlockingSelector.java:342)
+
+"GC Daemon" Id=11 cpu=162551 ns usr=0 ns blocked 1 for -1 ms waited 1 for -1 ms
+   java.lang.Thread.State: TIMED_WAITING
+	at java.lang.Object.wait(Native Method)
+	- waiting on (a sun.misc.GC$LatencyLock@2715671b)
+	at sun.misc.GC$Daemon.run(GC.java:117)
+
+"Signal Dispatcher" Id=5 cpu=79156 ns usr=0 ns blocked 0 for -1 ms waited 0 for -1 ms
+   java.lang.Thread.State: RUNNABLE
+
+"Finalizer" Id=3 cpu=9371177 ns usr=0 ns blocked 59 for -1 ms waited 60 for -1 ms
+   java.lang.Thread.State: WAITING
+	at java.lang.Object.wait(Native Method)
+	- waiting on (a java.lang.ref.ReferenceQueue$Lock@4696a952)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:143)
+	at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:164)
+	at java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:209)
+
+"Reference Handler" Id=2 cpu=6706662 ns usr=0 ns blocked 67 for -1 ms waited 66 for -1 ms
+   java.lang.Thread.State: WAITING
+	at java.lang.Object.wait(Native Method)
+	- waiting on (a java.lang.ref.Reference$Lock@6a5842fb)
+	at java.lang.Object.wait(Object.java:502)
+	at java.lang.ref.Reference.tryHandlePending(Reference.java:191)
+	at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:153)
+
+"main" Id=1 cpu=524567733 ns usr=500000000 ns blocked 0 for -1 ms waited 1 for -1 ms (running in native)
+   java.lang.Thread.State: RUNNABLE
+	at java.net.PlainSocketImpl.socketAccept(Native Method)
+	at java.net.AbstractPlainSocketImpl.accept(AbstractPlainSocketImpl.java:409)
+	at java.net.ServerSocket.implAccept(ServerSocket.java:545)
+	at java.net.ServerSocket.accept(ServerSocket.java:513)
+	at org.apache.catalina.core.StandardServer.await(StandardServer.java:446)
+	at org.apache.catalina.startup.Catalina.await(Catalina.java:717)
+	at org.apache.catalina.startup.Catalina.start(Catalina.java:663)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.catalina.startup.Bootstrap.start(Bootstrap.java:351)
+	at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:485)
+""")
 	
+	###
+	#
+	# the action commands, i.e. commands that actually effect some change on
+	# the server
+	#
+	###	
 	def put_deploy(self):
 		# verify we have a path query string
 		url = urlparse(self.path)

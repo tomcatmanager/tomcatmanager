@@ -20,6 +20,7 @@
 # THE SOFTWARE.
 #
 
+import unittest
 from nose.tools import *
 import requests
 import tomcatmanager
@@ -40,27 +41,76 @@ class TestConnect:
 		tm = tomcatmanager.TomcatManager(self.mock_url, self.userid, self.password)
 		assert_true(tm.is_connected())
 
-class TestManager:
+class TestManager(unittest.TestCase):
 
 	@classmethod
 	def setup_class(cls):
 		(cls.mock_url, cls.userid, cls.password) = start_mock_server80()
 		cls.tm = tomcatmanager.TomcatManager(cls.mock_url, cls.userid, cls.password)
 
+	###
+	#
+	# test the info type commands, i.e. commands that don't really do anything, they
+	# just return some information from the server
+	#
+	###
+	def info_assertions(self, tmr):
+		"""a set of common assertions that should be true of the info
+		type commands which return a result"""
+		# order matters here, we want to test the status_code before we
+		# check for results. If the status_code is FAIL, then we probably
+		# won't have the result we want, but we need to fix the FAIL instead
+		# of worrying about why result it null
+		assert_equal(tmr.status_code, 'OK', 'message from server: "{0}"'.format(tmr.status_message))
+		assert_is_not_none(tmr.status_message)
+		assert_true(len(tmr.status_message) > 0)
+		try:
+			tmr.raise_for_status()
+		except RequestException as err:
+			self.fail(err)
+		except tomcatmanager.TomcatException as err:
+			self.fail('TomcatException raised')
+
+		assert_is_not_none(tmr.result)
+		assert_true(len(tmr.result) > 0)
+
 	def test_list(self):
 		tmr = self.tm.list()
-		assert_true(tmr.status_code, "OK")
+		self.info_assertions(tmr)
 		assert_true(isinstance(tmr.apps, list))
 	
-	def test_vminfo(self):
-		tmr = self.tm.vminfo()
-		assert_true(tmr.status_code, "OK")
+	def test_server_info(self):
+		tmr = self.tm.server_info()
+		self.info_assertions(tmr)
+		assert_is_instance(tmr.server_info, dict)
 
-	def test_serverinfo(self):
-		tmr = self.tm.serverinfo()
-		assert_true(tmr.status_code, "OK")
-		assert_true(isinstance(tmr.serverinfo, dict))
+	def test_status(self):
+		xml = self.tm.status()
+		assert_true(isinstance(xml, list))
+		assert_equal(xml[0][:6], '<?xml ')
 
+	def test_vm_info(self):
+		tmr = self.tm.vm_info()
+		self.info_assertions(tmr)
+
+	def test_ssl_connector_ciphers(self):
+		tmr = self.tm.ssl_connector_ciphers()
+		self.info_assertions(tmr)
+	
+	def test_thread_dump(self):
+		tmr = self.tm.thread_dump()
+		self.info_assertions(tmr)
+	
+	def test_findleaks(self):
+		pass
+
+
+	###
+	#
+	# test the action commands, i.e. commands that actually effect some change on
+	# the server
+	#
+	###
 	@raises(tomcatmanager.TomcatException)
 	def test_deploy_war_no_path(self):
 		"""server should return FAIL if we don't have a path to deploy to"""
@@ -79,8 +129,3 @@ class TestManager:
 	def test_undeploy(self):
 		"""should throw an exception if there is an error"""
 		self.tm.undeploy('/newapp')
-
-	def test_status(self):
-		xml = self.tm.status()
-		assert_true(isinstance(xml, list))
-		assert_equal(xml[0][:6], '<?xml ')
