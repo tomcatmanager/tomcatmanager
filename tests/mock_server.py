@@ -44,6 +44,8 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 	SERVERINFO_PATTERN = re.compile(r'^/manager/text/serverinfo($|\?.*$)')
 	DEPLOY_PATTERN = re.compile(r'^/manager/text/deploy($|\?.*$)')
 	UNDEPLOY_PATTERN = re.compile(r'^/manager/text/undeploy($|\?.*$)')
+	STATUS_PATTERN = re.compile(r'^/manager/status(/|/all)?($|\?.*$)')
+
 
 	def do_GET(self):
 		if not self.authorized(): return
@@ -59,6 +61,8 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 			self.send_fail('Invalid parameters supplied for command [/deploy]')
 		elif re.search(self.UNDEPLOY_PATTERN, self.path):
 			self.get_undeploy()
+		elif re.search(self.STATUS_PATTERN, self.path):
+			self.get_status()
 		else:
 			self.send_fail('Unknown command')
 
@@ -113,6 +117,11 @@ OS Architecture: amd64
 JVM Version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
 JVM Vendor: Oracle Corporation""")
 	
+	def get_status(self):
+		self.send_text("""<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xsl" href="/manager/xform.xsl" ?>
+<status><jvm><memory free='22294576' total='36569088' max='129761280'/><memorypool name='CMS Old Gen' type='Heap memory' usageInit='22413312' usageCommitted='25165824' usageMax='89522176' usageUsed='13503656'/><memorypool name='Par Eden Space' type='Heap memory' usageInit='8912896' usageCommitted='10158080' usageMax='35782656' usageUsed='299600'/><memorypool name='Par Survivor Space' type='Heap memory' usageInit='1114112' usageCommitted='1245184' usageMax='4456448' usageUsed='473632'/><memorypool name='Code Cache' type='Non-heap memory' usageInit='2555904' usageCommitted='12713984' usageMax='251658240' usageUsed='12510656'/><memorypool name='Compressed Class Space' type='Non-heap memory' usageInit='0' usageCommitted='2621440' usageMax='1073741824' usageUsed='2400424'/><memorypool name='Metaspace' type='Non-heap memory' usageInit='0' usageCommitted='24903680' usageMax='-1' usageUsed='24230432'/></jvm><connector name='"http-nio-8080"'><threadInfo  maxThreads="200" currentThreadCount="10" currentThreadsBusy="1" /><requestInfo  maxTime="570" processingTime="2015" requestCount="868" errorCount="494" bytesReceived="0" bytesSent="1761440" /><workers><worker  stage="S" requestProcessingTime="1" requestBytesSent="0" requestBytesReceived="0" remoteAddr="192.168.13.22" virtualHost="192.168.13.66" method="GET" currentUri="/manager/status/all" currentQueryString="XML=true" protocol="HTTP/1.1" /><worker  stage="R" requestProcessingTime="0" requestBytesSent="0" requestBytesReceived="0" remoteAddr="&#63;" virtualHost="&#63;" method="&#63;" currentUri="&#63;" currentQueryString="&#63;" protocol="&#63;" /></workers></connector></status>
+		""")
+
 	def put_deploy(self):
 		# verify we have a path query string
 		url = urlparse(self.path)
@@ -134,7 +143,7 @@ JVM Vendor: Oracle Corporation""")
 			self.send_text('OK - Undeployed application at context path {path}'.format(path=path))
 		else:
 			self.send_fail('Invalid parameters supplied for command [/deploy]')
-		
+	
 #
 #
 def start_mock_server80():

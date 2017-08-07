@@ -65,5 +65,11 @@ class TestManager:
 		"""server should return FAIL if we don't have a path to undeploy"""
 		self.tm.undeploy(None)
 	
-	def tests_undeploy(self):
+	def test_undeploy(self):
+		"""should throw an exception if there is an error"""
 		self.tm.undeploy('/newapp')
+
+	def test_status(self):
+		xml = self.tm.status()
+		assert_true(isinstance(xml, list))
+		assert_equal(xml[0][:6], '<?xml ')
