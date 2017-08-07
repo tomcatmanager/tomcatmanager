@@ -468,7 +468,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 				fileobj = open(filename, "rb")
 				self.exit_code = 0
-				self.docmd(self.tomcat_manager.deployWAR, path, fileobj, update, tag)
+				self.docmd(self.tomcat_manager.deploy_war, path, fileobj, update, tag)
 			else:
 				self.help_deploy()
 				self.exit_code = 2

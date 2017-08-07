@@ -23,14 +23,15 @@
 from nose.tools import *
 import requests
 import tomcatmanager
+import io
 
-from tests.mock_server import start_mock_server
+from tests.mock_server import start_mock_server80
 
 class TestConnect:
 
 	@classmethod
 	def setup_class(cls):
-		(cls.mock_url, cls.userid, cls.password) = start_mock_server()
+		(cls.mock_url, cls.userid, cls.password) = start_mock_server80()
 	
 	def test_connect(self):
 		tm = tomcatmanager.TomcatManager(self.mock_url)
@@ -43,8 +44,26 @@ class TestManager:
 
 	@classmethod
 	def setup_class(cls):
-		(cls.mock_url, cls.userid, cls.password) = start_mock_server()
+		(cls.mock_url, cls.userid, cls.password) = start_mock_server80()
 		cls.tm = tomcatmanager.TomcatManager(cls.mock_url, cls.userid, cls.password)
 
 	def test_serverinfo(self):
 		assert_true(isinstance(self.tm.serverinfo(), dict))
+
+	@raises(tomcatmanager.TomcatException)
+	def test_deploy_war_no_path(self):
+		"""server should return FAIL if we don't have a path to deploy to"""
+		warfile = io.BytesIO(b'the contents of my warfile')
+		self.tm.deploy_war(None, warfile)
+
+	def test_deploy_war(self):
+		warfile = io.BytesIO(b'the contents of my warfile')
+		self.tm.deploy_war('/newapp', warfile)
+
+	@raises(tomcatmanager.TomcatException)
+	def test_undeploy_no_path(self):
+		"""server should return FAIL if we don't have a path to undeploy"""
+		self.tm.undeploy(None)
+	
+	def tests_undeploy(self):
+		self.tm.undeploy('/newapp')

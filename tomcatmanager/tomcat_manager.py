@@ -81,7 +81,7 @@ class TomcatManager:
 		content = codecs.iterdecode(response, 'utf-8')
 		status = next(content).rstrip()
 		self.has_connected = True
-		if not status[:4] == 'OK -':
+		if status[:4] != 'OK -':
 			raise TomcatException(status)
 		return content
 
@@ -275,7 +275,7 @@ class TomcatManager:
 			sessions.append(line.rstrip())
 		return sessions
 
-	def deployWAR(self, path, fileobj, update=False, tag=None):
+	def deploy_war(self, path, fileobj, update=False, tag=None):
 		"""read a WAR file from a local fileobj and deploy it at path
 		
 		Arguments:
@@ -289,7 +289,10 @@ class TomcatManager:
 		headers = {}
 		headers['Content-type'] = "application/octet-stream"
 		headers['Content-length'] = str(len(wardata))
-		params = {'path': path}
+		
+		params = {}
+		if path:
+			params['path'] = path
 		if update:
 			params['update'] = "true"
 		if tag:
@@ -306,7 +309,10 @@ class TomcatManager:
 			tm = TomcatManager(url)
 			tm.undeploy("/myappname")
 		"""
-		response = self._execute("undeploy", {'path': path})
+		params = {}
+		if path:
+			params['path'] = path
+		response = self._execute("undeploy", params)
 
 	def resources(self,type=None):
 		"""list the global JNDI resources available for use in resource links for config files
