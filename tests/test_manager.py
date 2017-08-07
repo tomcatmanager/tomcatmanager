@@ -47,8 +47,19 @@ class TestManager:
 		(cls.mock_url, cls.userid, cls.password) = start_mock_server80()
 		cls.tm = tomcatmanager.TomcatManager(cls.mock_url, cls.userid, cls.password)
 
+	def test_list(self):
+		tmr = self.tm.list()
+		assert_true(tmr.status_code, "OK")
+		assert_true(isinstance(tmr.apps, list))
+	
+	def test_vminfo(self):
+		tmr = self.tm.vminfo()
+		assert_true(tmr.status_code, "OK")
+
 	def test_serverinfo(self):
-		assert_true(isinstance(self.tm.serverinfo(), dict))
+		tmr = self.tm.serverinfo()
+		assert_true(tmr.status_code, "OK")
+		assert_true(isinstance(tmr.serverinfo, dict))
 
 	@raises(tomcatmanager.TomcatException)
 	def test_deploy_war_no_path(self):

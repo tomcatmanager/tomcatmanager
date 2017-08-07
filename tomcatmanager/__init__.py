@@ -25,6 +25,7 @@ from pkg_resources import get_distribution
 __version__ = get_distribution('tomcatmanager').version
 
 from tomcatmanager.tomcat_manager import TomcatManager
+from tomcatmanager.tomcat_manager import TomcatManagerResponse
 from tomcatmanager.tomcat_manager import TomcatException
 from tomcatmanager.interactive_tomcat_manager import InteractiveTomcatManager
 

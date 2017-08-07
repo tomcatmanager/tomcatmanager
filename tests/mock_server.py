@@ -45,7 +45,11 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 	DEPLOY_PATTERN = re.compile(r'^/manager/text/deploy($|\?.*$)')
 	UNDEPLOY_PATTERN = re.compile(r'^/manager/text/undeploy($|\?.*$)')
 	STATUS_PATTERN = re.compile(r'^/manager/status(/|/all)?($|\?.*$)')
+	VMINFO_PATTERN = re.compile(r'^/manager/text/vminfo($|\?.*$)')
 
+	def log_message(self, format, *args):
+		"no logging for our mockup"
+		return
 
 	def do_GET(self):
 		if not self.authorized(): return
@@ -63,6 +67,8 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 			self.get_undeploy()
 		elif re.search(self.STATUS_PATTERN, self.path):
 			self.get_status()
+		elif re.search(self.VMINFO_PATTERN, self.path):
+			self.get_vminfo()
 		else:
 			self.send_fail('Unknown command')
 
@@ -122,6 +128,371 @@ JVM Vendor: Oracle Corporation""")
 <status><jvm><memory free='22294576' total='36569088' max='129761280'/><memorypool name='CMS Old Gen' type='Heap memory' usageInit='22413312' usageCommitted='25165824' usageMax='89522176' usageUsed='13503656'/><memorypool name='Par Eden Space' type='Heap memory' usageInit='8912896' usageCommitted='10158080' usageMax='35782656' usageUsed='299600'/><memorypool name='Par Survivor Space' type='Heap memory' usageInit='1114112' usageCommitted='1245184' usageMax='4456448' usageUsed='473632'/><memorypool name='Code Cache' type='Non-heap memory' usageInit='2555904' usageCommitted='12713984' usageMax='251658240' usageUsed='12510656'/><memorypool name='Compressed Class Space' type='Non-heap memory' usageInit='0' usageCommitted='2621440' usageMax='1073741824' usageUsed='2400424'/><memorypool name='Metaspace' type='Non-heap memory' usageInit='0' usageCommitted='24903680' usageMax='-1' usageUsed='24230432'/></jvm><connector name='"http-nio-8080"'><threadInfo  maxThreads="200" currentThreadCount="10" currentThreadsBusy="1" /><requestInfo  maxTime="570" processingTime="2015" requestCount="868" errorCount="494" bytesReceived="0" bytesSent="1761440" /><workers><worker  stage="S" requestProcessingTime="1" requestBytesSent="0" requestBytesReceived="0" remoteAddr="192.168.13.22" virtualHost="192.168.13.66" method="GET" currentUri="/manager/status/all" currentQueryString="XML=true" protocol="HTTP/1.1" /><worker  stage="R" requestProcessingTime="0" requestBytesSent="0" requestBytesReceived="0" remoteAddr="&#63;" virtualHost="&#63;" method="&#63;" currentUri="&#63;" currentQueryString="&#63;" protocol="&#63;" /></workers></connector></status>
 		""")
 
+	def get_vminfo(self):
+		self.send_text("""OK - VM info
+2017-08-07 00:55:24.199
+Runtime information:
+  vmName: OpenJDK 64-Bit Server VM
+  vmVersion: 25.131-b11
+  vmVendor: Oracle Corporation
+  specName: Java Virtual Machine Specification
+  specVersion: 1.8
+  specVendor: Oracle Corporation
+  managementSpecVersion: 1.2
+  name: 6403@tomcat
+  startTime: 1501951074623
+  uptime: 124960918
+  isBootClassPathSupported: true
+
+OS information:
+  name: Linux
+  version: 4.4.0-89-generic
+  architecture: amd64
+  availableProcessors: 2
+  systemLoadAverage: 0.0
+
+ThreadMXBean capabilities:
+  isCurrentThreadCpuTimeSupported: true
+  isThreadCpuTimeSupported: true
+  isThreadCpuTimeEnabled: true
+  isObjectMonitorUsageSupported: true
+  isSynchronizerUsageSupported: true
+  isThreadContentionMonitoringSupported: true
+  isThreadContentionMonitoringEnabled: false
+
+Thread counts:
+  daemon: 19
+  total: 20
+  peak: 20
+  totalStarted: 22
+
+Startup arguments:
+  -Djava.util.logging.config.file=/var/lib/tomcat8/conf/logging.properties
+  -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager
+  -Djava.awt.headless=true
+  -Xmx128m
+  -XX:+UseConcMarkSweepGC
+  -Djava.endorsed.dirs=/usr/share/tomcat8/endorsed
+  -Dcatalina.base=/var/lib/tomcat8
+  -Dcatalina.home=/usr/share/tomcat8
+  -Djava.io.tmpdir=/tmp/tomcat8-tomcat8-tmp
+
+Path information:
+  bootClassPath: /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/resources.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/sunrsasign.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/jsse.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/jce.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/charsets.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/jfr.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/classes
+  classPath: /usr/share/tomcat8/bin/bootstrap.jar:/usr/share/tomcat8/bin/tomcat-juli.jar
+  libraryPath: /usr/java/packages/lib/amd64:/usr/lib/x86_64-linux-gnu/jni:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/usr/lib/jni:/lib:/usr/lib
+
+Class loading:
+  loaded: 3357
+  unloaded: 5
+  totalLoaded: 3362
+  isVerbose: false
+
+Class compilation:
+  name: HotSpot 64-Bit Tiered Compilers
+  totalCompilationTime: 8462
+  isCompilationTimeMonitoringSupported: true
+
+Memory Manager [CodeCacheManager]:
+  isValid: true
+  mbean.getMemoryPoolNames: 
+	Code Cache
+
+Memory Manager [Metaspace Manager]:
+  isValid: true
+  mbean.getMemoryPoolNames: 
+	Compressed Class Space
+	Metaspace
+
+Memory Manager [ParNew]:
+  isValid: true
+  mbean.getMemoryPoolNames: 
+	Par Eden Space
+	Par Survivor Space
+
+Memory Manager [ConcurrentMarkSweep]:
+  isValid: true
+  mbean.getMemoryPoolNames: 
+	CMS Old Gen
+	Par Eden Space
+	Par Survivor Space
+
+Garbage Collector [ParNew]:
+  isValid: true
+  mbean.getMemoryPoolNames: 
+	Par Eden Space
+	Par Survivor Space
+  getCollectionCount: 61
+  getCollectionTime: 161
+
+Garbage Collector [ConcurrentMarkSweep]:
+  isValid: true
+  mbean.getMemoryPoolNames: 
+	CMS Old Gen
+	Par Eden Space
+	Par Survivor Space
+  getCollectionCount: 17
+  getCollectionTime: 203
+
+Memory information:
+  isVerbose: false
+  getObjectPendingFinalizationCount: 0
+  heap init: 33554432
+  heap used: 15019296
+  heap committed: 36569088
+  heap max: 129761280
+  non-heap init: 2555904
+  non-heap used: 39402128
+  non-heap committed: 40370176
+  non-heap max: -1
+
+Memory Pool [Code Cache]:
+  isValid: true
+  getType: Non-heap memory
+  mbean.getMemoryManagerNames: 
+	CodeCacheManager
+  isUsageThresholdSupported: true
+  isUsageThresholdExceeded: false
+  isCollectionUsageThresholdSupported: false
+  getUsageThreshold: 0
+  getUsageThresholdCount: 0
+  current init: 2555904
+  current used: 12715968
+  current committed: 12845056
+  current max: 251658240
+  peak init: 2555904
+  peak used: 12715968
+  peak committed: 12845056
+  peak max: 251658240
+
+Memory Pool [Metaspace]:
+  isValid: true
+  getType: Non-heap memory
+  mbean.getMemoryManagerNames: 
+	Metaspace Manager
+  isUsageThresholdSupported: true
+  isUsageThresholdExceeded: false
+  isCollectionUsageThresholdSupported: false
+  getUsageThreshold: 0
+  getUsageThresholdCount: 0
+  current init: 0
+  current used: 24281872
+  current committed: 24903680
+  current max: -1
+  peak init: 0
+  peak used: 24281872
+  peak committed: 24903680
+  peak max: -1
+
+Memory Pool [Compressed Class Space]:
+  isValid: true
+  getType: Non-heap memory
+  mbean.getMemoryManagerNames: 
+	Metaspace Manager
+  isUsageThresholdSupported: true
+  isUsageThresholdExceeded: false
+  isCollectionUsageThresholdSupported: false
+  getUsageThreshold: 0
+  getUsageThresholdCount: 0
+  current init: 0
+  current used: 2404288
+  current committed: 2621440
+  current max: 1073741824
+  peak init: 0
+  peak used: 2404288
+  peak committed: 2621440
+  peak max: 1073741824
+
+Memory Pool [Par Eden Space]:
+  isValid: true
+  getType: Heap memory
+  mbean.getMemoryManagerNames: 
+	ConcurrentMarkSweep
+	ParNew
+  isUsageThresholdSupported: false
+  isCollectionUsageThresholdSupported: true
+  isCollectionUsageThresholdExceeded: false
+  getCollectionUsageThreshold: 0
+  getCollectionUsageThresholdCount: 0
+  current init: 8912896
+  current used: 1127152
+  current committed: 10158080
+  current max: 35782656
+  collection init: 8912896
+  collection used: 0
+  collection committed: 10158080
+  collection max: 35782656
+  peak init: 8912896
+  peak used: 10158080
+  peak committed: 10158080
+  peak max: 35782656
+
+Memory Pool [Par Survivor Space]:
+  isValid: true
+  getType: Heap memory
+  mbean.getMemoryManagerNames: 
+	ConcurrentMarkSweep
+	ParNew
+  isUsageThresholdSupported: false
+  isCollectionUsageThresholdSupported: true
+  isCollectionUsageThresholdExceeded: false
+  getCollectionUsageThreshold: 0
+  getCollectionUsageThresholdCount: 0
+  current init: 1114112
+  current used: 160608
+  current committed: 1245184
+  current max: 4456448
+  collection init: 1114112
+  collection used: 160608
+  collection committed: 1245184
+  collection max: 4456448
+  peak init: 1114112
+  peak used: 1114112
+  peak committed: 1245184
+  peak max: 4456448
+
+Memory Pool [CMS Old Gen]:
+  isValid: true
+  getType: Heap memory
+  mbean.getMemoryManagerNames: 
+	ConcurrentMarkSweep
+  isUsageThresholdSupported: true
+  isUsageThresholdExceeded: false
+  isCollectionUsageThresholdSupported: true
+  isCollectionUsageThresholdExceeded: false
+  getUsageThreshold: 0
+  getUsageThresholdCount: 0
+  getCollectionUsageThreshold: 0
+  getCollectionUsageThresholdCount: 0
+  current init: 22413312
+  current used: 13787424
+  current committed: 25165824
+  current max: 89522176
+  collection init: 22413312
+  collection used: 13176808
+  collection committed: 25165824
+  collection max: 89522176
+  peak init: 22413312
+  peak used: 24748376
+  peak committed: 25165824
+  peak max: 89522176
+
+System properties:
+  awt.toolkit: sun.awt.X11.XToolkit
+  catalina.base: /var/lib/tomcat8
+  catalina.home: /usr/share/tomcat8
+  catalina.useNaming: true
+  common.loader: "${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar","${catalina.home}/common/classes","${catalina.home}/common/*.jar"
+  file.encoding: UTF-8
+  file.encoding.pkg: sun.io
+  file.separator: /
+  java.awt.graphicsenv: sun.awt.X11GraphicsEnvironment
+  java.awt.headless: true
+  java.awt.printerjob: sun.print.PSPrinterJob
+  java.class.path: /usr/share/tomcat8/bin/bootstrap.jar:/usr/share/tomcat8/bin/tomcat-juli.jar
+  java.class.version: 52.0
+  java.endorsed.dirs: /usr/share/tomcat8/endorsed
+  java.ext.dirs: /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/ext:/usr/java/packages/lib/ext
+  java.home: /usr/lib/jvm/java-8-openjdk-amd64/jre
+  java.io.tmpdir: /tmp/tomcat8-tomcat8-tmp
+  java.library.path: /usr/java/packages/lib/amd64:/usr/lib/x86_64-linux-gnu/jni:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/usr/lib/jni:/lib:/usr/lib
+  java.naming.factory.initial: org.apache.naming.java.javaURLContextFactory
+  java.naming.factory.url.pkgs: org.apache.naming
+  java.runtime.name: OpenJDK Runtime Environment
+  java.runtime.version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
+  java.specification.name: Java Platform API Specification
+  java.specification.vendor: Oracle Corporation
+  java.specification.version: 1.8
+  java.util.logging.config.file: /var/lib/tomcat8/conf/logging.properties
+  java.util.logging.manager: org.apache.juli.ClassLoaderLogManager
+  java.vendor: Oracle Corporation
+  java.vendor.url: http://java.oracle.com/
+  java.vendor.url.bug: http://bugreport.sun.com/bugreport/
+  java.version: 1.8.0_131
+  java.vm.info: mixed mode
+  java.vm.name: OpenJDK 64-Bit Server VM
+  java.vm.specification.name: Java Virtual Machine Specification
+  java.vm.specification.vendor: Oracle Corporation
+  java.vm.specification.version: 1.8
+  java.vm.vendor: Oracle Corporation
+  java.vm.version: 25.131-b11
+  line.separator: 
+
+  os.arch: amd64
+  os.name: Linux
+  os.version: 4.4.0-89-generic
+  package.access: sun.,org.apache.catalina.,org.apache.coyote.,org.apache.jasper.,org.apache.tomcat.
+  package.definition: sun.,java.,org.apache.catalina.,org.apache.coyote.,org.apache.jasper.,org.apache.naming.,org.apache.tomcat.
+  path.separator: :
+  server.loader: ${catalina.home}/server/classes,${catalina.home}/server/*.jar
+  shared.loader: ${catalina.home}/shared/classes,${catalina.home}/shared/*.jar
+  sun.arch.data.model: 64
+  sun.boot.class.path: /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/resources.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/sunrsasign.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/jsse.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/jce.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/charsets.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/jfr.jar:/usr/lib/jvm/java-8-openjdk-amd64/jre/classes
+  sun.boot.library.path: /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/amd64
+  sun.cpu.endian: little
+  sun.cpu.isalist: 
+  sun.io.unicode.encoding: UnicodeLittle
+  sun.java.command: org.apache.catalina.startup.Bootstrap start
+  sun.java.launcher: SUN_STANDARD
+  sun.jnu.encoding: UTF-8
+  sun.management.compiler: HotSpot 64-Bit Tiered Compilers
+  sun.os.patch.level: unknown
+  tomcat.util.buf.StringCache.byte.enabled: true
+  tomcat.util.scan.StandardJarScanFilter.jarsToScan: log4j-core*.jar,log4j-taglib*.jar,log4javascript*.jar
+  tomcat.util.scan.StandardJarScanFilter.jarsToSkip: bootstrap.jar,commons-daemon.jar,tomcat-juli.jar,annotations-api.jar,el-api.jar,jsp-api.jar,servlet-api.jar,websocket-api.jar,catalina.jar,catalina-ant.jar,catalina-ha.jar,catalina-storeconfig.jar,catalina-tribes.jar,jasper.jar,jasper-el.jar,ecj-*.jar,tomcat-api.jar,tomcat-util.jar,tomcat-util-scan.jar,tomcat-coyote.jar,tomcat-dbcp.jar,tomcat-jni.jar,tomcat-websocket.jar,tomcat-i18n-en.jar,tomcat-i18n-es.jar,tomcat-i18n-fr.jar,tomcat-i18n-ja.jar,tomcat-juli-adapters.jar,catalina-jmx-remote.jar,catalina-ws.jar,tomcat-jdbc.jar,tools.jar,commons-beanutils*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-lang*.jar,commons-logging*.jar,commons-math*.jar,commons-pool*.jar,jstl.jar,taglibs-standard-spec-*.jar,geronimo-spec-jaxrpc*.jar,wsdl4j*.jar,ant.jar,ant-junit*.jar,aspectj*.jar,jmx.jar,h2*.jar,hibernate*.jar,httpclient*.jar,jmx-tools.jar,jta*.jar,log4j*.jar,mail*.jar,slf4j*.jar,xercesImpl.jar,xmlParserAPIs.jar,xml-apis.jar,junit.jar,junit-*.jar,ant-launcher.jar,cobertura-*.jar,asm-*.jar,dom4j-*.jar,icu4j-*.jar,jaxen-*.jar,jdom-*.jar,jetty-*.jar,oro-*.jar,servlet-api-*.jar,tagsoup-*.jar,xmlParserAPIs-*.jar,xom-*.jar
+  user.country: US
+  user.dir: /var/lib/tomcat8
+  user.home: /usr/share/tomcat8
+  user.language: en
+  user.name: tomcat8
+  user.timezone: America/Denver
+
+Logger information:
+  : level=, parent=
+  org: level=, parent=
+  org.apache: level=, parent=org
+  org.apache.catalina: level=, parent=org.apache
+  org.apache.catalina.core: level=, parent=org.apache.catalina
+  org.apache.catalina.core.ContainerBase: level=, parent=org.apache.catalina.core
+  org.apache.catalina.core.ContainerBase.[Catalina]: level=, parent=org.apache.catalina.core.ContainerBase
+  org.apache.catalina.core.ContainerBase.[Catalina].[localhost]: level=INFO, parent=org.apache.catalina.core.ContainerBase.[Catalina]
+  org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager]: level=, parent=org.apache.catalina.core.ContainerBase.[Catalina].[localhost]
+  org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager].[HTMLManager]: level=, parent=org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager]
+  org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager].[JMXProxy]: level=, parent=org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager]
+  org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager].[Manager]: level=, parent=org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager]
+  org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager].[Status]: level=, parent=org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager]
+  org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager].[default]: level=, parent=org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager]
+  org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager].[jsp]: level=, parent=org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager]
+  org.apache.catalina.session: level=, parent=org.apache.catalina
+  org.apache.catalina.session.ManagerBase: level=, parent=org.apache.catalina.session
+  org.apache.catalina.session.StandardManager: level=, parent=org.apache.catalina.session
+  org.apache.catalina.util: level=, parent=org.apache.catalina
+  org.apache.catalina.util.RequestUtil: level=, parent=org.apache.catalina.util
+  org.apache.jasper: level=, parent=org.apache
+  org.apache.jasper.EmbeddedServletOptions: level=, parent=org.apache.jasper
+  org.apache.jasper.JspCompilationContext: level=, parent=org.apache.jasper
+  org.apache.jasper.compiler: level=, parent=org.apache.jasper
+  org.apache.jasper.compiler.Compiler: level=, parent=org.apache.jasper.compiler
+  org.apache.jasper.compiler.JDTCompiler: level=, parent=org.apache.jasper.compiler
+  org.apache.jasper.compiler.JspConfig: level=, parent=org.apache.jasper.compiler
+  org.apache.jasper.compiler.JspReader: level=, parent=org.apache.jasper.compiler
+  org.apache.jasper.compiler.JspRuntimeContext: level=, parent=org.apache.jasper.compiler
+  org.apache.jasper.compiler.SmapUtil$SDEInstaller: level=, parent=org.apache.jasper.compiler
+  org.apache.jasper.servlet: level=, parent=org.apache.jasper
+  org.apache.jasper.servlet.JspServlet: level=, parent=org.apache.jasper.servlet
+  org.apache.jasper.servlet.JspServletWrapper: level=, parent=org.apache.jasper.servlet
+  org.apache.jasper.xmlparser: level=, parent=org.apache.jasper
+  org.apache.jasper.xmlparser.UTF8Reader: level=, parent=org.apache.jasper.xmlparser
+  org.apache.tomcat: level=, parent=org.apache
+  org.apache.tomcat.util: level=, parent=org.apache.tomcat
+  org.apache.tomcat.util.Diagnostics: level=, parent=org.apache.tomcat.util
+  org.apache.tomcat.util.digester: level=, parent=org.apache.tomcat.util
+  org.apache.tomcat.util.digester.Digester: level=, parent=org.apache.tomcat.util.digester
+  org.apache.tomcat.util.digester.Digester.sax: level=, parent=org.apache.tomcat.util.digester.Digester
+  org.apache.tomcat.websocket: level=, parent=org.apache.tomcat
+  org.apache.tomcat.websocket.WsWebSocketContainer: level=, parent=org.apache.tomcat.websocket
+""")
+	
 	def put_deploy(self):
 		# verify we have a path query string
 		url = urlparse(self.path)

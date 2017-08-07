@@ -46,6 +46,61 @@ class TomcatException(Exception):
 	def __str__(self):
 		return self.message
 
+
+class TomcatManagerResponse:
+	"""The response for a Tomcat Manager command"""    
+
+	def __init__(self, response=None):
+		self._response = response
+
+	@property
+	def response(self):
+		"""contains the requsts.Response object from our request"""
+		return self._response
+	
+	@response.setter
+	def response(self, value):
+		self._response = value
+
+	@property
+	def status_code(self):
+		"""status of the tomcat manager command, can be 'OK' or 'FAIL'"""
+		if self._response:
+			statusline = self._response.text.splitlines()[0]
+			return statusline.split(' ', 1)[0]
+		else:
+			return None
+
+	@property
+	def status_message(self):
+		if self._response:
+			statusline = self._response.text.splitlines()[0]
+			return statusline.split(' ',1)[1][2:]
+		else:
+			return None
+
+	@property
+	def result(self):
+		if self._response:
+			return self._response.text.splitlines()[1:]
+		else:
+			return None
+
+	def raise_for_status():
+		"""raise exceptions if status is not ok
+		
+		first calls requests.Response.raise_for_status() which will
+		raise exceptions if a 4xx or 5xx response is received from the server
+		
+		If that doesn't raise anything, then check if we have an "FAIL" response
+		from the first line of text back from the Tomcat Manager web app, and
+		raise an TomcatException if necessary
+		
+		stole idea from requests package
+		"""
+		self.response.raise_for_status()
+		
+
 class TomcatManager:
 	"""A wrapper around the tomcat manager web application
 	
@@ -84,6 +139,20 @@ class TomcatManager:
 		if status[:4] != 'OK -':
 			raise TomcatException(status)
 		return content
+	
+	def _get(self, cmd, params=None):
+		"""make an HTTP get request to the tomcat manager web app
+		
+		returns a TomcatManagerResponse object
+		"""
+		url = self.__managerURL + '/text/' + cmd
+		tmr = TomcatManagerResponse()
+		tmr.response = requests.get(
+				url,
+				auth=(self.__userid, self.__password),
+				params=params
+				)
+		return tmr
 
 	def _execute_list(self, cmd, params=None, data=None, headers={}, method=None):
 		"""execute a tomcat command, and return the results as a python list, one line
@@ -116,16 +185,19 @@ class TomcatManager:
 		"""get information about the server
 		
 			tm = TomcatManager(url)
-			sinfo = tm.serverinfo()
-		
-		returns a dictionary of server information items
+			tmr = tm.serverinfo()
+			tmr.serverinfo['OS Name']
+			
+		returns a TomcatManagerResponse with an additional serverinfo
+		attribute. The serverinfo attribute contains a dictionary		
 		"""
-		response = self._execute("serverinfo")
+		tmr = self._get("serverinfo")
 		serverinfo = {}
-		for line in response:
+		for line in tmr.result:
 			key, value = line.rstrip().split(":",1)
 			serverinfo[key] = value.lstrip()
-		return serverinfo
+		tmr.serverinfo = serverinfo
+		return tmr
 
 	def vminfo(self):
 		"""get diagnostic information about the JVM
@@ -135,7 +207,7 @@ class TomcatManager:
 		
 		returns an array of JVM information
 		"""
-		return self._execute_list("vminfo")
+		return self._get("vminfo")
 
 	def sslConnectorCiphers(self):
 		"""get SSL/TLS ciphers configured for each connector
@@ -208,7 +280,8 @@ class TomcatManager:
 		"""return a list of all applications currently installed
 		
 			tm = TomcatManager(url)
-			apps = tm.list()
+			tmr = tm.list()
+			apps = tmr.apps
 		
 		apps is a list of tuples: (path, status, sessions, directory)
 		
@@ -218,12 +291,13 @@ class TomcatManager:
 		directory - the directory on the server where this app resides
 		
 		"""
-		response = self._execute("list")
+		tmr = self._get("list")
 		apps = []
-		for line in response:
+		for line in tmr.result:
 			apps.append(line.rstrip().split(":"))		
-		self.apps = apps
-		return apps
+		tmr.apps = apps
+		return tmr
+				
 
 	def stop(self, path):
 		"""stop an application
