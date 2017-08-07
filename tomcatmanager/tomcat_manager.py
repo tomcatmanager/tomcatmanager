@@ -23,6 +23,7 @@
 import urllib.request
 import urllib.parse
 import codecs
+import requests
 
 class ExtendedRequest(urllib.request.Request):
 	def __init__(self, url, data=None, headers={}, origin_req_host=None, unverifiable=False):
@@ -96,7 +97,21 @@ class TomcatManager:
 		for line in response:
 			output.append(line.rstrip())
 		return output	
-	
+
+	def is_connected(self):
+		"""try and connect to the tomcat server using url and authentication
+		
+		returns true if successful, false otherwise
+		"""
+		url = self.__managerURL + '/text/list'
+		r = requests.get(url, auth=(self.__userid, self.__password))
+		connected = False
+		if (r.status_code == requests.codes.ok):
+			status = r.text[:4]
+			if status == 'OK -':
+				connected = True
+		return connected
+		
 	def serverinfo(self):
 		"""get information about the server
 		

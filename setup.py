@@ -9,7 +9,7 @@ from os import path
 
 # get the long description from the README file
 here = path.abspath(path.dirname(__file__))
-with open(path.join(here, 'README'), encoding='utf-8') as f:
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
@@ -40,8 +40,14 @@ setup(
 
 	packages=find_packages(),
 
-	#install_requires=['cmd2'],
-	python_requires='>=3',
+	python_requires='>=3.3',
+	install_requires=['cmd2', 'requests'],
+	
+	# dependencies for unit testing
+	# $ pip install -e .[test]
+	extras_require={
+		'test': ['nose'],
+	},
 
 	# define the scripts that should be created on installation
 	entry_points={
