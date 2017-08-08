@@ -23,8 +23,8 @@
 import unittest
 from nose.tools import *
 import requests
-import tomcatmanager
 import io
+from tomcatmanager import *
 
 from tests.mock_server import start_mock_server80
 
@@ -35,10 +35,10 @@ class TestConnect:
 		(cls.mock_url, cls.userid, cls.password) = start_mock_server80()
 	
 	def test_connect(self):
-		tm = tomcatmanager.TomcatManager(self.mock_url)
+		tm = TomcatManager(self.mock_url)
 		assert_false(tm.is_connected())
 
-		tm = tomcatmanager.TomcatManager(self.mock_url, self.userid, self.password)
+		tm = TomcatManager(self.mock_url, self.userid, self.password)
 		assert_true(tm.is_connected())
 
 class TestManager(unittest.TestCase):
@@ -46,7 +46,7 @@ class TestManager(unittest.TestCase):
 	@classmethod
 	def setup_class(cls):
 		(cls.mock_url, cls.userid, cls.password) = start_mock_server80()
-		cls.tm = tomcatmanager.TomcatManager(cls.mock_url, cls.userid, cls.password)
+		cls.tm = TomcatManager(cls.mock_url, cls.userid, cls.password)
 
 	###
 	#
@@ -68,7 +68,7 @@ class TestManager(unittest.TestCase):
 			tmr.raise_for_status()
 		except RequestException as err:
 			self.fail(err)
-		except tomcatmanager.TomcatException as err:
+		except TomcatException as err:
 			self.fail('TomcatException raised')
 
 		assert_is_not_none(tmr.result)
@@ -117,12 +117,24 @@ class TestManager(unittest.TestCase):
 			tmr.raise_for_status()
 		except RequestException as err:
 			self.fail(err)
-		except tomcatmanager.TomcatException as err:
+		except TomcatException as err:
 			self.fail('TomcatException raised')
 		
 		assert_is_instance(tmr.leakers, list)
 		# make sure we don't have duplicates
 		assert_equal(len(tmr.leakers), len(set(tmr.leakers)))
+
+	@raises(TomcatException)
+	def test_sessions_no_path(self):	
+		"""sessions requires a path"""
+		tmr = self.tm.sessions('')
+		assert_equal(tmr.status_code, 'FAIL')
+		tmr.raise_for_status()
+
+	def test_sessions(self):
+		tmr = self.tm.sessions('/manager')
+		self.info_assertions(tmr)
+		assert_equal(tmr.result, tmr.sessions)	
 
 	###
 	#
@@ -130,7 +142,7 @@ class TestManager(unittest.TestCase):
 	# the server
 	#
 	###
-	@raises(tomcatmanager.TomcatException)
+	@raises(TomcatException)
 	def test_deploy_war_no_path(self):
 		"""server should return FAIL if we don't have a path to deploy to"""
 		warfile = io.BytesIO(b'the contents of my warfile')
@@ -140,7 +152,7 @@ class TestManager(unittest.TestCase):
 		warfile = io.BytesIO(b'the contents of my warfile')
 		self.tm.deploy_war('/newapp', warfile)
 
-	@raises(tomcatmanager.TomcatException)
+	@raises(TomcatException)
 	def test_undeploy_no_path(self):
 		"""server should return FAIL if we don't have a path to undeploy"""
 		self.tm.undeploy(None)

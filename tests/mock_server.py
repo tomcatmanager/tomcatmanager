@@ -31,6 +31,7 @@ import re
 import base64
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
+from tomcatmanager import *
 
 USERID='admin'
 PASSWORD='admin'
@@ -48,6 +49,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 	SSL_PATTERN = re.compile(r'^/manager/text/sslConnectorCiphers($|\?.*$)')
 	THREAD_DUMP_PATTERN = re.compile(r'^/manager/text/threaddump($|\?.*$)')
 	FIND_LEAKERS_PATTERN = re.compile(r'^/manager/text/findleaks($|\?.*$)')
+	SESSIONS_PATTERN = re.compile(r'^/manager/text/sessions($|\?.*$)')
 	# action commands
 	DEPLOY_PATTERN = re.compile(r'^/manager/text/deploy($|\?.*$)')
 	UNDEPLOY_PATTERN = re.compile(r'^/manager/text/undeploy($|\?.*$)')
@@ -80,6 +82,8 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 			self.get_thread_dump()
 		elif re.search(self.FIND_LEAKERS_PATTERN, self.path):
 			self.get_find_leakers()
+		elif re.search(self.SESSIONS_PATTERN, self.path):
+			self.get_sessions()
 		
 
 		# the action commands
@@ -98,7 +102,12 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 			self.put_deploy()
 		else:
 			self.send_fail('Unknown command')
-			
+
+	###
+	#
+	# convenience methods
+	#
+	###			
 	def authorized(self):
 		"""check authorization and return true or false"""
 		# first check authentication
@@ -112,7 +121,27 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 			c = "not authorized"
 			self.wfile.write(c.encode('utf-8'))
 			return False
-	
+
+	def ensure_path(self, failmsg):
+		"""Ensure we have a path in the query string
+		
+		Return the path if the path parameter is present. The Tomcat Manager web app
+		seems to assume of the path parameter is present, but the supplied path is an
+		empty string, the path to use is '/', so that's what we return here
+		
+		If no path is present return None and send the fail message
+		"""
+		url = urlparse(self.path)
+		qs = parse_qs(url.query)
+		path = None
+		if 'path' in qs:
+			path = qs['path']
+			if path == '':
+				path = '/'
+		else:
+			self.send_fail(failmsg)
+		return path
+		
 	def send_fail(self, msg=None):
 		# the path wasn't found, tomcat sends a 200 with a FAIL
 		self.send_text('FAIL - {msg}'.format(msg=msg))
@@ -787,7 +816,7 @@ Full thread dump OpenJDK 64-Bit Server VM (25.131-b11 mixed mode):
 """)
 
 	def get_find_leakers(self):
-		# verify we have a path query string
+		# check for a statusLine query string
 		url = urlparse(self.path)
 		qs = parse_qs(url.query)
 		status = ''
@@ -798,7 +827,13 @@ Full thread dump OpenJDK 64-Bit Server VM (25.131-b11 mixed mode):
 /leaker2
 /leaker1""")
 
-	
+	def get_sessions(self):
+		path = self.ensure_path('Invalid context path null was specified')
+		if path:
+			self.send_text("""OK - Session information for application at context path /manager
+Default maximum session inactive interval 30 minutes
+<1 minutes: 1 sessions""")
+
 	###
 	#
 	# the action commands, i.e. commands that actually effect some change on

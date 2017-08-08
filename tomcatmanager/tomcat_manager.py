@@ -233,7 +233,7 @@ class TomcatManager:
 			tmr.server_info['OS Name']
 			
 		returns an instance of TomcatManagerResponse with an additional server_info
-		attribute. The server_info attribute contains a dictionary		
+		attribute. The server_info attribute is a dictionary of items about the server
 		"""
 		tmr = self._get("serverinfo")
 		sinfo = {}
@@ -322,7 +322,7 @@ class TomcatManager:
 			y = tmr.thread_dump
 		
 		returns an instance of TomcatManagerResponse with the thread dump in the result
-		attribute and in the thread_dump
+		attribute and in the thread_dump attribute
 		"""
 		tmr = self._get("threaddump")
 		tmr.thread_dump = tmr.result
@@ -361,13 +361,41 @@ class TomcatManager:
 		tmr.leakers = list(set(leakers))
 		return tmr
 
-				
+	def sessions(self, path):
+		"""return a list of the sessions in an application at a given path
+	
+			tm = TomcatManager(url)
+			tmr = tm.sessions('/manager')
+			x = tmr.result
+			y = tmr.sessions
+		
+		returns an instance of TomcatManagerResponse with the session summary in the
+		result attribute and in the sessions attribute
+		"""
+		tmr = self._get("sessions", {'path': str(path)})
+		tmr.sessions = tmr.result
+		return tmr
+
 	###
 	#
 	# the action commands, i.e. commands that actually effect some change on
 	# the server
 	#
 	###
+	def expire(self, path, idle):
+		"""expire sessions idle for longer than idle minutes
+		
+		Arguments:
+		path     the path to the app on the server whose sessions you want to expire
+		idle      sessions idle for more than this number of minutes will be expired
+		         use age=0 to expire all sessions
+		"""
+		response = self._execute("expire", {'path': path, 'idle': idle})
+		sessions = []
+		for line in response:
+			sessions.append(line.rstrip())
+		return sessions
+	
 	def stop(self, path):
 		"""stop an application
 		
@@ -392,31 +420,7 @@ class TomcatManager:
 		"""
 		response = self._execute("reload", {'path': path})
 
-	def sessions(self, path):
-		"""return a list of the sessions in an application
-		
-			tm = TomcatManager(url)
-			print(tm.sessions("/myappname"))
-		"""
-		response = self._execute("sessions", {'path': path})
-		sessions = []
-		for line in response:
-			sessions.append(line.rstrip())
-		return sessions
 
-	def expire(self, path, idle):
-		"""expire sessions idle for longer than idle minutes
-		
-		Arguments:
-		path     the path to the app on the server whose sessions you want to expire
-		idle      sessions idle for more than this number of minutes will be expired
-		         use age=0 to expire all sessions
-		"""
-		response = self._execute("expire", {'path': path, 'idle': idle})
-		sessions = []
-		for line in response:
-			sessions.append(line.rstrip())
-		return sessions
 
 	def deploy_war(self, path, fileobj, update=False, tag=None):
 		"""read a WAR file from a local fileobj and deploy it at path
