@@ -20,30 +20,16 @@
 # THE SOFTWARE.
 #
 
-from pkg_resources import get_distribution
+from requests.structures import LookupDict
 
-__version__ = get_distribution('tomcatmanager').version
+_codes = {
 
-from .tomcat_manager import TomcatManager
-from .tomcat_manager import TomcatException
-from .status_codes import codes
-from .interactive_tomcat_manager import InteractiveTomcatManager
+	# 'sent from tomcat': 'friendly name'
+	'OK': 'ok',
+	'FAIL': 'fail',
+}
 
-'''from https://stackoverflow.com/questions/17583443/what-is-the-correct-way-to-share-package-version-with-setup-py-and-the-package
+codes = LookupDict(name='status_codes')
 
-from pkg_resources import get_distribution, DistributionNotFound
-import os.path
-
-try:
-    _dist = get_distribution('foobar')
-    # Normalize case for Windows systems
-    dist_loc = os.path.normcase(_dist.location)
-    here = os.path.normcase(__file__)
-    if not here.startswith(os.path.join(dist_loc, 'foobar')):
-        # not installed, but there is another version that *is*
-        raise DistributionNotFound
-except DistributionNotFound:
-    __version__ = 'Please install this project with setup.py'
-else:
-    __version__ = _dist.version
-'''
+for code, title in _codes.items():
+	setattr(codes, title, code)

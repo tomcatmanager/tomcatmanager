@@ -24,7 +24,7 @@ import unittest
 from nose.tools import *
 import requests
 import io
-from tomcatmanager import *
+import tomcatmanager as tm
 
 from tests.mock_server import start_mock_server80
 
@@ -35,18 +35,18 @@ class TestConnect:
 		(cls.mock_url, cls.userid, cls.password) = start_mock_server80()
 	
 	def test_connect(self):
-		tm = TomcatManager(self.mock_url)
-		assert_false(tm.is_connected())
+		tomcat = tm.TomcatManager(self.mock_url)
+		assert_false(tomcat.is_connected())
 
-		tm = TomcatManager(self.mock_url, self.userid, self.password)
-		assert_true(tm.is_connected())
+		tomcat = tm.TomcatManager(self.mock_url, self.userid, self.password)
+		assert_true(tomcat.is_connected())
 
 class TestManager(unittest.TestCase):
 
 	@classmethod
 	def setup_class(cls):
 		(cls.mock_url, cls.userid, cls.password) = start_mock_server80()
-		cls.tm = TomcatManager(cls.mock_url, cls.userid, cls.password)
+		cls.tomcat = tm.TomcatManager(cls.mock_url, cls.userid, cls.password)
 
 	###
 	#
@@ -61,7 +61,7 @@ class TestManager(unittest.TestCase):
 		# check for results. If the status_code is FAIL, then we probably
 		# won't have the result we want, but we need to fix the FAIL instead
 		# of worrying about why result it null
-		assert_equal(tmr.status_code, 'OK', 'message from server: "{0}"'.format(tmr.status_message))
+		assert_equal(tmr.status_code, tm.codes.ok, 'message from server: "{0}"'.format(tmr.status_message))
 		assert_is_not_none(tmr.status_message)
 		assert_true(len(tmr.status_message) > 0)
 		try:
@@ -75,17 +75,17 @@ class TestManager(unittest.TestCase):
 		assert_true(len(tmr.result) > 0)
 
 	def test_list(self):
-		tmr = self.tm.list()
+		tmr = self.tomcat.list()
 		self.info_assertions(tmr)
 		assert_true(isinstance(tmr.apps, list))
 	
 	def test_server_info(self):
-		tmr = self.tm.server_info()
+		tmr = self.tomcat.server_info()
 		self.info_assertions(tmr)
 		assert_is_instance(tmr.server_info, dict)
 
 	def test_status_xml(self):
-		tmr = self.tm.status_xml()
+		tmr = self.tomcat.status_xml()
 		self.info_assertions(tmr)
 		assert_equal(tmr.result, tmr.status_xml)
 		xml = tmr.status_xml
@@ -93,24 +93,24 @@ class TestManager(unittest.TestCase):
 		assert_equal(xml[0][:6], '<?xml ')
 
 	def test_vm_info(self):
-		tmr = self.tm.vm_info()
+		tmr = self.tomcat.vm_info()
 		self.info_assertions(tmr)
 		assert_equal(tmr.result, tmr.vm_info)
 
 	def test_ssl_connector_ciphers(self):
-		tmr = self.tm.ssl_connector_ciphers()
+		tmr = self.tomcat.ssl_connector_ciphers()
 		self.info_assertions(tmr)
 		assert_equal(tmr.result, tmr.ssl_connector_ciphers)
 	
 	def test_thread_dump(self):
-		tmr = self.tm.thread_dump()
+		tmr = self.tomcat.thread_dump()
 		self.info_assertions(tmr)
 		assert_equal(tmr.result, tmr.thread_dump)
 
 	def test_find_leakers(self):
-		tmr = self.tm.find_leakers()
+		tmr = self.tomcat.find_leakers()
 		# don't use info_assertions() because there might not be any leakers
-		assert_equal(tmr.status_code, 'OK', 'message from server: "{0}"'.format(tmr.status_message))
+		assert_equal(tmr.status_code, tm.codes.ok, 'message from server: "{0}"'.format(tmr.status_message))
 		assert_is_not_none(tmr.status_message)
 		assert_true(len(tmr.status_message) > 0)
 		try:
@@ -124,15 +124,15 @@ class TestManager(unittest.TestCase):
 		# make sure we don't have duplicates
 		assert_equal(len(tmr.leakers), len(set(tmr.leakers)))
 
-	@raises(TomcatException)
+	@raises(tm.TomcatException)
 	def test_sessions_no_path(self):	
 		"""sessions requires a path"""
-		tmr = self.tm.sessions('')
-		assert_equal(tmr.status_code, 'FAIL')
+		tmr = self.tomcat.sessions('')
+		assert_equal(tmr.status_code, tm.codes.fail)
 		tmr.raise_for_status()
 
 	def test_sessions(self):
-		tmr = self.tm.sessions('/manager')
+		tmr = self.tomcat.sessions('/manager')
 		self.info_assertions(tmr)
 		assert_equal(tmr.result, tmr.sessions)	
 
@@ -142,21 +142,21 @@ class TestManager(unittest.TestCase):
 	# the server
 	#
 	###
-	@raises(TomcatException)
+	@raises(tm.TomcatException)
 	def test_deploy_war_no_path(self):
-		"""server should return FAIL if we don't have a path to deploy to"""
+		"""ensure we throw an exception if we don't have a path to deploy to"""
 		warfile = io.BytesIO(b'the contents of my warfile')
-		self.tm.deploy_war(None, warfile)
+		self.tomcat.deploy_war(None, warfile)
 
 	def test_deploy_war(self):
 		warfile = io.BytesIO(b'the contents of my warfile')
-		self.tm.deploy_war('/newapp', warfile)
+		self.tomcat.deploy_war('/newapp', warfile)
 
-	@raises(TomcatException)
+	@raises(tm.TomcatException)
 	def test_undeploy_no_path(self):
-		"""server should return FAIL if we don't have a path to undeploy"""
-		self.tm.undeploy(None)
+		"""ensure we throw an exception if we don't have a path to undeploy"""
+		self.tomcat.undeploy(None)
 	
 	def test_undeploy(self):
 		"""should throw an exception if there is an error"""
-		self.tm.undeploy('/newapp')
+		self.tomcat.undeploy('/newapp')

@@ -25,6 +25,8 @@ import urllib.parse
 import codecs
 import requests
 
+from .status_codes import codes
+
 class ExtendedRequest(urllib.request.Request):
 	def __init__(self, url, data=None, headers={}, origin_req_host=None, unverifiable=False):
 		urllib.request.Request.__init__(self, url, data, headers, origin_req_host,  unverifiable)
@@ -67,7 +69,13 @@ class TomcatManagerResponse:
 
 	@property
 	def status_code(self):
-		"""status of the tomcat manager command, can be 'OK' or 'FAIL'"""
+		"""status of the tomcat manager command
+		
+		the codes can be found in tomcatmanager.codes and they are
+		
+		tomcatmanager.codes.ok
+		tomcatmanager.codes.fail
+		"""
 		return self._status_code
 
 	@status_code.setter
@@ -103,7 +111,7 @@ class TomcatManagerResponse:
 		stole idea from requests package
 		"""
 		self.response.raise_for_status()
-		if self.status_code == 'FAIL':
+		if self.status_code == codes.fail:
 			raise TomcatException(self.status_message)
 
 
@@ -142,7 +150,7 @@ class TomcatManager:
 		content = codecs.iterdecode(response, 'utf-8')
 		status = next(content).rstrip()
 		self.has_connected = True
-		if status[:4] != 'OK -':
+		if status[:4] != codes.ok + ' -':
 			raise TomcatException(status)
 		return content
 	
@@ -276,11 +284,11 @@ class TomcatManager:
 		# we have to force a status_code and a status_message
 		# because the server doesn't return them
 		if tmr.response.status_code == requests.codes.ok:
-			tmr.status_code = 'OK'
-			tmr.status_message = 'ok'
+			tmr.status_code = codes.ok
+			tmr.status_message = codes.ok
 		else:
-			tmr.status_code = 'FAIL'
-			tmr.status_message = 'fail'
+			tmr.status_code = codes.fail
+			tmr.status_message = codes.fail
 		return tmr
 
 	def vm_info(self):
