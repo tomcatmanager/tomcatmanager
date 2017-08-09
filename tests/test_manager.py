@@ -48,6 +48,19 @@ class TestManager(unittest.TestCase):
 		(cls.mock_url, cls.userid, cls.password) = start_mock_server80()
 		cls.tomcat = tm.TomcatManager(cls.mock_url, cls.userid, cls.password)
 
+	def success_assertions(self, tmr):
+		"""a set of common assertions for every command to ensure it
+		completed successfully"""
+		assert_equal(tmr.status_code, tm.codes.ok, 'message from server: "{0}"'.format(tmr.status_message))
+		assert_is_not_none(tmr.status_message)
+		assert_true(len(tmr.status_message) > 0)
+		try:
+			tmr.raise_for_status()
+		except RequestException as err:
+			self.fail(err)
+		except TomcatException as err:
+			self.fail(err)
+
 	###
 	#
 	# test the info type commands, i.e. commands that don't really do anything, they
@@ -57,20 +70,7 @@ class TestManager(unittest.TestCase):
 	def info_assertions(self, tmr):
 		"""a set of common assertions that should be true of the info
 		type commands which return a result"""
-		# order matters here, we want to test the status_code before we
-		# check for results. If the status_code is FAIL, then we probably
-		# won't have the result we want, but we need to fix the FAIL instead
-		# of worrying about why result it null
-		assert_equal(tmr.status_code, tm.codes.ok, 'message from server: "{0}"'.format(tmr.status_message))
-		assert_is_not_none(tmr.status_message)
-		assert_true(len(tmr.status_message) > 0)
-		try:
-			tmr.raise_for_status()
-		except RequestException as err:
-			self.fail(err)
-		except TomcatException as err:
-			self.fail('TomcatException raised')
-
+		self.success_assertions(tmr)
 		assert_is_not_none(tmr.result)
 		assert_true(len(tmr.result) > 0)
 
@@ -107,18 +107,25 @@ class TestManager(unittest.TestCase):
 		self.info_assertions(tmr)
 		assert_equal(tmr.result, tmr.thread_dump)
 
+	def test_resources(self):
+		tmr = self.tomcat.resources()
+		self.info_assertions(tmr)
+		assert_is_instance(tmr.resources, list)
+
+		tmr = self.tomcat.resources('org.apache.catalina.users.MemoryUserDatabase')
+		self.info_assertions(tmr)
+		assert_is_instance(tmr.resources, list)
+		assert_equal(len(tmr.resources), 1)
+		
+		tmr = self.tomcat.resources('com.example.Nothing')
+		self.info_assertions(tmr)
+		assert_is_instance(tmr.resources, list)
+		assert_equal(len(tmr.resources), 0)
+		
+
 	def test_find_leakers(self):
 		tmr = self.tomcat.find_leakers()
-		# don't use info_assertions() because there might not be any leakers
-		assert_equal(tmr.status_code, tm.codes.ok, 'message from server: "{0}"'.format(tmr.status_message))
-		assert_is_not_none(tmr.status_message)
-		assert_true(len(tmr.status_message) > 0)
-		try:
-			tmr.raise_for_status()
-		except RequestException as err:
-			self.fail(err)
-		except TomcatException as err:
-			self.fail('unexpected TomcatException raised')
+		self.success_assertions(tmr)
 		
 		assert_is_instance(tmr.leakers, list)
 		# make sure we don't have duplicates
@@ -163,7 +170,7 @@ class TestManager(unittest.TestCase):
 
 	def test_start(self):
 		tmr = self.tomcat.start('/someapp')
-		assert_equal(tmr.status_code, tm.codes.ok)
+		self.success_assertions(tmr)
 		tmr.raise_for_status()
 
 	@raises(tm.TomcatException)
@@ -175,7 +182,7 @@ class TestManager(unittest.TestCase):
 
 	def test_stop(self):
 		tmr = self.tomcat.stop('/someapp')
-		assert_equal(tmr.status_code, tm.codes.ok)
+		self.success_assertions(tmr)
 		tmr.raise_for_status()
 
 	@raises(tm.TomcatException)
@@ -187,7 +194,7 @@ class TestManager(unittest.TestCase):
 
 	def test_reload(self):
 		tmr = self.tomcat.reload('/someapp')
-		assert_equal(tmr.status_code, tm.codes.ok)
+		self.success_assertions(tmr)
 		tmr.raise_for_status()
 	
 	@raises(tm.TomcatException)

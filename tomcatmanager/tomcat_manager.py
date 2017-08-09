@@ -336,6 +336,30 @@ class TomcatManager:
 		tmr.thread_dump = tmr.result
 		return tmr
 
+	def resources(self, type=None):
+		"""list the global JNDI resources available for use in resource links for context config files
+		
+			tm = TomcatManager(url)
+			tmr = tm.resources()
+			resources = tmr.resources
+		
+		returns an instance of TomcatManagerResponse with an additional resources
+		attribute
+		
+		resources is a list of tuples: (resource, class)
+		"""
+		if type:
+			tmr = self._get("resources", {'type': str(type)})
+		else:
+			tmr = self._get("resources")
+		resources = []
+		for line in tmr.result:
+			resource, cls = line.rstrip().split(":",1)
+			if resource[:7] != codes.fail + ' - ':
+				resources.append([resource, cls])
+		tmr.resources = resources
+		return tmr
+
 	def find_leakers(self):
 		"""list apps that leak memory
 		
@@ -484,18 +508,4 @@ class TomcatManager:
 			params['path'] = path
 		response = self._execute("undeploy", params)
 
-	def resources(self,type=None):
-		"""list the global JNDI resources available for use in resource links for config files
-		
-		Arguments:
-		type	a fully qualified Java class name of the resource type you are interested in
-				if passed empty, resources of all types will be returned
-		"""
-		if type:
-			response = self._execute("resources", {'type': type})
-		else:
-			response = self._execute("resources")
-		resources = []
-		for line in response:
-			resources.append(line.rstrip())
-		return resources
+

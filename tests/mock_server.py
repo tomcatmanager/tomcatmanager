@@ -48,6 +48,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 	VM_INFO_PATTERN = re.compile(r'^/manager/text/vminfo($|\?.*$)')
 	SSL_PATTERN = re.compile(r'^/manager/text/sslConnectorCiphers($|\?.*$)')
 	THREAD_DUMP_PATTERN = re.compile(r'^/manager/text/threaddump($|\?.*$)')
+	RESOURCES_PATTERN = re.compile(r'^/manager/text/resources($|\?.*$)')
 	FIND_LEAKERS_PATTERN = re.compile(r'^/manager/text/findleaks($|\?.*$)')
 	SESSIONS_PATTERN = re.compile(r'^/manager/text/sessions($|\?.*$)')
 	# action commands
@@ -84,6 +85,8 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 			self.get_ssl_connector_ciphers()
 		elif re.search(self.THREAD_DUMP_PATTERN, self.path):
 			self.get_thread_dump()
+		elif re.search(self.RESOURCES_PATTERN, self.path):
+			self.get_resources()
 		elif re.search(self.FIND_LEAKERS_PATTERN, self.path):
 			self.get_find_leakers()
 		elif re.search(self.SESSIONS_PATTERN, self.path):
@@ -826,6 +829,24 @@ Full thread dump OpenJDK 64-Bit Server VM (25.131-b11 mixed mode):
 	at org.apache.catalina.startup.Bootstrap.start(Bootstrap.java:351)
 	at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:485)
 """)
+
+	def get_resources(self):
+		# check for a type query string
+		url = urlparse(self.path)
+		qs = parse_qs(url.query)
+		type = None
+		if 'type' in qs:
+			type = qs['type'][0]
+
+		if type == 'org.apache.catalina.users.MemoryUserDatabase':
+			self.send_text("""OK - Listed global resources of type org.apache.catalina.users.MemoryUserDatabase
+UserDatabase:org.apache.catalina.users.MemoryUserDatabase""")
+		elif type == 'com.example.Nothing':
+			self.send_text("""OK - Listed global resources of type com.example.Nothing
+FAIL - Encountered exception java.lang.ClassNotFoundException: com.example.Nothing""")
+		else:
+			self.send_text("""OK - Listed global resources of type org.apache.catalina.users.MemoryUserDatabase
+UserDatabase:org.apache.catalina.users.MemoryUserDatabase""")
 
 	def get_find_leakers(self):
 		# check for a statusLine query string
