@@ -220,9 +220,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 			response = func(*args)
 			response.raise_for_status()
 			return response
-		except tm.TomcatError:
+		except tm.TomcatError as err:
 			self.exit_code = 1
-			self.pexception()
+			self.perr(str(err))
 
 	def emptyline(self):
 		"""Do nothing on an empty line"""
