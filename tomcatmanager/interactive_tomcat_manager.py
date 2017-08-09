@@ -86,14 +86,9 @@ import argparse
 import sys
 import traceback
 import getpass
+import cmd2
 import urllib.request
 import tomcatmanager as tm
-
-# use cmd2 if it's available
-try:
-	import cmd2 as cmd
-except ImportError as e:
-	import cmd
 
 #
 #
@@ -102,7 +97,7 @@ prog_name='tomcat-manager'
 version_string='%s %s (works with Tomcat Manager <= 8.5)' % (prog_name, version_number)
 
 
-class InteractiveTomcatManager(cmd.Cmd):
+class InteractiveTomcatManager(cmd2.Cmd):
 	"""an interactive command line tool for tomcat manager
 	
 	each command sets the value of the instance variable exit_code, which follows
