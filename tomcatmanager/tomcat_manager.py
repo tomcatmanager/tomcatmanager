@@ -20,26 +20,9 @@
 # THE SOFTWARE.
 #
 
-import urllib.request
-import urllib.parse
-import codecs
 import requests
 
 from .status_codes import codes
-
-class ExtendedRequest(urllib.request.Request):
-	def __init__(self, url, data=None, headers={}, origin_req_host=None, unverifiable=False):
-		urllib.request.Request.__init__(self, url, data, headers, origin_req_host,  unverifiable)
-		self.method = None
-
-	def get_method(self):
-		if self.method == None:
-			if self.data:
-				return "POST"
-			else:
-				return "GET"
-		else:
-			return self.method
 
 class TomcatException(Exception):
 	def __init__(self, msg):
@@ -60,12 +43,21 @@ class TomcatManagerResponse:
 
 	@property
 	def response(self):
-		"""contains the requsts.Response object from our request"""
+		"""contains the requsts.Response object from the request"""
 		return self._response
 
 	@response.setter
-	def response(self, value):
-		self._response = value
+	def response(self, response):
+		self._response = response
+		# parse the text to get the status code and results
+		if response.text:
+			try:
+				statusline = response.text.splitlines()[0]
+				self.status_code = statusline.split(' ', 1)[0]
+				self.status_message = statusline.split(' ',1)[1][2:]
+				self.result = response.text.splitlines()[1:]
+			except IndexError:
+				pass
 
 	@property
 	def status_code(self):
@@ -123,37 +115,7 @@ class TomcatManager:
 		self.__managerURL = url
 		self.__userid = userid
 		self.__password = password
-		self.has_connected = False
-		
-		if userid and password:
-			self.__passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-			self.__passman.add_password(None, self.__managerURL, self.__userid, self.__password)
-			self.__auth_handler = urllib.request.HTTPBasicAuthHandler(self.__passman)
-			self.__opener = urllib.request.build_opener(self.__auth_handler)
-		else:
-			self.__opener = urllib.request.build_opener()
 
-	def _execute(self, cmd, params=None, data=None, headers={}, method=None):
-		"""execute a tomcat command and check status returning a file obj
-		for further processing
-		
-			tm = TomcatManager(url)
-			fobj = tm._execute(url)
-		"""
-		url = self.__managerURL + '/text/' + cmd
-		if params:
-			url = url + '?%s' % urllib.parse.urlencode(params)
-		req = ExtendedRequest(url, data, headers)
-		if method:
-			req.method = method
-		response = self.__opener.open(req)
-		content = codecs.iterdecode(response, 'utf-8')
-		status = next(content).rstrip()
-		self.has_connected = True
-		if status[:4] != codes.ok + ' -':
-			raise TomcatException(status)
-		return content
-	
 	def _get(self, cmd, payload=None):
 		"""make an HTTP get request to the tomcat manager web app
 		
@@ -166,25 +128,7 @@ class TomcatManager:
 				auth=(self.__userid, self.__password),
 				params=payload
 				)
-		# set the other attributes of the response object
-		statusline = tmr.response.text.splitlines()[0]
-		tmr.status_code = statusline.split(' ', 1)[0]
-		tmr.status_message = statusline.split(' ',1)[1][2:]
-		tmr.result = tmr.response.text.splitlines()[1:]
 		return tmr
-
-	def _execute_list(self, cmd, params=None, data=None, headers={}, method=None):
-		"""execute a tomcat command, and return the results as a python list, one line
-		per list item
-		
-			tm = TomcatManager(url)
-			output = tm._execute_list("vminfo")
-		"""
-		response = self._execute(cmd, params, data, headers, method)
-		output = []
-		for line in response:
-			output.append(line.rstrip())
-		return output	
 
 	###
 	#
@@ -467,8 +411,6 @@ class TomcatManager:
 		"""
 		return self._get("reload", {'path': path})
 
-
-
 	def deploy_war(self, path, fileobj, update=False, tag=None):
 		"""read a WAR file from a local fileobj and deploy it at path
 		
@@ -477,13 +419,7 @@ class TomcatManager:
 		fileobj  a file object opened for binary reading, from which the war file will be read
 		update   whether to update the existing path (default False)
 		tag      a tag for this application (default None)
-		 
 		"""
-		wardata = fileobj.read()
-		headers = {}
-		headers['Content-type'] = "application/octet-stream"
-		headers['Content-length'] = str(len(wardata))
-		
 		params = {}
 		if path:
 			params['path'] = path
@@ -491,21 +427,24 @@ class TomcatManager:
 			params['update'] = "true"
 		if tag:
 			params['tag'] = tag
-		response = self._execute("deploy", params, wardata, headers, "PUT")
-	
-	def deployLocalWAR(self, path, warfile, config=None, update=False, tag=None):
-		"""tell tomcat to deploy a file already on the server"""
-		pass
+
+		url = self.__managerURL + '/text/deploy'
+		tmr = TomcatManagerResponse()
+		tmr.response = requests.put(
+				url,
+				auth=(self.__userid, self.__password),
+				params=params,
+				data=fileobj,
+				)
+		return tmr
 
 	def undeploy(self, path):
-		"""undeploy an application
-		
+		"""undeploy the application at a given path
+	
 			tm = TomcatManager(url)
-			tm.undeploy("/myappname")
+			tmr = tm.undeploy('/someapp')
+			tmr.raise_on_status()
+		
+		returns an instance of TomcatManagerResponse
 		"""
-		params = {}
-		if path:
-			params['path'] = path
-		response = self._execute("undeploy", params)
-
-
+		return self._get("undeploy", {'path': path})

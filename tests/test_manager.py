@@ -201,17 +201,24 @@ class TestManager(unittest.TestCase):
 	def test_deploy_war_no_path(self):
 		"""ensure we throw an exception if we don't have a path to deploy to"""
 		warfile = io.BytesIO(b'the contents of my warfile')
-		self.tomcat.deploy_war(None, warfile)
+		tmr = self.tomcat.deploy_war(None, warfile)
+		tmr.raise_for_status()
 
 	def test_deploy_war(self):
 		warfile = io.BytesIO(b'the contents of my warfile')
-		self.tomcat.deploy_war('/newapp', warfile)
+		tmr = self.tomcat.deploy_war('/newapp', warfile)
+		self.success_assertions(tmr)
+		tmr.raise_for_status()
 
 	@raises(tm.TomcatException)
 	def test_undeploy_no_path(self):
 		"""ensure we throw an exception if we don't have a path to undeploy"""
-		self.tomcat.undeploy(None)
+		tmr = self.tomcat.undeploy(None)
+		assert_equal(tmr.status_code, tm.codes.fail)
+		tmr.raise_for_status()
 	
 	def test_undeploy(self):
 		"""should throw an exception if there is an error"""
-		self.tomcat.undeploy('/newapp')
+		tmr = self.tomcat.undeploy('/newapp')
+		self.success_assertions(tmr)
+		tmr.raise_for_status()

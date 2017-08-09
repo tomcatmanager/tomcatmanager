@@ -898,28 +898,21 @@ Default maximum session inactive interval 30 minutes
 
 	def put_deploy(self):
 		# verify we have a path query string
-		url = urlparse(self.path)
-		qs = parse_qs(url.query)
-		if 'path' in qs:
-			path = qs['path']
+		path = self.ensure_path('Invalid parameters supplied for command [/deploy]')
+		if path:
 			length = int(self.headers.get('Content-Length'))
 			content = self.rfile.read(length)
 			self.send_text('OK - Deployed application at context path {path}'.format(path=path))
-		else:
-			self.send_fail('Invalid parameters supplied for command [/deploy]')
 
 	def get_undeploy(self):
-		# verify we have a path query string
-		url = urlparse(self.path)
-		qs = parse_qs(url.query)
-		if 'path' in qs:
-			path = qs['path'][0]
-			self.send_text('OK - Undeployed application at context path {path}'.format(path=path))
-		else:
-			self.send_fail('Invalid parameters supplied for command [/deploy]')
+		path = self.ensure_path('Invalid context path null was specified')
+		if path:
+			self.send_text('OK - Undeployed application at context path {0}'.format(path))
 	
+###
 #
 #
+###
 def start_mock_server80():
 	"""start a mock Tomcat Manager application
 	
