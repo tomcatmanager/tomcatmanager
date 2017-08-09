@@ -44,9 +44,9 @@ setup(
 	install_requires=['cmd2', 'requests'],
 	
 	# dependencies for unit testing
-	# $ pip install -e .[test]
+	# $ pip3 install -e .[test]
 	extras_require={
-		'test': ['nose'],
+		'test': ['pytest'],
 	},
 
 	# define the scripts that should be created on installation

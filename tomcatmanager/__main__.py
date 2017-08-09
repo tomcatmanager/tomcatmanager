@@ -22,7 +22,9 @@
 
 import argparse
 import sys
+
 import tomcatmanager as tm
+
 
 #
 # entry point for command line

@@ -108,6 +108,15 @@ class TomcatManager:
 	"""A wrapper around the tomcat manager web application
 	
 	"""
+	
+	@classmethod
+	def _is_stream(self, obj):
+		"""return true if this is a stream type object"""
+		return all([
+			hasattr(obj, '__iter__'),
+			not isinstance(obj, (str, bytes, list, tuple, collections.Mapping))
+		])
+		
 	def __init__(self, url=None, userid=None, password=None):
 		self._url = url
 		self._userid = userid
@@ -119,13 +128,13 @@ class TomcatManager:
 		returns a TomcatManagerResponse object
 		"""
 		url = self._url + '/text/' + cmd
-		tmr = TomcatManagerResponse()
-		tmr.response = requests.get(
+		r = TomcatManagerResponse()
+		r.response = requests.get(
 				url,
 				auth=(self._userid, self._password),
 				params=payload
 				)
-		return tmr
+		return r
 
 	###
 	#
@@ -142,7 +151,7 @@ class TomcatManager:
 		try:
 			tmr = self._get('list')
 		except:
-			return
+			return connected
 
 		if (tmr.response.status_code == requests.codes.ok):
 			if tmr.status_code == codes.ok:
@@ -446,13 +455,6 @@ class TomcatManager:
 			return tmr
 		else:
 			return self._get('deploy')
-	
-	def _is_stream(self, obj):
-		"""return true if this is a stream type object"""
-		return all([
-			hasattr(obj, '__iter__'),
-			not isinstance(obj, (str, bytes, list, tuple, collections.Mapping))
-		])
 
 	def undeploy(self, path):
 		"""undeploy the application at a given path

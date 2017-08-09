@@ -20,7 +20,7 @@
 # THE SOFTWARE.
 #
 
-"""Mock up a Tomcat Manager server
+"""Mock up a Tomcat Manager application that behaves like tomcat version 8.0.x
 """
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -31,10 +31,10 @@ import re
 import base64
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
-from tomcatmanager import *
 
 USERID='admin'
 PASSWORD='admin'
+
 
 class MockRequestHandler80(BaseHTTPRequestHandler):
 	"""Handle HTTP Requests like Tomcat Manager 8.0.x"""
@@ -931,4 +931,4 @@ def start_mock_server80():
 	mock_server_thread.setDaemon(True)
 	mock_server_thread.start()
     
-	return (url, USERID, PASSWORD)
+	return {'url': url, 'userid': USERID, 'password': PASSWORD}
