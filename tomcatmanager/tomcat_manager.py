@@ -106,7 +106,7 @@ class TomcatManager:
 	"""A wrapper around the tomcat manager web application
 	
 	"""
-	def __init__(self, url="http://localhost:8080/manager", userid=None, password=None):
+	def __init__(self, url=None, userid=None, password=None):
 		self._url = url
 		self._userid = userid
 		self._password = password
@@ -130,13 +130,18 @@ class TomcatManager:
 	# convenience and utility methods
 	#
 	###
+	@property
 	def is_connected(self):
 		"""try and connect to the tomcat server using url and authentication
 		
 		returns true if successful, false otherwise
 		"""
-		tmr = self._get("list")
 		connected = False
+		try:
+			tmr = self._get("list")
+		except:
+			return
+
 		if (tmr.response.status_code == requests.codes.ok):
 			if tmr.status_code == 'OK':
 				connected = True

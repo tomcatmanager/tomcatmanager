@@ -35,11 +35,14 @@ class TestConnect:
 		(cls.mock_url, cls.userid, cls.password) = start_mock_server80()
 	
 	def test_connect(self):
+		tomcat = tm.TomcatManager()
+		assert_false(tomcat.is_connected)
+		
 		tomcat = tm.TomcatManager(self.mock_url)
-		assert_false(tomcat.is_connected())
+		assert_false(tomcat.is_connected)
 
 		tomcat = tm.TomcatManager(self.mock_url, self.userid, self.password)
-		assert_true(tomcat.is_connected())
+		assert_true(tomcat.is_connected)
 
 class TestManager(unittest.TestCase):
 
