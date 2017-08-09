@@ -410,21 +410,27 @@ class TomcatManager:
 		tmr.sessions = tmr.result
 		return tmr
 	
-	def stop(self, path):
-		"""stop an application
-		
-			tm = TomcatManager(url)
-			tm.stop("/myappname")
-		"""
-		response = self._execute("stop", {'path': path})
-
 	def start(self, path):
-		"""start a stopped application
-		
+		"""start the application at a given path
+	
 			tm = TomcatManager(url)
-			tm.start("/myappname")
+			tmr = tm.start('/someapp')
+			tmr.raise_on_status()
+		
+		returns an instance of TomcatManagerResponse
 		"""
-		response = self._execute("start", {'path': path})
+		return self._get("start", {'path': path})
+
+	def stop(self, path):
+		"""stop the application at a given path
+	
+			tm = TomcatManager(url)
+			tmr = tm.stop('/someapp')
+			tmr.raise_on_status()
+		
+		returns an instance of TomcatManagerResponse
+		"""
+		return self._get("stop", {'path': path})
 
 	def reload(self, path):
 		"""reload an application

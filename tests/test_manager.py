@@ -153,6 +153,30 @@ class TestManager(unittest.TestCase):
 		tmr = self.tomcat.expire('/manager', 10)
 		self.info_assertions(tmr)
 		assert_equal(tmr.result, tmr.sessions)
+
+	@raises(tm.TomcatException)
+	def test_start_no_path(self):
+		"""start requires a path"""
+		tmr = self.tomcat.start(None)
+		assert_equal(tmr.status_code, tm.codes.fail)
+		tmr.raise_for_status()
+
+	def test_start(self):
+		tmr = self.tomcat.start('/someapp')
+		assert_equal(tmr.status_code, tm.codes.ok)
+		tmr.raise_for_status()
+
+	@raises(tm.TomcatException)
+	def test_stop_no_path(self):
+		"""stop requires a path"""
+		tmr = self.tomcat.start(None)
+		assert_equal(tmr.status_code, tm.codes.fail)
+		tmr.raise_for_status()
+
+	def test_stop(self):
+		tmr = self.tomcat.stop('/someapp')
+		assert_equal(tmr.status_code, tm.codes.ok)
+		tmr.raise_for_status()
 	
 	@raises(tm.TomcatException)
 	def test_deploy_war_no_path(self):
