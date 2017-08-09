@@ -70,21 +70,22 @@ class TestInfo(TestManagerBase):
 		self.info_assertions(r)
 		assert r.result == r.thread_dump
 
-	def test_resources(self, tomcat):
+	def test_resources_list(self, tomcat):
 		r = tomcat.resources()
 		self.info_assertions(r)
-		assert isinstance(r.resources, list)
+		assert isinstance(r.resources, dict)
 
+	def test_resources_named_class(self, tomcat):
 		r = tomcat.resources('org.apache.catalina.users.MemoryUserDatabase')
 		self.info_assertions(r)
-		assert isinstance(r.resources, list)
+		assert isinstance(r.resources, dict)
 		assert len(r.resources) == 1
-		
+	
+	def test_resources_named_class_not_registered(self, tomcat):
 		r = tomcat.resources('com.example.Nothing')
 		self.info_assertions(r)
-		assert isinstance(r.resources, list)
+		assert isinstance(r.resources, dict)
 		assert len(r.resources) == 0
-		
 
 	def test_find_leakers(self, tomcat):
 		r = tomcat.find_leakers()

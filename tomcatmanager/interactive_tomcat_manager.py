@@ -323,8 +323,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
 			self.help_serverinfo()
 			self.exit_code = 2
 		else:
-			response = self.docmd(self.tomcat.server_info)
-			for key,value in iter(sorted(response.server_info.items())):
+			r = self.docmd(self.tomcat.server_info)
+			for key,value in iter(sorted(r.server_info.items())):
 				self.pout('{}: {}'.format(key, value))
 
 	def help_serverinfo(self):
@@ -391,9 +391,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 				type, = args.split()
 			except ValueError:
 				type = None
-			response = self.docmd(self.tomcat.resources, type)
-			for resource, cls in response.resources:
-				self.pout('{}: {}'.format(resource, cls))
+			r = self.docmd(self.tomcat.resources, type)
+			for resource, classname in iter(sorted(r.resources.items())):
+				self.pout('{}: {}'.format(resource, classname))
 		else:
 			self.help_resources()
 			self.exit_code = 2

@@ -33,6 +33,7 @@ from requests.structures import LookupDict
 class TomcatError(Exception):
 	pass
 
+
 class TomcatManagerResponse:
 	"""The response for a Tomcat Manager command"""    
 
@@ -106,10 +107,6 @@ class TomcatManagerResponse:
 		self.response.raise_for_status()
 		if self.status_code == codes.fail:
 			raise TomcatError(self.status_message)
-
-
-class JNDIResource():
-	pass
 
 
 ###

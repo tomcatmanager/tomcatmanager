@@ -120,13 +120,13 @@ class TomcatManager:
 		returns an instance of TomcatManagerResponse with an additional server_info
 		attribute. The server_info attribute is a dictionary of items about the server
 		"""
-		tmr = self._get('serverinfo')
+		r = self._get('serverinfo')
 		sinfo = {}
-		for line in tmr.result:
+		for line in r.result:
 			key, value = line.rstrip().split(':',1)
 			sinfo[key] = value.lstrip()
-		tmr.server_info = sinfo
-		return tmr
+		r.server_info = sinfo
+		return r
 
 	def status_xml(self):
 		"""get server status information in XML format
@@ -230,16 +230,18 @@ class TomcatManager:
 		resources is a list of tuples: (resource, class)
 		"""
 		if type:
-			tmr = self._get('resources', {'type': str(type)})
+			r = self._get('resources', {'type': str(type)})
 		else:
-			tmr = self._get('resources')
-		resources = []
-		for line in tmr.result:
-			resource, cls = line.rstrip().split(':',1)
+			r = self._get('resources')
+
+		resources = {}
+		for line in r.result:
+			resource, classname = line.rstrip().split(':',1)
 			if resource[:7] != codes.fail + ' - ':
-				resources.append([resource, cls])
-		tmr.resources = resources
-		return tmr
+				resources[resource] = classname.lstrip()
+		r.resources = resources
+		return r
+
 
 	def find_leakers(self):
 		"""list apps that leak memory
