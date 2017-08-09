@@ -112,11 +112,11 @@ class InteractiveTomcatManager(cmd.Cmd):
 	1 - error
 	2 - improper usage
 	"""
+	
 	def __init__(self):
 		super().__init__()
 		self.prompt = prog_name + '>'
-		self.tomcat_manager = None
-		self.__MSG_not_connected = 'not connected'
+		self.tomcat = None
 		self.debug_flag = False
 		self.exit_code = None
 		# only relevant for cmd2, but doesn't hurt anything on cmd
@@ -158,7 +158,12 @@ class InteractiveTomcatManager(cmd.Cmd):
 		else:
 			etype, evalue, etraceback = sys.exc_info()
 			self.perr(traceback.format_exception_only(etype, evalue))	
-	
+
+	def not_connected(self):
+		"""call when the command requires you to be connected and you aren't"""
+		self.exit_code = 1
+		self.perr('not connected')
+		
 	def docmd(self, func, *args):
 		"""call a function and return, printing any exceptions that occur
 		
@@ -198,8 +203,8 @@ class InteractiveTomcatManager(cmd.Cmd):
 			else:
 				raise ValueError()
 
-			self.tomcat_manager = tm.TomcatManager(url, username, password)
-			if self.tomcat_manager.is_connected:
+			self.tomcat = tm.TomcatManager(url, username, password)
+			if self.tomcat.is_connected:
 				self.pout('connected to tomcat manager at {0}'.format(url))
 				self.exit_code = 0
 			else:
@@ -222,6 +227,28 @@ class InteractiveTomcatManager(cmd.Cmd):
 	# anything, they just return some information from the server
 	#
 	###
+	def do_list(self, args):
+		"""list the applications on the server"""
+		if args:
+			self.help_list()
+			self.exit_code = 2
+		elif self.tomcat and self.tomcat.is_connected:
+			tmr = self.docmd(self.tomcat.list)
+			if tmr.status_code == tm.codes.ok:
+				apps = tmr.apps
+				cw = [24, 7, 8, 36]
+				# build the format string from the column widths so we only
+				# have the column widths hardcoded in one place
+				fmt = " ".join(list(map(lambda x: "%"+str(x)+"s",cw)))
+				dashes = "-"*80
+				self.pout( fmt % ("Path".ljust(cw[0]), "Status".ljust(cw[1]), "Sessions".rjust(cw[2]), "Directory".ljust(cw[3])) )
+				self.pout( fmt % (dashes[:cw[0]], dashes[:cw[1]], dashes[:cw[2]], dashes[:cw[3]]) )
+				for app in apps:
+					path, status, session, directory = app[:4]
+					self.pout( fmt % (app[0].ljust(cw[0]), app[1].ljust(cw[1]), app[2].rjust(cw[2]), app[3].ljust(cw[3])) )
+		else:
+			self.not_connected()
+			
 	def do_serverinfo(self, args):
 		if args:
 			self.help_serverinfo()
@@ -327,27 +354,6 @@ class InteractiveTomcatManager(cmd.Cmd):
 		self.exit_code = 0
 		self.pout("Usage: status")
 		self.pout("get server status information in XML format")
-
-	def do_list(self, args):
-		"""list the applications on the server"""
-		if args:
-			self.help_list()
-			self.exit_code = 2
-		elif self.tomcat and self.tomcat.has_connected:
-			apps = self.docmd(self.tomcat.list)
-			cw = [24, 7, 8, 36]
-			# build the format string from the column widths so we only
-			# have the column widths hardcoded in one place
-			fmt = " ".join(list(map(lambda x: "%"+str(x)+"s",cw)))
-			dashes = "-"*80
-			self.pout( fmt % ("Path".ljust(cw[0]), "Status".ljust(cw[1]), "Sessions".rjust(cw[2]), "Directory".ljust(cw[3])) )
-			self.pout( fmt % (dashes[:cw[0]], dashes[:cw[1]], dashes[:cw[2]], dashes[:cw[3]]) )
-			for app in apps:
-				path, status, session, directory = app[:4]
-				self.pout( fmt % (app[0].ljust(cw[0]), app[1].ljust(cw[1]), app[2].rjust(cw[2]), app[3].ljust(cw[3])) )
-		else:
-			self.exit_code = 1
-			self.perr(self.__MSG_not_connected)
 
 	def help_list(self):
 		self.exit_code = 0
