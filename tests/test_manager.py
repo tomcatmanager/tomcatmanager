@@ -20,14 +20,19 @@
 # THE SOFTWARE.
 #
 
-import unittest
-from nose.tools import *
 import requests
+import os
 import io
 import tomcatmanager as tm
 
+from nose.tools import *
 from tests.mock_server import start_mock_server80
 
+###
+#
+# test the connect command
+#
+###
 class TestConnect:
 
 	@classmethod
@@ -44,7 +49,12 @@ class TestConnect:
 		tomcat = tm.TomcatManager(self.mock_url, self.userid, self.password)
 		assert_true(tomcat.is_connected)
 
-class TestManager(unittest.TestCase):
+###
+#
+# test the info and action commands, except for deploy and undeploy
+#
+###
+class TestManager:
 
 	@classmethod
 	def setup_class(cls):
@@ -199,29 +209,70 @@ class TestManager(unittest.TestCase):
 		tmr = self.tomcat.reload('/someapp')
 		self.success_assertions(tmr)
 		tmr.raise_for_status()
-	
-	@raises(tm.TomcatError)
-	def test_deploy_war_no_path(self):
-		"""ensure we throw an exception if we don't have a path to deploy to"""
-		warfile = io.BytesIO(b'the contents of my warfile')
-		tmr = self.tomcat.deploy_war(None, warfile)
-		tmr.raise_for_status()
 
-	def test_deploy_war(self):
+###
+#
+# test the deploy command in all it's flavors
+#
+###
+
+class TestDeploy(TestManager):
+	"""here's the various flavors of deploy we need to support
+
+		# local warfile to server, via PUT, all the rest via get
+		tomcat.deploy(path='/sampleapp', war=fileobj)
+		# deploy a previously deployed webapp which was deployed by a tag
+		tomcat.deploy(path='/sampleapp', tag='footag')
+		# deploy a warfile that's already on the server
+		tomcat.deploy(path='/sampleapp', war='file:/path/to/foo')
+		# implied path, deploys to /sampleapp
+		tomcat.deploy(war='file:/path/to/sampleapp.war')
+		# deploy from appBase sampleapp.war to context /sampleapp
+		tomcat.deploy(war='sampleapp')
+		# deploy from appBase sampleapp.war to context /sampleapp
+		tomcat.deploy(war='sampleapp.war')
+		# deploy based on a context.xml
+		tomcat.deploy(config='file:/path/to/context.xml')
+		# deploy by context and war
+		tomcat.deploy(config='file:/path/to/context.xml', war='file:/path/bar.war')
+
+		# ? see if we can deploy a config and a warfile
+		tomcat.deploy(config='file:/path/to/context.xml', war=fileobj)		
+	"""	
+
+	def test_is_stream(self):
+		warfile = os.path.dirname(__file__) + '/war/sample.war'
+		obj = open(warfile, 'rb')
+		assert_true(self.tomcat._is_stream(obj))
+		
 		warfile = io.BytesIO(b'the contents of my warfile')
-		tmr = self.tomcat.deploy_war('/newapp', warfile)
-		self.success_assertions(tmr)
-		tmr.raise_for_status()
+		assert_true(self.tomcat._is_stream(obj))
+		
+		assert_false(self.tomcat._is_stream(None))
+		assert_false(self.tomcat._is_stream('some string'))
+		assert_false(self.tomcat._is_stream(['some', 'list']))
+
+	@raises(tm.TomcatError)
+	def test_deploy_no_args(self):
+		r = self.tomcat.deploy()
+		assert_equal(r.status_code, tm.codes.fail)
+		r.raise_for_status()
+
+	def test_deploy_local_war(self):
+		warfile = os.path.dirname(__file__) + '/war/sample.war'
+		war_fileobj = open(warfile, 'rb')
+		r = self.tomcat.deploy(path='/newapp', war=war_fileobj)
+		self.success_assertions(r)
+		r.raise_for_status()
 
 	@raises(tm.TomcatError)
 	def test_undeploy_no_path(self):
 		"""ensure we throw an exception if we don't have a path to undeploy"""
-		tmr = self.tomcat.undeploy(None)
-		assert_equal(tmr.status_code, tm.codes.fail)
-		tmr.raise_for_status()
+		r = self.tomcat.undeploy(None)
+		assert_equal(r.status_code, tm.codes.fail)
+		r.raise_for_status()
 	
 	def test_undeploy(self):
 		"""should throw an exception if there is an error"""
-		tmr = self.tomcat.undeploy('/newapp')
+		r = self.tomcat.undeploy('/newapp')
 		self.success_assertions(tmr)
-		tmr.raise_for_status()

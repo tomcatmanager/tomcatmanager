@@ -21,8 +21,10 @@
 #
 
 import requests
+import collections
 
 from .status_codes import codes
+
 
 class TomcatError(Exception):
 	pass
@@ -415,32 +417,41 @@ class TomcatManager:
 		"""
 		return self._get('reload', {'path': path})
 
-	def deploy_war(self, path, fileobj, update=False, tag=None):
-		"""read a WAR file from a local fileobj and deploy it at path
+	def deploy(self,
+			path=None, war=None
+			):
+		"""deploy tomcat applications
 		
 		Arguments:
 		path     the path on the server to deploy this war to
 		fileobj  a file object opened for binary reading, from which the war file will be read
-		update   whether to update the existing path (default False)
+		update   whether to undeploy the existing path first (default False)
 		tag      a tag for this application (default None)
 		"""
 		params = {}
-		if path:
-			params['path'] = path
-		if update:
-			params['update'] = 'true'
-		if tag:
-			params['tag'] = tag
 
-		url = self._url + '/text/deploy'
-		tmr = TomcatManagerResponse()
-		tmr.response = requests.put(
-				url,
-				auth=(self._userid, self._password),
-				params=params,
-				data=fileobj,
-				)
-		return tmr
+		if self._is_stream(war):
+			# PUT a local stream
+			url = self._url + '/text/deploy'
+			tmr = TomcatManagerResponse()
+			if path:
+				params['path'] = path
+			tmr.response = requests.put(
+					url,
+					auth=(self._userid, self._password),
+					params=params,
+					data=war,
+					)
+			return tmr
+		else:
+			return self._get('deploy')
+	
+	def _is_stream(self, obj):
+		"""return true if this is a stream type object"""
+		return all([
+			hasattr(obj, '__iter__'),
+			not isinstance(obj, (str, bytes, list, tuple, collections.Mapping))
+		])
 
 	def undeploy(self, path):
 		"""undeploy the application at a given path

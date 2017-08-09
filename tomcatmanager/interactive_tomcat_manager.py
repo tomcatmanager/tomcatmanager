@@ -209,7 +209,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 		"""call when the command requires you to be connected and you aren't"""
 
 		
-	def docmd(self, func, *args):
+	def docmd(self, func, *args, **kwargs):
 		"""Call a function and return, printing any exceptions that occur
 		
 		Sets exit_code to 0 and calls {func}. If func throws a TomcatError,
@@ -217,7 +217,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 		"""
 		try:
 			self.exit_code = 0
-			response = func(*args)
+			response = func(*args, **kwargs)
 			response.raise_for_status()
 			return response
 		except tm.TomcatError as err:
@@ -526,14 +526,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
 				tag = None
 
 			fileobj = open(filename, 'rb')
-			self.docmd(self.tomcat.deploy_war, path, fileobj, update, tag)
+			self.docmd(self.tomcat.deploy, path=path, war=fileobj)
 		else:
 			self.help_deploy()
 			self.exit_code = 2
 	
 	def help_deploy(self):
 		self.exit_code = 0
-		self.pout("""Usage: deploy {path} {warfile} [update]
+		self.pout("""Usage: deploy {path} {warfile} [update] [tag]
 deploy a local war file at path
   path    = the path on the server to deploy the application
   warfile = path on the local machine to a war file to deploy
