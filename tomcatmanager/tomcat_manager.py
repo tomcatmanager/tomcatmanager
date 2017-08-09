@@ -112,20 +112,20 @@ class TomcatManager:
 	
 	"""
 	def __init__(self, url="http://localhost:8080/manager", userid=None, password=None):
-		self.__managerURL = url
-		self.__userid = userid
-		self.__password = password
+		self._url = url
+		self._userid = userid
+		self._password = password
 
 	def _get(self, cmd, payload=None):
 		"""make an HTTP get request to the tomcat manager web app
 		
 		returns a TomcatManagerResponse object
 		"""
-		url = self.__managerURL + '/text/' + cmd
+		url = self._url + '/text/' + cmd
 		tmr = TomcatManagerResponse()
 		tmr.response = requests.get(
 				url,
-				auth=(self.__userid, self.__password),
+				auth=(self._userid, self._password),
 				params=payload
 				)
 		return tmr
@@ -215,11 +215,11 @@ class TomcatManager:
 		the result attribute and in the status_xml attribute
 		"""
 		# this command isn't in the /manager/text url space, so we can't use _get()
-		url = self.__managerURL + '/status/all'
+		url = self._url + '/status/all'
 		tmr = TomcatManagerResponse()
 		tmr.response = requests.get(
 				url,
-				auth=(self.__userid, self.__password),
+				auth=(self._userid, self._password),
 				params={'XML': 'true'}
 				)
 		tmr.result = tmr.response.text.splitlines()
@@ -428,11 +428,11 @@ class TomcatManager:
 		if tag:
 			params['tag'] = tag
 
-		url = self.__managerURL + '/text/deploy'
+		url = self._url + '/text/deploy'
 		tmr = TomcatManagerResponse()
 		tmr.response = requests.put(
 				url,
-				auth=(self.__userid, self.__password),
+				auth=(self._userid, self._password),
 				params=params,
 				data=fileobj,
 				)
