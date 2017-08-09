@@ -287,6 +287,10 @@ class TomcatManager:
 			tmr = tm.resources()
 			resources = tmr.resources
 		
+		pass the optional fully qualified java class name of the resource type you are
+		interested in. For example, you might pass javax.sql.DataSource to acquire
+		the names of all available JDBC data sources
+		
 		returns an instance of TomcatManagerResponse with an additional resources
 		attribute
 		
