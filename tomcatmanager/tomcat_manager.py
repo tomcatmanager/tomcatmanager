@@ -418,7 +418,8 @@ class TomcatManager:
 		return self._get('reload', {'path': path})
 
 	def deploy(self,
-			path=None, war=None
+			path=None, war=None,
+			update=False, tag=None,
 			):
 		"""deploy tomcat applications
 		

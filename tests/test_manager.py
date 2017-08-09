@@ -26,6 +26,7 @@ import io
 import tomcatmanager as tm
 
 from nose.tools import *
+from nose.tools import with_setup
 from tests.mock_server import start_mock_server80
 
 ###
@@ -240,13 +241,27 @@ class TestDeploy(TestManager):
 		tomcat.deploy(config='file:/path/to/context.xml', war=fileobj)		
 	"""	
 
+	###
+	#
+	# fixtures
+	#
+	###
+	@classmethod
+	def setup_class(cls):
+		super().setup_class()
+		cls.war_file = os.path.dirname(__file__) + '/war/sample.war'
+
+	###
+	#
+	# tests
+	#
+	###
 	def test_is_stream(self):
-		warfile = os.path.dirname(__file__) + '/war/sample.war'
-		obj = open(warfile, 'rb')
-		assert_true(self.tomcat._is_stream(obj))
+		war_fileobj = open(self.war_file, 'rb')
+		assert_true(self.tomcat._is_stream(war_fileobj))
 		
-		warfile = io.BytesIO(b'the contents of my warfile')
-		assert_true(self.tomcat._is_stream(obj))
+		fileobj = io.BytesIO(b'the contents of my warfile')
+		assert_true(self.tomcat._is_stream(fileobj))
 		
 		assert_false(self.tomcat._is_stream(None))
 		assert_false(self.tomcat._is_stream('some string'))
@@ -259,9 +274,26 @@ class TestDeploy(TestManager):
 		r.raise_for_status()
 
 	def test_deploy_local_war(self):
-		warfile = os.path.dirname(__file__) + '/war/sample.war'
-		war_fileobj = open(warfile, 'rb')
+		war_fileobj = open(self.war_file, 'rb')
 		r = self.tomcat.deploy(path='/newapp', war=war_fileobj)
+		self.success_assertions(r)
+		r.raise_for_status()
+
+	def test_deploy_local_war_tag(self):
+		war_fileobj = open(self.war_file, 'rb')
+		r = self.tomcat.deploy(path='/newapp', war=war_fileobj, tag='mytag')
+		self.success_assertions(r)
+		r.raise_for_status()
+
+	def test_deploy_local_war_update(self):
+		war_fileobj = open(self.war_file, 'rb')
+		r = self.tomcat.deploy(path='/newapp', war=war_fileobj, update=True)
+		self.success_assertions(r)
+		r.raise_for_status()
+
+	def test_deploy_local_war_tag_update(self):
+		war_fileobj = open(self.war_file, 'rb')
+		r = self.tomcat.deploy(path='/newapp', war=war_fileobj, tag='mytag', update=True)
 		self.success_assertions(r)
 		r.raise_for_status()
 
@@ -275,4 +307,4 @@ class TestDeploy(TestManager):
 	def test_undeploy(self):
 		"""should throw an exception if there is an error"""
 		r = self.tomcat.undeploy('/newapp')
-		self.success_assertions(tmr)
+		self.success_assertions(r)
