@@ -122,7 +122,11 @@ class InteractiveTomcatManager(cmd.Cmd):
 		# only relevant for cmd2, but doesn't hurt anything on cmd
 		self.allow_cli_args = False
 		
-
+	###
+	#
+	# convenience methods
+	#
+	###
 	def pout(self, msg):
 		"""convenience method to print output"""
 		if isinstance(msg, list):
@@ -168,12 +172,18 @@ class InteractiveTomcatManager(cmd.Cmd):
 			self.exit_code = 1
 			self.pexception()
 
+	###
+	#
+	# methods for commands exposed to the user
+	#
+	###
 	def do_connect(self, args):
-		"""connect to an instance of the manager application"""
+		"""connect to an instance of the tomcat manager application"""
 		url = None
 		username = None
 		password = None
 		sargs = args.split()
+		
 		try:
 			if len(sargs) == 1:
 				url = sargs[0]
@@ -189,22 +199,15 @@ class InteractiveTomcatManager(cmd.Cmd):
 				raise ValueError()
 
 			self.tomcat_manager = tm.TomcatManager(url, username, password)
-			apps = self.tomcat_manager.list()
-			self.pdebug("connected to tomcat manager at %s" % url)
-			self.exit_code = 0
+			if self.tomcat_manager.is_connected:
+				self.pout('connected to tomcat manager at {0}'.format(url))
+				self.exit_code = 0
+			else:
+				self.perr('tomcat manager not found at {0}'.format(url))
+				self.exit_code = 1
 		except ValueError:
 			self.help_connect()
 			self.exit_code = 2
-		except urllib.request.HTTPError as e:
-			self.exit_code = 1
-			if e.code == 401:
-				self.perr("login failed")
-			elif e.code == 403:
-				self.perr("login failed")
-			elif e.code == 404:
-				self.perr("tomcat manager not found at %s" % url)
-			else:
-				self.pexception()
 
 	def help_connect(self):
 		self.exit_code = 0
@@ -213,6 +216,12 @@ class InteractiveTomcatManager(cmd.Cmd):
 		self.pout("if you specify a username and no password, you will be prompted for the password")
 		self.pout("if you don't specify a username or password, connect with no authentication")
 
+	###
+	#
+	# the info commands exposed to the user, i.e. commands that don't really do
+	# anything, they just return some information from the server
+	#
+	###
 	def do_serverinfo(self, args):
 		if args:
 			self.help_serverinfo()
