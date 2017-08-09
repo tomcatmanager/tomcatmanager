@@ -439,117 +439,97 @@ class InteractiveTomcatManager(cmd2.Cmd):
 	# some change on the server
 	#
 	###
-	def do_start(self, args):
-		"""start an application"""
-		if self.tomcat and self.tomcat.has_connected:
-			try:
-				app, = args.split()
-				self.exit_code = 0
-				self.docmd(self.tomcat.start, app)
-			except ValueError:
-				self.help_start()
-				self.exit_code = 2
-		else:
-			self.exit_code = 1
-			self.perr(self.__MSG_not_connected)
-
-	def help_start(self):
-		self.exit_code = 0
-		self.pout("Usage: start {path}")
-		self.pout("start the application at {path}")
-
-	def do_stop(self, args):
-		"""stop an application"""
-		if self.tomcat and self.tomcat.has_connected:
-			try:
-				app, = args.split()
-				self.exit_code = 0
-				self.docmd(self.tomcat.stop, app)
-			except ValueError:
-				self.help_stop()
-				self.exit_code = 2
-		else:
-			self.exit_code = 1
-			self.perr(self.__MSG_not_connected)
-
-	def help_stop(self):
-		self.exit_code = 0
-		self.pout("Usage: stop {path}")
-		self.pout("stop the application at {path}")
-
-	def do_reload(self, args):
-		"""reload an application"""
-		if self.tomcat and self.tomcat.has_connected:
-			try:
-				app, = args.split()
-				self.exit_code = 0
-				self.docmd(self.tomcat.reload, app)
-			except ValueError:
-				self.help_reload()
-				self.exit_code = 2
-		else:
-			self.exit_code = 1
-			self.perr(self.__MSG_not_connected)
-
-	def help_reload(self):
-		self.exit_code = 0
-		self.pout("Usage: reload {path}")
-		self.pout("reload the application at {path}")
-
 	def do_expire(self, args):
 		"""expire sessions idle for longer than idle minutes"""
-		if self.tomcat and self.tomcat.has_connected:
-			try:
-				app,idle, = args.split()
-				self.exit_code = 0
-				sesslist = self.docmd(self.tomcat.expire, app, idle)
-				self.pout(sesslist)
-			except ValueError:
-				self.help_expire()
-				self.exit_code = 2
-		else:
-			self.exit_code = 1
-			self.perr(self.__MSG_not_connected)
+		try:
+			# this nifty line barfs if there are other than 2 arguments
+			app,idle, = args.split()
+			response = self.docmd(self.tomcat.expire, app, idle)
+			self.pout(response.sessions)
+		except ValueError:
+			self.help_expire()
+			self.exit_code = 2
 
 	def help_expire(self):
 		self.exit_code = 0
-		self.pout("Usage: expire {path} {idle}")
-		self.pout("expire sessions idle for more than {idle} minutes in the application at {path}")
+		self.pout('Usage: expire {path} {idle}')
+		self.pout('expire sessions idle for more than {idle} minutes in the application at {path}')
+
+	def do_start(self, args):
+		"""start an application"""
+		try:
+			# this nifty line barfs if there are other than 1 argument
+			app, = args.split()
+			self.docmd(self.tomcat.start, app)
+		except ValueError:
+			self.help_start()
+			self.exit_code = 2
+
+	def help_start(self):
+		self.exit_code = 0
+		self.pout('Usage: start {path}')
+		self.pout('start the application at {path}')
+
+	def do_stop(self, args):
+		"""stop an application"""
+		try:
+			# this nifty line barfs if there are other than 1 argument
+			app, = args.split()
+			self.docmd(self.tomcat.stop, app)
+		except ValueError:
+			self.help_stop()
+			self.exit_code = 2
+
+	def help_stop(self):
+		self.exit_code = 0
+		self.pout('Usage: stop {path}')
+		self.pout('stop the application at {path}')
+
+	def do_reload(self, args):
+		"""reload an application"""
+		try:
+			# this nifty line barfs if there are other than 1 argument
+			app, = args.split()
+			self.exit_code = 0
+			self.docmd(self.tomcat.reload, app)
+		except ValueError:
+			self.help_reload()
+			self.exit_code = 2
+
+	def help_reload(self):
+		self.exit_code = 0
+		self.pout('Usage: reload {path}')
+		self.pout('reload the application at {path}')
 
 	def do_deploy(self, args):
-		if self.tomcat and self.tomcat.has_connected:
-			args = args.split()
-			if len(args) >= 2 and len(args) <= 4:
-				path = args[0]
-				filename = args[1]
-				try:
-					update = args[2]
-					update = update.lower()
-					if update in ("true", "t","y","yes","1"):
-						update = True
-					elif update in ("false", "f", "n", "no","0"):
-						update = False
-					else:
-						self.help_deploy()
-						self.exit_code = 2
-						return
-				except IndexError:
-					update = None
+		args = args.split()
+		if len(args) >= 2 and len(args) <= 4:
+			path = args[0]
+			filename = args[1]
+			try:
+				update = args[2]
+				update = update.lower()
+				if update in ('true', 't','y','yes','1'):
+					update = True
+				elif update in ('false', 'f', 'n', 'no','0'):
+					update = False
+				else:
+					self.help_deploy()
+					self.exit_code = 2
+					return
+			except IndexError:
+				update = None
 
-				try:
-					tag = args[3]
-				except IndexError:
-					tag = None
+			try:
+				tag = args[3]
+			except IndexError:
+				tag = None
 
-				fileobj = open(filename, "rb")
-				self.exit_code = 0
-				self.docmd(self.tomcat.deploy_war, path, fileobj, update, tag)
-			else:
-				self.help_deploy()
-				self.exit_code = 2
+			fileobj = open(filename, 'rb')
+			self.docmd(self.tomcat.deploy_war, path, fileobj, update, tag)
 		else:
-			self.exit_code = 1
-			self.perr(self.__MSG_not_connected)
+			self.help_deploy()
+			self.exit_code = 2
 	
 	def help_deploy(self):
 		self.exit_code = 0
@@ -560,27 +540,23 @@ deploy a local war file at path
             don't include the 'file:' at the beginning
   update  = optional parameter - default value is false
             use 'true' or 'yes' to undeploy the application
-            before deploying it
-""")
+            before deploying it""")
 
 	def do_undeploy(self, args):
 		"""undeploy an application"""
-		if self.tomcat and self.tomcat.has_connected:
-			try:
-				app, = args.split()
-				self.exit_code = 0
-				self.docmd(self.tomcat.undeploy, app)
-			except ValueError:
-				self.help_undeploy()
-				self.exit_code = 2
-		else:
-			self.exit_code = 1
-			self.perr(self.__MSG_not_connected)
+		try:
+			# this nifty line barfs if there are other than 1 argument
+			app, = args.split()
+			self.exit_code = 0
+			self.docmd(self.tomcat.undeploy, app)
+		except ValueError:
+			self.help_undeploy()
+			self.exit_code = 2
 
 	def help_undeploy(self):
 		self.exit_code = 0
-		self.pout("Usage: undeploy {path}")
-		self.pout("undeploy the application at {path}")
+		self.pout('Usage: undeploy {path}')
+		self.pout('undeploy the application at {path}')
 
 	###
 	#
@@ -634,7 +610,7 @@ THE SOFTWARE.
 
 	def help_license(self):
 		self.exit_code = 0
-		self.pout("show license information")
+		self.pout('show license information')
 
 	def help_help(self):
 		self.exit_code = 0
