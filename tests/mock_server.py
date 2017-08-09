@@ -39,7 +39,7 @@ PASSWORD='admin'
 class MockRequestHandler80(BaseHTTPRequestHandler):
 	"""Handle HTTP Requests like Tomcat Manager 8.0.x"""
 
-	AUTH_KEY = base64.b64encode('{u}:{p}'.format(u=USERID, p=PASSWORD).encode('utf-8')).decode('utf-8')
+	AUTH_KEY = base64.b64encode('{}:{}'.format(USERID, PASSWORD).encode('utf-8')).decode('utf-8')
 	TEXT_PATTERN = re.compile(r'^/manager/text/?$')
 	# info commands
 	LIST_PATTERN = re.compile(r'^/manager/text/list($|\?.*$)')
@@ -159,7 +159,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 		
 	def send_fail(self, msg=None):
 		# the path wasn't found, tomcat sends a 200 with a FAIL
-		self.send_text('FAIL - {msg}'.format(msg=msg))
+		self.send_text('FAIL - {}'.format(msg))
 
 	def send_text(self, content):
 		"""send a status ok and content as text/html"""
@@ -884,17 +884,17 @@ Default maximum session inactive interval 30 minutes
 	def get_start(self):
 		path = self.ensure_path('Invalid context path null was specified')
 		if path:
-			self.send_text('OK - Started application at context path {0}'.format(path))
+			self.send_text('OK - Started application at context path {}'.format(path))
 
 	def get_stop(self):
 		path = self.ensure_path('Invalid context path null was specified')
 		if path:
-			self.send_text('OK - Stopped application at context path {0}'.format(path))
+			self.send_text('OK - Stopped application at context path {}'.format(path))
 
 	def get_reload(self):
 		path = self.ensure_path('Invalid context path null was specified')
 		if path:
-			self.send_text('OK - Reloaded application at context path {0}'.format(path))
+			self.send_text('OK - Reloaded application at context path {}'.format(path))
 
 	def put_deploy(self):
 		# verify we have a path query string
@@ -902,12 +902,12 @@ Default maximum session inactive interval 30 minutes
 		if path:
 			length = int(self.headers.get('Content-Length'))
 			content = self.rfile.read(length)
-			self.send_text('OK - Deployed application at context path {path}'.format(path=path))
+			self.send_text('OK - Deployed application at context path {}'.format(path))
 
 	def get_undeploy(self):
 		path = self.ensure_path('Invalid context path null was specified')
 		if path:
-			self.send_text('OK - Undeployed application at context path {0}'.format(path))
+			self.send_text('OK - Undeployed application at context path {}'.format(path))
 	
 ###
 #
@@ -924,7 +924,7 @@ def start_mock_server80():
 	address, port = s.getsockname()
 	s.close()
 
-	url = 'http://localhost:{port}/manager'.format(port=port)
+	url = 'http://localhost:{}/manager'.format(port)
 		
 	mock_server = HTTPServer(('localhost', port), MockRequestHandler80)
 	mock_server_thread = Thread(target=mock_server.serve_forever)

@@ -274,10 +274,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 			self.tomcat = tm.TomcatManager(url, username, password)
 			if self.tomcat.is_connected:
-				self.pout('connected to tomcat manager at {0}'.format(url))
+				self.pout('connected to tomcat manager at {}'.format(url))
 				self.exit_code = 0
 			else:
-				self.perr('tomcat manager not found at {0}'.format(url))
+				self.perr('tomcat manager not found at {}'.format(url))
 				self.exit_code = 1
 		except ValueError:
 			self.help_connect()
@@ -323,7 +323,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 		else:
 			response = self.docmd(self.tomcat.server_info)
 			for key,value in iter(sorted(response.server_info.items())):
-				self.pout('{0}: {1}'.format(key, value))
+				self.pout('{}: {}'.format(key, value))
 
 	def help_serverinfo(self):
 		self.exit_code = 0
@@ -391,7 +391,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 				type = None
 			response = self.docmd(self.tomcat.resources, type)
 			for resource, cls in response.resources:
-				self.pout('{0}: {1}'.format(resource, cls))
+				self.pout('{}: {}'.format(resource, cls))
 		else:
 			self.help_resources()
 			self.exit_code = 2

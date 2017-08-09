@@ -54,7 +54,7 @@ class TestManager(unittest.TestCase):
 	def success_assertions(self, tmr):
 		"""a set of common assertions for every command to ensure it
 		completed successfully"""
-		assert_equal(tmr.status_code, tm.codes.ok, 'message from server: "{0}"'.format(tmr.status_message))
+		assert_equal(tmr.status_code, tm.codes.ok, 'message from server: "{}"'.format(tmr.status_message))
 		assert_is_not_none(tmr.status_message)
 		assert_true(len(tmr.status_message) > 0)
 		try:
