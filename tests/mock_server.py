@@ -51,6 +51,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 	FIND_LEAKERS_PATTERN = re.compile(r'^/manager/text/findleaks($|\?.*$)')
 	SESSIONS_PATTERN = re.compile(r'^/manager/text/sessions($|\?.*$)')
 	# action commands
+	EXPIRE_PATTERN = re.compile(r'^/manager/text/expire($|\?.*$)')	
 	DEPLOY_PATTERN = re.compile(r'^/manager/text/deploy($|\?.*$)')
 	UNDEPLOY_PATTERN = re.compile(r'^/manager/text/undeploy($|\?.*$)')
 
@@ -87,6 +88,8 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 		
 
 		# the action commands
+		elif re.search(self.EXPIRE_PATTERN, self.path):
+			self.get_expire()
 		elif re.search(self.UNDEPLOY_PATTERN, self.path):
 			self.get_undeploy()
 
@@ -840,6 +843,14 @@ Default maximum session inactive interval 30 minutes
 	# the server
 	#
 	###	
+	def get_expire(self):
+		path = self.ensure_path('Invalid context path null was specified')
+		if path:
+			self.send_text("""OK - Session information for application at context path /manager
+Default maximum session inactive interval 30 minutes
+<1 minutes: 1 sessions
+>15 minutes: 0 sessions were expired""")
+
 	def put_deploy(self):
 		# verify we have a path query string
 		url = urlparse(self.path)

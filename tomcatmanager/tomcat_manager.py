@@ -392,17 +392,23 @@ class TomcatManager:
 	###
 	def expire(self, path, idle):
 		"""expire sessions idle for longer than idle minutes
-		
+
+			tm = TomcatManager(url)
+			tmr = tm.sessions('/manager')
+			x = tmr.result
+			y = tmr.sessions
+			
 		Arguments:
 		path     the path to the app on the server whose sessions you want to expire
-		idle      sessions idle for more than this number of minutes will be expired
-		         use age=0 to expire all sessions
+		idle     sessions idle for more than this number of minutes will be expired
+		         use idle=0 to expire all sessions
+		
+		returns an instance of TomcatManagerResponse with the session summary in the
+		result attribute and in the sessions attribute
 		"""
-		response = self._execute("expire", {'path': path, 'idle': idle})
-		sessions = []
-		for line in response:
-			sessions.append(line.rstrip())
-		return sessions
+		tmr = self._get( "expire", {'path': str(path), 'idle': int(idle)} )
+		tmr.sessions = tmr.result
+		return tmr
 	
 	def stop(self, path):
 		"""stop an application

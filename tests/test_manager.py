@@ -118,7 +118,7 @@ class TestManager(unittest.TestCase):
 		except RequestException as err:
 			self.fail(err)
 		except TomcatException as err:
-			self.fail('TomcatException raised')
+			self.fail('unexpected TomcatException raised')
 		
 		assert_is_instance(tmr.leakers, list)
 		# make sure we don't have duplicates
@@ -134,7 +134,7 @@ class TestManager(unittest.TestCase):
 	def test_sessions(self):
 		tmr = self.tomcat.sessions('/manager')
 		self.info_assertions(tmr)
-		assert_equal(tmr.result, tmr.sessions)	
+		assert_equal(tmr.result, tmr.sessions)
 
 	###
 	#
@@ -142,6 +142,18 @@ class TestManager(unittest.TestCase):
 	# the server
 	#
 	###
+	@raises(tm.TomcatException)
+	def test_expire_no_path(self):
+		"""expire requires a path"""
+		tmr = self.tomcat.expire('', 0)
+		assert_equal(tmr.status_code, tm.codes.fail)
+		tmr.raise_for_status()
+
+	def test_expire(self):
+		tmr = self.tomcat.expire('/manager', 10)
+		self.info_assertions(tmr)
+		assert_equal(tmr.result, tmr.sessions)
+	
 	@raises(tm.TomcatException)
 	def test_deploy_war_no_path(self):
 		"""ensure we throw an exception if we don't have a path to deploy to"""
