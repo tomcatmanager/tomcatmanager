@@ -54,6 +54,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 	EXPIRE_PATTERN = re.compile(r'^/manager/text/expire($|\?.*$)')
 	START_PATTERN = re.compile(r'^/manager/text/start($|\?.*$)')
 	STOP_PATTERN = re.compile(r'^/manager/text/stop($|\?.*$)')
+	RELOAD_PATTERN = re.compile(r'^/manager/text/reload($|\?.*$)')
 	DEPLOY_PATTERN = re.compile(r'^/manager/text/deploy($|\?.*$)')
 	UNDEPLOY_PATTERN = re.compile(r'^/manager/text/undeploy($|\?.*$)')
 
@@ -96,6 +97,8 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 			self.get_start()
 		elif re.search(self.STOP_PATTERN, self.path):
 			self.get_stop()
+		elif re.search(self.RELOAD_PATTERN, self.path):
+			self.get_reload()
 		elif re.search(self.UNDEPLOY_PATTERN, self.path):
 			self.get_undeploy()
 
@@ -866,6 +869,11 @@ Default maximum session inactive interval 30 minutes
 		path = self.ensure_path('Invalid context path null was specified')
 		if path:
 			self.send_text('OK - Stopped application at context path {0}'.format(path))
+
+	def get_reload(self):
+		path = self.ensure_path('Invalid context path null was specified')
+		if path:
+			self.send_text('OK - Reloaded application at context path {0}'.format(path))
 
 	def put_deploy(self):
 		# verify we have a path query string

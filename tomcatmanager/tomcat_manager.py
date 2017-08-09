@@ -433,12 +433,15 @@ class TomcatManager:
 		return self._get("stop", {'path': path})
 
 	def reload(self, path):
-		"""reload an application
-		
+		"""reload the application at a given path
+	
 			tm = TomcatManager(url)
-			tm.reload("/myappname")
+			tmr = tm.reload('/someapp')
+			tmr.raise_on_status()
+		
+		returns an instance of TomcatManagerResponse
 		"""
-		response = self._execute("reload", {'path': path})
+		return self._get("reload", {'path': path})
 
 
 

@@ -177,6 +177,18 @@ class TestManager(unittest.TestCase):
 		tmr = self.tomcat.stop('/someapp')
 		assert_equal(tmr.status_code, tm.codes.ok)
 		tmr.raise_for_status()
+
+	@raises(tm.TomcatException)
+	def test_reload_no_path(self):
+		"""reload requires a path"""
+		tmr = self.tomcat.reload(None)
+		assert_equal(tmr.status_code, tm.codes.fail)
+		tmr.raise_for_status()
+
+	def test_reload(self):
+		tmr = self.tomcat.reload('/someapp')
+		assert_equal(tmr.status_code, tm.codes.ok)
+		tmr.raise_for_status()
 	
 	@raises(tm.TomcatException)
 	def test_deploy_war_no_path(self):
