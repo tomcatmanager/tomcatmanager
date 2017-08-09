@@ -25,8 +25,8 @@ from pkg_resources import get_distribution
 __version__ = get_distribution('tomcatmanager').version
 
 from .tomcat_manager import TomcatManager
-from .tomcat_manager import TomcatError
-from .status_codes import codes
+from .models import TomcatError
+from .models import codes
 from .interactive_tomcat_manager import InteractiveTomcatManager
 
 '''from https://stackoverflow.com/questions/17583443/what-is-the-correct-way-to-share-package-version-with-setup-py-and-the-package
