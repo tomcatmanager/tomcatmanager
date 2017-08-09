@@ -138,12 +138,12 @@ class TomcatManager:
 		"""
 		connected = False
 		try:
-			tmr = self._get("list")
+			tmr = self._get('list')
 		except:
 			return
 
 		if (tmr.response.status_code == requests.codes.ok):
-			if tmr.status_code == 'OK':
+			if tmr.status_code == codes.ok:
 				connected = True
 		return connected
 
@@ -170,7 +170,7 @@ class TomcatManager:
 		sessions - number of currently active sessions
 		directory - the directory on the server where this app resides		
 		"""
-		tmr = self._get("list")
+		tmr = self._get('list')
 		apps = []
 		for line in tmr.result:
 			apps.append(line.rstrip().split(":"))		
@@ -187,10 +187,10 @@ class TomcatManager:
 		returns an instance of TomcatManagerResponse with an additional server_info
 		attribute. The server_info attribute is a dictionary of items about the server
 		"""
-		tmr = self._get("serverinfo")
+		tmr = self._get('serverinfo')
 		sinfo = {}
 		for line in tmr.result:
-			key, value = line.rstrip().split(":",1)
+			key, value = line.rstrip().split(':',1)
 			sinfo[key] = value.lstrip()
 		tmr.server_info = sinfo
 		return tmr
@@ -246,7 +246,7 @@ class TomcatManager:
 		returns an instance of TomcatManagerResponse with the virtual machine info in
 		the result attribute and in the vm_info attribute
 		"""
-		tmr = self._get("vminfo")
+		tmr = self._get('vminfo')
 		tmr.vm_info = tmr.result
 		return tmr
 
@@ -261,7 +261,7 @@ class TomcatManager:
 		returns an instance of TomcatManagerResponse with the ssl cipher info in the
 		result attribute and in the ssl_connector_info attribute
 		"""
-		tmr = self._get("sslConnectorCiphers")
+		tmr = self._get('sslConnectorCiphers')
 		tmr.ssl_connector_ciphers = tmr.result
 		return tmr
 
@@ -276,7 +276,7 @@ class TomcatManager:
 		returns an instance of TomcatManagerResponse with the thread dump in the result
 		attribute and in the thread_dump attribute
 		"""
-		tmr = self._get("threaddump")
+		tmr = self._get('threaddump')
 		tmr.thread_dump = tmr.result
 		return tmr
 
@@ -297,12 +297,12 @@ class TomcatManager:
 		resources is a list of tuples: (resource, class)
 		"""
 		if type:
-			tmr = self._get("resources", {'type': str(type)})
+			tmr = self._get('resources', {'type': str(type)})
 		else:
-			tmr = self._get("resources")
+			tmr = self._get('resources')
 		resources = []
 		for line in tmr.result:
-			resource, cls = line.rstrip().split(":",1)
+			resource, cls = line.rstrip().split(':',1)
 			if resource[:7] != codes.fail + ' - ':
 				resources.append([resource, cls])
 		tmr.resources = resources
@@ -333,7 +333,7 @@ class TomcatManager:
 		it
 		
 		"""
-		tmr = self._get("findleaks", {'statusLine': 'true'})
+		tmr = self._get('findleaks', {'statusLine': 'true'})
 		leakers = []
 		for line in tmr.result:
 			leakers.append(line.rstrip())
@@ -352,7 +352,7 @@ class TomcatManager:
 		returns an instance of TomcatManagerResponse with the session summary in the
 		result attribute and in the sessions attribute
 		"""
-		tmr = self._get("sessions", {'path': str(path)})
+		tmr = self._get('sessions', {'path': str(path)})
 		tmr.sessions = tmr.result
 		return tmr
 
@@ -378,7 +378,7 @@ class TomcatManager:
 		returns an instance of TomcatManagerResponse with the session summary in the
 		result attribute and in the sessions attribute
 		"""
-		tmr = self._get( "expire", {'path': str(path), 'idle': int(idle)} )
+		tmr = self._get( 'expire', {'path': str(path), 'idle': int(idle)} )
 		tmr.sessions = tmr.result
 		return tmr
 	
@@ -391,7 +391,7 @@ class TomcatManager:
 		
 		returns an instance of TomcatManagerResponse
 		"""
-		return self._get("start", {'path': path})
+		return self._get('start', {'path': path})
 
 	def stop(self, path):
 		"""stop the application at a given path
@@ -402,7 +402,7 @@ class TomcatManager:
 		
 		returns an instance of TomcatManagerResponse
 		"""
-		return self._get("stop", {'path': path})
+		return self._get('stop', {'path': path})
 
 	def reload(self, path):
 		"""reload the application at a given path
@@ -413,7 +413,7 @@ class TomcatManager:
 		
 		returns an instance of TomcatManagerResponse
 		"""
-		return self._get("reload", {'path': path})
+		return self._get('reload', {'path': path})
 
 	def deploy_war(self, path, fileobj, update=False, tag=None):
 		"""read a WAR file from a local fileobj and deploy it at path
@@ -428,7 +428,7 @@ class TomcatManager:
 		if path:
 			params['path'] = path
 		if update:
-			params['update'] = "true"
+			params['update'] = 'true'
 		if tag:
 			params['tag'] = tag
 
@@ -451,4 +451,4 @@ class TomcatManager:
 		
 		returns an instance of TomcatManagerResponse
 		"""
-		return self._get("undeploy", {'path': path})
+		return self._get('undeploy', {'path': path})
