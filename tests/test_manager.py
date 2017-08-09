@@ -58,7 +58,7 @@ class TestManager(unittest.TestCase):
 			tmr.raise_for_status()
 		except RequestException as err:
 			self.fail(err)
-		except TomcatException as err:
+		except TomcatError as err:
 			self.fail(err)
 
 	###
@@ -131,7 +131,7 @@ class TestManager(unittest.TestCase):
 		# make sure we don't have duplicates
 		assert_equal(len(tmr.leakers), len(set(tmr.leakers)))
 
-	@raises(tm.TomcatException)
+	@raises(tm.TomcatError)
 	def test_sessions_no_path(self):	
 		"""sessions requires a path"""
 		tmr = self.tomcat.sessions('')
@@ -149,7 +149,7 @@ class TestManager(unittest.TestCase):
 	# the server
 	#
 	###
-	@raises(tm.TomcatException)
+	@raises(tm.TomcatError)
 	def test_expire_no_path(self):
 		"""expire requires a path"""
 		tmr = self.tomcat.expire('', 0)
@@ -161,7 +161,7 @@ class TestManager(unittest.TestCase):
 		self.info_assertions(tmr)
 		assert_equal(tmr.result, tmr.sessions)
 
-	@raises(tm.TomcatException)
+	@raises(tm.TomcatError)
 	def test_start_no_path(self):
 		"""start requires a path"""
 		tmr = self.tomcat.start(None)
@@ -173,7 +173,7 @@ class TestManager(unittest.TestCase):
 		self.success_assertions(tmr)
 		tmr.raise_for_status()
 
-	@raises(tm.TomcatException)
+	@raises(tm.TomcatError)
 	def test_stop_no_path(self):
 		"""stop requires a path"""
 		tmr = self.tomcat.start(None)
@@ -185,7 +185,7 @@ class TestManager(unittest.TestCase):
 		self.success_assertions(tmr)
 		tmr.raise_for_status()
 
-	@raises(tm.TomcatException)
+	@raises(tm.TomcatError)
 	def test_reload_no_path(self):
 		"""reload requires a path"""
 		tmr = self.tomcat.reload(None)
@@ -197,7 +197,7 @@ class TestManager(unittest.TestCase):
 		self.success_assertions(tmr)
 		tmr.raise_for_status()
 	
-	@raises(tm.TomcatException)
+	@raises(tm.TomcatError)
 	def test_deploy_war_no_path(self):
 		"""ensure we throw an exception if we don't have a path to deploy to"""
 		warfile = io.BytesIO(b'the contents of my warfile')
@@ -210,7 +210,7 @@ class TestManager(unittest.TestCase):
 		self.success_assertions(tmr)
 		tmr.raise_for_status()
 
-	@raises(tm.TomcatException)
+	@raises(tm.TomcatError)
 	def test_undeploy_no_path(self):
 		"""ensure we throw an exception if we don't have a path to undeploy"""
 		tmr = self.tomcat.undeploy(None)

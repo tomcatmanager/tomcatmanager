@@ -164,7 +164,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		"""
 		try:
 			return func(*args)
-		except tm.TomcatException:
+		except tm.TomcatError:
 			self.exit_code = 1
 			self.pexception()
 

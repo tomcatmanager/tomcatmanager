@@ -24,13 +24,8 @@ import requests
 
 from .status_codes import codes
 
-class TomcatException(Exception):
-	def __init__(self, msg):
-		self.message = msg
-
-	def __str__(self):
-		return self.message
-
+class TomcatError(Exception):
+	pass
 
 class TomcatManagerResponse:
 	"""The response for a Tomcat Manager command"""    
@@ -98,13 +93,13 @@ class TomcatManagerResponse:
 		
 		If that doesn't raise anything, then check if we have an "FAIL" response
 		from the first line of text back from the Tomcat Manager web app, and
-		raise an TomcatException if necessary
+		raise an TomcatError if necessary
 		
 		stole idea from requests package
 		"""
 		self.response.raise_for_status()
 		if self.status_code == codes.fail:
-			raise TomcatException(self.status_message)
+			raise TomcatError(self.status_message)
 
 
 class TomcatManager:
