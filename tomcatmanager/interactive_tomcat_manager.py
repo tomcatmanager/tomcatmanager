@@ -226,9 +226,9 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_serverinfo()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.has_connected:
+		elif self.tomcat and self.tomcat.has_connected:
 			self.exit_code = 0
-			info = self.docmd(self.tomcat_manager.serverinfo)
+			info = self.docmd(self.tomcat.serverinfo)
 			for key,value in iter(sorted(info.items())):
 				self.pout("%s: %s" % (key, value))
 		else:
@@ -244,9 +244,9 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_vminfo()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.has_connected:
+		elif self.tomcat and self.tomcat.has_connected:
 			self.exit_code = 0
-			info = self.docmd(self.tomcat_manager.vminfo)
+			info = self.docmd(self.tomcat.vminfo)
 			self.pout(info)
 		else:
 			self.exit_code = 1
@@ -261,9 +261,9 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_sslconnectorciphers()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.has_connected:
+		elif self.tomcat and self.tomcat.has_connected:
 			self.exit_code = 0
-			info = self.docmd(self.tomcat_manager.sslConnectorCiphers)
+			info = self.docmd(self.tomcat.sslConnectorCiphers)
 			self.pout(info)
 		else:
 			self.exit_code = 1
@@ -278,9 +278,9 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_threaddump()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.has_connected:
+		elif self.tomcat and self.tomcat.has_connected:
 			self.exit_code = 0
-			info = self.docmd(self.tomcat_manager.threaddump)
+			info = self.docmd(self.tomcat.threaddump)
 			self.pout(info)
 		else:
 			self.exit_code = 1
@@ -295,9 +295,9 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_findleaks()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.has_connected:
+		elif self.tomcat and self.tomcat.has_connected:
 			self.exit_code = 0
-			info = self.docmd(self.tomcat_manager.findleaks)
+			info = self.docmd(self.tomcat.findleaks)
 			self.pout(info)
 		else:
 			self.exit_code = 1
@@ -315,9 +315,9 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_status()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.has_connected:
+		elif self.tomcat and self.tomcat.has_connected:
 			self.exit_code = 0
-			info = self.docmd(self.tomcat_manager.status)
+			info = self.docmd(self.tomcat.status)
 			self.pout(info)
 		else:
 			self.exit_code = 1
@@ -333,8 +333,8 @@ class InteractiveTomcatManager(cmd.Cmd):
 		if args:
 			self.help_list()
 			self.exit_code = 2
-		elif self.tomcat_manager and self.tomcat_manager.has_connected:
-			apps = self.docmd(self.tomcat_manager.list)
+		elif self.tomcat and self.tomcat.has_connected:
+			apps = self.docmd(self.tomcat.list)
 			cw = [24, 7, 8, 36]
 			# build the format string from the column widths so we only
 			# have the column widths hardcoded in one place
@@ -356,11 +356,11 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 	def do_start(self, args):
 		"""start an application"""
-		if self.tomcat_manager and self.tomcat_manager.has_connected:
+		if self.tomcat and self.tomcat.has_connected:
 			try:
 				app, = args.split()
 				self.exit_code = 0
-				self.docmd(self.tomcat_manager.start, app)
+				self.docmd(self.tomcat.start, app)
 			except ValueError:
 				self.help_start()
 				self.exit_code = 2
@@ -375,11 +375,11 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 	def do_stop(self, args):
 		"""stop an application"""
-		if self.tomcat_manager and self.tomcat_manager.has_connected:
+		if self.tomcat and self.tomcat.has_connected:
 			try:
 				app, = args.split()
 				self.exit_code = 0
-				self.docmd(self.tomcat_manager.stop, app)
+				self.docmd(self.tomcat.stop, app)
 			except ValueError:
 				self.help_stop()
 				self.exit_code = 2
@@ -394,11 +394,11 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 	def do_reload(self, args):
 		"""reload an application"""
-		if self.tomcat_manager and self.tomcat_manager.has_connected:
+		if self.tomcat and self.tomcat.has_connected:
 			try:
 				app, = args.split()
 				self.exit_code = 0
-				self.docmd(self.tomcat_manager.reload, app)
+				self.docmd(self.tomcat.reload, app)
 			except ValueError:
 				self.help_reload()
 				self.exit_code = 2
@@ -413,11 +413,11 @@ class InteractiveTomcatManager(cmd.Cmd):
 		
 	def do_sessions(self, args):
 		"""display the sessions in an application"""
-		if self.tomcat_manager and self.tomcat_manager.has_connected:
+		if self.tomcat and self.tomcat.has_connected:
 			try:
 				app, = args.split()
 				self.exit_code = 0
-				sesslist = self.docmd(self.tomcat_manager.sessions, app)
+				sesslist = self.docmd(self.tomcat.sessions, app)
 				self.pout(sesslist)
 			except ValueError:
 				self.help_sessions()
@@ -432,11 +432,11 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 	def do_expire(self, args):
 		"""expire sessions idle for longer than idle minutes"""
-		if self.tomcat_manager and self.tomcat_manager.has_connected:
+		if self.tomcat and self.tomcat.has_connected:
 			try:
 				app,idle, = args.split()
 				self.exit_code = 0
-				sesslist = self.docmd(self.tomcat_manager.expire, app, idle)
+				sesslist = self.docmd(self.tomcat.expire, app, idle)
 				self.pout(sesslist)
 			except ValueError:
 				self.help_expire()
@@ -451,7 +451,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 		self.pout("expire sessions idle for more than {idle} minutes in the application at {path}")
 
 	def do_deploy(self, args):
-		if self.tomcat_manager and self.tomcat_manager.has_connected:
+		if self.tomcat and self.tomcat.has_connected:
 			args = args.split()
 			if len(args) >= 2 and len(args) <= 4:
 				path = args[0]
@@ -477,7 +477,7 @@ class InteractiveTomcatManager(cmd.Cmd):
 
 				fileobj = open(filename, "rb")
 				self.exit_code = 0
-				self.docmd(self.tomcat_manager.deploy_war, path, fileobj, update, tag)
+				self.docmd(self.tomcat.deploy_war, path, fileobj, update, tag)
 			else:
 				self.help_deploy()
 				self.exit_code = 2
@@ -499,11 +499,11 @@ deploy a local war file at path
 
 	def do_undeploy(self, args):
 		"""undeploy an application"""
-		if self.tomcat_manager and self.tomcat_manager.has_connected:
+		if self.tomcat and self.tomcat.has_connected:
 			try:
 				app, = args.split()
 				self.exit_code = 0
-				self.docmd(self.tomcat_manager.undeploy, app)
+				self.docmd(self.tomcat.undeploy, app)
 			except ValueError:
 				self.help_undeploy()
 				self.exit_code = 2
@@ -517,14 +517,14 @@ deploy a local war file at path
 		self.pout("undeploy the application at {path}")
 
 	def do_resources(self, args):
-		if self.tomcat_manager and self.tomcat_manager.has_connected:
+		if self.tomcat and self.tomcat.has_connected:
 			resourcelist = None
 			args = args.split()
 			self.exit_code = 0
 			if len(args) == 0:
-				resourcelist = self.docmd(self.tomcat_manager.resources)
+				resourcelist = self.docmd(self.tomcat.resources)
 			elif len(args) == 1:
-				resourcelist = self.docmd(self.tomcat_manager.resources, args[0])
+				resourcelist = self.docmd(self.tomcat.resources, args[0])
 			else:
 				self.help_resources()
 				self.exit_code = 2
@@ -541,6 +541,11 @@ list global jndi resources
   class_name  = optional fully qualified Java class name of the resource type you want
 """)
 
+	###
+	#
+	# miscellaneous user accessible commands
+	#
+	###
 	def do_version(self, args):
 		self.exit_code = 0
 		self.pout(version_string)
