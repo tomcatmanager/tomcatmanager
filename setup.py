@@ -44,9 +44,9 @@ setup(
 	install_requires=['cmd2', 'requests'],
 	
 	# dependencies for unit testing
-	# $ pip3 install -e .[test]
+	# $ pip3 install -e .[dev]
 	extras_require={
-		'test': ['pytest'],
+		'dev': ['pytest', 'sphinx']
 	},
 
 	# define the scripts that should be created on installation
