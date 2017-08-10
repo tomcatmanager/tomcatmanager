@@ -51,7 +51,6 @@ class TestInfo(TestManagerBase):
 		r = tomcat.status_xml()
 		self.info_assertions(r)
 		assert r.result == r.status_xml
-		
 		assert isinstance(r.status_xml, list)
 		assert r.status_xml[0][:6] == '<?xml '
 
@@ -102,5 +101,10 @@ class TestInfo(TestManagerBase):
 		
 	def test_sessions(self, tomcat):
 		r = tomcat.sessions('/manager')
+		self.info_assertions(r)
+		assert r.result == r.sessions
+
+	def test_sessions_version(self, tomcat):
+		r = tomcat.sessions('/someapp', '42')
 		self.info_assertions(r)
 		assert r.result == r.sessions

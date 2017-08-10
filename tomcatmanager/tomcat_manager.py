@@ -75,7 +75,6 @@ class TomcatManager:
 		except:
 			return False
 
-
 	###
 	#
 	# the info commands, i.e. commands that don't really do anything, they
@@ -268,7 +267,7 @@ class TomcatManager:
 		tmr.leakers = list(set(leakers))
 		return tmr
 
-	def sessions(self, path):
+	def sessions(self, path, version=None):
 		"""return a list of the sessions in an application at a given path
 	
 			tm = TomcatManager(url)
@@ -279,9 +278,13 @@ class TomcatManager:
 		returns an instance of TomcatManagerResponse with the session summary in the
 		result attribute and in the sessions attribute
 		"""
-		tmr = self._get('sessions', {'path': str(path)})
-		tmr.sessions = tmr.result
-		return tmr
+		params = {}
+		params['path'] = path
+		if version:
+			params['version'] = version
+		r = self._get('sessions', params)
+		if r.ok: r.sessions = r.result
+		return r
 
 	###
 	#
@@ -289,7 +292,7 @@ class TomcatManager:
 	# the server
 	#
 	###
-	def expire(self, path, idle):
+	def expire(self, path, version=None, idle=None):
 		"""expire sessions idle for longer than idle minutes
 
 			tm = TomcatManager(url)
@@ -305,11 +308,17 @@ class TomcatManager:
 		returns an instance of TomcatManagerResponse with the session summary in the
 		result attribute and in the sessions attribute
 		"""
-		tmr = self._get( 'expire', {'path': str(path), 'idle': int(idle)} )
-		tmr.sessions = tmr.result
-		return tmr
+		params = {}
+		params['path'] = path
+		if version:
+			params['version'] = version
+		if idle:
+			params['idle'] = idle		
+		r = self._get('expire', params)
+		if r.ok: r.sessions = r.result
+		return r
 	
-	def start(self, path):
+	def start(self, path, version=None):
 		"""start the application at a given path
 	
 			tm = TomcatManager(url)
@@ -318,9 +327,13 @@ class TomcatManager:
 		
 		returns an instance of TomcatManagerResponse
 		"""
-		return self._get('start', {'path': path})
+		params = {}
+		params['path'] = path
+		if version:
+			params['version'] = version
+		return self._get('start', params)
 
-	def stop(self, path):
+	def stop(self, path, version=None):
 		"""stop the application at a given path
 	
 			tm = TomcatManager(url)
@@ -329,9 +342,13 @@ class TomcatManager:
 		
 		returns an instance of TomcatManagerResponse
 		"""
-		return self._get('stop', {'path': path})
+		params = {}
+		params['path'] = path
+		if version:
+			params['version'] = version
+		return self._get('stop', params)
 
-	def reload(self, path):
+	def reload(self, path, version=None):
 		"""reload the application at a given path
 	
 			tm = TomcatManager(url)
@@ -340,21 +357,38 @@ class TomcatManager:
 		
 		returns an instance of TomcatManagerResponse
 		"""
-		return self._get('reload', {'path': path})
+		params = {}
+		params['path'] = path
+		if version:
+			params['version'] = version
+		return self._get('reload', params)
 
-	def deploy(self, path, localwar=None, serverwar=None, update=False):
-		"""deploy tomcat applications
+	def deploy(self, path, localwar=None, serverwar=None, version=None, update=False):
+		"""Deploy applications to the tomcat server
 		
-		Arguments:
-		path     the path on the server to deploy this war to
-		fileobj  a file object opened for binary reading, from which the war file will be read
-		update   whether to undeploy the existing path first (default False)
-		tag      a tag for this application (default None)
+		Specify either localwar or serverwar, but not both. localwar reads a war file
+		from the local filesystem and sends it to the tomcat server to deploy.
+		serverwar deploys a file available on the server file system.
+		
+		:param path: The path on the server to deploy this war to, i.e. /sampleapp
+		:param localwar: (optional) The path (specified using your particular
+			operating system convention) to a war file on the local file system. This
+			will be sent to the server for deployment.
+		:param serverwar: (optional) The java-style path (use slashes not backslashes) to
+			the war file on the server. Don't include ``file:`` at the beginning.
+		:param version: (optional) For tomcat parallel deployments, the version to use
+			for this version of the app
+		:param update: (optional) Whether to undeploy the existing path
+			first (default False)
+		:return: :class:`TomcatManagerResponse <TomcatManagerResponse>` object
+		:rtype: tomcatmanager.TomcatManagerResponse		
 		"""
 		params = {}
 		params['path'] = path
 		if update:
 			params['update'] = 'true'
+		if version:
+			params['version'] = version
 
 		if localwar and serverwar:
 			raise ValueError('can not deploy localwar and serverwar at the same time')
@@ -381,13 +415,18 @@ class TomcatManager:
 
 		return r
 
-	def undeploy(self, path):
-		"""undeploy the application at a given path
-	
-			tm = TomcatManager(url)
-			tmr = tm.undeploy('/someapp')
-			tmr.raise_on_status()
+	def undeploy(self, path, version=None):
+		"""Undeploy the application at a given path
 		
-		returns an instance of TomcatManagerResponse
+		:param path: The path of the application to undeploy
+		:param version: The version to undeploy
+		:return: :class:`TomcatManagerResponse <TomcatManagerResponse>` object
+		:rtype: tomcatmanager.TomcatManagerResponse		
+				
+		If an application was deployed using a version, then a version is required to
+		undeploy the application.
 		"""
-		return self._get('undeploy', {'path': path})
+		params = {'path': path}
+		if version:
+			params['version'] = version
+		return self._get('undeploy', params)

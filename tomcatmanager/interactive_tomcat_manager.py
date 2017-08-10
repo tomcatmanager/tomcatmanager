@@ -131,6 +131,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
 			'sslconnectorciphers', 'threaddump', 'resources',
 			'findleakers', 'sessions',
 			# action commands
+			'expire', 'start', 'stop', 'reload',
+			'deploy', 'redeploy', 'undeploy',
 			]
 		
 		# settings for cmd2.Cmd
@@ -171,9 +173,18 @@ class InteractiveTomcatManager(cmd2.Cmd):
 			# this command doesn't require us to be connected, run it as is
 			return stop, statement
 
+	def emptyline(self):
+		"""Do nothing on an empty line"""
+		pass
+
+	def default(self, line):
+		"""what to do if we don't recognize the command the user entered"""
+		self.exit_code = 127
+		self.perr('unknown command: ' + line)
+
 	###
 	#
-	# convenience methods
+	# convenience and shared methods
 	#
 	###
 	def pout(self, msg=''):
@@ -207,10 +218,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
 		else:
 			etype, evalue, etraceback = sys.exc_info()
 			self.perr(traceback.format_exception_only(etype, evalue))	
-
-	def not_connected(self):
-		"""call when the command requires you to be connected and you aren't"""
-
 		
 	def docmd(self, func, *args, **kwargs):
 		"""Call a function and return, printing any exceptions that occur
@@ -218,23 +225,44 @@ class InteractiveTomcatManager(cmd2.Cmd):
 		Sets exit_code to 0 and calls {func}. If func throws a TomcatError,
 		set exit_code to 1 and print the exception
 		"""
+		self.exit_code = 0
+		r = func(*args, **kwargs)
 		try:
-			self.exit_code = 0
-			response = func(*args, **kwargs)
-			response.raise_for_status()
-			return response
+			r.raise_for_status()
 		except tm.TomcatError as err:
 			self.exit_code = 1
 			self.perr(str(err))
+		return r
 
-	def emptyline(self):
-		"""Do nothing on an empty line"""
-		pass
+	def base_path_version(self, args, func, help_func):
+		"""do any command that takes a path and an optional version"""
+		args = args.split()
+		version = None
+		if len(args) in [1, 2]:
+			path = args[0]
+			if len(args) == 2:
+				version = args[1]
+			self.exit_code = 0
+			return self.docmd(func, path, version)
+		else:
+			help_func()
+			self.exit_code = 2
 
-	def default(self, line):
-		"""what to do if we don't recognize the command the user entered"""
-		self.exit_code = 127
-		self.perr('unknown command: ' + line)
+	def deploy_base_help(self):
+		"""common help string for the various flavors of deploy commands"""
+		return """
+  server|local  'server' to deploy a war file already on the server
+                'local' to transmit a locally available warfile to the server
+  warfile       Path to the war file to deploy.
+
+                For 'server', don't include the 'file:' at the beginning,
+                and use java style paths (i.e. '/' as path seperator).
+
+                For 'local', give a path according to your local operating
+                system conventions.
+
+  path          The path part of the URL where the application will be deployed.
+  version       The version to associate with this deployment."""
 
 	###
 	#
@@ -421,19 +449,28 @@ class InteractiveTomcatManager(cmd2.Cmd):
 		self.pout('Use with extreme caution on production systems')
 
 	def do_sessions(self, args):
-		"""display the sessions in an application"""
-		try:
-			# this nifty line barfs if there are other than 1 argument
-			app, = args.split()
-			response = self.docmd(self.tomcat.sessions, app)
-			self.pout(response.sessions)
-		except ValueError:
+		args = args.split()
+		version = None
+		if len(args) in [1, 2]:
+			path = args[0]
+			if len(args) == 2:
+				version = args[1]
+			self.exit_code = 0
+			r = self.docmd(self.tomcat.sessions, path, version)
+			if r.ok: self.pout(r.sessions)
+		else:
 			self.help_sessions()
 			self.exit_code = 2
 
 	def help_sessions(self):
-		self.pout('Usage: sessions {path}')
-		self.pout('display the currently active sessions in the application at {path}')
+		self.pout("""Usage: sessions {path} [version]
+
+Display number of active sessions.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version of the application from which to expire
+           sessions. If the application was deployed with a version, the
+           version must be specified in order to expire sessions in it.""")
 
 	###
 	#
@@ -442,136 +479,152 @@ class InteractiveTomcatManager(cmd2.Cmd):
 	#
 	###
 	def do_expire(self, args):
-		"""expire sessions idle for longer than idle minutes"""
-		try:
-			# this nifty line barfs if there are other than 2 arguments
-			app,idle, = args.split()
-			response = self.docmd(self.tomcat.expire, app, idle)
-			self.pout(response.sessions)
-		except ValueError:
+		args = args.split()
+		version = None
+		if len(args) in [2, 3]:
+			path = args[0]
+			if len(args) == 2:
+				idle = args[1]
+			else:
+				version = args[1]
+				idle = args[2]
+			self.exit_code = 0
+			r = self.docmd(self.tomcat.expire, path, version, idle)
+			if r.ok: self.pout(r.sessions)
+		else:
 			self.help_expire()
 			self.exit_code = 2
 
 	def help_expire(self):
 		self.exit_code = 0
-		self.pout('Usage: expire {path} {idle}')
-		self.pout('expire sessions idle for more than {idle} minutes in the application at {path}')
+		self.pout("""Usage: expire {path} [version] {idle}
+
+Expire idle sessions.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version of the application from which to expire
+           sessions. If the application was deployed with a version, the
+           version must be specified in order to expire sessions in it.
+  idle     Sessions idle for more than this number of minutes are expired.
+           Use 0 to expire all sessions.""")
 
 	def do_start(self, args):
-		"""start an application"""
-		try:
-			# this nifty line barfs if there are other than 1 argument
-			app, = args.split()
-			self.docmd(self.tomcat.start, app)
-		except ValueError:
-			self.help_start()
-			self.exit_code = 2
+		self.base_path_version(args, self.tomcat.start, self.help_start)
 
 	def help_start(self):
 		self.exit_code = 0
-		self.pout('Usage: start {path}')
-		self.pout('start the application at {path}')
+		self.pout("""Usage: start {path} [version]
+
+Start a tomcat application.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version of the application to start. If the
+           application was deployed with a version, the version must be
+           specified in order to start it.""")
 
 	def do_stop(self, args):
-		"""stop an application"""
-		try:
-			# this nifty line barfs if there are other than 1 argument
-			app, = args.split()
-			self.docmd(self.tomcat.stop, app)
-		except ValueError:
-			self.help_stop()
-			self.exit_code = 2
+		self.base_path_version(args, self.tomcat.stop, self.help_stop)
 
 	def help_stop(self):
 		self.exit_code = 0
-		self.pout('Usage: stop {path}')
-		self.pout('stop the application at {path}')
+		self.pout("""Usage: stop {path} [version]
+
+Stop a tomcat application.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version of the application to stop. If the
+           application was deployed with a version, the version must be
+           specified in order to stop it.""")
 
 	def do_reload(self, args):
-		"""reload an application"""
-		try:
-			# this nifty line barfs if there are other than 1 argument
-			app, = args.split()
-			self.exit_code = 0
-			self.docmd(self.tomcat.reload, app)
-		except ValueError:
-			self.help_reload()
-			self.exit_code = 2
+		self.base_path_version(args, self.tomcat.reload, self.help_reload)
 
 	def help_reload(self):
 		self.exit_code = 0
-		self.pout('Usage: reload {path}')
-		self.pout('reload the application at {path}')
+		self.pout("""Usage: reload {path} [version]
 
-	def do_deploy(self, args):
+Reload a tomcat application.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version of the application to reload. If the
+           application was deployed with a version, the version must be
+           specified in order to reload it.""")
+
+	def deploy_base(self, args, show_help, update):
 		server = 'server'
 		local = 'local'
 		args = args.split()
-		if len(args) >= 3 and len(args) <= 4:
+		if len(args) in [3, 4]:
 			src = args[0]
 			warfile = args[1]
 			path = args[2]
-			try:
-				update = args[3]
-				update = update.lower()
-				if update in ('true', 't','y','yes','1'):
-					update = True
-				elif update in ('false', 'f', 'n', 'no','0'):
-					update = False
-				else:
-					self.help_deploy()
-					self.exit_code = 2
-					return
-			except IndexError:
-				update = False
+			version = None
+			if len(args) == 4:
+				version = args[3]
 
 			if server.startswith(src): src = server
 			if local.startswith(src): src = local
 			
 			if src == server:
 				self.exit_code = 0
-				self.docmd(self.tomcat.deploy, path, serverwar=warfile, update=update)
+				self.docmd(self.tomcat.deploy, path, serverwar=warfile,
+						update=update, version=version)
 			elif src == local:
 				warfile = os.path.expanduser(warfile)
 				fileobj = open(warfile, 'rb')
 				self.exit_code = 0
-				self.docmd(self.tomcat.deploy, path, localwar=fileobj, update=update)
+				self.docmd(self.tomcat.deploy, path, localwar=fileobj,
+						update=update, version=version)
 			else:
-				self.help_deploy()
+				show_help()
 				self.exit_code = 2
 		else:
-			self.help_deploy()
+			show_help()
 			self.exit_code = 2
-	
+
+	def do_deploy(self, args):
+		self.deploy_base(args, self.help_deploy, False)
+
 	def help_deploy(self):
 		self.exit_code = 0
-		self.pout("""Usage: deploy server|local {warfile} {path} [update]
-deploy a war file at path
-  server|local = server to deploy a war file already on the server
-                 local to transmit a locally available warfile to the server
-  warfile      = path to the war file to deploy
-                 for 'server', don't include the 'file:' at the beginning,
-                 and use java style paths (i.e. '/' as path seperator
-  path         = the path on the server to deploy the application
-  update       = optional parameter - default value is false
-                 use 'true' or 'yes' to undeploy the application
-                 before deploying it""")
+		self.pout("""Usage: deploy server|local {warfile} {path} [version]
+
+Deploy a tomcat application contained in a war file.""")
+		self.pout(self.deploy_base_help())
+
+	def do_redeploy(self, args):
+		self.deploy_base(args, self.help_redeploy, True)
+
+	def help_redeploy(self):
+		self.exit_code = 0
+		self.pout("""Usage: redeploy server|local {warfile} {path} [version]
+
+Redeploy a tomcat application contained in a war file by undeploying the
+application located at {path} and then deploying {warfile}.""")
+		self.pout(self.deploy_base_help())
 
 	def do_undeploy(self, args):
-		"""undeploy an application"""
-		try:
-			# this nifty line barfs if there are other than 1 argument
-			app, = args.split()
+		args = args.split()
+		version = None
+		if len(args) in [1, 2]:
+			path = args[0]
+			if len(args) == 2:
+				version = args[1]
 			self.exit_code = 0
-			self.docmd(self.tomcat.undeploy, app)
-		except ValueError:
+			self.docmd(self.tomcat.undeploy, path, version)
+		else:
 			self.help_undeploy()
 			self.exit_code = 2
 
 	def help_undeploy(self):
 		self.exit_code = 0
-		self.pout('Usage: undeploy {path}')
-		self.pout('undeploy the application at {path}')
+		self.pout("""Usage: undeploy {path} [version]
+
+Undeploy a tomcat application.
+
+  path     The path part of the URL where the application is deployed.
+  version  Version of the application to undeploy. If the application was
+           deployed with a version, a version must be specified to undeploy it.""")
 
 	###
 	#
@@ -593,7 +646,7 @@ deploy a war file at path
 
 	def help_exit_code(self):
 		self.exit_code = 0
-		self.pout('show the value of the exit_code variable, similar to $? in sh/ksh/bash')
+		self.pout('show the value of the exit_code variable, similar to $? in ksh/bash')
 				
 	def help_commandline(self):
 		self.exit_code = 0
@@ -602,7 +655,7 @@ deploy a war file at path
 	def do_license(self, args):
 		self.exit_code = 0
 		self.pout("""
-Copyright (c) 2007 Jared Crapo
+Copyright 2007 Jared Crapo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
