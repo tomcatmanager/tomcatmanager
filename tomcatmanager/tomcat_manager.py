@@ -69,16 +69,12 @@ class TomcatManager:
 		
 		returns true if successful, false otherwise
 		"""
-		connected = False
 		try:
-			tmr = self._get('list')
+			r = self._get('list')
+			return r.ok
 		except:
-			return connected
+			return False
 
-		if (tmr.response.status_code == requests.codes.ok):
-			if tmr.status_code == codes.ok:
-				connected = True
-		return connected
 
 	###
 	#
