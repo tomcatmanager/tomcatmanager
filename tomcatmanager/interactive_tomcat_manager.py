@@ -503,12 +503,15 @@ class InteractiveTomcatManager(cmd2.Cmd):
 		self.pout('reload the application at {path}')
 
 	def do_deploy(self, args):
+		server = 'server'
+		local = 'local'
 		args = args.split()
-		if len(args) >= 2 and len(args) <= 4:
-			path = args[0]
-			filename = args[1]
+		if len(args) >= 3 and len(args) <= 4:
+			src = args[0]
+			warfile = args[1]
+			path = args[2]
 			try:
-				update = args[2]
+				update = args[3]
 				update = update.lower()
 				if update in ('true', 't','y','yes','1'):
 					update = True
@@ -519,29 +522,38 @@ class InteractiveTomcatManager(cmd2.Cmd):
 					self.exit_code = 2
 					return
 			except IndexError:
-				update = None
+				update = False
 
-			try:
-				tag = args[3]
-			except IndexError:
-				tag = None
-
-			fileobj = open(filename, 'rb')
-			self.docmd(self.tomcat.deploy, path=path, war=fileobj)
+			if server.startswith(src): src = server
+			if local.startswith(src): src = local
+			
+			if src == server:
+				self.exit_code = 0
+				self.docmd(self.tomcat.deploy, path, serverwar=warfile, update=update)
+			elif src == local:
+				self.exit_code = 0
+				fileobj = open(warfile, 'rb')
+				self.docmd(self.tomcat.deploy, path, localwar=fileobj, update=update)
+			else:
+				self.help_deploy()
+				self.exit_code = 2
 		else:
 			self.help_deploy()
 			self.exit_code = 2
 	
 	def help_deploy(self):
 		self.exit_code = 0
-		self.pout("""Usage: deploy {path} {warfile} [update] [tag]
-deploy a local war file at path
-  path    = the path on the server to deploy the application
-  warfile = path on the local machine to a war file to deploy
-            don't include the 'file:' at the beginning
-  update  = optional parameter - default value is false
-            use 'true' or 'yes' to undeploy the application
-            before deploying it""")
+		self.pout("""Usage: deploy server|local {warfile} {path} [update]
+deploy a war file at path
+  server|local = server to deploy a war file already on the server
+                 local to transmit a locally available warfile to the server
+  warfile      = path to the war file to deploy
+                 for 'server', don't include the 'file:' at the beginning,
+                 and use java style paths (i.e. '/' as path seperator
+  path         = the path on the server to deploy the application
+  update       = optional parameter - default value is false
+                 use 'true' or 'yes' to undeploy the application
+                 before deploying it""")
 
 	def do_undeploy(self, args):
 		"""undeploy an application"""

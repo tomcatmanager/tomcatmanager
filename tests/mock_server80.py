@@ -60,7 +60,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 	UNDEPLOY_PATTERN = re.compile(r'^/manager/text/undeploy($|\?.*$)')
 
 	def log_message(self, format, *args):
-		"no logging for our mockup"
+		"""no logging for our mockup"""
 		return
 
 	def do_GET(self):
@@ -69,8 +69,6 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 		# handle request based on path
 		if re.search(self.TEXT_PATTERN, self.path):
 			self.send_fail('Unknown command')
-		elif re.search(self.DEPLOY_PATTERN, self.path):
-			self.send_fail('Invalid parameters supplied for command [/deploy]')
 
 		# the info commands
 		elif re.search(self.LIST_PATTERN, self.path):
@@ -102,6 +100,8 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 			self.get_stop()
 		elif re.search(self.RELOAD_PATTERN, self.path):
 			self.get_reload()
+		elif re.search(self.DEPLOY_PATTERN, self.path):
+			self.get_deploy()
 		elif re.search(self.UNDEPLOY_PATTERN, self.path):
 			self.get_undeploy()
 
@@ -903,6 +903,21 @@ Default maximum session inactive interval 30 minutes
 			length = int(self.headers.get('Content-Length'))
 			content = self.rfile.read(length)
 			self.send_text('OK - Deployed application at context path {}'.format(path))
+
+	def get_deploy(self):
+		url = urlparse(self.path)
+		qs = parse_qs(url.query)
+
+		path = self.ensure_path('Invalid parameters supplied for command [/deploy]')
+		if path:
+			war = None
+			if 'war' in qs:
+				war = qs['war']
+		
+			if war:
+				self.send_text('OK - Deployed application at context path {}'.format(path))			
+			else:
+				self.send_text('FAIL - Invalid parameters supplied for command [/deploy]')
 
 	def get_undeploy(self):
 		path = self.ensure_path('Invalid context path null was specified')

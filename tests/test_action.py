@@ -76,12 +76,14 @@ class TestAction(TestManagerBase):
 
 	"""here's the various flavors of deploy we need to support
 
-		# local warfile to server, via PUT, all the rest via get
-		tomcat.deploy(path='/sampleapp', war=fileobj)
-		# deploy a previously deployed webapp which was deployed by a tag
-		tomcat.deploy(path='/sampleapp', tag='footag')
+		# local warfile to server, using PUT
+		@done - tomcat.deploy(path='/sampleapp', war=fileobj)
+
 		# deploy a warfile that's already on the server
 		tomcat.deploy(path='/sampleapp', war='file:/path/to/foo')
+
+		# deploy a previously deployed webapp which was deployed by a tag
+		tomcat.deploy(path='/sampleapp', tag='footag')
 		# implied path, deploys to /sampleapp
 		tomcat.deploy(war='file:/path/to/sampleapp.war')
 		# deploy from appBase sampleapp.war to context /sampleapp
@@ -97,26 +99,47 @@ class TestAction(TestManagerBase):
 		tomcat.deploy(config='file:/path/to/context.xml', war=fileobj)		
 	"""	
 	
-	def test_deploy_no_args(self, tomcat):
-		r = tomcat.deploy()
+	def test_deploy_localwar_no_path(self, tomcat, war_fileobj):
+		r = tomcat.deploy(None, localwar=war_fileobj)
+		self.failure_assertions(r)
+	
+	def test_deploy_localwar(self, tomcat, war_fileobj):
+		r = tomcat.deploy(path='/newapp', localwar=war_fileobj)
+		self.success_assertions(r)
+
+	def test_deploy_localwar_update(self, tomcat, war_fileobj):
+		r = tomcat.deploy(path='/newapp', localwar=war_fileobj, update=True)
+		self.success_assertions(r)
+
+	def test_deploy_serverwar_and_localwar(self, tomcat, war_fileobj):
+		with pytest.raises(ValueError):
+			r = tomcat.deploy('/newapp', localwar=war_fileobj, serverwar='/path/to/foo.war')
+	
+	def test_deploy_serverwar_no_path(self, tomcat):
+		"""deploy a war from a file on the server without a path
+		
+		https://tomcat.apache.org/tomcat-8.0-doc/manager-howto.html#Deploy_A_New_Application_from_a_Local_Path
+		says that you should be able to just deploy a war file, but testing indicates
+		that you must have a path as well
+		
+		therefore, this should be a failure even though the documentation says it should
+		work
+		"""
+		r = tomcat.deploy(None, serverwar='/path/to/foo.war')
 		self.failure_assertions(r)
 
-	def test_deploy_local_war(self, tomcat, war_fileobj):
-		r = tomcat.deploy(path='/newapp', war=war_fileobj)
+	def test_deploy_serverwar_update(self, tomcat, war_fileobj):
+		r = tomcat.deploy(path='/newapp', serverwar=war_fileobj, update=True)
+		self.success_assertions(r)
+	
+	def test_deploy_serverwar(self, tomcat):
+		r = tomcat.deploy(path='/newapp', serverwar='/path/to/foo.war')
 		self.success_assertions(r)
 
-	def test_deploy_local_war_tag(self, tomcat, war_fileobj):
-		r = tomcat.deploy(path='/newapp', war=war_fileobj, tag='mytag')
-		self.success_assertions(r)
-
-	def test_deploy_local_war_update(self, tomcat, war_fileobj):
-		r = tomcat.deploy(path='/newapp', war=war_fileobj, update=True)
-		self.success_assertions(r)
-
-	def test_deploy_local_war_tag_update(self, tomcat, war_fileobj):
-		r = tomcat.deploy(path='/newapp', war=war_fileobj, tag='mytag', update=True)
-		self.success_assertions(r)
-
+	def test_deploy_path_only(self, tomcat):
+		r = tomcat.deploy(path='/newapp')
+		self.failure_assertions(r)
+	
 	def test_undeploy_no_path(self, tomcat):
 		"""ensure we throw an exception if we don't have a path to undeploy"""
 		r = tomcat.undeploy(None)

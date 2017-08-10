@@ -346,10 +346,7 @@ class TomcatManager:
 		"""
 		return self._get('reload', {'path': path})
 
-	def deploy(self,
-			path=None, war=None,
-			update=False, tag=None,
-			):
+	def deploy(self, path, localwar=None, serverwar=None, update=False):
 		"""deploy tomcat applications
 		
 		Arguments:
@@ -359,22 +356,34 @@ class TomcatManager:
 		tag      a tag for this application (default None)
 		"""
 		params = {}
+		params['path'] = path
+		if update:
+			params['update'] = 'true'
 
-		if self._is_stream(war):
+		if localwar and serverwar:
+			raise ValueError('can not deploy localwar and serverwar at the same time')
+		elif localwar:
 			# PUT a local stream
 			url = self._url + '/text/deploy'
-			tmr = TomcatManagerResponse()
-			if path:
-				params['path'] = path
-			tmr.response = requests.put(
+			if self._is_stream(localwar):
+				warobj = localwar
+			else:
+				warobj = open(localwar, 'rb')	
+
+			r = TomcatManagerResponse()
+			r.response = requests.put(
 					url,
 					auth=(self._userid, self._password),
 					params=params,
-					data=war,
+					data=warobj,
 					)
-			return tmr
+		elif serverwar:
+			params['war'] = serverwar
+			r = self._get('deploy', params)
 		else:
-			return self._get('deploy')
+			r = self._get('deploy', params)
+
+		return r
 
 	def undeploy(self, path):
 		"""undeploy the application at a given path
