@@ -40,7 +40,7 @@ setup(
 
 	packages=find_packages(),
 
-	python_requires='>=3.3',
+	python_requires='>=3.4',
 	install_requires=['cmd2', 'requests'],
 	
 	# dependencies for unit testing
