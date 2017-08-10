@@ -96,9 +96,10 @@ class TomcatManagerResponse:
 	@property
 	def ok(self):
 		"""returns True if there is a response, and if it completed ok"""
-		return all([self.response != None,
-			 self.response.status_code == requests.codes.ok,
-			 self.status_code == codes.ok,
+		return all([
+				self.response != None,
+				self.response.status_code == requests.codes.ok,
+				self.status_code == codes.ok,
 			 ])
 
 	def raise_for_status(self):
