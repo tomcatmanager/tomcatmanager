@@ -109,6 +109,63 @@ class TomcatManagerResponse:
 			raise TomcatError(self.status_message)
 
 
+class ServerInfo(dict):
+	"""Discrete data about the tomcat server"""
+
+	def __init__(self, result=None):
+		"""result is the plain text from the server"""
+		self._tomcat_version = None
+		self._os_name = None
+		self._os_version= None
+		self._os_architecture = None
+		self._jvm_version = None
+		self._jvm_vendor = None
+		self._parse(result)
+
+	def _parse(self, result):
+		"""parse up a list of lines from the server"""
+		if result:
+			for line in result:
+				key, value = line.rstrip().split(':',1)
+				self[key] = value.lstrip()
+			
+			self._tomcat_version = self['Tomcat Version']
+			self._os_name = self['OS Name']
+			self._os_version= self['OS Version']
+			self._os_architecture = self['OS Architecture']
+			self._jvm_version = self['JVM Version']
+			self._jvm_vendor = self['JVM Vendor']
+		
+	@property
+	def tomcat_version(self):
+		"""the tomcat version string"""
+		return self._tomcat_version
+
+	@property
+	def os_name(self):
+		"""the operating system name"""
+		return self._os_name
+
+	@property
+	def os_version(self):
+		"""the operating system version"""
+		return self._os_version
+
+	@property
+	def os_architecture(self):
+		"""the operating system architecture"""
+		return self._os_architecture
+
+	@property
+	def jvm_version(self):
+		"""the java virtual machine version string"""
+		return self._jvm_version
+
+	@property
+	def jvm_vendor(self):
+		"""the java virtual machine vendor"""
+		return self._jvm_vendor
+
 ###
 #
 # build status codes

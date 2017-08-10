@@ -324,8 +324,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 			self.exit_code = 2
 		else:
 			r = self.docmd(self.tomcat.server_info)
-			for key,value in iter(sorted(r.server_info.items())):
-				self.pout('{}: {}'.format(key, value))
+			self.pout(r.result)
 
 	def help_serverinfo(self):
 		self.exit_code = 0

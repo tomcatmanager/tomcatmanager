@@ -20,42 +20,32 @@
 # THE SOFTWARE.
 #
 
-import os
 import pytest
 
-from tests.mock_server80 import start_mock_server80
 import tomcatmanager as tm
 
 
-@pytest.fixture(scope='module')
-def mock_server80():
-	"""start a local http server which provides a similar interface to a real Tomcat Manager app"""
-	return start_mock_server80()
+class TestServerInfo:
 
-@pytest.fixture(scope='module')
-def tomcat(mock_server80):
-	return tm.TomcatManager(
-			mock_server80['url'],
-			mock_server80['userid'],
-			mock_server80['password'] )
+	def test_dict(self, server_info_lines):
+		s = tm.models.ServerInfo(server_info_lines)
+		assert s['Tomcat Version'] == 'Apache Tomcat/8.0.32 (Ubuntu)'
+		assert s['OS Name'] == 'Linux'
+		assert s['OS Version'] == '4.4.0-89-generic'
+		assert s['OS Architecture'] == 'amd64'
+		assert s['JVM Version'] == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
+		assert s['JVM Vendor'] == 'Oracle Corporation'
 
-@pytest.fixture(scope='module')
-def war_file():
-	"""return the path to a valid war file"""
-	return os.path.dirname(__file__) + '/war/sample.war'
+	def test_properties(self, server_info_lines):
+		s = tm.models.ServerInfo(server_info_lines)
+		assert s.tomcat_version == 'Apache Tomcat/8.0.32 (Ubuntu)'
+		assert s.os_name == 'Linux'
+		assert s.os_version == '4.4.0-89-generic'
+		assert s.os_architecture == 'amd64'
+		assert s.jvm_version == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
+		assert s.jvm_vendor == 'Oracle Corporation'
 
-@pytest.fixture(scope='function')
-def war_fileobj(war_file):
-	"""open war_file for binary reading"""
-	return open(war_file, 'rb')
-
-@pytest.fixture(scope='module')
-def server_info_lines():
-	result = """Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
-OS Name: Linux
-OS Version: 4.4.0-89-generic
-OS Architecture: amd64
-JVM Version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
-JVM Vendor: Oracle Corporation
-"""
-	return result.splitlines()
+	def test_parse_extra(self, server_info_lines):
+		server_info_lines.append('New Key: New Value') 
+		s = tm.models.ServerInfo(server_info_lines)
+		assert s['New Key'] == 'New Value'

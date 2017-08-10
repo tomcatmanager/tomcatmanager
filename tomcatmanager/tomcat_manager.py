@@ -23,7 +23,7 @@
 import requests
 import collections
 
-from .models import codes, TomcatManagerResponse
+from .models import codes, TomcatManagerResponse, ServerInfo
 
 
 class TomcatManager:
@@ -114,18 +114,14 @@ class TomcatManager:
 		"""get information about the server
 		
 			tm = TomcatManager(url)
-			tmr = tm.serverinfo()
-			tmr.server_info['OS Name']
+			r = tm.serverinfo()
+			r.server_info['OS Name']
 			
 		returns an instance of TomcatManagerResponse with an additional server_info
 		attribute. The server_info attribute is a dictionary of items about the server
 		"""
 		r = self._get('serverinfo')
-		sinfo = {}
-		for line in r.result:
-			key, value = line.rstrip().split(':',1)
-			sinfo[key] = value.lstrip()
-		r.server_info = sinfo
+		r.server_info = ServerInfo(r.result)
 		return r
 
 	def status_xml(self):

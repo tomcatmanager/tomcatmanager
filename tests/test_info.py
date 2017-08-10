@@ -45,8 +45,8 @@ class TestInfo(TestManagerBase):
 	def test_server_info(self, tomcat):
 		r = tomcat.server_info()
 		self.info_assertions(r)
-		assert isinstance(r.server_info, dict)
-
+		assert isinstance(r.server_info, tm.models.ServerInfo)
+	
 	def test_status_xml(self, tomcat):
 		r = tomcat.status_xml()
 		self.info_assertions(r)
