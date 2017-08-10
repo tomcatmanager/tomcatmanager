@@ -84,6 +84,7 @@ Options
 """
 import argparse
 import sys
+import os
 import traceback
 import getpass
 import cmd2
@@ -531,8 +532,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 				self.exit_code = 0
 				self.docmd(self.tomcat.deploy, path, serverwar=warfile, update=update)
 			elif src == local:
-				self.exit_code = 0
+				warfile = os.path.expanduser(warfile)
 				fileobj = open(warfile, 'rb')
+				self.exit_code = 0
 				self.docmd(self.tomcat.deploy, path, localwar=fileobj, update=update)
 			else:
 				self.help_deploy()
