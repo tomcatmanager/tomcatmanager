@@ -27,6 +27,7 @@ tomcatmanager.models
 This module contains the data objects created by and used by tomcatmanager.
 """
 
+import requests
 from requests.structures import LookupDict
 
 
@@ -92,6 +93,15 @@ class TomcatManagerResponse:
 	def result(self, value):
 		self._result = value
 
+	@property
+	def ok(self):
+		"""returns True if there is a response, and if it completed ok"""
+		return all([
+				self.response != None,
+				self.response.status_code == requests.codes.ok,
+				self.status_code == codes.ok,
+			 ])
+
 	def raise_for_status(self):
 		"""raise exceptions if status is not ok
 		
@@ -105,7 +115,7 @@ class TomcatManagerResponse:
 		stole idea from requests package
 		"""
 		self.response.raise_for_status()
-		if self.status_code == codes.fail:
+		if self.status_code != codes.ok:
 			raise TomcatError(self.status_message)
 
 

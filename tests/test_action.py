@@ -39,11 +39,18 @@ class TestAction(TestManagerBase):
 
 	def test_expire_no_path(self, tomcat):
 		"""expire requires a path"""
-		r = tomcat.expire('', 0)
+		r = tomcat.expire('')
+		self.failure_assertions(r)
+		r = tomcat.expire(None)
 		self.failure_assertions(r)
 
 	def test_expire(self, tomcat):
-		r = tomcat.expire('/manager', 10)
+		r = tomcat.expire('/manager', 30)
+		self.info_assertions(r)
+		assert r.result == r.sessions
+
+	def test_expire_version(self, tomcat):
+		r = tomcat.expire('/someapp', '5', 30)
 		self.info_assertions(r)
 		assert r.result == r.sessions
 
@@ -56,6 +63,10 @@ class TestAction(TestManagerBase):
 		r = tomcat.start('/someapp')
 		self.success_assertions(r)
 
+	def test_start_version(self, tomcat):
+		r = tomcat.start('/someapp', '5')
+		self.success_assertions(r)
+		
 	def test_stop_no_path(self, tomcat):
 		"""stop requires a path"""
 		r = tomcat.start(None)
@@ -64,6 +75,10 @@ class TestAction(TestManagerBase):
 	def test_stop(self, tomcat):
 		r = tomcat.stop('/someapp')
 		self.success_assertions(r)
+
+	def test_stop_version(self, tomcat):
+		r = tomcat.stop('/someapp', '5')
+		self.success_assertions(r)		
 
 	def test_reload_no_path(self, tomcat):
 		"""reload requires a path"""
@@ -74,41 +89,37 @@ class TestAction(TestManagerBase):
 		r = tomcat.reload('/someapp')
 		self.success_assertions(r)
 
-	"""here's the various flavors of deploy we need to support
+	def test_reload_version(self, tomcat):
+		r = tomcat.reload('/someapp', '5')
+		self.success_assertions(r)
 
-		# local warfile to server, using PUT
-		@done - tomcat.deploy(path='/sampleapp', war=fileobj)
-
-		# deploy a warfile that's already on the server
-		tomcat.deploy(path='/sampleapp', war='file:/path/to/foo')
-
-		# deploy a previously deployed webapp which was deployed by a tag
-		tomcat.deploy(path='/sampleapp', tag='footag')
-		# implied path, deploys to /sampleapp
-		tomcat.deploy(war='file:/path/to/sampleapp.war')
-		# deploy from appBase sampleapp.war to context /sampleapp
-		tomcat.deploy(war='sampleapp')
-		# deploy from appBase sampleapp.war to context /sampleapp
-		tomcat.deploy(war='sampleapp.war')
-		# deploy based on a context.xml
-		tomcat.deploy(config='file:/path/to/context.xml')
-		# deploy by context and war
-		tomcat.deploy(config='file:/path/to/context.xml', war='file:/path/bar.war')
-
-		# ? see if we can deploy a config and a warfile
-		tomcat.deploy(config='file:/path/to/context.xml', war=fileobj)		
-	"""	
+	###
+	#
+	# test deploy variations
+	#
+	###
+	def test_deploy_path_only(self, tomcat):
+		r = tomcat.deploy(path='/newapp')
+		self.failure_assertions(r)	
 	
 	def test_deploy_localwar_no_path(self, tomcat, war_fileobj):
 		r = tomcat.deploy(None, localwar=war_fileobj)
 		self.failure_assertions(r)
-	
+
 	def test_deploy_localwar(self, tomcat, war_fileobj):
 		r = tomcat.deploy(path='/newapp', localwar=war_fileobj)
 		self.success_assertions(r)
 
+	def test_deploy_localwar_version(self, tomcat, war_fileobj):
+		r = tomcat.deploy(path='/newapp', localwar=war_fileobj, version='42')
+		self.success_assertions(r)
+	
 	def test_deploy_localwar_update(self, tomcat, war_fileobj):
 		r = tomcat.deploy(path='/newapp', localwar=war_fileobj, update=True)
+		self.success_assertions(r)
+
+	def test_deploy_localwar_version_update(self, tomcat, war_fileobj):
+		r = tomcat.deploy(path='/newapp', localwar=war_fileobj, version='42', update=True)
 		self.success_assertions(r)
 
 	def test_deploy_serverwar_and_localwar(self, tomcat, war_fileobj):
@@ -136,9 +147,17 @@ class TestAction(TestManagerBase):
 		r = tomcat.deploy(path='/newapp', serverwar='/path/to/foo.war')
 		self.success_assertions(r)
 
-	def test_deploy_path_only(self, tomcat):
-		r = tomcat.deploy(path='/newapp')
-		self.failure_assertions(r)
+	def test_deploy_serverwar_version(self, tomcat):
+		r = tomcat.deploy(path='/newapp', serverwar='/path/to/foo.war', version='42')
+		self.success_assertions(r)
+
+	def test_deploy_serverwar_update(self, tomcat):
+		r = tomcat.deploy(path='/newapp', serverwar='/path/to/foo.war', update=True)
+		self.success_assertions(r)
+	
+	def test_deploy_serverwar_version_update(self, tomcat):
+		r = tomcat.deploy(path='/newapp', serverwar='/path/to/foo.war', version='42', update=True)
+		self.success_assertions(r)
 	
 	def test_undeploy_no_path(self, tomcat):
 		"""ensure we throw an exception if we don't have a path to undeploy"""
@@ -148,4 +167,8 @@ class TestAction(TestManagerBase):
 	def test_undeploy(self, tomcat):
 		"""should throw an exception if there is an error"""
 		r = tomcat.undeploy('/newapp')
+		self.success_assertions(r)
+
+	def test_undeploy_version(self, tomcat):
+		r = tomcat.undeploy('/newapp', '3')
 		self.success_assertions(r)
