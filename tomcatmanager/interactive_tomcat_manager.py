@@ -305,7 +305,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 			self.tomcat = tm.TomcatManager(url, username, password)
 			if self.tomcat.is_connected:
-				self.pout('connected to tomcat manager at {}'.format(url))
+				self.pdebug('connected to tomcat manager at {}'.format(url))
 				self.exit_code = 0
 			else:
 				self.perr('tomcat manager not found at {}'.format(url))
