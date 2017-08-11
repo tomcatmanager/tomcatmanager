@@ -70,7 +70,7 @@ web application included in the Tomcat distribution. You will need to
 configure authentication in `tomcat-users.xml` with access to the
 `manager-script` role:
 
-.. code-block: xml
+.. code-block:: xml
 
     <tomcat-users>
     .....
