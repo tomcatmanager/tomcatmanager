@@ -84,18 +84,19 @@ Features
 
 The ``tomcat-manager`` command line tool supports the following commands:
 
-- **list** - show all applications currently installed
+- **list** - show all installed applications
 - **serverinfo** - show information about the server, including tomcat version, OS version and architecture, and jvm version
-- **statusxml** - show server status information in XML format
+- **statusxml** - show server status information in xml format
 - **vminfo** - show diagnostic information about the jvm
-- **sslconnectorciphers** - get SSL/TLS ciphers configured for each connector
+- **sslconnectorciphers** - show ssl/tls ciphers configured for each connector
 - **threaddump** - show a jvm thread dump
 - **resources** - show the global jdni resources configured in tomcat
-- **findleakers** - show tomcat apps that are leaking memory
+- **findleakers** - show tomcat applications that leak memory
 - **sessions** - show active sessions for a particular tomcat application
 - **expire** - expire idle sessions
-- **start** - start a tomcat application that has already been deployed in the tomcat server
-- **stop** - stop execution of a tomcat application but leave it deployed in the tomcat server
+- **start** - start a tomcat application that has been deployed but isn't running
+- **stop** - stop a tomcat application and leave it deployed on the server
 - **reload** - stop and start a tomcat application
-- **deploy** - install a war file in the tomcat server
+- **deploy** - deploy a war file containing a tomcat application in the tomcat server
+- **redeploy** - remove the application currently installed at a given path and install a new war file there
 - **undeploy** - remove an application from the tomcat server

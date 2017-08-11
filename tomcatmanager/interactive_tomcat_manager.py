@@ -21,7 +21,7 @@
 #
 
 """
-Tomcat Manager
+tomcat-manager
 ==============
 
 	Manage a tomcat server from the command line or from an interactive
@@ -112,7 +112,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 	127 - unknown command
 	"""
 
-	# override behavior of cmd2.Cmd
+	# settings for cmd2.Cmd
 	cmd2.Cmd.shortcuts.update({'$?': 'exit_code' })
 	
 	def __init__(self):
@@ -141,7 +141,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 	###
 	#
-	# override cmd2.Cmd methods
+	# Override cmd2.Cmd methods.
 	#
 	###
 	def postparsing_precmd(self, statement):
@@ -184,7 +184,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 	###
 	#
-	# convenience and shared methods
+	# Convenience and shared methods.
 	#
 	###
 	def pout(self, msg=''):
@@ -262,11 +262,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 system conventions.
 
   path          The path part of the URL where the application will be deployed.
-  version       The version to associate with this deployment."""
+  version       The version string to associate with this deployment."""
 
 	###
 	#
-	# methods for commands exposed to the user
+	# Miscellaneous commands.
 	#
 	###
 	def do_exit(self, args):
@@ -283,7 +283,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
 		return self.do_exit(args)
 
 	def do_connect(self, args):
-		"""connect to an instance of the tomcat manager application"""
 		url = None
 		username = None
 		password = None
@@ -316,19 +315,21 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 	def help_connect(self):
 		self.exit_code = 0
-		self.pout('usage: connect url [username] [password]')
-		self.pout('connect to a tomcat manager instance')
-		self.pout('if you specify a username and no password, you will be prompted for the password')
-		self.pout('if you don\'t specify a username or password, connect with no authentication')
+		self.pout("""Usage: connect url [userid] [password]
+
+Connect to a tomcat manager instance.
+
+If you specify a userid and no password, you will be prompted for the
+password. If you don't specify a userid or password, attempt to connect
+with no authentication""")
 
 	###
 	#
-	# the info commands exposed to the user, i.e. commands that don't really do
-	# anything, they just return some information from the server
+	# The info commands. These commands that don't affect change, they just
+    # return some information from the server.
 	#
 	###
 	def do_list(self, args):
-		"""list the applications on the server"""
 		if args:
 			self.help_list()
 			self.exit_code = 2
@@ -344,8 +345,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 	def help_list(self):
 		self.exit_code = 0
-		self.pout('Usage: list')
-		self.pout('list installed applications')
+		self.pout("""Usage: list
+
+Show all installed applications.""")
 
 	def do_serverinfo(self, args):
 		if args:
@@ -357,8 +359,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 	def help_serverinfo(self):
 		self.exit_code = 0
-		self.pout('usage: serverinfo')
-		self.pout('show information about the server')
+		self.pout("""Usage: serverinfo
+
+Show information about the server.""")
 
 	def do_status(self, args):
 		if args:
@@ -370,8 +373,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 	def help_status(self):
 		self.exit_code = 0
-		self.pout('Usage: status')
-		self.pout('get server status information in XML format')
+		self.pout("""Usage: status
+
+Show server status information in xml format.""")
 
 	def do_vminfo(self, args):
 		if args:
@@ -383,8 +387,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 	def help_vminfo(self):
 		self.exit_code = 0
-		self.pout('Usage: vminfo')
-		self.pout('show information about the jvm')
+		self.pout("""Usage: vminfo
+
+Show diagnostic information about the jvm.""")
 
 	def do_sslconnectorciphers(self, args):
 		if args:
@@ -396,8 +401,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 	
 	def help_sslconnectorciphers(self):
 		self.exit_code = 0
-		self.pout('Usage: sslconnectorciphers')
-		self.pout('show SSL/TLS ciphers configured for each connector')
+		self.pout("""Usage: sslconnectorciphers
+
+Show SSL/TLS ciphers configured for each connector.""")
 
 	def do_threaddump(self, args):
 		if args:
@@ -409,8 +415,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 	def help_threaddump(self):
 		self.exit_code = 0
-		self.pout('Usage: threaddump')
-		self.pout('show a jvm thread dump')
+		self.pout("""Usage: threaddump
+
+Show a jvm thread dump.""")
 
 	def do_resources(self, args):
 		if len(args.split()) in [0,1]:
@@ -428,9 +435,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 	def help_resources(self):
 		self.exit_code = 0
-		self.pout('Usage: resources [class_name]')
-		self.pout('list global jndi resources')
-		self.pout('  class_name  = optional fully qualified Java class name of the resource type you want')
+		self.pout("""Usage: resources [class_name]
+
+Show global jndi resources configured in tomcat.
+
+class_name  Optional fully qualified java class name of the resource type
+            to show.""")
 
 	def do_findleakers(self, args):
 		if args:
@@ -442,11 +452,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
 	
 	def help_findleakers(self):
 		self.exit_code = 0
-		self.pout('Usage: findleakers')
-		self.pout('find apps that leak memory')
-		self.pout()
-		self.pout('CAUTION: this triggers a full garbage collection on the server')
-		self.pout('Use with extreme caution on production systems')
+		self.pout("""Usage: findleakers
+
+Show tomcat applications that leak memory.
+
+WARNING: this triggers a full garbage collection on the server. Use with
+extreme caution on production systems.""")
 
 	def do_sessions(self, args):
 		args = args.split()
@@ -465,17 +476,16 @@ class InteractiveTomcatManager(cmd2.Cmd):
 	def help_sessions(self):
 		self.pout("""Usage: sessions {path} [version]
 
-Display number of active sessions.
+Show active sessions for a tomcat application.
 
   path     The path part of the URL where the application is deployed.
-  version  Optional version of the application from which to expire
-           sessions. If the application was deployed with a version, the
-           version must be specified in order to expire sessions in it.""")
+  version  Optional version string of the application from which to show
+           sessions. If the application was deployed with a version
+           string, it must be specified in order to show sessions.""")
 
 	###
 	#
-	# the action commands exposed to the user, i.e. commands that actually effect
-	# some change on the server
+	# The action commands. These commands affect some change on the server.
 	#
 	###
 	def do_expire(self, args):
@@ -502,11 +512,11 @@ Display number of active sessions.
 Expire idle sessions.
 
   path     The path part of the URL where the application is deployed.
-  version  Optional version of the application from which to expire
-           sessions. If the application was deployed with a version, the
-           version must be specified in order to expire sessions in it.
-  idle     Sessions idle for more than this number of minutes are expired.
-           Use 0 to expire all sessions.""")
+  version  Optional version string of the application from which to
+           expire sessions. If the application was deployed with a version
+           string, it must be specified in order to expire sessions.
+  idle     Expire sessions idle for more than this number of minutes. Use
+           0 to expire all sessions.""")
 
 	def do_start(self, args):
 		self.base_path_version(args, self.tomcat.start, self.help_start)
@@ -515,12 +525,12 @@ Expire idle sessions.
 		self.exit_code = 0
 		self.pout("""Usage: start {path} [version]
 
-Start a tomcat application.
+Start a tomcat application that has been deployed but isn't running.
 
   path     The path part of the URL where the application is deployed.
-  version  Optional version of the application to start. If the
-           application was deployed with a version, the version must be
-           specified in order to start it.""")
+  version  Optional version string of the application to start. If the
+           application was deployed with a version string, it must be
+           specified in order to start the application.""")
 
 	def do_stop(self, args):
 		self.base_path_version(args, self.tomcat.stop, self.help_stop)
@@ -529,12 +539,12 @@ Start a tomcat application.
 		self.exit_code = 0
 		self.pout("""Usage: stop {path} [version]
 
-Stop a tomcat application.
+Stop a tomcat application and leave it deployed on the server.
 
   path     The path part of the URL where the application is deployed.
-  version  Optional version of the application to stop. If the
-           application was deployed with a version, the version must be
-           specified in order to stop it.""")
+  version  Optional version string of the application to stop. If the
+           application was deployed with a version string, it must be
+           specified in order to stop the application.""")
 
 	def do_reload(self, args):
 		self.base_path_version(args, self.tomcat.reload, self.help_reload)
@@ -543,12 +553,12 @@ Stop a tomcat application.
 		self.exit_code = 0
 		self.pout("""Usage: reload {path} [version]
 
-Reload a tomcat application.
+Start and stop a tomcat application.
 
   path     The path part of the URL where the application is deployed.
-  version  Optional version of the application to reload. If the
-           application was deployed with a version, the version must be
-           specified in order to reload it.""")
+  version  Optional version string of the application to reload. If the
+           application was deployed with a version string, it must be
+           specified in order to reload the application.""")
 
 	def deploy_base(self, args, show_help, update):
 		server = 'server'
@@ -589,7 +599,7 @@ Reload a tomcat application.
 		self.exit_code = 0
 		self.pout("""Usage: deploy server|local {warfile} {path} [version]
 
-Deploy a tomcat application contained in a war file.""")
+Install a war file containing a tomcat application in the tomcat server.""")
 		self.pout(self.deploy_base_help())
 
 	def do_redeploy(self, args):
@@ -599,8 +609,8 @@ Deploy a tomcat application contained in a war file.""")
 		self.exit_code = 0
 		self.pout("""Usage: redeploy server|local {warfile} {path} [version]
 
-Redeploy a tomcat application contained in a war file by undeploying the
-application located at {path} and then deploying {warfile}.""")
+Remove the application currently installed at a given path and install a
+new war file there.""")
 		self.pout(self.deploy_base_help())
 
 	def do_undeploy(self, args):
@@ -620,11 +630,12 @@ application located at {path} and then deploying {warfile}.""")
 		self.exit_code = 0
 		self.pout("""Usage: undeploy {path} [version]
 
-Undeploy a tomcat application.
+Remove an application from the tomcat server.
 
   path     The path part of the URL where the application is deployed.
-  version  Version of the application to undeploy. If the application was
-           deployed with a version, a version must be specified to undeploy it.""")
+  version  Version string of the application to undeploy. If the
+           application was deployed with a version, it must be
+           specified in order to undeploy it.""")
 
 	###
 	#
@@ -637,7 +648,9 @@ Undeploy a tomcat application.
 	
 	def help_version(self):
 		self.exit_code = 0
-		self.pout('show version information')
+		self.pout("""Usage: version
+        
+Show version information.""")
 	
 	def do_exit_code(self, args):
 		"""show the value of the exit_code variable"""
@@ -646,7 +659,9 @@ Undeploy a tomcat application.
 
 	def help_exit_code(self):
 		self.exit_code = 0
-		self.pout('show the value of the exit_code variable, similar to $? in ksh/bash')
+		self.pout("""Usage: exit_code
+        
+Show the value of the exit_code variable, similar to $? in ksh/bash""")
 				
 	def help_commandline(self):
 		self.exit_code = 0
@@ -678,7 +693,9 @@ THE SOFTWARE.
 
 	def help_license(self):
 		self.exit_code = 0
-		self.pout('show license information')
+		self.pout("""Usage: license
+        
+Show license information.""")
 
 	def help_help(self):
 		self.exit_code = 0
