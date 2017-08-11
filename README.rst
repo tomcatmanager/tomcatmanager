@@ -3,9 +3,9 @@ tomcatmanager
 
 If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
 
-- use the [Tomcat Manager](https://tomcat.apache.org/tomcat-8.5-doc/manager-howto.html) application in your browser
-- use the [Tomcat Ant Tasks](https://wiki.apache.org/tomcat/AntDeploy) included with Tomcat
-- use [Cargo](https://codehaus-cargo.github.io/) and its plugins for ant and maven
+- use the `Tomcat Manager <https://tomcat.apache.org/tomcat-8.5-doc/manager-howto.html>`_ application in your browser
+- use the `Tomcat Ant Tasks <https://wiki.apache.org/tomcat/AntDeploy>`_ included with Tomcat
+- use `Cargo <https://codehaus-cargo.github.io/>`_ and its plugins for ant and maven
 
 Here's another way. tomcatmanager is a command line tool and python
 library for managing a Tomcat server.
@@ -14,7 +14,7 @@ library for managing a Tomcat server.
 Quick Tour
 ----------
 
-This package installs a command line utility called `tomcat-manager`. It's easily scriptable using your favorite shell:
+This package installs a command line utility called ``tomcat-manager``. It's easily scriptable using your favorite shell:
 
 .. code-block:: bash
 
@@ -67,8 +67,8 @@ Tomcat Configuration
 
 This library and associated tools do their work via the Tomcat Manager
 web application included in the Tomcat distribution. You will need to
-configure authentication in `tomcat-users.xml` with access to the
-`manager-script` role:
+configure authentication in ``tomcat-users.xml`` with access to the
+``manager-script`` role:
 
 .. code-block:: xml
 
@@ -82,7 +82,7 @@ configure authentication in `tomcat-users.xml` with access to the
 Features
 --------
 
-The tomcat-manager command line tool supports the following commands:
+The ``tomcat-manager`` command line tool supports the following commands:
 
 - **list** - show all applications currently installed
 - **serverinfo** - show information about the server, including tomcat version, OS version and architecture, and jvm version
