@@ -14,10 +14,10 @@ already got that installed. Create a new environment, and then install
 development dependencies::
 
     $ cd tomcatmanager
-		$ mkvirtualenv --python=/usr/local/bin/python3 tomcatmanager
-		$ setvirtualenvproject ~/.virtualenvs/tomcatmanager .
-		$ workon tomcatmanager
-		$ pip install -e .
+    $ mkvirtualenv --python=/usr/local/bin/python3 tomcatmanager
+    $ setvirtualenvproject ~/.virtualenvs/tomcatmanager .
+    $ workon tomcatmanager
+    $ pip install -e .
     $ pip install -e .[dev]
 
 
