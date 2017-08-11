@@ -6,26 +6,34 @@ Get Source Code
 
 Clone the repo from github::
 
-    $ git clone git@github.com:tomcatmanager/tomcatmanager.git
+		$ git clone git@github.com:tomcatmanager/tomcatmanager.git
 
-Then install development dependencies::
+I recommend using ``virtualenvwrapper`` and friends, especially for
+development use. tomcatmanager requires python 3, I assume you've
+already got that installed. Create a new environment, and then install
+development dependencies::
 
     $ cd tomcatmanager
-    $ pip3 install -e .[dev]
+		$ mkvirtualenv --python=/usr/local/bin/python3 tomcatmanager
+		$ setvirtualenvproject ~/.virtualenvs/tomcatmanager .
+		$ workon tomcatmanager
+		$ pip install -e .
+    $ pip install -e .[dev]
 
 
 Branches, tags, and versions
 ----------------------------
 
-This project uses a simplified version of the `git flow branching strategy
-<http://nvie.com/posts/a-successful-git-branching-model/>`_. We don't use
-release branches, and we generally don't do hotfixes, so we don't have any
-of those branches either. The master branch always contains the latest
-release of the code uploaded to PyPI, with a tag for the version number of
-that release.
+This project uses a simplified version of the `git flow branching
+strategy <http://nvie.com/posts/a-successful-git-branching-model/>`_. We
+don't use release branches, and we generally don't do hotfixes, so we
+don't have any of those branches either. The master branch always
+contains the latest release of the code uploaded to PyPI, with a tag for
+the version number of that release.
 
 
-The develop branch is where all the action occurs. Feature branches are welcome. When it's time for a release, we merge develop into master.
+The develop branch is where all the action occurs. Feature branches are
+welcome. When it's time for a release, we merge develop into master.
 
 This project uses `semantic versioning <http://semver.org/>`_.
 
@@ -47,6 +55,7 @@ To remove the development links::
 
 Testing
 -------
+
 To ensure the tests can run without an external dependencies,
 ``tests/mock_server80.py`` contains a HTTP server which emulates
 the behavior of Tomcat Manager 8.0. There is a test fixture to start
@@ -59,8 +68,9 @@ To run the tests::
 
 Make a Release
 --------------
-To make a release and deploy it to `PyPI <https://pypi.python.org/pypi>`_,
-do the following:
+
+To make a release and deploy it to `PyPI
+<https://pypi.python.org/pypi>`_, do the following:
 
 1. Merge everything to be included in the release into the develop branch.
 
