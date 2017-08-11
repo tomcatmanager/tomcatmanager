@@ -9,14 +9,14 @@ from os import path
 
 # get the long description from the README file
 here = path.abspath(path.dirname(__file__))
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
 	name='tomcatmanager',
-	version='0.1.0',
+	version='0.9.0',
 
-	description='interact with the Tomcat Manager web application from the command line',
+	description='A command line tool and python library for managing a tomcat server.',
 	long_description=long_description,
 
 	author='Kotfu',
@@ -25,7 +25,7 @@ setup(
 	license='MIT',
 
 	classifiers=[
-	'Development Status :: 5 - Production/Stable',
+	'Development Status :: 4 - Beta',
 	'Environment :: Console',
 	'Topic :: System :: Systems Administration',
 	'Topic :: Utilities',
@@ -36,7 +36,7 @@ setup(
 	'Programming Language :: Python :: 3 :: Only',
 	],
 
-	keywords='java tomcat command line manager',
+	keywords='java tomcat command line',
 
 	packages=find_packages(),
 
@@ -46,7 +46,7 @@ setup(
 	# dependencies for unit testing
 	# $ pip3 install -e .[dev]
 	extras_require={
-		'dev': ['pytest', 'sphinx']
+		'dev': ['pytest', 'sphinx', 'wheel', 'twine']
 	},
 
 	# define the scripts that should be created on installation

@@ -95,9 +95,9 @@ import tomcatmanager as tm
 
 #
 #
-version_number='8.5'
+version_number=tm.__version__
 prog_name='tomcat-manager'
-version_string='%s %s (works with Tomcat Manager <= 8.5)' % (prog_name, version_number)
+version_string='%s %s (works with Tomcat Manager >= 7.0 and <= 8.5)' % (prog_name, version_number)
 
 
 class InteractiveTomcatManager(cmd2.Cmd):
