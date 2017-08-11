@@ -6,17 +6,33 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
-from sphinx.setup_command import BuildDoc
-cmdclass={'build_docs': BuildDoc}
+name='tomcatmanager'
+version = '0.9'
+release = '0.9.2'
+
+# the first time we install, sphinx may not already be installed
+# so we skip sphinx. If someone does pip install -e .[dev] then
+# we will have sphix and this will work
+try:
+    from sphinx.setup_command import BuildDoc
+    cmdclass={'build_docs': BuildDoc}
+    command_options={
+            'build_docs': {
+                'project': ('setup.py', name),
+                'version': ('setup.py', version),
+                'release': ('setup.py', release),
+            },
+        }
+except ModuleNotFoundError:
+    cmdclass={}
+    command_options={}
+
 #
 # get the long description from the README file
 here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-name='tomcatmanager'
-version = '0.9'
-release = '0.9.2'
 setup(
 	name=name,
 	version=release,
@@ -48,7 +64,7 @@ setup(
 	python_requires='>=3.4',
 	install_requires=['cmd2', 'requests'],
 	
-	# dependencies for unit testing
+	# dependencies for development and testing
 	# $ pip3 install -e .[dev]
 	extras_require={
 		'dev': ['pytest', 'sphinx', 'wheel', 'twine']
@@ -63,11 +79,5 @@ setup(
     
     # add a build_docs command
     cmdclass=cmdclass,
-    command_options={
-        'build_docs': {
-            'project': ('setup.py', name),
-            'version': ('setup.py', version),
-            'release': ('setup.py', release),
-        },
-    },
+    command_options=command_options,
 )
