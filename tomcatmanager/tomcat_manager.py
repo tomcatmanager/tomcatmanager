@@ -77,8 +77,8 @@ class TomcatManager:
 
 	###
 	#
-	# the info commands, i.e. commands that don't really do anything, they
-	# just return some information from the server
+	# The info commands. These commands that don't affect change, they just
+    # return some information from the server.
 	#
 	###
 	def list(self):
@@ -288,8 +288,7 @@ class TomcatManager:
 
 	###
 	#
-	# the action commands, i.e. commands that actually effect some change on
-	# the server
+	# The action commands. These commands affect some change on the server.
 	#
 	###
 	def expire(self, path, version=None, idle=None):
