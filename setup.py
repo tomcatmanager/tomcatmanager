@@ -19,7 +19,7 @@ version = '0.9'
 release = '0.9.2'
 setup(
 	name=name,
-	version=version,
+	version=release,
 
 	description='A command line tool and python library for managing a tomcat server.',
 	long_description=long_description,
