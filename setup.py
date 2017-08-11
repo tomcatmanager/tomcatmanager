@@ -6,15 +6,20 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
-
+from sphinx.setup_command import BuildDoc
+cmdclass={'build_docs': BuildDoc}
+#
 # get the long description from the README file
 here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+name='tomcatmanager'
+version = '0.9'
+release = '0.9.2'
 setup(
-	name='tomcatmanager',
-	version='0.9.2',
+	name=name,
+	version=version,
 
 	description='A command line tool and python library for managing a tomcat server.',
 	long_description=long_description,
@@ -55,4 +60,14 @@ setup(
 			'tomcat-manager=tomcatmanager.__main__:main',
 		],
 	},
+    
+    # add a build_docs command
+    cmdclass=cmdclass,
+    command_options={
+        'build_docs': {
+            'project': ('setup.py', name),
+            'version': ('setup.py', version),
+            'release': ('setup.py', release),
+        },
+    },
 )
