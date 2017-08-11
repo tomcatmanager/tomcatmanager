@@ -14,7 +14,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
 	name='tomcatmanager',
-	version='0.9.0',
+	version='0.9.1',
 
 	description='A command line tool and python library for managing a tomcat server.',
 	long_description=long_description,
