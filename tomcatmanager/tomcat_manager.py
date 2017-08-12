@@ -63,6 +63,60 @@ class TomcatManager:
 	# convenience and utility methods
 	#
 	###
+	def connect(self, url=None, userid=None, password=None):
+		"""
+		Connect to a Tomcat Manager server.
+		
+		:param url: url where the Tomcat Manager web application is deployed
+		:param userid: userid to authenticate
+		:param password: password to authenticate
+		:return: :class:`TomcatManagerResponse <TomcatManagerResponse>` object
+		:rtype: TomcatManagerResponse
+	
+		Usage::
+		
+		>>> import tomcatmanager as tm
+		>>> tomcat = tm.TomcatManager()
+		>>> r = tomcat.connect('http://localhost:8080/manager', \
+		... 	'ace', 'newenglandclamchowder')
+		
+		or
+		
+		>>> import tomcatmanager as tm
+		>>> tomcat = tm.TomcatManager(url='http://localhost:8080/manager', \
+		... 	userid='ace', password='newenglandclamchowder')
+		>>> r = tomcat.connect()
+		
+		The only way to validate whether we are connected is to actually get
+		a url: this method uses the same one as :meth:`list` uses.
+		
+		Requesting url's via http can raise exceptions. For example, if you
+		give a URL where no web server is listening, you'll get a
+		:meth:`requests.connections.ConnectionError`. This method won't raise
+		exceptions for everything however. If the credentials are incorrect, you
+		won't get an exception unless you ask for it using
+		:meth:`TomcatManagerResponse.raise_for_status`. Once you have used this
+		method there are two ways to check if you are actually connected::
+		
+		>>> tomcat.is_connected
+		
+		or
+		
+		>>> try:
+		>>> 	r.raise_for_status()
+		>>> except Exception as err:
+		>>> 	print(type(err))
+		"""
+		self._url = url
+		self._userid = userid
+		self._password = password
+		r = self._get('serverinfo')
+		# hide the fact that we did a different command, we don't
+		# want people relying on or using this data
+		r.result = ''
+		r.status_message = ''
+		return r
+
 	@property
 	def is_connected(self):
 		"""try and connect to the tomcat server using url and authentication

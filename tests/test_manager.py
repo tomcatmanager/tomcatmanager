@@ -66,17 +66,42 @@ class TestManager(TestManagerBase):
 		assert tm.TomcatManager()._is_stream('some string') == False
 		assert tm.TomcatManager()._is_stream(['some', 'list']) == False
 
-	def test_connect_no_url(self, mock_server80):
+	def test_init_no_url(self, mock_server80):
 		tomcat = tm.TomcatManager()
 		assert tomcat.is_connected == False
 
-	def test_connect_noauth(self, mock_server80):
+	def test_init_noauth(self, mock_server80):
 		tomcat = tm.TomcatManager(mock_server80['url'])
 		assert tomcat.is_connected == False
 
-	def test_connect_auth(self, mock_server80):
+	def test_init_auth(self, mock_server80):
 		tomcat = tm.TomcatManager(
 			mock_server80['url'],
 			mock_server80['userid'],
 			mock_server80['password'] )
 		assert tomcat.is_connected == True
+
+	def test_connect_no_url(self, mock_server80):
+		tomcat = tm.TomcatManager()
+		with pytest.raises(requests.exceptions.MissingSchema):
+			r = tomcat.connect()
+
+	def test_connect_noauth(self, mock_server80):
+		tomcat = tm.TomcatManager()
+		r = tomcat.connect(mock_server80['url'])
+		assert isinstance(r, tm.models.TomcatManagerResponse)
+		assert tomcat.is_connected == False
+		with pytest.raises(requests.exceptions.HTTPError):
+			r.raise_for_status()
+
+	def test_connect_auth(self, mock_server80):
+		tomcat = tm.TomcatManager()
+		r = tomcat.connect(
+			mock_server80['url'],
+			mock_server80['userid'],
+			mock_server80['password'] )
+		assert isinstance(r, tm.models.TomcatManagerResponse)
+		assert r.result == ''
+		assert r.status_code == tm.codes.ok
+		assert tomcat.is_connected == True
+		r.raise_for_status()		
