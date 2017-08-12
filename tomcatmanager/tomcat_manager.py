@@ -223,7 +223,8 @@ class TomcatManager:
 		the result attribute and in the status_xml attribute
 		"""
 		# this command isn't in the /manager/text url space, so we can't use _get()
-		url = self._url + '/status/all'
+		base = self._url or ''		
+		url = base + '/status/all'
 		tmr = TomcatManagerResponse()
 		tmr.response = requests.get(
 				url,
@@ -477,7 +478,8 @@ class TomcatManager:
 			raise ValueError('can not deploy localwar and serverwar at the same time')
 		elif localwar:
 			# PUT a local stream
-			url = self._url + '/text/deploy'
+			base = self._url or ''
+			url = base + '/text/deploy'
 			if self._is_stream(localwar):
 				warobj = localwar
 			else:
