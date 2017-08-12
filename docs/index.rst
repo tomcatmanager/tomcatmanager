@@ -10,6 +10,8 @@ tomcatmanager documentation
    :maxdepth: 2
    :caption: Contents:
 
+   tomcat-manager
+   library
    developer
 
 

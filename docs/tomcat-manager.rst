@@ -1,53 +1,56 @@
+tomcat-manager command line tool
+================================
+
 This script can either be used in command line mode or interactive mode. To
-use interactive mode you can do:
+use interactive mode you can do::
 
-    $ tomcat-manager
-	tomcat-manager> connect http://localhost:8080/manager admin newenglandclamchowder
-	tomcat-manager> list
-	Path                     Status  Sessions Directory
-	------------------------ ------- -------- ------------------------------------
-	/                        running        0 ROOT
-	/manager                 running       14 /usr/share/tomcat7-admin/manager
-	/host-manager            running        0 /usr/share/tomcat7-admin/host-manager
-	tomcat-manager> exit
+   $ tomcat-manager
+   tomcat-manager> connect http://localhost:8080/manager admin newenglandclamchowder
+   tomcat-manager> list
+   Path                     Status  Sessions Directory
+   ------------------------ ------- -------- ------------------------------------
+   /                        running        0 ROOT
+   /manager                 running       14 /usr/share/tomcat7-admin/manager
+   /host-manager            running        0 /usr/share/tomcat7-admin/host-manager
+   tomcat-manager> exit
 
-Command line mode might look like:
+Command line mode might look like::
 
-	$ tomcat-manager --user=admin http://localhost:8080/manager list
-	Password: {you type your password here}
-	Path                     Status  Sessions Directory
-	------------------------ ------- -------- ------------------------------------
-	/                        running        0 ROOT
-	/manager                 running       17 /usr/share/tomcat7-admin/manager
-	/host-manager            running        0 /usr/share/tomcat7-admin/host-manager
+   $ tomcat-manager --user=admin http://localhost:8080/manager list
+   Password: {you type your password here}
+   Path                     Status  Sessions Directory
+   ------------------------ ------- -------- ------------------------------------
+   /                        running        0 ROOT
+   /manager                 running       17 /usr/share/tomcat7-admin/manager
+   /host-manager            running        0 /usr/share/tomcat7-admin/host-manager
 
-To see all of the valid commands, use interactive mode:
+To see all of the valid commands, use interactive mode::
 
-	$ tomcat-manager
-	tomcat-manager> help
-
-
-	Documented commands (type help <topic>):
-	========================================
-	EOF      exit_code  license  resources            start       undeploy
-	connect  expire     list     serverinfo           status      version
-	deploy   findleaks  quit     sessions             stop        vminfo
-	exit     help       reload   sslconnectorciphers  threaddump
-
-	Miscellaneous help topics:
-	==========================
-	commandline
+   $ tomcat-manager
+   tomcat-manager> help
 
 
+   Documented commands (type help <topic>):
+   ========================================
+   EOF      exit_code  license  resources            start       undeploy
+   connect  expire     list     serverinfo           status      version
+   deploy   findleaks  quit     sessions             stop        vminfo
+   exit     help       reload   sslconnectorciphers  threaddump
 
-For help on a particular command:
+   Miscellaneous help topics:
+   ==========================
+   commandline
+
+
+For help on a particular command::
 
 	$ tomcat-manager
 	tomcat-manager> help connect
 	usage: connect url [username] [password]
 	tomcat-manager>
 
-## Interactive Mode Features
+Interactive Mode Features
+-------------------------
 
 Interactive mode has a rich set of capabilities, mostly provided by the readline library. It keeps a command history, which you can navigate using the up and down arrow keys. You can edit current or previous commands using standard editing keys, and search the history of your commands with `<control>+r`.
 

@@ -27,10 +27,9 @@ from .models import codes, TomcatManagerResponse, ServerInfo
 
 
 class TomcatManager:
-	"""A wrapper around the tomcat manager web application
-	
 	"""
-	
+	A wrapper around the tomcat manager web application
+	"""
 	@classmethod
 	def _is_stream(self, obj):
 		"""return true if this is a stream type object"""
@@ -40,6 +39,32 @@ class TomcatManager:
 		])
 		
 	def __init__(self, url=None, userid=None, password=None):
+		"""
+		Initialize a new TomcatManager object.
+		
+		:param url: URL where the Tomcat Manager web application is deployed
+		:param userid: userid to authenticate
+		:param password: password to authenticate
+
+		Usage::
+		
+		>>> import tomcatmanager as tm
+		>>> tomcat = tm.TomcatManager('http://localhost:8080/manager', \
+		... 	'ace', 'newenglandclamchowder')
+		
+		or
+		
+		>>> import tomcatmanager as tm
+		>>> tomcat = tm.TomcatManager(url='http://localhost:8080/manager', \
+		... 	userid='ace', password='newenglandclamchowder')
+		
+		or
+		
+		>>> import tomcatmanager as tm
+		>>> tomcat = tm.TomcatManager()
+		
+		If you initialize without a url and credentials,	
+		"""
 		self._url = url
 		self._userid = userid
 		self._password = password
@@ -49,7 +74,8 @@ class TomcatManager:
 		
 		returns a TomcatManagerResponse object
 		"""
-		url = self._url + '/text/' + cmd
+		base = self._url or ''
+		url = base + '/text/' + cmd
 		r = TomcatManagerResponse()
 		r.response = requests.get(
 				url,
@@ -119,9 +145,10 @@ class TomcatManager:
 
 	@property
 	def is_connected(self):
-		"""try and connect to the tomcat server using url and authentication
+		"""
+		Is the url an actual tomcat server and are the credentials valid?
 		
-		returns true if successful, false otherwise
+		:return: True if connected to a tomcat server, False if not.
 		"""
 		try:
 			r = self._get('list')
@@ -136,7 +163,10 @@ class TomcatManager:
 	#
 	###
 	def list(self):
-		"""list of all applications currently installed
+		"""
+		list of all applications currently installed
+
+		:return: :class:`TomcatManagerResponse <TomcatManagerResponse>` object
 		
 			tm = TomcatManager(url)
 			tmr = tm.list()
