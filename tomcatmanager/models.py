@@ -37,7 +37,24 @@ class TomcatError(Exception):
 
 class TomcatManagerResponse:
 	"""
-	Returned as the response for :class:`TomcatManager` commands
+	Returned as the response for :class:`TomcatManager` commands.
+	
+	After running a command, it's a good idea to check and make sure that
+	the command completed succesfully.
+	
+	>>> import tomcatmanager as tm
+	>>> tomcat = tm.TomcatManager('http://localhost:8080/manager', \
+	... 	'ace', 'newenglandclamchowder')
+	>>> try:
+	... 	r = tomcat.server_info()
+	...		r.raise_for_status()
+	... except Exception as err:
+	...		print(err)
+	...
+	
+	
+	
+	
 	"""    
 
 	def __init__(self, response=None):

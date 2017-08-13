@@ -28,11 +28,29 @@ from .models import codes, TomcatManagerResponse, ServerInfo
 
 class TomcatManager:
 	"""
-	A wrapper around the tomcat manager web application
+	A class for interacting with the Tomcat Manager web application.
+	
+	
+	Here's a summary of the recommended way to use this class with proper exception
+	and error handling. For this example, we'll use the :meth:`server_info` method.
+	
+	>>> import tomcatmanager as tm
+	>>> tomcat = tm.TomcatManager(url='http://localhost:8080/manager', \
+	... 	userid='ace', password='newenglandclamchowder')
+	>>> try:
+	... 	r = tomcat.server_info()
+	...		r.raise_for_status()
+	...		if r.ok:
+	...			print(r.server_info)
+	...		else:
+	...			print('Error: {}'.format(r.status_message))
+	... except Exception as err:
+	... 	print('Error: {}'.format(err))
 	"""
+
 	@classmethod
 	def _is_stream(self, obj):
-		"""return true if this is a stream type object"""
+		"""return True if passed a stream type object"""
 		return all([
 			hasattr(obj, '__iter__'),
 			not isinstance(obj, (str, bytes, list, tuple, collections.Mapping))
@@ -46,6 +64,9 @@ class TomcatManager:
 		:param userid: userid to authenticate
 		:param password: password to authenticate
 
+		Initializing the object with a url and credentials does not try to connect
+		to the server. Use the :meth:`connect` method for that.
+		
 		Usage::
 		
 		>>> import tomcatmanager as tm
@@ -95,7 +116,14 @@ class TomcatManager:
 		:param userid: userid to authenticate
 		:param password: password to authenticate
 		:return: :class:`TomcatManagerResponse <TomcatManagerResponse>` object
-	
+		
+		You don't have to connect before using any other commands. If you initialized
+		the object with credentials you can call any other method. The purpose
+		of :meth:`connect` is to:
+		
+		- give you a way to change the credentials on an existing object
+		- provide a convenient mechanism to validate you can actually connect to the server
+		
 		Usage::
 		
 		>>> import tomcatmanager as tm
@@ -111,18 +139,18 @@ class TomcatManager:
 		>>> r = tomcat.connect()
 		
 		The only way to validate whether we are connected is to actually
-		get a url: this method uses the same one as :meth:`list` uses.
+		get a url. Internally this method tries the 'serverinfo' command.
 		
-		Requesting url's via http can raise exceptions. For example, if you
-		give a URL where no web server is listening, you'll get a
-		:meth:`requests.connections.ConnectionError`. This method won't raise
-		exceptions for everything however. If the credentials are incorrect, you
-		won't get an exception unless you ask for it. To check whether you are
-		actually connected, use::
+		Requesting url's via http can raise all kinds of exceptions. For
+		example, if you give a URL where no web server is listening, you'll get a
+		:meth:`requests.connections.ConnectionError`. However, :meth:`connect`
+		won't raise exceptions for everything. If the credentials are
+		incorrect, you won't get an exception unless you ask for it. To check
+		whether you are actually connected, use::
 		
 		>>> tomcat.is_connected
 		
-		If you want to raise exceptions (with caveats) see
+		If you want to raise exceptions see
 		:meth:`tomcatmanager.models.TomcatManagerResponse.raise_for_status`.
 		"""
 		self._url = url
@@ -369,20 +397,19 @@ class TomcatManager:
 	#
 	###
 	def expire(self, path, version=None, idle=None):
-		"""expire sessions idle for longer than idle minutes
-
-			tm = TomcatManager(url)
-			tmr = tm.sessions('/manager')
-			x = tmr.result
-			y = tmr.sessions
-			
-		Arguments:
-		path     the path to the app on the server whose sessions you want to expire
-		idle     sessions idle for more than this number of minutes will be expired
-		         use idle=0 to expire all sessions
+		"""
+		Expire sessions idle for longer than idle minutes.
 		
-		returns an instance of TomcatManagerResponse with the session summary in the
+		:param path: the path to the app on the server whose sessions you want to expire
+		:param idle: sessions idle for more than this number of minutes will be
+		expired. Use idle=0 to expire all sessions.
+		:return: an instance of TomcatManagerResponse with the session summary in the
 		result attribute and in the sessions attribute
+		
+		>>> tm = TomcatManager(url)
+		>>> r = tm.sessions('/manager')
+		>>> x = r.result
+		>>> y = r.sessions
 		"""
 		params = {}
 		params['path'] = path
@@ -441,7 +468,7 @@ class TomcatManager:
 
 	def deploy(self, path, localwar=None, serverwar=None, version=None, update=False):
 		"""
-		Deploy an application to the tomcat server.
+		Deploy an application to the Tomcat server.
 		
 		If the WAR file is already present somewhere on the same server
 		where Tomcat is running, you should use the ``serverwar`` parameter. If
