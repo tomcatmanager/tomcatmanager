@@ -79,18 +79,6 @@ class TomcatManagerResponse:
 			raise TomcatError(self.status_message)
 
 	@property
-	def result(self):
-		"""
-		The text of the response from the Tomcat server, without the first
-		line, which contains the status code and message.
-		"""
-		return self._result
-
-	@result.setter
-	def result(self, value):
-		self._result = value
-
-	@property
 	def status_code(self):
 		"""
 		Status of the Tomcat Manager command from the first line of text.
@@ -116,6 +104,18 @@ class TomcatManagerResponse:
 	@status_message.setter
 	def status_message(self, value):
 		self._status_message = value
+
+	@property
+	def result(self):
+		"""
+		The text of the response from the Tomcat server, without the first
+		line, which contains the status code and message.
+		"""
+		return self._result
+
+	@result.setter
+	def result(self, value):
+		self._result = value
 
 	@property
 	def response(self):
