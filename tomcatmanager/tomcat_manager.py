@@ -62,8 +62,6 @@ class TomcatManager:
 		
 		>>> import tomcatmanager as tm
 		>>> tomcat = tm.TomcatManager()
-		
-		If you initialize without a url and credentials,	
 		"""
 		self._url = url
 		self._userid = userid
@@ -97,7 +95,6 @@ class TomcatManager:
 		:param userid: userid to authenticate
 		:param password: password to authenticate
 		:return: :class:`TomcatManagerResponse <TomcatManagerResponse>` object
-		:rtype: TomcatManagerResponse
 	
 		Usage::
 		
@@ -113,25 +110,20 @@ class TomcatManager:
 		... 	userid='ace', password='newenglandclamchowder')
 		>>> r = tomcat.connect()
 		
-		The only way to validate whether we are connected is to actually get
-		a url: this method uses the same one as :meth:`list` uses.
+		The only way to validate whether we are connected is to actually
+		get a url: this method uses the same one as :meth:`list` uses.
 		
 		Requesting url's via http can raise exceptions. For example, if you
 		give a URL where no web server is listening, you'll get a
 		:meth:`requests.connections.ConnectionError`. This method won't raise
 		exceptions for everything however. If the credentials are incorrect, you
-		won't get an exception unless you ask for it using
-		:meth:`TomcatManagerResponse.raise_for_status`. Once you have used this
-		method there are two ways to check if you are actually connected::
+		won't get an exception unless you ask for it. To check whether you are
+		actually connected, use::
 		
 		>>> tomcat.is_connected
 		
-		or
-		
-		>>> try:
-		>>> 	r.raise_for_status()
-		>>> except Exception as err:
-		>>> 	print(type(err))
+		If you want to raise exceptions (with caveats) see
+		:meth:`tomcatmanager.models.TomcatManagerResponse.raise_for_status`.
 		"""
 		self._url = url
 		self._userid = userid
@@ -448,11 +440,13 @@ class TomcatManager:
 		return self._get('reload', params)
 
 	def deploy(self, path, localwar=None, serverwar=None, version=None, update=False):
-		"""Deploy applications to the tomcat server
+		"""
+		Deploy an application to the tomcat server.
 		
-		Specify either localwar or serverwar, but not both. localwar reads a war file
-		from the local filesystem and sends it to the tomcat server to deploy.
-		serverwar deploys a file available on the server file system.
+		If the WAR file is already present somewhere on the same server
+		where Tomcat is running, you should use the ``serverwar`` parameter. If
+		the WAR file is local to where python is running, use the ``localwar``
+		parameter. Specify either ``localwar`` or ``serverwar``, but not both. 
 		
 		:param path: The path on the server to deploy this war to, i.e. /sampleapp
 		:param localwar: (optional) The path (specified using your particular
@@ -465,7 +459,8 @@ class TomcatManager:
 		:param update: (optional) Whether to undeploy the existing path
 			first (default False)
 		:return: :class:`TomcatManagerResponse <TomcatManagerResponse>` object
-		:rtype: tomcatmanager.TomcatManagerResponse		
+		
+		
 		"""
 		params = {}
 		params['path'] = path

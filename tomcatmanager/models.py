@@ -36,7 +36,9 @@ class TomcatError(Exception):
 
 
 class TomcatManagerResponse:
-	"""The response for a Tomcat Manager command"""    
+	"""
+	Returned as the response for :class:`TomcatManager` commands
+	"""    
 
 	def __init__(self, response=None):
 		self._response = response
@@ -45,8 +47,90 @@ class TomcatManagerResponse:
 		self._result = None
 
 	@property
+	def ok(self):
+		"""
+		:return: True if the request completed with no errors.
+		
+		For this property to return True:
+		
+		- The HTTP request must return a status code of 200 OK
+		- The first line of the response from the Tomcat Server must begin
+		  with 'OK '		
+		"""
+		return all([
+				self.response != None,
+				self.response.status_code == requests.codes.ok,
+				self.status_code == codes.ok,
+			 ])
+
+	def raise_for_status(self):
+		"""
+		Raise exceptions for server errors.
+		
+		First call :meth:`requests.Response.raise_for_status()` which
+		raises exceptions if a 4xx or 5xx response is received from the server.
+		
+		If that doesn't raise anything, then raise a :class:`TomcatError`
+		if there is not an 'OK' response from the first line of text back from
+		the Tomcat Manager web app.
+		"""
+		self.response.raise_for_status()
+		if self.status_code != codes.ok:
+			raise TomcatError(self.status_message)
+
+	@property
+	def result(self):
+		"""
+		The text of the response from the Tomcat server, without the first
+		line, which contains the status code and message.
+		"""
+		return self._result
+
+	@result.setter
+	def result(self, value):
+		self._result = value
+
+	@property
+	def status_code(self):
+		"""
+		Status of the Tomcat Manager command from the first line of text.
+
+		A lookup object, :obj:`tomcatmanager.codes` makes it easy to check these
+		codes::
+		
+		>>> print(r.status_code == tomcatmanager.codes.ok)
+		"""
+		return self._status_code
+
+	@status_code.setter
+	def status_code(self, value):
+		self._status_code = value
+
+	@property
+	def status_message(self):
+		"""
+		The message on the first line of the response from the Tomcat Server.
+		"""
+		return self._status_message
+	
+	@status_message.setter
+	def status_message(self, value):
+		self._status_message = value
+
+	@property
 	def response(self):
-		"""contains the requsts.Response object from the request"""
+		"""
+		The server's response to an HTTP request.
+		
+		:class:`TomcatManager` uses the excellent Requests package for HTTP
+		communication. This property returns the
+		:class:`requests.models.Response` object which contains the server's
+		response to the HTTP request.
+		
+		Of particular use is :meth:`requests.models.Response.text` which
+		contains the content of the response in unicode. If you want raw access to
+		the content returned by the Tomcat Server, this is where you can get it.		
+		"""
 		return self._response
 
 	@response.setter
@@ -61,62 +145,6 @@ class TomcatManagerResponse:
 				self.result = response.text.splitlines()[1:]
 			except IndexError:
 				pass
-
-	@property
-	def status_code(self):
-		"""status of the tomcat manager command
-		
-		the codes can be found in tomcatmanager.codes and they are
-		
-		tomcatmanager.codes.ok
-		tomcatmanager.codes.fail
-		"""
-		return self._status_code
-
-	@status_code.setter
-	def status_code(self, value):
-		self._status_code = value
-
-	@property
-	def status_message(self):
-		return self._status_message
-	
-	@status_message.setter
-	def status_message(self, value):
-		self._status_message = value
-
-	@property
-	def result(self):
-		return self._result
-
-	@result.setter
-	def result(self, value):
-		self._result = value
-
-	@property
-	def ok(self):
-		"""returns True if there is a response, and if it completed ok"""
-		return all([
-				self.response != None,
-				self.response.status_code == requests.codes.ok,
-				self.status_code == codes.ok,
-			 ])
-
-	def raise_for_status(self):
-		"""raise exceptions if status is not ok
-		
-		first calls requests.Response.raise_for_status() which will
-		raise exceptions if a 4xx or 5xx response is received from the server
-		
-		If that doesn't raise anything, then check if we have an "FAIL" response
-		from the first line of text back from the Tomcat Manager web app, and
-		raise an TomcatError if necessary
-		
-		stole idea from requests package
-		"""
-		self.response.raise_for_status()
-		if self.status_code != codes.ok:
-			raise TomcatError(self.status_message)
 
 
 class ServerInfo(dict):
