@@ -122,9 +122,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.debug_flag = False
         self.exit_code = None
 
-        # this is the list of commands that require us to be connected
-        # to a tomcat server
-        # postparsing_precmd() checks the list and handles everything appropriately
+        # this is the list of commands that require us to be connected to a
+        # tomcat server postparsing_precmd() checks the list and handles
+        # everything appropriately
         self.connected_commands = [
             # info commands
             'list', 'serverinfo', 'status', 'vminfo',
