@@ -71,20 +71,19 @@ class TomcatManager:
         connect to the server. It just stores the url and credentials.
         
         Usage::
-        
         >>> import tomcatmanager as tm
-        >>> tomcat = tm.TomcatManager('http://localhost:8080/manager', \\
-        ...     'ace', 'newenglandclamchowder')
+        >>> url = 'http://localhost:8080/manager'
+        >>> userid = 'ace'
+        >>> password = 'newenglandclamchowder'
+        
+        >>> tomcat = tm.TomcatManager(url, userid, password)
         
         or
         
-        >>> import tomcatmanager as tm
-        >>> tomcat = tm.TomcatManager(url='http://localhost:8080/manager', \\
-        ...     userid='ace', password='newenglandclamchowder')
+        >>> tomcat = tm.TomcatManager(url=url, userid=userid, password=password)
         
         or
         
-        >>> import tomcatmanager as tm
         >>> tomcat = tm.TomcatManager()
         """
         self._url = url
@@ -126,20 +125,29 @@ class TomcatManager:
         
         - give you a way to change the credentials on an existing object
         - provide a convenient mechanism to validate you can actually connect to the server
-        
+
         Usage::
         
         >>> import tomcatmanager as tm
+        >>> url = 'http://localhost:8080/manager'
+        >>> userid = 'ace'
+        >>> password = 'newenglandclamchowder'
+        
         >>> tomcat = tm.TomcatManager()
-        >>> r = tomcat.connect('http://localhost:8080/manager', \
-        ...     'ace', 'newenglandclamchowder')
+        >>> try:
+        ...     r = tomcat.connect(murl, userid, password)
+        ... except Exception as err:
+        ...     # handle exception
+        ...     pass
         
         or
         
-        >>> import tomcatmanager as tm
-        >>> tomcat = tm.TomcatManager(url='http://localhost:8080/manager', \
-        ...     userid='ace', password='newenglandclamchowder')
-        >>> r = tomcat.connect()
+        >>> tomcat = tm.TomcatManager(url=url, userid=userid, password=password)
+        >>> try:
+        ...     r = tomcat.connect()
+        ... except Exception as err:
+        ...     # handle exception
+        ...     pass
         
         The only way to validate whether we are connected is to actually
         get a url. Internally this method tries the 'serverinfo' command.
@@ -151,7 +159,11 @@ class TomcatManager:
         won't get an exception unless you ask for it. To check whether you are
         actually connected, use::
         
-        >>> tomcat.is_connected
+        >>> if tomcat.is_connected:
+        ...     print('connected')
+        ... else:
+        ...     print('not connected')
+        not connected
         
         If you want to raise exceptions see
         :meth:`.raise_for_status`.
@@ -410,10 +422,10 @@ class TomcatManager:
         :return: an instance of TomcatManagerResponse with the session summary in the
         result attribute and in the sessions attribute
         
-        >>> tm = TomcatManager(url)
-        >>> r = tm.sessions('/manager')
-        >>> x = r.result
-        >>> y = r.sessions
+        tm = TomcatManager(url)
+        r = tm.sessions('/manager')
+        x = r.result
+        y = r.sessions
         """
         params = {}
         params['path'] = path
