@@ -52,8 +52,12 @@ class TestManagerBase:
 
 
 class TestManager(TestManagerBase):
-    """test stuff on TomcatManager() that isn't a command to the server"""
 
+    ###
+    #
+    # is_stream
+    #
+    ###
     def test_is_stream_fileobj(self, war_fileobj):
         assert tm.TomcatManager()._is_stream(war_fileobj)
     
@@ -66,6 +70,11 @@ class TestManager(TestManagerBase):
         assert tm.TomcatManager()._is_stream('some string') == False
         assert tm.TomcatManager()._is_stream(['some', 'list']) == False
 
+    ###
+    #
+    # init
+    #
+    ###
     def test_init_no_url(self, mock_server80):
         tomcat = tm.TomcatManager()
         assert tomcat.is_connected == False
@@ -81,6 +90,11 @@ class TestManager(TestManagerBase):
             mock_server80['password'] )
         assert tomcat.is_connected == True
 
+    ###
+    #
+    # connect
+    #
+    ###
     def test_connect_no_url(self, mock_server80):
         tomcat = tm.TomcatManager()
         with pytest.raises(requests.exceptions.MissingSchema):
