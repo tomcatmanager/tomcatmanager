@@ -33,7 +33,7 @@ class TomcatManager:
     
     Here's a summary of the recommended way to use this class with proper
     exception and error handling. For this example, we'll use the
-    :meth:`.server_info` method.
+    `server_info()` method.
     
     >>> import tomcatmanager as tm
     >>> tomcat = tm.TomcatManager('http://localhost:8080/manager', \\
@@ -71,20 +71,20 @@ class TomcatManager:
         connect to the server. It just stores the url and credentials.
         
         Usage::
-        >>> import tomcatmanager as tm
-        >>> url = 'http://localhost:8080/manager'
-        >>> userid = 'ace'
-        >>> password = 'newenglandclamchowder'
         
-        >>> tomcat = tm.TomcatManager(url, userid, password)
+            >>> import tomcatmanager as tm
+            >>> url = 'http://localhost:8080/manager'
+            >>> userid = 'ace'
+            >>> password = 'newenglandclamchowder'        
+            >>> tomcat = tm.TomcatManager(url, userid, password)
         
-        or
+        or::
         
-        >>> tomcat = tm.TomcatManager(url=url, userid=userid, password=password)
+            >>> tomcat = tm.TomcatManager(url=url, userid=userid, password=password)
         
-        or
+        or::
         
-        >>> tomcat = tm.TomcatManager()
+            >>> tomcat = tm.TomcatManager()
         """
         self._url = url
         self._userid = userid
@@ -119,54 +119,56 @@ class TomcatManager:
         :param password: password to authenticate
         :return: :class:`.TomcatManagerResponse` object
         
-        You don't have to connect before using any other commands. If you initialized
-        the object with credentials you can call any other method. The purpose
-        of :meth:`.connect` is to:
+        You don't have to connect before using any other commands. If you
+        initialized the object with credentials you can call any other
+        method. The purpose of `connect()` is to:
         
         - give you a way to change the credentials on an existing object
-        - provide a convenient mechanism to validate you can actually connect to the server
+        - provide a convenient mechanism to validate you can actually
+          connect to the server
 
         Usage::
         
-        >>> import tomcatmanager as tm
-        >>> url = 'http://localhost:8080/manager'
-        >>> userid = 'ace'
-        >>> password = 'newenglandclamchowder'
+            >>> import tomcatmanager as tm
+            >>> url = 'http://localhost:8080/manager'
+            >>> userid = 'ace'
+            >>> password = 'newenglandclamchowder'
+            >>> 
+            >>> tomcat = tm.TomcatManager()
+            >>> try:
+            ...     r = tomcat.connect(murl, userid, password)
+            ... except Exception as err:
+            ...     # handle exception
+            ...     pass
         
-        >>> tomcat = tm.TomcatManager()
-        >>> try:
-        ...     r = tomcat.connect(murl, userid, password)
-        ... except Exception as err:
-        ...     # handle exception
-        ...     pass
+        or::
         
-        or
-        
-        >>> tomcat = tm.TomcatManager(url=url, userid=userid, password=password)
-        >>> try:
-        ...     r = tomcat.connect()
-        ... except Exception as err:
-        ...     # handle exception
-        ...     pass
+            >>> tomcat = tm.TomcatManager(url=url, userid=userid, password=password)
+            >>> try:
+            ...     r = tomcat.connect()
+            ... except Exception as err:
+            ...     # handle exception
+            ...     pass
         
         The only way to validate whether we are connected is to actually
-        get a url. Internally this method tries the 'serverinfo' command.
+        get a url. Internally this method tries to retrieve
+        ``/manager/text/serverinfo``.
         
         Requesting url's via http can raise all kinds of exceptions. For
-        example, if you give a URL where no web server is listening, you'll get a
-        :meth:`requests.connections.ConnectionError`. However, this method won't
-        raise exceptions for everything. If the credentials are incorrect, you
-        won't get an exception unless you ask for it. To check whether you are
-        actually connected, use::
+        example, if you give a URL where no web server is listening, you'll
+        get a `requests.connections.ConnectionError`. However, this
+        method won't raise exceptions for everything. If the credentials
+        are incorrect, you won't get an exception unless you ask for it. To
+        check whether you are actually connected, use::
         
-        >>> if tomcat.is_connected:
-        ...     print('connected')
-        ... else:
-        ...     print('not connected')
-        not connected
+            >>> if tomcat.is_connected:
+            ...     print('connected')
+            ... else:
+            ...     print('not connected')
+            not connected
         
         If you want to raise exceptions see
-        :meth:`.raise_for_status`.
+        `raise_for_status()`.
 
         """
         self._url = url
@@ -501,7 +503,7 @@ class TomcatManager:
             with this version of the app
         :param update: (optional) Whether to undeploy the existing path
             first (default False)
-        :return: :class:`.TomcatManagerResponse` object
+        :return: `TomcatManagerResponse` object
         
         
         """
@@ -539,11 +541,11 @@ class TomcatManager:
         return r
 
     def undeploy(self, path, version=None):
-        """Undeploy the application at a given path
+        """Undeploy the application at a given path.
         
         :param path: The path of the application to undeploy
         :param version: (optional) The version string of the app to undeploy
-        :return: :class:`.TomcatManagerResponse` object
+        :return: `TomcatManagerResponse` object
                 
         If the application was deployed with a version string, it must be
         specified in order to undeploy the application.

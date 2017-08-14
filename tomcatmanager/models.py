@@ -40,21 +40,21 @@ class TomcatManagerResponse:
     Returned as the response for :class:`TomcatManager` commands.
     
     After running a command, it's a good idea to check and make sure that
-    the command completed succesfully.
+    the command completed succesfully before relying on the results::
     
-    >>> import tomcatmanager as tm
-    >>> tomcat = tm.TomcatManager('http://localhost:8080/manager', \\
-    ...     'ace', 'newenglandclamchowder')
-    >>> try:
-    ...     r = tomcat.server_info()
-    ...     r.raise_for_status()
-    ...     if r.ok:
-    ...         print(r.server_info)
-    ...     else:
-    ...         print('Error: {}'.format(r.status_message))
-    ... except Exception as err:
-    ...     # handle exception
-    ...     pass
+        >>> import tomcatmanager as tm
+        >>> tomcat = tm.TomcatManager('http://localhost:8080/manager', \\
+        ...     'ace', 'newenglandclamchowder')
+        >>> try:
+        ...     r = tomcat.server_info()
+        ...     r.raise_for_status()
+        ...     if r.ok:
+        ...         print(r.server_info)
+        ...     else:
+        ...         print('Error: {}'.format(r.status_message))
+        ... except Exception as err:
+        ...     # handle exception
+        ...     pass
 
     """    
 
@@ -71,9 +71,8 @@ class TomcatManagerResponse:
 
         For this property to return True:
 
-        - The HTTP request must return a status code of 200 OK
-        - The first line of the response from the Tomcat Server must begin
-          with 'OK '        
+        - The HTTP request must return a status code of ``200 OK``
+        - The first line of the response from the Tomcat Server must begin with ``OK``.
         """
         return all([
             self.response != None,
@@ -85,12 +84,12 @@ class TomcatManagerResponse:
         """
         Raise exceptions for server errors.
 
-        First call :meth:`requests.Response.raise_for_status()` which
+        First call `requests.Response.raise_for_status()` which
         raises exceptions if a 4xx or 5xx response is received from the
         server.
 
-        If that doesn't raise anything, then raise a :class:`TomcatError`
-        if there is not an 'OK' response from the first line of text back
+        If that doesn't raise anything, then raise a `TomcatError`
+        if there is not an ``OK`` response from the first line of text back
         from the Tomcat Manager web app.
         """
         self.response.raise_for_status()
@@ -102,22 +101,24 @@ class TomcatManagerResponse:
         """
         Status of the Tomcat Manager command from the first line of text.
 
-        A lookup object, :obj:`tomcatmanager.codes` makes it easy to check
-        these codes::
+        The preferred way to check for success is to use the `ok()` method,
+        because it checks for http errors as well as tomcat errors.
+        However, if you want specific access to the status of the tomcat
+        command, use this method.
+        
+        Currently there are only two known status codes
+        
+        - ``OK``
+        - ``FAIL``
+        
+        A lookup object, `tomcatmanager.codes`, makes it easy to check
+        `status_code` against known values::
 
-        >>> import tomcatmanager as tm
-        >>> tomcat = tm.TomcatManager('http://localhost:8080/manager', \\
-        ...     'ace', 'newenglandclamchowder')
-        >>> try:
-        ...     r = tomcat.server_info()
-        ...     r.raise_for_status()
-        ...     if r.status_code == tomcatmanager.codes.ok:
-        ...         print(r.server_info)
-        ...     else:
-        ...         print('Error: {}'.format(r.status_message))
-        ... except Exception as err:
-        ...     # handle exception
-        ...     pass    
+            >>> import tomcatmanager as tm
+            >>> tomcat = getfixture('tomcat')
+            >>> r = tomcat.server_info()
+            >>> r.status_code == tm.codes.ok
+            True
         """
         return self._status_code
 
@@ -140,7 +141,7 @@ class TomcatManagerResponse:
     def result(self):
         """
         The text of the response from the Tomcat server, without the first
-        line, which contains the status code and message.
+        line (which contains the status code and message).
         """
         return self._result
 
@@ -153,12 +154,11 @@ class TomcatManagerResponse:
         """
         The server's response to an HTTP request.
     
-        :class:`TomcatManager` uses the excellent Requests package for HTTP
-        communication. This property returns the
-        :class:`requests.models.Response` object which contains the server's
-        response to the HTTP request.
+        `TomcatManager` uses the excellent Requests package for HTTP
+        communication. This property returns the `requests.models.Response`
+        object which contains the server's response to the HTTP request.
     
-        Of particular use is :meth:`requests.models.Response.text` which
+        Of particular use is `requests.models.Response.text` which
         contains the content of the response in unicode. If you want raw access to
         the content returned by the Tomcat Server, this is where you can get it.        
         """

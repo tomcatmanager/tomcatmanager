@@ -69,7 +69,14 @@ author = 'Jared Crapo'
 # Usually you set "language" from the command line for these cases.
 language = None
 
+# when we autodoc classes, show the methods in the order they are in the
+# source
 autodoc_member_order = 'bysource'
+
+# make the default role of ` try to link to anything it can find
+# this allows for cleaner docstrings, which still get linked when
+# we build the documentation
+default_role = 'any'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
