@@ -65,6 +65,8 @@ To run the tests::
 
 	$ pytest
 
+This runs all the test in ``tests/`` and also runs doctests in
+``tomcatmanager/``.
 
 Make a Release
 --------------
@@ -74,7 +76,8 @@ To make a release and deploy it to `PyPI
 
 1. Merge everything to be included in the release into the develop branch.
 
-2. Ensure ``setup.py`` and ``docs/source/conf.py`` have the correct version number. If not, commit the proper version number to the develop branch.
+2. Ensure ``setup.py`` and ``docs/source/conf.py`` have the correct version
+   number. If not, commit the proper version number to the develop branch.
 
 3. Merge the develop branch into the master branch.
 
@@ -103,4 +106,5 @@ To make a release and deploy it to `PyPI
 
     $ twine upload dist/*
 
-11. Checkout the develop branch and update the version numbers in ``setup.py`` and ``docs/source/conf.py``.
+11. Checkout the develop branch and update the version numbers in
+    ``setup.py`` and ``docs/source/conf.py``.
