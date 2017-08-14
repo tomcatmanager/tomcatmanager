@@ -66,7 +66,18 @@ To run the tests::
 	$ pytest
 
 This runs all the test in ``tests/`` and also runs doctests in
-``tomcatmanager/``.
+``tomcatmanager/`` and ``docs/``.
+
+In many of the doctests you'll see something like:
+
+>>> tomcat = getfixture('tomcat')
+
+This ``getfixture()`` helper imports fixtures defined in ``conftest.py``,
+which has several benefits:
+
+- reduces the amount of redundant code in doctests which shows connecting
+  to a tomcat server and handling exceptions
+- allows doctests to execute against a mock tomcat server
 
 Make a Release
 --------------
