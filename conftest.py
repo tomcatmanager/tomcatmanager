@@ -42,7 +42,7 @@ def tomcat(mock_server80):
 @pytest.fixture(scope='module')
 def war_file():
     """return the path to a valid war file"""
-    return os.path.dirname(__file__) + '/war/sample.war'
+    return os.path.dirname(__file__) + '/tests/war/sample.war'
 
 @pytest.fixture(scope='function')
 def war_fileobj(war_file):
