@@ -274,7 +274,7 @@ class TomcatManager:
         If the application was deployed with a version string, it must be
         specified in order to undeploy the application.
         """
-        params = {'path': path}
+        params = {'path': path or ''}
         if version:
             params['version'] = version
         return self._get('undeploy', params)
