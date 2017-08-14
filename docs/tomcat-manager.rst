@@ -126,6 +126,3 @@ This launches a python interpreter, with our own objects available. From that py
 			End with ``Ctrl-D`` (Unix) / ``Ctrl-Z`` (Windows), ``quit()``, '`exit()``.
 			Non-python commands can be issued with ``cmd("your command")``.
 			Run python code from external script files with ``run("script.py")``
-
-	>>> print(self.tomcat_manager.serverinfo())
-	{'Tomcat Version': 'Apache Tomcat/8.0.32 (Ubuntu)', 'OS Name': 'Linux', 'OS Version': '4.4.0-89-generic', 'OS Architecture': 'amd64', 'JVM Version': '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11', 'JVM Vendor': 'Oracle Corporation'}
