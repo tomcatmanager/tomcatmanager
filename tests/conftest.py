@@ -29,33 +29,33 @@ import tomcatmanager as tm
 
 @pytest.fixture(scope='module')
 def mock_server80():
-	"""start a local http server which provides a similar interface to a real Tomcat Manager app"""
-	return start_mock_server80()
+    """start a local http server which provides a similar interface to a real Tomcat Manager app"""
+    return start_mock_server80()
 
 @pytest.fixture(scope='module')
 def tomcat(mock_server80):
-	return tm.TomcatManager(
-			mock_server80['url'],
-			mock_server80['userid'],
-			mock_server80['password'] )
+    return tm.TomcatManager(
+            mock_server80['url'],
+            mock_server80['userid'],
+            mock_server80['password'] )
 
 @pytest.fixture(scope='module')
 def war_file():
-	"""return the path to a valid war file"""
-	return os.path.dirname(__file__) + '/war/sample.war'
+    """return the path to a valid war file"""
+    return os.path.dirname(__file__) + '/war/sample.war'
 
 @pytest.fixture(scope='function')
 def war_fileobj(war_file):
-	"""open war_file for binary reading"""
-	return open(war_file, 'rb')
+    """open war_file for binary reading"""
+    return open(war_file, 'rb')
 
 @pytest.fixture(scope='module')
 def server_info_lines():
-	result = """Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
+    result = """Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
 OS Name: Linux
 OS Version: 4.4.0-89-generic
 OS Architecture: amd64
 JVM Version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
 JVM Vendor: Oracle Corporation
 """
-	return result.splitlines()
+    return result.splitlines()

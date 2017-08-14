@@ -28,80 +28,80 @@ import tomcatmanager as tm
 
 
 class TestManagerBase:
-	"""base class for all tests with some convenience methods"""
+    """base class for all tests with some convenience methods"""
 
-	def success_assertions(self, r):
-		"""a set of common assertions for every command to ensure it
-		completed successfully"""
-		assert r.status_code == tm.codes.ok, 'message from server: "{}"'.format(r.status_message)
-		assert r.status_message != None
-		assert len(r.status_message) > 0
-		r.raise_for_status()
+    def success_assertions(self, r):
+        """a set of common assertions for every command to ensure it
+        completed successfully"""
+        assert r.status_code == tm.codes.ok, 'message from server: "{}"'.format(r.status_message)
+        assert r.status_message != None
+        assert len(r.status_message) > 0
+        r.raise_for_status()
 
-	def failure_assertions(self, r):
-		assert r.status_code == tm.codes.fail
-		with pytest.raises(tm.TomcatError):
-			r.raise_for_status()
+    def failure_assertions(self, r):
+        assert r.status_code == tm.codes.fail
+        with pytest.raises(tm.TomcatError):
+            r.raise_for_status()
 
-	def info_assertions(self, r):
-		"""a set of common assertions that should be true of the info
-		type commands which return a result"""
-		self.success_assertions(r)
-		assert r.result != None
-		assert len(r.result) > 0
+    def info_assertions(self, r):
+        """a set of common assertions that should be true of the info
+        type commands which return a result"""
+        self.success_assertions(r)
+        assert r.result != None
+        assert len(r.result) > 0
 
 
 class TestManager(TestManagerBase):
-	"""test stuff on TomcatManager() that isn't a command to the server"""
+    """test stuff on TomcatManager() that isn't a command to the server"""
 
-	def test_is_stream_fileobj(self, war_fileobj):
-		assert tm.TomcatManager()._is_stream(war_fileobj)
-	
-	def test_is_stream_bytesio(self):
-		fileobj = io.BytesIO(b'the contents of my warfile')
-		assert tm.TomcatManager()._is_stream(fileobj)
-		
-	def test_is_stream_primitives(self):
-		assert tm.TomcatManager()._is_stream(None) == False
-		assert tm.TomcatManager()._is_stream('some string') == False
-		assert tm.TomcatManager()._is_stream(['some', 'list']) == False
+    def test_is_stream_fileobj(self, war_fileobj):
+        assert tm.TomcatManager()._is_stream(war_fileobj)
+    
+    def test_is_stream_bytesio(self):
+        fileobj = io.BytesIO(b'the contents of my warfile')
+        assert tm.TomcatManager()._is_stream(fileobj)
+        
+    def test_is_stream_primitives(self):
+        assert tm.TomcatManager()._is_stream(None) == False
+        assert tm.TomcatManager()._is_stream('some string') == False
+        assert tm.TomcatManager()._is_stream(['some', 'list']) == False
 
-	def test_init_no_url(self, mock_server80):
-		tomcat = tm.TomcatManager()
-		assert tomcat.is_connected == False
+    def test_init_no_url(self, mock_server80):
+        tomcat = tm.TomcatManager()
+        assert tomcat.is_connected == False
 
-	def test_init_noauth(self, mock_server80):
-		tomcat = tm.TomcatManager(mock_server80['url'])
-		assert tomcat.is_connected == False
+    def test_init_noauth(self, mock_server80):
+        tomcat = tm.TomcatManager(mock_server80['url'])
+        assert tomcat.is_connected == False
 
-	def test_init_auth(self, mock_server80):
-		tomcat = tm.TomcatManager(
-			mock_server80['url'],
-			mock_server80['userid'],
-			mock_server80['password'] )
-		assert tomcat.is_connected == True
+    def test_init_auth(self, mock_server80):
+        tomcat = tm.TomcatManager(
+            mock_server80['url'],
+            mock_server80['userid'],
+            mock_server80['password'] )
+        assert tomcat.is_connected == True
 
-	def test_connect_no_url(self, mock_server80):
-		tomcat = tm.TomcatManager()
-		with pytest.raises(requests.exceptions.MissingSchema):
-			r = tomcat.connect()
+    def test_connect_no_url(self, mock_server80):
+        tomcat = tm.TomcatManager()
+        with pytest.raises(requests.exceptions.MissingSchema):
+            r = tomcat.connect()
 
-	def test_connect_noauth(self, mock_server80):
-		tomcat = tm.TomcatManager()
-		r = tomcat.connect(mock_server80['url'])
-		assert isinstance(r, tm.models.TomcatManagerResponse)
-		assert tomcat.is_connected == False
-		with pytest.raises(requests.exceptions.HTTPError):
-			r.raise_for_status()
+    def test_connect_noauth(self, mock_server80):
+        tomcat = tm.TomcatManager()
+        r = tomcat.connect(mock_server80['url'])
+        assert isinstance(r, tm.models.TomcatManagerResponse)
+        assert tomcat.is_connected == False
+        with pytest.raises(requests.exceptions.HTTPError):
+            r.raise_for_status()
 
-	def test_connect_auth(self, mock_server80):
-		tomcat = tm.TomcatManager()
-		r = tomcat.connect(
-			mock_server80['url'],
-			mock_server80['userid'],
-			mock_server80['password'] )
-		assert isinstance(r, tm.models.TomcatManagerResponse)
-		assert r.result == ''
-		assert r.status_code == tm.codes.ok
-		assert tomcat.is_connected == True
-		r.raise_for_status()		
+    def test_connect_auth(self, mock_server80):
+        tomcat = tm.TomcatManager()
+        r = tomcat.connect(
+            mock_server80['url'],
+            mock_server80['userid'],
+            mock_server80['password'] )
+        assert isinstance(r, tm.models.TomcatManagerResponse)
+        assert r.result == ''
+        assert r.status_code == tm.codes.ok
+        assert tomcat.is_connected == True
+        r.raise_for_status()        
