@@ -96,6 +96,8 @@ class TestInfo(TestManagerBase):
 
     def test_sessions_no_path(self, tomcat):
         """sessions requires a path"""
+        r = tomcat.sessions(None)
+        self.failure_assertions(r)
         r = tomcat.sessions('')
         self.failure_assertions(r)
         

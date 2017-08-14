@@ -506,7 +506,7 @@ class TomcatManager:
         
         """
         params = {}
-        params['path'] = path
+        params['path'] = path or ''
         if update:
             params['update'] = 'true'
         if version:

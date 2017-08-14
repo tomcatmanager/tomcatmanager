@@ -39,9 +39,9 @@ class TestAction(TestManagerBase):
 
     def test_expire_no_path(self, tomcat):
         """expire requires a path"""
-        r = tomcat.expire('')
-        self.failure_assertions(r)
         r = tomcat.expire(None)
+        self.failure_assertions(r)
+        r = tomcat.expire('')
         self.failure_assertions(r)
 
     def test_expire(self, tomcat):
@@ -58,6 +58,8 @@ class TestAction(TestManagerBase):
         """start requires a path"""
         r = tomcat.start(None)
         self.failure_assertions(r)
+        r = tomcat.start('')
+        self.failure_assertions(r)
 
     def test_start(self, tomcat):
         r = tomcat.start('/someapp')
@@ -71,6 +73,8 @@ class TestAction(TestManagerBase):
         """stop requires a path"""
         r = tomcat.start(None)
         self.failure_assertions(r)
+        r = tomcat.start('')
+        self.failure_assertions(r)
 
     def test_stop(self, tomcat):
         r = tomcat.stop('/someapp')
@@ -83,6 +87,8 @@ class TestAction(TestManagerBase):
     def test_reload_no_path(self, tomcat):
         """reload requires a path"""
         r = tomcat.reload(None)
+        self.failure_assertions(r)
+        r = tomcat.reload('')
         self.failure_assertions(r)
 
     def test_reload(self, tomcat):
@@ -104,6 +110,8 @@ class TestAction(TestManagerBase):
     
     def test_deploy_localwar_no_path(self, tomcat, war_fileobj):
         r = tomcat.deploy(None, localwar=war_fileobj)
+        self.failure_assertions(r)
+        r = tomcat.deploy('', localwar=war_fileobj)
         self.failure_assertions(r)
 
     def test_deploy_localwar(self, tomcat, war_fileobj):
@@ -138,6 +146,8 @@ class TestAction(TestManagerBase):
         """
         r = tomcat.deploy(None, serverwar='/path/to/foo.war')
         self.failure_assertions(r)
+        r = tomcat.deploy('', serverwar='/path/to/foo.war')
+        self.failure_assertions(r)
 
     def test_deploy_serverwar_update(self, tomcat, war_fileobj):
         r = tomcat.deploy(path='/newapp', serverwar=war_fileobj, update=True)
@@ -163,6 +173,8 @@ class TestAction(TestManagerBase):
         """ensure we throw an exception if we don't have a path to undeploy"""
         r = tomcat.undeploy(None)
         self.failure_assertions(r)
+        r = tomcat.undeploy('')
+        self.failure_assertions(r)        
     
     def test_undeploy(self, tomcat):
         """should throw an exception if there is an error"""
