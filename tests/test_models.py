@@ -37,8 +37,8 @@ class TestTomcatManagerResponse:
 
 class TestServerInfo:
 
-    def test_dict(self, server_info_lines):
-        s = tm.models.ServerInfo(server_info_lines)
+    def test_dict(self, server_info):
+        s = tm.models.ServerInfo(server_info)
         assert s['Tomcat Version'] == 'Apache Tomcat/8.0.32 (Ubuntu)'
         assert s['OS Name'] == 'Linux'
         assert s['OS Version'] == '4.4.0-89-generic'
@@ -46,8 +46,8 @@ class TestServerInfo:
         assert s['JVM Version'] == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
         assert s['JVM Vendor'] == 'Oracle Corporation'
 
-    def test_properties(self, server_info_lines):
-        s = tm.models.ServerInfo(server_info_lines)
+    def test_properties(self, server_info):
+        s = tm.models.ServerInfo(server_info)
         assert s.tomcat_version == 'Apache Tomcat/8.0.32 (Ubuntu)'
         assert s.os_name == 'Linux'
         assert s.os_version == '4.4.0-89-generic'
@@ -55,7 +55,7 @@ class TestServerInfo:
         assert s.jvm_version == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
         assert s.jvm_vendor == 'Oracle Corporation'
 
-    def test_parse_extra(self, server_info_lines):
-        server_info_lines.append('New Key: New Value') 
-        s = tm.models.ServerInfo(server_info_lines)
+    def test_parse_extra(self, server_info):
+        lines = server_info + "New Key: New Value\n"
+        s = tm.models.ServerInfo(lines)
         assert s['New Key'] == 'New Value'

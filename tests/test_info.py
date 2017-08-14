@@ -46,8 +46,7 @@ class TestInfo(TestManagerBase):
         r = tomcat.status_xml()
         self.info_assertions(r)
         assert r.result == r.status_xml
-        assert isinstance(r.status_xml, list)
-        assert r.status_xml[0][:6] == '<?xml '
+        assert r.status_xml[:6] == '<?xml '
 
     def test_vm_info(self, tomcat):
         r = tomcat.vm_info()

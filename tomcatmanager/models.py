@@ -169,11 +169,17 @@ class TomcatManagerResponse:
         self._response = response
         # parse the text to get the status code and results
         if response.text:
+            lines = response.text.splitlines()
+            # get the status line
             try:
                 statusline = response.text.splitlines()[0]
                 self.status_code = statusline.split(' ', 1)[0]
                 self.status_message = statusline.split(' ',1)[1][2:]
-                self.result = response.text.splitlines()[1:]
+            except IndexError:
+                pass
+            # set the result
+            try:
+                self.result = "\n".join(lines[1:])
             except IndexError:
                 pass
 
@@ -213,7 +219,7 @@ class ServerInfo(dict):
     def _parse(self, result):
         """Parse up a list of lines from the server."""
         if result:
-            for line in result:
+            for line in result.splitlines():
                 key, value = line.rstrip().split(':',1)
                 self[key] = value.lstrip()
         

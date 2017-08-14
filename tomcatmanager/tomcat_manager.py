@@ -348,15 +348,16 @@ class TomcatManager:
             >>> r = tomcat.sessions('/manager')
             >>> if r.ok:
             ...     print(r.sessions)
-            ['Default maximum session inactive interval 30 minutes',
-             '<1 minutes: 1 sessions']
+            Default maximum session inactive interval 30 minutes
+            <1 minutes: 1 sessions
         """
         params = {}
         params['path'] = path
         if version:
             params['version'] = version
         r = self._get('sessions', params)
-        if r.ok: r.sessions = r.result
+        if r.ok:
+            r.sessions = r.result
         return r
 
     def expire(self, path, version=None, idle=None):
@@ -376,9 +377,9 @@ class TomcatManager:
             >>> r = tomcat.expire('/manager', idle=15)
             >>> if r.ok:
             ...     print(r.sessions)
-            ['Default maximum session inactive interval 30 minutes',
-             '<1 minutes: 1 sessions',
-             '>15 minutes: 0 sessions were expired']
+            Default maximum session inactive interval 30 minutes
+            <1 minutes: 1 sessions
+            >15 minutes: 0 sessions were expired
         """
         params = {}
         params['path'] = path
@@ -387,7 +388,8 @@ class TomcatManager:
         if idle:
             params['idle'] = idle       
         r = self._get('expire', params)
-        if r.ok: r.sessions = r.result
+        if r.ok:
+            r.sessions = r.result
         return r
 
     def list(self):
@@ -414,12 +416,12 @@ class TomcatManager:
         * ``sessions`` - number of currently active sessions
         * ``directory`` - the directory on the server where this app resides    
         """
-        tmr = self._get('list')
+        r = self._get('list')
         apps = []
-        for line in tmr.result:
+        for line in r.result.splitlines():
             apps.append(line.rstrip().split(":"))       
-        tmr.apps = apps
-        return tmr
+        r.apps = apps
+        return r
 
     ###
     #
@@ -464,7 +466,7 @@ class TomcatManager:
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.status_xml()
             >>> if r.ok:
-            ...     root = ET.fromstring('\\n'.join(r.status_xml))
+            ...     root = ET.fromstring(r.status_xml)
             ...     mem = root.find('jvm/memory')
             ...     print(mem.attrib['free'])
             22294576
@@ -482,7 +484,7 @@ class TomcatManager:
                 auth=(self._userid, self._password),
                 params={'XML': 'true'}
                 )
-        r.result = r.response.text.splitlines()
+        r.result = r.response.text
         r.status_xml = r.result
 
         # we have to force a status_code and a status_message
@@ -513,9 +515,9 @@ class TomcatManager:
         :return: `TomcatManagerResponse` object with an additional
                  ``ssl_connector_ciphers`` attribute
         """
-        tmr = self._get('sslConnectorCiphers')
-        tmr.ssl_connector_ciphers = tmr.result
-        return tmr
+        r = self._get('sslConnectorCiphers')
+        r.ssl_connector_ciphers = r.result
+        return r
 
     def thread_dump(self):
         """
@@ -524,9 +526,9 @@ class TomcatManager:
         :return: `TomcatManagerResponse` object with an additional
                  ``thread_dump`` attribute
         """
-        tmr = self._get('threaddump')
-        tmr.thread_dump = tmr.result
-        return tmr
+        r = self._get('threaddump')
+        r.thread_dump = r.result
+        return r
 
     def resources(self, type=None):
         """
@@ -557,7 +559,7 @@ class TomcatManager:
             r = self._get('resources')
 
         resources = {}
-        for line in r.result:
+        for line in r.result.splitlines():
             resource, classname = line.rstrip().split(':',1)
             if resource[:7] != codes.fail + ' - ':
                 resources[resource] = classname.lstrip()
@@ -596,7 +598,7 @@ class TomcatManager:
         """
         r = self._get('findleaks', {'statusLine': 'true'})
         leakers = []
-        for line in r.result:
+        for line in r.result.splitlines():
             # don't add duplicates
             if not line in leakers:
                 leakers.append(line)

@@ -50,12 +50,11 @@ def war_fileobj(war_file):
     return open(war_file, 'rb')
 
 @pytest.fixture(scope='module')
-def server_info_lines():
-    result = """Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
+def server_info():
+    return """Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
 OS Name: Linux
 OS Version: 4.4.0-89-generic
 OS Architecture: amd64
 JVM Version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
 JVM Vendor: Oracle Corporation
 """
-    return result.splitlines()
