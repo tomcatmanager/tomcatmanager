@@ -19,6 +19,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+"""
+Package documentation for tomcatmanager package
+"""
 
 from pkg_resources import get_distribution
 
@@ -29,7 +32,7 @@ from .models import TomcatError
 from .models import codes
 from .interactive_tomcat_manager import InteractiveTomcatManager
 
-'''from https://stackoverflow.com/questions/17583443/what-is-the-correct-way-to-share-package-version-with-setup-py-and-the-package
+"""from https://stackoverflow.com/questions/17583443/what-is-the-correct-way-to-share-package-version-with-setup-py-and-the-package
 
 from pkg_resources import get_distribution, DistributionNotFound
 import os.path
@@ -46,4 +49,4 @@ except DistributionNotFound:
     __version__ = 'Please install this project with setup.py'
 else:
     __version__ = _dist.version
-'''
+"""

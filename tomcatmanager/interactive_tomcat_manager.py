@@ -633,9 +633,10 @@ new war file there.""")
 Remove an application from the tomcat server.
 
   path     The path part of the URL where the application is deployed.
-  version  Version string of the application to undeploy. If the
-           application was deployed with a version, it must be
-           specified in order to undeploy it.""")
+  version  Optional version string of the application to undeploy. If the
+           application was deployed with a version string, it must be
+           specified in order to undeploy the application.""")
+
 
 	###
 	#

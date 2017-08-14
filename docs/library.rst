@@ -11,21 +11,20 @@ Connect to the server
 ---------------------
 
 Before you can do anything useful, you need to create a
-:class:`TomcatManager` object and tell it how to connect to the server.
+:class:`TomcatManager <tm.TomcatManager>` object
+and tell it how to connect to the server.
 
 .. automethod:: tomcatmanager.TomcatManager.__init__
 
-Alternatively, you can use the :meth:`TomcatManager.connect` method, which
-unlike creating the object, actually tries to connect to the server.
+Alternatively, you can use the :meth:`connect()
+<tomcatmanager.tomcat_manager.TomcatManager.connect>` method, which unlike
+creating the object, actually tries to connect to the server.
 
 .. automethod:: tomcatmanager.TomcatManager.connect
 
 
 Responses from the server
 -------------------------
-
-Methods in the :class:`TomcatManager` class which talk to the server return
-a :class:`TomcatManagerResponse` object.
 
 .. autoclass:: tomcatmanager.models.TomcatManagerResponse
    :members:

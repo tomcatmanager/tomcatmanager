@@ -8,11 +8,11 @@ tomcatmanager documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    tomcat-manager
    library
    developer
+   api/index.rst
 
 
 Indices and tables

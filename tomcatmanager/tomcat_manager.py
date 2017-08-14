@@ -31,8 +31,9 @@ class TomcatManager:
 	A class for interacting with the Tomcat Manager web application.
 	
 	
-	Here's a summary of the recommended way to use this class with proper exception
-	and error handling. For this example, we'll use the :meth:`server_info` method.
+	Here's a summary of the recommended way to use this class with proper
+	exception and error handling. For this example, we'll use the
+	:meth:`.server_info` method.
 	
 	>>> import tomcatmanager as tm
 	>>> tomcat = tm.TomcatManager(url='http://localhost:8080/manager', \
@@ -64,8 +65,8 @@ class TomcatManager:
 		:param userid: userid to authenticate
 		:param password: password to authenticate
 
-		Initializing the object with a url and credentials does not try to connect
-		to the server. Use the :meth:`connect` method for that.
+		Initializing the object with a url and credentials does not try to
+		connect to the server. It just stores the url and credentials.
 		
 		Usage::
 		
@@ -115,11 +116,11 @@ class TomcatManager:
 		:param url: url where the Tomcat Manager web application is deployed
 		:param userid: userid to authenticate
 		:param password: password to authenticate
-		:return: :class:`TomcatManagerResponse <TomcatManagerResponse>` object
+		:return: :class:`.TomcatManagerResponse` object
 		
 		You don't have to connect before using any other commands. If you initialized
 		the object with credentials you can call any other method. The purpose
-		of :meth:`connect` is to:
+		of :meth:`.connect` is to:
 		
 		- give you a way to change the credentials on an existing object
 		- provide a convenient mechanism to validate you can actually connect to the server
@@ -143,15 +144,16 @@ class TomcatManager:
 		
 		Requesting url's via http can raise all kinds of exceptions. For
 		example, if you give a URL where no web server is listening, you'll get a
-		:meth:`requests.connections.ConnectionError`. However, :meth:`connect`
-		won't raise exceptions for everything. If the credentials are
-		incorrect, you won't get an exception unless you ask for it. To check
-		whether you are actually connected, use::
+		:meth:`requests.connections.ConnectionError`. However, this method won't
+		raise exceptions for everything. If the credentials are incorrect, you
+		won't get an exception unless you ask for it. To check whether you are
+		actually connected, use::
 		
 		>>> tomcat.is_connected
 		
 		If you want to raise exceptions see
-		:meth:`tomcatmanager.models.TomcatManagerResponse.raise_for_status`.
+		:meth:`.raise_for_status`.
+
 		"""
 		self._url = url
 		self._userid = userid
@@ -481,11 +483,11 @@ class TomcatManager:
 			will be sent to the server for deployment.
 		:param serverwar: (optional) The java-style path (use slashes not backslashes) to
 			the war file on the server. Don't include ``file:`` at the beginning.
-		:param version: (optional) For tomcat parallel deployments, the version to use
-			for this version of the app
+		:param version: (optional) For tomcat parallel deployments, the version string to associate
+			with this version of the app
 		:param update: (optional) Whether to undeploy the existing path
 			first (default False)
-		:return: :class:`TomcatManagerResponse <TomcatManagerResponse>` object
+		:return: :class:`.TomcatManagerResponse` object
 		
 		
 		"""
@@ -526,12 +528,11 @@ class TomcatManager:
 		"""Undeploy the application at a given path
 		
 		:param path: The path of the application to undeploy
-		:param version: The version to undeploy
-		:return: :class:`TomcatManagerResponse <TomcatManagerResponse>` object
-		:rtype: tomcatmanager.TomcatManagerResponse		
+		:param version: (optional) The version string of the app to undeploy
+		:return: :class:`.TomcatManagerResponse` object
 				
-		If an application was deployed using a version, then a version is required to
-		undeploy the application.
+		If the application was deployed with a version string, it must be
+		specified in order to undeploy the application.
 		"""
 		params = {'path': path}
 		if version:
