@@ -10,23 +10,6 @@ name='tomcatmanager'
 version = '0.9'
 release = '0.9.2'
 
-# the first time we install, sphinx may not already be installed
-# so we skip sphinx. If someone does pip install -e .[dev] then
-# we will have sphix and this will work
-try:
-    from sphinx.setup_command import BuildDoc
-    cmdclass={'build_docs': BuildDoc}
-    command_options={
-            'build_docs': {
-                'project': ('setup.py', name),
-                'version': ('setup.py', version),
-                'release': ('setup.py', release),
-            },
-        }
-except ModuleNotFoundError:
-    cmdclass={}
-    command_options={}
-
 #
 # get the long description from the README file
 here = path.abspath(path.dirname(__file__))
@@ -76,8 +59,5 @@ setup(
 			'tomcat-manager=tomcatmanager.__main__:main',
 		],
 	},
-    
-    # add a build_docs command
-    cmdclass=cmdclass,
-    command_options=command_options,
+
 )

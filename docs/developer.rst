@@ -79,6 +79,17 @@ which has several benefits:
   to a tomcat server and handling exceptions
 - allows doctests to execute against a mock tomcat server
 
+Documentation
+-------------
+
+To build the documentation::
+
+   $ cd docs
+   $ make html
+
+The output will be in ``build/docs/html``.
+
+
 Make a Release
 --------------
 
