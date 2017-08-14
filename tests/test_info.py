@@ -36,11 +36,6 @@ from test_manager import TestManagerBase
 #
 ###
 class TestInfo(TestManagerBase):
-
-    def test_list(self, tomcat):
-        r = tomcat.list()
-        self.info_assertions(r)
-        assert isinstance(r.apps, list)
     
     def test_server_info(self, tomcat):
         r = tomcat.server_info()
@@ -88,25 +83,7 @@ class TestInfo(TestManagerBase):
 
     def test_find_leakers(self, tomcat):
         r = tomcat.find_leakers()
-        self.success_assertions(r)
-        
+        self.success_assertions(r)        
         assert isinstance(r.leakers, list)
         # make sure we don't have duplicates
         assert len(r.leakers) == len(set(r.leakers))
-
-    def test_sessions_no_path(self, tomcat):
-        """sessions requires a path"""
-        r = tomcat.sessions(None)
-        self.failure_assertions(r)
-        r = tomcat.sessions('')
-        self.failure_assertions(r)
-        
-    def test_sessions(self, tomcat):
-        r = tomcat.sessions('/manager')
-        self.info_assertions(r)
-        assert r.result == r.sessions
-
-    def test_sessions_version(self, tomcat):
-        r = tomcat.sessions('/someapp', '42')
-        self.info_assertions(r)
-        assert r.result == r.sessions

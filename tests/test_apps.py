@@ -31,77 +31,14 @@ from test_manager import TestManagerBase
 
 ###
 #
-# test the action commands, i.e. commands that actually effect some change on
-# the server
+# test the methods for managing applications on the server
 #
 ###
-class TestAction(TestManagerBase):
-
-    def test_expire_no_path(self, tomcat):
-        """expire requires a path"""
-        r = tomcat.expire(None)
-        self.failure_assertions(r)
-        r = tomcat.expire('')
-        self.failure_assertions(r)
-
-    def test_expire(self, tomcat):
-        r = tomcat.expire('/manager', 30)
-        self.info_assertions(r)
-        assert r.result == r.sessions
-
-    def test_expire_version(self, tomcat):
-        r = tomcat.expire('/someapp', '5', 30)
-        self.info_assertions(r)
-        assert r.result == r.sessions
-
-    def test_start_no_path(self, tomcat):
-        """start requires a path"""
-        r = tomcat.start(None)
-        self.failure_assertions(r)
-        r = tomcat.start('')
-        self.failure_assertions(r)
-
-    def test_start(self, tomcat):
-        r = tomcat.start('/someapp')
-        self.success_assertions(r)
-
-    def test_start_version(self, tomcat):
-        r = tomcat.start('/someapp', '5')
-        self.success_assertions(r)
-        
-    def test_stop_no_path(self, tomcat):
-        """stop requires a path"""
-        r = tomcat.start(None)
-        self.failure_assertions(r)
-        r = tomcat.start('')
-        self.failure_assertions(r)
-
-    def test_stop(self, tomcat):
-        r = tomcat.stop('/someapp')
-        self.success_assertions(r)
-
-    def test_stop_version(self, tomcat):
-        r = tomcat.stop('/someapp', '5')
-        self.success_assertions(r)      
-
-    def test_reload_no_path(self, tomcat):
-        """reload requires a path"""
-        r = tomcat.reload(None)
-        self.failure_assertions(r)
-        r = tomcat.reload('')
-        self.failure_assertions(r)
-
-    def test_reload(self, tomcat):
-        r = tomcat.reload('/someapp')
-        self.success_assertions(r)
-
-    def test_reload_version(self, tomcat):
-        r = tomcat.reload('/someapp', '5')
-        self.success_assertions(r)
+class TestApps(TestManagerBase):
 
     ###
     #
-    # test deploy variations
+    # deploy
     #
     ###
     def test_deploy_path_only(self, tomcat):
@@ -169,6 +106,11 @@ class TestAction(TestManagerBase):
         r = tomcat.deploy(path='/newapp', serverwar='/path/to/foo.war', version='42', update=True)
         self.success_assertions(r)
     
+    ###
+    #
+    # undeploy
+    #
+    ###
     def test_undeploy_no_path(self, tomcat):
         """ensure we throw an exception if we don't have a path to undeploy"""
         r = tomcat.undeploy(None)
@@ -184,3 +126,117 @@ class TestAction(TestManagerBase):
     def test_undeploy_version(self, tomcat):
         r = tomcat.undeploy('/newapp', '3')
         self.success_assertions(r)
+
+    ###
+    #
+    # start
+    #
+    ###
+    def test_start_no_path(self, tomcat):
+        """start requires a path"""
+        r = tomcat.start(None)
+        self.failure_assertions(r)
+        r = tomcat.start('')
+        self.failure_assertions(r)
+
+    def test_start(self, tomcat):
+        r = tomcat.start('/someapp')
+        self.success_assertions(r)
+
+    def test_start_version(self, tomcat):
+        r = tomcat.start('/someapp', '5')
+        self.success_assertions(r)
+    
+    ###
+    #
+    # stop
+    #
+    ###
+    def test_stop_no_path(self, tomcat):
+        """stop requires a path"""
+        r = tomcat.start(None)
+        self.failure_assertions(r)
+        r = tomcat.start('')
+        self.failure_assertions(r)
+
+    def test_stop(self, tomcat):
+        r = tomcat.stop('/someapp')
+        self.success_assertions(r)
+
+    def test_stop_version(self, tomcat):
+        r = tomcat.stop('/someapp', '5')
+        self.success_assertions(r)
+    
+    ###
+    #
+    # reload
+    #
+    ###
+    def test_reload_no_path(self, tomcat):
+        """reload requires a path"""
+        r = tomcat.reload(None)
+        self.failure_assertions(r)
+        r = tomcat.reload('')
+        self.failure_assertions(r)
+
+    def test_reload(self, tomcat):
+        r = tomcat.reload('/someapp')
+        self.success_assertions(r)
+
+    def test_reload_version(self, tomcat):
+        r = tomcat.reload('/someapp', '5')
+        self.success_assertions(r)
+
+    ###
+    #
+    # sessions
+    #
+    ###
+    def test_sessions_no_path(self, tomcat):
+        """sessions requires a path"""
+        r = tomcat.sessions(None)
+        self.failure_assertions(r)
+        r = tomcat.sessions('')
+        self.failure_assertions(r)
+        
+    def test_sessions(self, tomcat):
+        r = tomcat.sessions('/manager')
+        self.info_assertions(r)
+        assert r.result == r.sessions
+
+    def test_sessions_version(self, tomcat):
+        r = tomcat.sessions('/someapp', '42')
+        self.info_assertions(r)
+        assert r.result == r.sessions
+    
+    ###
+    #
+    # expire
+    #
+    ###
+    def test_expire_no_path(self, tomcat):
+        """expire requires a path"""
+        r = tomcat.expire(None)
+        self.failure_assertions(r)
+        r = tomcat.expire('')
+        self.failure_assertions(r)
+
+    def test_expire(self, tomcat):
+        r = tomcat.expire('/manager', 30)
+        self.info_assertions(r)
+        assert r.result == r.sessions
+
+    def test_expire_version(self, tomcat):
+        r = tomcat.expire('/someapp', '5', 30)
+        self.info_assertions(r)
+        assert r.result == r.sessions
+
+    ###
+    #
+    # list
+    #
+    ###
+    def test_list(self, tomcat):
+        r = tomcat.list()
+        self.info_assertions(r)
+        assert isinstance(r.apps, list)
