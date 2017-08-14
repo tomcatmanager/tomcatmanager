@@ -101,7 +101,8 @@ class TestManager(TestManagerBase):
             mock_server80['userid'],
             mock_server80['password'] )
         assert isinstance(r, tm.models.TomcatManagerResponse)
-        assert r.result == ''
         assert r.status_code == tm.codes.ok
         assert tomcat.is_connected == True
+        assert r.result == ''
+        assert r.status_message == ''
         r.raise_for_status()        

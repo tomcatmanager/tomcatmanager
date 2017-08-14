@@ -45,8 +45,6 @@ You can also undeploy applications. This removes the WAR file from the Tomcat se
 Other application commands
 --------------------------
 
-.. automethod:: tomcatmanager.TomcatManager.list
-
 .. automethod:: tomcatmanager.TomcatManager.start
 
 .. automethod:: tomcatmanager.TomcatManager.stop
@@ -56,6 +54,9 @@ Other application commands
 .. automethod:: tomcatmanager.TomcatManager.sessions
 
 .. automethod:: tomcatmanager.TomcatManager.expire
+
+.. automethod:: tomcatmanager.TomcatManager.list
+
 
 Parallel Deployments
 --------------------
@@ -103,6 +104,10 @@ parallel deployments:
 
 Information about Tomcat
 ------------------------
+
+There are a number of methods which just return information about the
+Tomcat server. With the exception of `find_leakers()` (which triggers
+garbage collection), these methods don't effect any change on the server.
 
 .. automethod:: tomcatmanager.TomcatManager.server_info
 

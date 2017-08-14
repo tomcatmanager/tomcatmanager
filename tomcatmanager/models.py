@@ -179,10 +179,29 @@ class TomcatManagerResponse:
 
 
 class ServerInfo(dict):
-    """Discrete data about the tomcat server"""
+    """
+    Discrete data about the Tomcat server.
+    
+    This object is a dictionary of keys and values as returned from the
+    Tomcat server. It also has properties for well-known values.
+    
+    Usage::
+    
+        >>> tomcat = getfixture('tomcat')
+        >>> r = tomcat.server_info()
+        >>> r.server_info['OS Architecture']
+        'amd64'
+        >>> r.server_info.jvm_vendor
+        'Oracle Corporation'
+    """
 
     def __init__(self, result=None):
-        """result is the plain text from the server"""
+        """
+        Initialize from the plain text response from a Tomcat server.
+        
+        :param result: the plain text from the server, minus the first
+        line with the status info
+        """
         self._tomcat_version = None
         self._os_name = None
         self._os_version= None
@@ -192,7 +211,7 @@ class ServerInfo(dict):
         self._parse(result)
 
     def _parse(self, result):
-        """parse up a list of lines from the server"""
+        """Parse up a list of lines from the server."""
         if result:
             for line in result:
                 key, value = line.rstrip().split(':',1)
@@ -207,32 +226,32 @@ class ServerInfo(dict):
         
     @property
     def tomcat_version(self):
-        """the tomcat version string"""
+        """The tomcat version string."""
         return self._tomcat_version
 
     @property
     def os_name(self):
-        """the operating system name"""
+        """The operating system name."""
         return self._os_name
 
     @property
     def os_version(self):
-        """the operating system version"""
+        """The operating system version."""
         return self._os_version
 
     @property
     def os_architecture(self):
-        """the operating system architecture"""
+        """The operating system architecture."""
         return self._os_architecture
 
     @property
     def jvm_version(self):
-        """the java virtual machine version string"""
+        """The java virtual machine version string."""
         return self._jvm_version
 
     @property
     def jvm_vendor(self):
-        """the java virtual machine vendor"""
+        """The java virtual machine vendor."""
         return self._jvm_vendor
 
 ###

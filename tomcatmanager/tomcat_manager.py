@@ -63,8 +63,9 @@ class TomcatManager:
         """
         Initialize a new TomcatManager object.
         
-        :param url: URL where the Tomcat Manager web application is deployed
-        :param userid: userid to authenticate
+        :param url:      url where the Tomcat Manager web application is
+                         deployed
+        :param userid:   userid to authenticate
         :param password: password to authenticate
 
         Initializing the object with a url and credentials does not try to
@@ -80,7 +81,8 @@ class TomcatManager:
         
         or::
         
-            >>> tomcat = tm.TomcatManager(url=url, userid=userid, password=password)
+            >>> tomcat = tm.TomcatManager(url=url, userid=userid, \\
+            ...     password=password)
         
         or::
         
@@ -91,9 +93,10 @@ class TomcatManager:
         self._password = password
 
     def _get(self, cmd, payload=None):
-        """make an HTTP get request to the tomcat manager web app
+        """
+        Make an HTTP get request to the tomcat manager web app.
         
-        returns a TomcatManagerResponse object
+        :return: `TomcatManagerResponse` object
         """
         base = self._url or ''
         url = base + '/text/' + cmd
@@ -114,10 +117,11 @@ class TomcatManager:
         """
         Connect to a Tomcat Manager server.
         
-        :param url: url where the Tomcat Manager web application is deployed
-        :param userid: userid to authenticate
+        :param url:      url where the Tomcat Manager web application is
+                         deployed
+        :param userid:   userid to authenticate
         :param password: password to authenticate
-        :return: :class:`.TomcatManagerResponse` object
+        :return:         `TomcatManagerResponse` object
         
         You don't have to connect before using any other commands. If you
         initialized the object with credentials you can call any other
@@ -175,7 +179,7 @@ class TomcatManager:
         self._userid = userid
         self._password = password
         r = self._get('serverinfo')
-        # hide the fact that we did a different command, we don't
+        # hide the fact that we retrieved results, we don't
         # want people relying on or using this data
         r.result = ''
         r.status_message = ''
@@ -184,9 +188,9 @@ class TomcatManager:
     @property
     def is_connected(self):
         """
-        Is the url an actual tomcat server and are the credentials valid?
+        Does the url point to an actual tomcat server and are the credentials valid?
         
-        :return: True if connected to a tomcat server, False if not.
+        :return: True if connected to a tomcat server, otherwise, False
         """
         try:
             r = self._get('list')
@@ -196,294 +200,9 @@ class TomcatManager:
 
     ###
     #
-    # The info commands. These commands that don't affect change, they just
-    # return some information from the server.
+    # managing applications
     #
     ###
-    def list(self):
-        """
-        list of all applications currently installed
-
-        :return: :class:`TomcatManagerResponse <TomcatManagerResponse>` object
-        
-            tm = TomcatManager(url)
-            tmr = tm.list()
-            apps = tmr.apps
-        
-        returns an instance of TomcatManagerResponse with an additional apps
-        attribute
-        
-        apps is a list of tuples: (path, status, sessions, directory)
-        
-        path - the relative URL where this app is deployed on the server
-        status - whether the app is running or not
-        sessions - number of currently active sessions
-        directory - the directory on the server where this app resides      
-        """
-        tmr = self._get('list')
-        apps = []
-        for line in tmr.result:
-            apps.append(line.rstrip().split(":"))       
-        tmr.apps = apps
-        return tmr
-        
-    def server_info(self):
-        """get information about the server
-        
-            tm = TomcatManager(url)
-            r = tm.serverinfo()
-            r.server_info['OS Name']
-            
-        returns an instance of TomcatManagerResponse with an additional server_info
-        attribute. The server_info attribute is a dictionary of items about the server
-        """
-        r = self._get('serverinfo')
-        r.server_info = ServerInfo(r.result)
-        return r
-
-    def status_xml(self):
-        """get server status information in XML format
-        
-        we have lots of status stuff, so this method is named status_xml to try
-        and reduce confusion with status_code and status_message
-        
-        Uses the '/manager/status/all?XML=true' command
-        
-        Tomcat 8 doesn't include application info in the XML, even though the docs
-        say it does.
-        
-            tm = TomcatManager(url)
-            tmr = tm.status_xml()
-            x = tmr.result
-            y = tmr.status_xml
-        
-        returns an instance of TomcatManagerResponse with the status xml document in
-        the result attribute and in the status_xml attribute
-        """
-        # this command isn't in the /manager/text url space, so we can't use _get()
-        base = self._url or ''      
-        url = base + '/status/all'
-        tmr = TomcatManagerResponse()
-        tmr.response = requests.get(
-                url,
-                auth=(self._userid, self._password),
-                params={'XML': 'true'}
-                )
-        tmr.result = tmr.response.text.splitlines()
-        tmr.status_xml = tmr.result
-
-        # we have to force a status_code and a status_message
-        # because the server doesn't return them
-        if tmr.response.status_code == requests.codes.ok:
-            tmr.status_code = codes.ok
-            tmr.status_message = codes.ok
-        else:
-            tmr.status_code = codes.fail
-            tmr.status_message = codes.fail
-        return tmr
-
-    def vm_info(self):
-        """get diagnostic information about the JVM
-                
-            tm = TomcatManager(url)
-            tmr = tm.vm_info()
-            x = tmr.result
-            y = tmr.vm_info
-        
-        returns an instance of TomcatManagerResponse with the virtual machine info in
-        the result attribute and in the vm_info attribute
-        """
-        tmr = self._get('vminfo')
-        tmr.vm_info = tmr.result
-        return tmr
-
-    def ssl_connector_ciphers(self):
-        """get SSL/TLS ciphers configured for each connector
-
-            tm = TomcatManager(url)
-            tmr = tm.ssl_connector_ciphers()
-            x = tmr.result
-            y = tmr.ssl_connector_info
-        
-        returns an instance of TomcatManagerResponse with the ssl cipher info in the
-        result attribute and in the ssl_connector_info attribute
-        """
-        tmr = self._get('sslConnectorCiphers')
-        tmr.ssl_connector_ciphers = tmr.result
-        return tmr
-
-    def thread_dump(self):
-        """get a jvm thread dump
-
-            tm = TomcatManager(url)
-            tmr = tm.thread_dump()
-            x = tmr.result
-            y = tmr.thread_dump
-        
-        returns an instance of TomcatManagerResponse with the thread dump in the result
-        attribute and in the thread_dump attribute
-        """
-        tmr = self._get('threaddump')
-        tmr.thread_dump = tmr.result
-        return tmr
-
-    def resources(self, type=None):
-        """list the global JNDI resources available for use in resource links for context config files
-        
-            tm = TomcatManager(url)
-            r = tm.resources()
-            resources = r.resources
-        
-        pass the optional fully qualified java class name of the resource type you are
-        interested in. For example, you might pass javax.sql.DataSource to acquire
-        the names of all available JDBC data sources
-        
-        returns an instance of TomcatManagerResponse with an additional resources
-        attribute
-        
-        resources is a list of tuples: (resource, class)
-        """
-        if type:
-            r = self._get('resources', {'type': str(type)})
-        else:
-            r = self._get('resources')
-
-        resources = {}
-        for line in r.result:
-            resource, classname = line.rstrip().split(':',1)
-            if resource[:7] != codes.fail + ' - ':
-                resources[resource] = classname.lstrip()
-        r.resources = resources
-        return r
-
-
-    def find_leakers(self):
-        """list apps that leak memory
-        
-        This command triggers a full garbage collection on the server. Use with
-        extreme caution on production systems.
-        
-        Explicity triggering a full garbage collection from code is documented to be
-        unreliable. Furthermore, depending on the jvm, there are options to disable
-        explicit GC triggering, like ```-XX:+DisableExplicitGC```. If you want to make
-        sure this command triggered a full GC, you will have to verify using something
-        like GC logging or JConsole.
-        
-            tm = TomcatManager(url)
-            tmr = tm.find_leaks()
-            leakers = tmr.leakers
-
-        returns an instance of TomcatManagerResponse with an additional leakers
-        attribute. If leakers in an empty list, then no leaking apps were found.
-        
-        The tomcat manager documentation says that it can return duplicates in this
-        list if the app has been reloaded and was leaking both before and after the
-        reload. The list returned by the leakers attribute will have no duplicates in
-        it
-        
-        """
-        tmr = self._get('findleaks', {'statusLine': 'true'})
-        leakers = []
-        for line in tmr.result:
-            leakers.append(line.rstrip())
-        # remove duplicates by changing it to a set, then back to a list        
-        tmr.leakers = list(set(leakers))
-        return tmr
-
-    def sessions(self, path, version=None):
-        """return a list of the sessions in an application at a given path
-    
-            tm = TomcatManager(url)
-            tmr = tm.sessions('/manager')
-            x = tmr.result
-            y = tmr.sessions
-        
-        returns an instance of TomcatManagerResponse with the session summary in the
-        result attribute and in the sessions attribute
-        """
-        params = {}
-        params['path'] = path
-        if version:
-            params['version'] = version
-        r = self._get('sessions', params)
-        if r.ok: r.sessions = r.result
-        return r
-
-    ###
-    #
-    # The action commands. These commands affect some change on the server.
-    #
-    ###
-    def expire(self, path, version=None, idle=None):
-        """
-        Expire sessions idle for longer than idle minutes.
-        
-        :param path: the path to the app on the server whose sessions you want to expire
-        :param idle: sessions idle for more than this number of minutes will be
-        expired. Use idle=0 to expire all sessions.
-        :return: an instance of TomcatManagerResponse with the session summary in the
-        result attribute and in the sessions attribute
-        
-        tm = TomcatManager(url)
-        r = tm.sessions('/manager')
-        x = r.result
-        y = r.sessions
-        """
-        params = {}
-        params['path'] = path
-        if version:
-            params['version'] = version
-        if idle:
-            params['idle'] = idle       
-        r = self._get('expire', params)
-        if r.ok: r.sessions = r.result
-        return r
-    
-    def start(self, path, version=None):
-        """start the application at a given path
-    
-            tm = TomcatManager(url)
-            tmr = tm.start('/someapp')
-            tmr.raise_on_status()
-        
-        returns an instance of TomcatManagerResponse
-        """
-        params = {}
-        params['path'] = path
-        if version:
-            params['version'] = version
-        return self._get('start', params)
-
-    def stop(self, path, version=None):
-        """stop the application at a given path
-    
-            tm = TomcatManager(url)
-            tmr = tm.stop('/someapp')
-            tmr.raise_on_status()
-        
-        returns an instance of TomcatManagerResponse
-        """
-        params = {}
-        params['path'] = path
-        if version:
-            params['version'] = version
-        return self._get('stop', params)
-
-    def reload(self, path, version=None):
-        """reload the application at a given path
-    
-            tm = TomcatManager(url)
-            tmr = tm.reload('/someapp')
-            tmr.raise_on_status()
-        
-        returns an instance of TomcatManagerResponse
-        """
-        params = {}
-        params['path'] = path
-        if version:
-            params['version'] = version
-        return self._get('reload', params)
-
     def deploy(self, path, localwar=None, serverwar=None, version=None, update=False):
         """
         Deploy an application to the Tomcat server.
@@ -493,17 +212,21 @@ class TomcatManager:
         the WAR file is local to where python is running, use the ``localwar``
         parameter. Specify either ``localwar`` or ``serverwar``, but not both. 
         
-        :param path: The path on the server to deploy this war to, i.e. /sampleapp
-        :param localwar: (optional) The path (specified using your particular
-            operating system convention) to a war file on the local file system. This
-            will be sent to the server for deployment.
-        :param serverwar: (optional) The java-style path (use slashes not backslashes) to
-            the war file on the server. Don't include ``file:`` at the beginning.
-        :param version: (optional) For tomcat parallel deployments, the version string to associate
-            with this version of the app
-        :param update: (optional) Whether to undeploy the existing path
-            first (default False)
-        :return: `TomcatManagerResponse` object
+        :param path:      The path on the server to deploy this war to,
+                          i.e. /sampleapp
+        :param localwar:  (optional) The path (specified using your
+                          particular operating system convention) to a war
+                          file on the local file system. This will be sent
+                          to the server for deployment.
+        :param serverwar: (optional) The java-style path (use slashes not
+                          backslashes) to the war file on the server. Don't
+                          include ``file:`` at the beginning.
+        :param version:   (optional) For tomcat parallel deployments, the
+                          version string to associate with this version
+                          of the app
+        :param update:    (optional) Whether to undeploy the existing path
+                          first (default False)
+        :return:          `TomcatManagerResponse` object
         
         
         """
@@ -543,9 +266,10 @@ class TomcatManager:
     def undeploy(self, path, version=None):
         """Undeploy the application at a given path.
         
-        :param path: The path of the application to undeploy
-        :param version: (optional) The version string of the app to undeploy
-        :return: `TomcatManagerResponse` object
+        :param path:    The path of the application to undeploy
+        :param version: (optional) The version string of the app to
+                        undeploy
+        :return:        `TomcatManagerResponse` object
                 
         If the application was deployed with a version string, it must be
         specified in order to undeploy the application.
@@ -554,3 +278,327 @@ class TomcatManager:
         if version:
             params['version'] = version
         return self._get('undeploy', params)
+
+    def start(self, path, version=None):
+        """
+        Start the application at a given path.
+    
+        :param path:    The path of the application to start
+        :param version: (optional) The version string of the app to start
+        :return:        `TomcatManagerResponse` object
+                
+        If the application was deployed with a version string, it must be
+        specified in order to start the application.
+        """
+        params = {}
+        params['path'] = path
+        if version:
+            params['version'] = version
+        return self._get('start', params)
+
+    def stop(self, path, version=None):
+        """
+        Stop the application at a given path.
+    
+        :param path:    The path of the application to stop
+        :param version: (optional) The version string of the app to stop
+        :return:        `TomcatManagerResponse` object
+                
+        If the application was deployed with a version string, it must be
+        specified in order to stop the application.
+        """
+        params = {}
+        params['path'] = path
+        if version:
+            params['version'] = version
+        return self._get('stop', params)
+
+    def reload(self, path, version=None):
+        """
+        Reload (stop and start) the application at a given path.
+        
+        :param path:    The path of the application to reload
+        :param version: (optional) The version string of the app to reload
+        :return:        `TomcatManagerResponse` object
+                
+        If the application was deployed with a version string, it must be
+        specified in order to reload the application.
+        """
+        params = {}
+        params['path'] = path
+        if version:
+            params['version'] = version
+        return self._get('reload', params)
+
+    def sessions(self, path, version=None):
+        """
+        Get the age of the sessions in an application.
+
+        :param path:    The path of the application to get session
+                        information about
+        :param version: (optional) The version string of the app to get
+                        session information about
+        :return:        `TomcatManagerResponse` object with the session
+                        summary in both the ``result`` attribute and the
+                        ``sessions`` attribute
+    
+        Usage::
+        
+            >>> tomcat = getfixture('tomcat')
+            >>> r = tomcat.sessions('/manager')
+            >>> if r.ok:
+            ...     print(r.sessions)
+            ['Default maximum session inactive interval 30 minutes',
+             '<1 minutes: 1 sessions']
+        """
+        params = {}
+        params['path'] = path
+        if version:
+            params['version'] = version
+        r = self._get('sessions', params)
+        if r.ok: r.sessions = r.result
+        return r
+
+    def expire(self, path, version=None, idle=None):
+        """
+        Expire sessions idle for longer than idle minutes.
+        
+        :param path: the path to the app on the server whose sessions
+                     you want to expire
+        :param idle: sessions idle for more than this number of minutes
+                     will be expired. Use idle=0 to expire all sessions.
+        :return:     `TomcatManagerResponse` with the session summary in
+                     the ``result`` attribute and in the ``sessions`` attribute
+        
+        Usage::
+        
+            >>> tomcat = getfixture('tomcat')
+            >>> r = tomcat.expire('/manager', idle=15)
+            >>> if r.ok:
+            ...     print(r.sessions)
+            ['Default maximum session inactive interval 30 minutes',
+             '<1 minutes: 1 sessions',
+             '>15 minutes: 0 sessions were expired']
+        """
+        params = {}
+        params['path'] = path
+        if version:
+            params['version'] = version
+        if idle:
+            params['idle'] = idle       
+        r = self._get('expire', params)
+        if r.ok: r.sessions = r.result
+        return r
+
+    def list(self):
+        """
+        Get a list of all applications currently installed.
+
+        :return: `TomcatManagerResponse` object with an additional
+                 ``apps`` attribute
+        
+        Usage::
+        
+            >>> tomcat = getfixture('tomcat')
+            >>> r = tomcat.list()
+            >>> if r.ok:
+            ...     print(r.apps)
+            [['/', 'running', '0', 'ROOT'],
+             ['/host-manager', 'running', '0', '/usr/share/tomcat8-admin/host-manager'],
+             ['/manager', 'running', '0', '/usr/share/tomcat8-admin/manager']]        
+        
+        ``apps`` is a list of tuples: (``path``, ``status``, ``sessions``, ``directory``)
+        
+        * ``path`` - the relative URL where this app is deployed on the server
+        * ``status`` - whether the app is running or not
+        * ``sessions`` - number of currently active sessions
+        * ``directory`` - the directory on the server where this app resides    
+        """
+        tmr = self._get('list')
+        apps = []
+        for line in tmr.result:
+            apps.append(line.rstrip().split(":"))       
+        tmr.apps = apps
+        return tmr
+
+    ###
+    #
+    # These commands return info about the server
+    #
+    ###
+    def server_info(self):
+        """
+        Get information about the Tomcat server.
+        
+        :return: `TomcatManagerResponse` object with an additional
+                 ``server_info`` attribute
+        
+        Usage::
+        
+            >>> tomcat = getfixture('tomcat')
+            >>> r = tomcat.server_info()
+            >>> if r.ok:
+            ...     r.server_info['OS Name']
+            ...     r.server_info.os_name
+            'Linux'
+            'Linux'
+            
+        The ``server_info`` attribute contains a `ServerInfo` object, which is
+        a dictionary with some added properties for well-known values
+        returned from the Tomcat server.
+        """
+        r = self._get('serverinfo')
+        r.server_info = ServerInfo(r.result)
+        return r
+
+    def status_xml(self):
+        """
+        Get server status information in XML format.
+
+        :return: `TomcatManagerResponse` object with an additional
+                 ``status_xml`` attribute
+
+        Usage::
+
+            >>> import xml.etree.ElementTree as ET
+            >>> tomcat = getfixture('tomcat')
+            >>> r = tomcat.status_xml()
+            >>> if r.ok:
+            ...     root = ET.fromstring('\\n'.join(r.status_xml))
+            ...     mem = root.find('jvm/memory')
+            ...     print(mem.attrib['free'])
+            22294576
+
+
+        Tomcat 8.0 doesn't include application info in the XML, even though the docs
+        say it does.
+        """
+        # this command isn't in the /manager/text url space, so we can't use _get()
+        base = self._url or ''      
+        url = base + '/status/all'
+        r = TomcatManagerResponse()
+        r.response = requests.get(
+                url,
+                auth=(self._userid, self._password),
+                params={'XML': 'true'}
+                )
+        r.result = r.response.text.splitlines()
+        r.status_xml = r.result
+
+        # we have to force a status_code and a status_message
+        # because the server doesn't return them
+        if r.response.status_code == requests.codes.ok:
+            r.status_code = codes.ok
+            r.status_message = codes.ok
+        else:
+            r.status_code = codes.fail
+            r.status_message = codes.fail
+        return r
+
+    def vm_info(self):
+        """
+        Get diagnostic information about the JVM.
+                
+        :return: `TomcatManagerResponse` object with an additional
+                 ``vm_info`` attribute
+        """
+        r = self._get('vminfo')
+        r.vm_info = r.result
+        return r
+
+    def ssl_connector_ciphers(self):
+        """
+        Get SSL/TLS ciphers configured for each connector.
+
+        :return: `TomcatManagerResponse` object with an additional
+                 ``ssl_connector_ciphers`` attribute
+        """
+        tmr = self._get('sslConnectorCiphers')
+        tmr.ssl_connector_ciphers = tmr.result
+        return tmr
+
+    def thread_dump(self):
+        """
+        Get a jvm thread dump.
+
+        :return: `TomcatManagerResponse` object with an additional
+                 ``thread_dump`` attribute
+        """
+        tmr = self._get('threaddump')
+        tmr.thread_dump = tmr.result
+        return tmr
+
+    def resources(self, type=None):
+        """
+        Get the global JNDI resources available for use in resource links for context config files
+        
+        :param type: (optional) fully qualified java class name of the
+                     resource type you are interested in. For example,
+                     pass ``javax.sql.DataSource`` to acquire the names
+                     of all available JDBC data sources.
+        :return:     `TomcatManagerResponse` object with an additional
+                     ``resources`` attribute
+
+
+        Usage::
+        
+            >>> tomcat = getfixture('tomcat')
+            >>> r = tomcat.resources()
+            >>> if r.ok:
+            ...     print(r.resources)
+            {'UserDatabase': 'org.apache.catalina.users.MemoryUserDatabase'}       
+        
+        ``resources`` is a dictionary with the resource name as the key
+        and the class name as the value        
+        """
+        if type:
+            r = self._get('resources', {'type': str(type)})
+        else:
+            r = self._get('resources')
+
+        resources = {}
+        for line in r.result:
+            resource, classname = line.rstrip().split(':',1)
+            if resource[:7] != codes.fail + ' - ':
+                resources[resource] = classname.lstrip()
+        r.resources = resources
+        return r
+
+
+    def find_leakers(self):
+        """
+        Get apps that leak memory.
+        
+        :return: `TomcatManagerResponse` object with an additional
+                 ``leakers`` attribute
+        
+        This command triggers a full garbage collection on the server. Use with
+        extreme caution on production systems.
+        
+        Explicity triggering a full garbage collection from code is documented to be
+        unreliable. Furthermore, depending on the jvm, there are options to disable
+        explicit GC triggering, like ```-XX:+DisableExplicitGC```. If you want to make
+        sure this command triggered a full GC, you will have to verify using something
+        like GC logging or JConsole.
+
+        The Tomcat Manager documentation says the server can return duplicates in this
+        list if the app has been reloaded and was leaking both before and after the
+        reload. The list returned by the ``leakers`` attribute will have no duplicates in
+        it.
+
+        Usage::
+        
+            >>> tomcat = getfixture('tomcat')
+            >>> r = tomcat.find_leakers()
+            >>> if r.ok:
+            ...     print(r.leakers)
+            ['/leaker1', '/leaker2']
+        """
+        r = self._get('findleaks', {'statusLine': 'true'})
+        leakers = []
+        for line in r.result:
+            # don't add duplicates
+            if not line in leakers:
+                leakers.append(line)
+        r.leakers = leakers
+        return r
