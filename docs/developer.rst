@@ -79,6 +79,16 @@ which has several benefits:
   to a tomcat server and handling exceptions
 - allows doctests to execute against a mock tomcat server
 
+You can run all the tests against a real Tomcat Server that you have running
+by utilizing the following command line options::
+
+   $ pytest --url=http://localhost:8080/manager --userid=ace \
+   --password=newenglandclamchowder
+
+This will excercise your server well, and will definitely trigger garbage
+collection, so you might not want to run it against a production server.
+
+
 Documentation
 -------------
 

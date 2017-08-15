@@ -75,19 +75,19 @@ class TestManager(TestManagerBase):
     # init
     #
     ###
-    def test_init_no_url(self, mock_server80):
+    def test_init_no_url(self, tomcat_manager_server):
         tomcat = tm.TomcatManager()
         assert tomcat.is_connected == False
 
-    def test_init_noauth(self, mock_server80):
-        tomcat = tm.TomcatManager(mock_server80['url'])
+    def test_init_noauth(self, tomcat_manager_server):
+        tomcat = tm.TomcatManager(tomcat_manager_server['url'])
         assert tomcat.is_connected == False
 
-    def test_init_auth(self, mock_server80):
+    def test_init_auth(self, tomcat_manager_server):
         tomcat = tm.TomcatManager(
-            mock_server80['url'],
-            mock_server80['userid'],
-            mock_server80['password'] )
+            tomcat_manager_server['url'],
+            tomcat_manager_server['userid'],
+            tomcat_manager_server['password'] )
         assert tomcat.is_connected == True
 
     ###
@@ -95,25 +95,25 @@ class TestManager(TestManagerBase):
     # connect
     #
     ###
-    def test_connect_no_url(self, mock_server80):
+    def test_connect_no_url(self, tomcat_manager_server):
         tomcat = tm.TomcatManager()
         with pytest.raises(requests.exceptions.MissingSchema):
             r = tomcat.connect()
 
-    def test_connect_noauth(self, mock_server80):
+    def test_connect_noauth(self, tomcat_manager_server):
         tomcat = tm.TomcatManager()
-        r = tomcat.connect(mock_server80['url'])
+        r = tomcat.connect(tomcat_manager_server['url'])
         assert isinstance(r, tm.models.TomcatManagerResponse)
         assert tomcat.is_connected == False
         with pytest.raises(requests.exceptions.HTTPError):
             r.raise_for_status()
 
-    def test_connect_auth(self, mock_server80):
+    def test_connect_auth(self, tomcat_manager_server):
         tomcat = tm.TomcatManager()
         r = tomcat.connect(
-            mock_server80['url'],
-            mock_server80['userid'],
-            mock_server80['password'] )
+            tomcat_manager_server['url'],
+            tomcat_manager_server['userid'],
+            tomcat_manager_server['password'] )
         assert isinstance(r, tm.models.TomcatManagerResponse)
         assert r.status_code == tm.codes.ok
         assert tomcat.is_connected == True

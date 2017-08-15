@@ -26,18 +26,41 @@ import pytest
 from tests.mock_server80 import start_mock_server80
 import tomcatmanager as tm
 
+###
+#
+# add command line options
+#
+###
+def pytest_addoption(parser):
+    parser.addoption("--url", action="store", default=None,
+        help="url: url of tomcat manager to test against instead of mock")
+    parser.addoption("--userid", action="store", default=None,
+        help="userid: use to authenticate")
+    parser.addoption("--password", action="store", default=None,
+        help="password: use to authenticate")
 
 @pytest.fixture(scope='module')
-def mock_server80():
+def tomcat_manager_server(request):
     """start a local http server which provides a similar interface to a real Tomcat Manager app"""
-    return start_mock_server80()
+    url = request.config.getoption("--url")
+    if url:
+        # use the server info specified on the command line
+        tms = {'url': url}
+        userid = request.config.getoption("--userid")
+        tms.update({'userid': userid})
+        password = request.config.getoption("--password")
+        tms.update({'password': password})
+        return tms
+    else:
+        # go start up a fake server
+        return start_mock_server80()
 
 @pytest.fixture(scope='module')
-def tomcat(mock_server80):
+def tomcat(tomcat_manager_server):
     return tm.TomcatManager(
-            mock_server80['url'],
-            mock_server80['userid'],
-            mock_server80['password'] )
+            tomcat_manager_server['url'],
+            tomcat_manager_server['userid'],
+            tomcat_manager_server['password'] )
 
 @pytest.fixture(scope='module')
 def war_file():
