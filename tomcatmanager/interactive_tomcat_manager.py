@@ -100,6 +100,18 @@ prog_name='tomcat-manager'
 version_string='%s %s (works with Tomcat >= 7.0 and <= 8.5)' % (prog_name, version_number)
 
 
+def requires_connection(f):
+    """decorator for interactive methods which require a connection"""
+    def _requires_connection(self, *args, **kwargs):
+        if self.tomcat and self.tomcat.is_connected:
+            f(self, *args, **kwargs)
+        else:
+            # print the message
+            self.exit_code = 1
+            self.perr('not connected')
+    return _requires_connection
+
+
 class InteractiveTomcatManager(cmd2.Cmd):
     """an interactive command line tool for tomcat manager
     
@@ -122,19 +134,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.debug_flag = False
         self.exit_code = None
 
-        # this is the list of commands that require us to be connected to a
-        # tomcat server postparsing_precmd() checks the list and handles
-        # everything appropriately
-        self.connected_commands = [
-            # info commands
-            'list', 'serverinfo', 'status', 'vminfo',
-            'sslconnectorciphers', 'threaddump', 'resources',
-            'findleakers', 'sessions',
-            # action commands
-            'expire', 'start', 'stop', 'reload',
-            'deploy', 'redeploy', 'undeploy',
-            ]
-        
         # settings for cmd2.Cmd
         self.prompt = prog_name + '>'
         self.allow_cli_args = False
@@ -144,35 +143,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # Override cmd2.Cmd methods.
     #
     ###
-    def postparsing_precmd(self, statement):
-        """This runs after parsing the command-line, but before anything else; even before adding cmd to history.
-        
-        We use it to fail commands that require a connection if we aren't connected
-        
-        Even if we fail the command for not being connected we add it to history
-        """
-        stop = False
-        if statement.parsed.command in self.connected_commands:
-            if self.tomcat and self.tomcat.is_connected:
-                # everything is fine, just run the statement as is
-                return stop, statement
-            else:
-                # we aren't connected and the command requires it
-                # add it to history     
-                # this is verbatim from cmd2.Cmd.onecmd_plus_hooks()
-                if statement.parsed.command not in self.excludeFromHistory:
-                    self.history.append(statement.parsed.raw)
-            
-                # print the message
-                self.exit_code = 1
-                self.perr('not connected')
-            
-                # tell our super to not do anything
-                raise cmd2.EmptyStatement
-        else:
-            # this command doesn't require us to be connected, run it as is
-            return stop, statement
-
     def emptyline(self):
         """Do nothing on an empty line"""
         pass
@@ -193,7 +163,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         
     def perr(self, msg=''):
         """convenience method to print error messages"""
-        print(msg, file=sys.stderr)
+        print('Error: {}'.format(msg), file=sys.stderr)
 
     def pdebug(self, msg=''):
         """convenience method to print debugging messages"""
@@ -349,6 +319,7 @@ with no authentication""")
   path          The path part of the URL where the application will be deployed.
   version       The version string to associate with this deployment."""
 
+    @requires_connection
     def do_deploy(self, args):
         self.deploy_base(args, self.help_deploy, False)
 
@@ -359,6 +330,7 @@ with no authentication""")
 Install a war file containing a tomcat application in the tomcat server.""")
         self.pout(self.deploy_base_help())
 
+    @requires_connection
     def do_redeploy(self, args):
         self.deploy_base(args, self.help_redeploy, True)
 
@@ -370,6 +342,7 @@ Remove the application currently installed at a given path and install a
 new war file there.""")
         self.pout(self.deploy_base_help())
 
+    @requires_connection
     def do_undeploy(self, args):
         args = args.split()
         version = None
@@ -394,6 +367,7 @@ Remove an application from the tomcat server.
            application was deployed with a version string, it must be
            specified in order to undeploy the application.""")
     
+    @requires_connection
     def do_start(self, args):
         self.base_path_version(args, self.tomcat.start, self.help_start)
 
@@ -408,6 +382,7 @@ Start a tomcat application that has been deployed but isn't running.
            application was deployed with a version string, it must be
            specified in order to start the application.""")
 
+    @requires_connection
     def do_stop(self, args):
         self.base_path_version(args, self.tomcat.stop, self.help_stop)
 
@@ -422,6 +397,7 @@ Stop a tomcat application and leave it deployed on the server.
            application was deployed with a version string, it must be
            specified in order to stop the application.""")
 
+    @requires_connection
     def do_reload(self, args):
         self.base_path_version(args, self.tomcat.reload, self.help_reload)
 
@@ -436,6 +412,7 @@ Start and stop a tomcat application.
            application was deployed with a version string, it must be
            specified in order to reload the application.""")
 
+    @requires_connection
     def do_sessions(self, args):
         args = args.split()
         version = None
@@ -460,6 +437,7 @@ Show active sessions for a tomcat application.
            sessions. If the application was deployed with a version
            string, it must be specified in order to show sessions.""")
 
+    @requires_connection
     def do_expire(self, args):
         args = args.split()
         version = None
@@ -490,6 +468,7 @@ Expire idle sessions.
   idle     Expire sessions idle for more than this number of minutes. Use
            0 to expire all sessions.""")
 
+    @requires_connection
     def do_list(self, args):
         if args:
             self.help_list()
@@ -516,6 +495,7 @@ Show all installed applications.""")
     # information from the server.
     #
     ###
+    @requires_connection
     def do_serverinfo(self, args):
         if args:
             self.help_serverinfo()
@@ -530,6 +510,7 @@ Show all installed applications.""")
 
 Show information about the server.""")
 
+    @requires_connection
     def do_status(self, args):
         if args:
             self.help_status()
@@ -544,6 +525,7 @@ Show information about the server.""")
 
 Show server status information in xml format.""")
 
+    @requires_connection
     def do_vminfo(self, args):
         if args:
             self.help_vminfo()
@@ -558,6 +540,7 @@ Show server status information in xml format.""")
 
 Show diagnostic information about the jvm.""")
 
+    @requires_connection
     def do_sslconnectorciphers(self, args):
         if args:
             self.help_sslconnectorciphers()
@@ -572,6 +555,7 @@ Show diagnostic information about the jvm.""")
 
 Show SSL/TLS ciphers configured for each connector.""")
 
+    @requires_connection
     def do_threaddump(self, args):
         if args:
             self.help_threaddump()
@@ -586,6 +570,7 @@ Show SSL/TLS ciphers configured for each connector.""")
 
 Show a jvm thread dump.""")
 
+    @requires_connection
     def do_resources(self, args):
         if len(args.split()) in [0,1]:
             try:
@@ -609,6 +594,7 @@ Show global jndi resources configured in tomcat.
 class_name  Optional fully qualified java class name of the resource type
             to show.""")
 
+    @requires_connection
     def do_findleakers(self, args):
         if args:
             self.help_findleakers()
