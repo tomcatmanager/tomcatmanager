@@ -41,77 +41,94 @@ class TestApps(TestManagerBase):
     # deploy
     #
     ###
-    def test_deploy_path_only(self, tomcat):
-        r = tomcat.deploy(path=self.safe_path)
-        self.failure_assertions(r)  
-    
-    def test_deploy_localwar_no_path(self, tomcat, war_fileobj):
-        r = tomcat.deploy(None, localwar=war_fileobj)
-        self.failure_assertions(r)
-        r = tomcat.deploy('', localwar=war_fileobj)
+    def test_deploy_path_only(self, tomcat, safe_path):
+        r = tomcat.deploy(safe_path)
         self.failure_assertions(r)
 
-    def test_deploy_localwar(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj)
-        self.success_assertions(r)
-        r = tomcat.undeploy(path=self.safe_path)
-        self.success_assertions(r)
+    def test_deploy_serverwar_and_localwar(self, tomcat, localwar_file, safe_path, serverwar_file):
+        localwar_fileobj = open(localwar_file, 'rb')
+        try:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj, serverwar=serverwar_file)
+        except ValueError:
+            # we expect this exception
+            pass
+        finally:
+            localwar_fileobj.close()
 
-    def test_deploy_localwar_version(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj, version='42')
-        self.success_assertions(r)
-        r = tomcat.undeploy(path=self.safe_path, version='42')
-        self.success_assertions(r)
-    
-    def test_deploy_localwar_update(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj, update=True)
-        self.success_assertions(r)
-        r = tomcat.undeploy(path=self.safe_path)
-        self.success_assertions(r)
-
-    def test_deploy_localwar_version_update(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj, version='42', update=True)
-        self.success_assertions(r)
-        r = tomcat.undeploy(path=self.safe_path, version='42')
-        self.success_assertions(r)
-
-    def test_deploy_serverwar_and_localwar(self, tomcat, war_fileobj):
-        with pytest.raises(ValueError):
-            r = tomcat.deploy(self.safe_path, localwar=war_fileobj, serverwar='/path/to/foo.war')
-
-    def test_deploy_serverwar_no_path(self, tomcat):
-        """deploy a war from a file on the server without a path
-        
-        https://tomcat.apache.org/tomcat-8.0-doc/manager-howto.html#Deploy_A_New_Application_from_a_Local_Path
-        says that you should be able to just deploy a war file, but testing indicates
-        that you must have a path as well
-        
-        therefore, this should be a failure even though the documentation says it should
-        work
-        """
-        r = tomcat.deploy(None, serverwar='/path/to/foo.war')
+    def test_deploy_localwar_no_path(self, tomcat, localwar_file):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(None, localwar=localwar_fileobj)
         self.failure_assertions(r)
-        r = tomcat.deploy('', serverwar='/path/to/foo.war')
+        with open(localwar_file, 'rb') as localwar_fileobj:            
+            r = tomcat.deploy('', localwar=localwar_fileobj)
         self.failure_assertions(r)
 
-    def test_deploy_serverwar_update(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path='/newapp', serverwar=war_fileobj, update=True)
+    def test_deploy_localwar(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj)
         self.success_assertions(r)
-    
-    def test_deploy_serverwar(self, tomcat):
-        r = tomcat.deploy(path='/newapp', serverwar='/path/to/foo.war')
-        self.success_assertions(r)
-
-    def test_deploy_serverwar_version(self, tomcat):
-        r = tomcat.deploy(path='/newapp', serverwar='/path/to/foo.war', version='42')
+        r = tomcat.undeploy(safe_path)
         self.success_assertions(r)
 
-    def test_deploy_serverwar_update(self, tomcat):
-        r = tomcat.deploy(path='/newapp', serverwar='/path/to/foo.war', update=True)
+    def test_deploy_localwar_version(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj, version='42')
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path, version='42')
         self.success_assertions(r)
     
-    def test_deploy_serverwar_version_update(self, tomcat):
-        r = tomcat.deploy(path='/newapp', serverwar='/path/to/foo.war', version='42', update=True)
+    def test_deploy_localwar_update(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj)
+        self.success_assertions(r)        
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj, update=True)
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path)
+        self.success_assertions(r)
+
+    def test_deploy_localwar_version_update(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj, version='42')
+        self.success_assertions(r)
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj, version='42', update=True)
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path, version='42')
+        self.success_assertions(r)
+
+    def test_deploy_serverwar_no_path(self, tomcat, serverwar_file):
+        r = tomcat.deploy(None, serverwar=serverwar_file)
+        self.failure_assertions(r)
+        r = tomcat.deploy('', serverwar=serverwar_file)
+        self.failure_assertions(r)
+
+    def test_deploy_serverwar(self, tomcat, serverwar_file, safe_path):
+        r = tomcat.deploy(safe_path, serverwar=serverwar_file)
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path)
+        self.success_assertions(r)
+
+    def test_deploy_serverwar_version(self, tomcat, serverwar_file, safe_path):
+        r = tomcat.deploy(safe_path, serverwar=serverwar_file, version='42')
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path, version='42')
+        self.success_assertions(r)
+
+    def test_deploy_serverwar_update(self, tomcat, serverwar_file, safe_path):
+        r = tomcat.deploy(safe_path, serverwar=serverwar_file)
+        self.success_assertions(r)
+        r = tomcat.deploy(safe_path, serverwar=serverwar_file, update=True)
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path)
+        self.success_assertions(r)
+    
+    def test_deploy_serverwar_version_update(self, tomcat, serverwar_file, safe_path):
+        r = tomcat.deploy(safe_path, serverwar=serverwar_file, version='42')
+        self.success_assertions(r)
+        r = tomcat.deploy(safe_path, serverwar=serverwar_file, version='42', update=True)
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path, version='42')
         self.success_assertions(r)
 
     ###
@@ -145,30 +162,32 @@ class TestApps(TestManagerBase):
         r = tomcat.stop('')
         self.failure_assertions(r)
 
-    def test_stop_start(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj)
+    def test_stop_start(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj)
         self.success_assertions(r)
         
-        r = tomcat.stop(self.safe_path)
+        r = tomcat.stop(safe_path)
         self.success_assertions(r)
 
-        r = tomcat.start(self.safe_path)
+        r = tomcat.start(safe_path)
         self.success_assertions(r)
 
-        r = tomcat.undeploy(path=self.safe_path)
+        r = tomcat.undeploy(safe_path)
         self.success_assertions(r)
 
-    def test_stop_start_version(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj, version='42')
+    def test_stop_start_version(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj, version='42')
         self.success_assertions(r)
         
-        r = tomcat.stop(self.safe_path, version='42')
+        r = tomcat.stop(safe_path, version='42')
         self.success_assertions(r)
 
-        r = tomcat.start(self.safe_path, version='42')
+        r = tomcat.start(safe_path, version='42')
         self.success_assertions(r)
 
-        r = tomcat.undeploy(path=self.safe_path, version='42')
+        r = tomcat.undeploy(safe_path, version='42')
         self.success_assertions(r)
         
     
@@ -185,24 +204,26 @@ class TestApps(TestManagerBase):
         r = tomcat.reload('')
         self.failure_assertions(r)
 
-    def test_reload(self, tomcat, war_fileobj):
-         r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj)
-         self.success_assertions(r)
-        
-         r = tomcat.reload(self.safe_path)
-         self.success_assertions(r)
-
-         r = tomcat.undeploy(path=self.safe_path)
-         self.success_assertions(r)
-
-    def test_reload_version(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj, version='42')
+    def test_reload(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj)
         self.success_assertions(r)
         
-        r = tomcat.reload(self.safe_path, version='42')
+        r = tomcat.reload(safe_path)
         self.success_assertions(r)
 
-        r = tomcat.undeploy(path=self.safe_path, version='42')
+        r = tomcat.undeploy(safe_path)
+        self.success_assertions(r)
+
+    def test_reload_version(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:        
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj, version='42')
+        self.success_assertions(r)
+        
+        r = tomcat.reload(safe_path, version='42')
+        self.success_assertions(r)
+
+        r = tomcat.undeploy(safe_path, version='42')
         self.success_assertions(r)
 
 
@@ -219,27 +240,29 @@ class TestApps(TestManagerBase):
         r = tomcat.sessions('')
         self.failure_assertions(r)
         
-    def test_sessions(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj)
+    def test_sessions(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj)
         self.success_assertions(r)
         
-        r = tomcat.sessions(self.safe_path)
+        r = tomcat.sessions(safe_path)
         self.info_assertions(r)
         assert r.result == r.sessions
 
-        r = tomcat.undeploy(path=self.safe_path)
+        r = tomcat.undeploy(safe_path)
         self.success_assertions(r)
 
 
-    def test_sessions_version(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj, version='42')
+    def test_sessions_version(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj, version='42')
         self.success_assertions(r)
         
-        r = tomcat.sessions(self.safe_path, version='42')
+        r = tomcat.sessions(safe_path, version='42')
         self.info_assertions(r)
         assert r.result == r.sessions
 
-        r = tomcat.undeploy(path=self.safe_path, version='42')
+        r = tomcat.undeploy(safe_path, version='42')
         self.success_assertions(r)
     
     ###
@@ -255,26 +278,28 @@ class TestApps(TestManagerBase):
         r = tomcat.expire('')
         self.failure_assertions(r)
 
-    def test_expire(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj)
+    def test_expire(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj)
         self.success_assertions(r)
         
-        r = tomcat.expire(self.safe_path, idle=30)
+        r = tomcat.expire(safe_path, idle=30)
         self.info_assertions(r)
         assert r.result == r.sessions
 
-        r = tomcat.undeploy(path=self.safe_path)
+        r = tomcat.undeploy(safe_path)
         self.success_assertions(r)
 
-    def test_expire_version(self, tomcat, war_fileobj):
-        r = tomcat.deploy(path=self.safe_path, localwar=war_fileobj, version='42')
+    def test_expire_version(self, tomcat, localwar_file, safe_path):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            r = tomcat.deploy(safe_path, localwar=localwar_fileobj, version='42')
         self.success_assertions(r)
         
-        r = tomcat.expire(self.safe_path, version='42', idle=30)
+        r = tomcat.expire(safe_path, version='42', idle=30)
         self.info_assertions(r)
         assert r.result == r.sessions
 
-        r = tomcat.undeploy(path=self.safe_path, version='42')
+        r = tomcat.undeploy(safe_path, version='42')
         self.success_assertions(r)
 
     ###

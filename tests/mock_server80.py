@@ -946,4 +946,5 @@ def start_mock_server80():
     mock_server_thread.setDaemon(True)
     mock_server_thread.start()
     
-    return {'url': url, 'userid': USERID, 'password': PASSWORD}
+    return {'url': url, 'userid': USERID,
+            'password': PASSWORD, 'serverwar': '/path/to/server.war'}

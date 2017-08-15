@@ -69,13 +69,14 @@ an application with a version string. The combination of path and version
 string uniquely identify the application::
 
    >>> tomcat = getfixture('tomcat')
-   >>> war_file = getfixture('war_file')
-   >>> war_fileobj = open(war_file, 'rb')
-   >>> r = tomcat.deploy(path='/newapp', localwar=war_fileobj, version='42')
+   >>> safe_path = '/tomcat-manager-test-app'
+   >>> localwar_file = getfixture('localwar_file')
+   >>> with open(localwar_file, 'rb') as localwar_fileobj:
+   ...     r = tomcat.deploy(path=safe_path, localwar=localwar_fileobj, version='42')
    >>> r.ok
    True
-   >>> war_fileobj = open(war_file, 'rb')  # reopen the file to use it again
-   >>> r = tomcat.deploy(path='/newapp', localwar=war_fileobj, version='43')
+   >>> with open(localwar_file, 'rb') as localwar_fileobj:
+   ...     r = tomcat.deploy(path=safe_path, localwar=localwar_fileobj, version='43')
    >>> r.ok 
    True
 
@@ -83,13 +84,13 @@ We now have two instances of the same application, deployed at the same
 location, but with different version strings. To do anything to either of
 those applications, you must supply both the path and the version string::
 
-   >>> r = tomcat.stop(path='/newapp', version='42')
+   >>> r = tomcat.stop(path=safe_path, version='42')
    >>> r.ok
    True
-   >>> r = tomcat.undeploy(path='/newapp', version='42')
+   >>> r = tomcat.undeploy(path=safe_path, version='42')
    >>> r.ok
    True
-   >>> r = tomcat.undeploy(path='/newapp', version='43')
+   >>> r = tomcat.undeploy(path=safe_path, version='43')
    >>> r.ok
    True
 

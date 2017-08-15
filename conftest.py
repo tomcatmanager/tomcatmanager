@@ -38,6 +38,8 @@ def pytest_addoption(parser):
         help="userid: use to authenticate")
     parser.addoption("--password", action="store", default=None,
         help="password: use to authenticate")
+    parser.addoption("--serverwar", action="store", default=None,
+        help="serverwar: path to deployable war file on the tomcat server")
 
 @pytest.fixture(scope='module')
 def tomcat_manager_server(request):
@@ -56,6 +58,13 @@ def tomcat_manager_server(request):
         return start_mock_server80()
 
 @pytest.fixture(scope='module')
+def serverwar_file(request):
+    war = request.config.getoption("--serverwar")
+    if not war:
+        war = '/tmp/sample.war'
+    return war    
+
+@pytest.fixture(scope='module')
 def tomcat(tomcat_manager_server):
     return tm.TomcatManager(
             tomcat_manager_server['url'],
@@ -63,14 +72,14 @@ def tomcat(tomcat_manager_server):
             tomcat_manager_server['password'] )
 
 @pytest.fixture(scope='module')
-def war_file():
+def localwar_file():
     """return the path to a valid war file"""
     return os.path.dirname(__file__) + '/tests/war/sample.war'
 
-@pytest.fixture(scope='function')
-def war_fileobj(war_file):
-    """open war_file for binary reading"""
-    return open(war_file, 'rb')
+@pytest.fixture(scope='module')
+def safe_path():
+    """a safe path we can deploy apps to"""
+    return '/tomcat-manager-test-app'
 
 @pytest.fixture(scope='module')
 def server_info():

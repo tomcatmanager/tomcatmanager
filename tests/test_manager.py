@@ -30,9 +30,6 @@ import tomcatmanager as tm
 class TestManagerBase:
     """base class for all tests with some convenience methods"""
 
-    # a safe path to use when deploying to a tomcat server
-    safe_path = '/tomcat-manager-test-app'
-
     def success_assertions(self, r):
         """a set of common assertions for every command to ensure it
         completed successfully"""
@@ -61,8 +58,9 @@ class TestManager(TestManagerBase):
     # is_stream
     #
     ###
-    def test_is_stream_fileobj(self, war_fileobj):
-        assert tm.TomcatManager()._is_stream(war_fileobj)
+    def test_is_stream_fileobj(self, localwar_file):
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            assert tm.TomcatManager()._is_stream(localwar_fileobj)
     
     def test_is_stream_bytesio(self):
         fileobj = io.BytesIO(b'the contents of my warfile')
