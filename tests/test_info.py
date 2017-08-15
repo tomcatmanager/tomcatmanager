@@ -86,11 +86,14 @@ class TestInfo(TestManagerBase):
         self.success_assertions(r)        
         assert isinstance(r.leakers, list)
         
-    def test_find_leakers_duplicates(self, tomcat):
-        # set up our known leakers
-        r = tomcat.find_leakers()
-        self.success_assertions(r)        
+    def test_parse_leakers(self, tomcat):
+        # _parse_leakers doesn't hit the server
+        text='/leaker1\n/leaker2\n'
+        leakers = tomcat._parse_leakers(text)
+        assert leakers == ['/leaker1', '/leaker2']
+        
+    def test_parse_leakers_duplicates(self, tomcat):
+        text='/leaker1\n/leaker2\n/leaker1\n/leaker3\n/leaker2\n'
+        leakers = tomcat._parse_leakers(text)
         # make sure we don't have duplicates
-        assert len(r.leakers) == len(set(r.leakers))
-        assert len(r.result.splitlines()) == 3
-        assert len(r.leakers) == 2
+        assert leakers == ['/leaker1', '/leaker2', '/leaker3']

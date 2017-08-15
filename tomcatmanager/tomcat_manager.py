@@ -597,10 +597,20 @@ class TomcatManager:
             ['/leaker1', '/leaker2']
         """
         r = self._get('findleaks', {'statusLine': 'true'})
+        r.leakers = self._parse_leakers(r.result)
+        return r
+
+    def _parse_leakers(self,text):
+        """
+        Parse a list of leaking apps from the text returned by tomcat.
+        
+        We use this as a separate method so that we can test it against
+        several data sets to ensure proper behavior.
+        """
         leakers = []
-        for line in r.result.splitlines():
+        for line in text.splitlines():
             # don't add duplicates
             if not line in leakers:
                 leakers.append(line)
-        r.leakers = leakers
-        return r
+        return leakers
+        
