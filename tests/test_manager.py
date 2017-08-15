@@ -30,6 +30,9 @@ import tomcatmanager as tm
 class TestManagerBase:
     """base class for all tests with some convenience methods"""
 
+    # a safe path to use when deploying to a tomcat server
+    safe_path = '/tomcat-manager-test-app'
+
     def success_assertions(self, r):
         """a set of common assertions for every command to ensure it
         completed successfully"""
@@ -48,7 +51,7 @@ class TestManagerBase:
         type commands which return a result"""
         self.success_assertions(r)
         assert r.result != None
-        assert len(r.result) > 0
+        assert len(r.result) > 0    
 
 
 class TestManager(TestManagerBase):

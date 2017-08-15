@@ -147,7 +147,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         If no path is present return None and send the fail message
         """
         url = urlparse(self.path)
-        qs = parse_qs(url.query)
+        qs = parse_qs(url.query, keep_blank_values=True)
         path = None
         if 'path' in qs:
             path = qs['path']

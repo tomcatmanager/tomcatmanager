@@ -231,7 +231,8 @@ class TomcatManager:
         
         """
         params = {}
-        params['path'] = path or ''
+        if path:
+            params['path'] = path
         if update:
             params['update'] = 'true'
         if version:
@@ -274,7 +275,9 @@ class TomcatManager:
         If the application was deployed with a version string, it must be
         specified in order to undeploy the application.
         """
-        params = {'path': path or ''}
+        params = {}
+        if path:
+            params = {'path': path}
         if version:
             params['version'] = version
         return self._get('undeploy', params)
@@ -291,7 +294,8 @@ class TomcatManager:
         specified in order to start the application.
         """
         params = {}
-        params['path'] = path
+        if path:
+            params['path'] = path
         if version:
             params['version'] = version
         return self._get('start', params)
@@ -308,7 +312,8 @@ class TomcatManager:
         specified in order to stop the application.
         """
         params = {}
-        params['path'] = path
+        if path:
+            params['path'] = path
         if version:
             params['version'] = version
         return self._get('stop', params)
@@ -325,7 +330,8 @@ class TomcatManager:
         specified in order to reload the application.
         """
         params = {}
-        params['path'] = path
+        if path:
+            params['path'] = path
         if version:
             params['version'] = version
         return self._get('reload', params)
@@ -351,7 +357,8 @@ class TomcatManager:
 
         """
         params = {}
-        params['path'] = path
+        if path:
+            params['path'] = path
         if version:
             params['version'] = version
         r = self._get('sessions', params)
@@ -378,7 +385,8 @@ class TomcatManager:
             ...     expiration_data = r.sessions
         """
         params = {}
-        params['path'] = path
+        if path:        
+            params['path'] = path
         if version:
             params['version'] = version
         if idle:
