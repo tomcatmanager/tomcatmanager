@@ -69,12 +69,12 @@ an application with a version string. The combination of path and version
 string uniquely identify the application::
 
    >>> tomcat = getfixture('tomcat')
-   >>> war_fileobj = getfixture('war_fileobj')
+   >>> war_file = getfixture('war_file')
+   >>> war_fileobj = open(war_file, 'rb')
    >>> r = tomcat.deploy(path='/newapp', localwar=war_fileobj, version='42')
    >>> r.ok
    True
-   >>> war_fileobj.seek(0) # rewind the file so we can read it again
-   0
+   >>> war_fileobj = open(war_file, 'rb')  # reopen the file to use it again
    >>> r = tomcat.deploy(path='/newapp', localwar=war_fileobj, version='43')
    >>> r.ok 
    True
@@ -87,6 +87,9 @@ those applications, you must supply both the path and the version string::
    >>> r.ok
    True
    >>> r = tomcat.undeploy(path='/newapp', version='42')
+   >>> r.ok
+   True
+   >>> r = tomcat.undeploy(path='/newapp', version='43')
    >>> r.ok
    True
 
