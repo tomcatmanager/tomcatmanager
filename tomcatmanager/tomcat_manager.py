@@ -347,9 +347,8 @@ class TomcatManager:
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.sessions('/manager')
             >>> if r.ok:
-            ...     print(r.sessions)
-            Default maximum session inactive interval 30 minutes
-            <1 minutes: 1 sessions
+            ...     session_data = r.sessions
+
         """
         params = {}
         params['path'] = path
@@ -376,10 +375,7 @@ class TomcatManager:
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.expire('/manager', idle=15)
             >>> if r.ok:
-            ...     print(r.sessions)
-            Default maximum session inactive interval 30 minutes
-            <1 minutes: 1 sessions
-            >15 minutes: 0 sessions were expired
+            ...     expiration_data = r.sessions
         """
         params = {}
         params['path'] = path
@@ -404,10 +400,9 @@ class TomcatManager:
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.list()
             >>> if r.ok:
-            ...     print(r.apps)
-            [['/', 'running', '0', 'ROOT'],
-             ['/host-manager', 'running', '0', '/usr/share/tomcat8-admin/host-manager'],
-             ['/manager', 'running', '0', '/usr/share/tomcat8-admin/manager']]        
+            ...     running = []
+            ...     for (path, status, sessions, dir) in r.apps:
+            ...         if status == 'running': running.append(path)        
         
         ``apps`` is a list of tuples: (``path``, ``status``, ``sessions``, ``directory``)
         
@@ -434,20 +429,19 @@ class TomcatManager:
         
         :return: `TomcatManagerResponse` object with an additional
                  ``server_info`` attribute
+
+        The ``server_info`` attribute contains a `ServerInfo` object, which is
+        a dictionary with some added properties for well-known values
+        returned from the Tomcat server.
         
         Usage::
         
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.server_info()
             >>> if r.ok:
-            ...     r.server_info['OS Name']
-            ...     r.server_info.os_name
-            'Linux'
-            'Linux'
-            
-        The ``server_info`` attribute contains a `ServerInfo` object, which is
-        a dictionary with some added properties for well-known values
-        returned from the Tomcat server.
+            ...     r.server_info['OS Name'] == r.server_info.os_name
+            True
+
         """
         r = self._get('serverinfo')
         r.server_info = ServerInfo(r.result)
@@ -468,9 +462,8 @@ class TomcatManager:
             >>> if r.ok:
             ...     root = ET.fromstring(r.status_xml)
             ...     mem = root.find('jvm/memory')
-            ...     print(mem.attrib['free'])
-            22294576
-
+            ...     print('Free Memory = {}'.format(mem.attrib['free'])) #doctest: +ELLIPSIS
+            Free Memory ...
 
         Tomcat 8.0 doesn't include application info in the XML, even though the docs
         say it does.
@@ -574,6 +567,9 @@ class TomcatManager:
         :return: `TomcatManagerResponse` object with an additional
                  ``leakers`` attribute
         
+        The ``leakers`` attribute contains a list of paths of applications
+        which leak memory.
+        
         This command triggers a full garbage collection on the server. Use with
         extreme caution on production systems.
         
@@ -593,8 +589,9 @@ class TomcatManager:
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.find_leakers()
             >>> if r.ok:
-            ...     print(r.leakers)
-            ['/leaker1', '/leaker2']
+            ...     cnt = len(r.leakers)
+            ... else:
+            ...     cnt = 0
         """
         r = self._get('findleaks', {'statusLine': 'true'})
         r.leakers = self._parse_leakers(r.result)
