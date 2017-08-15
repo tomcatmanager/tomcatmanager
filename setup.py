@@ -50,7 +50,7 @@ setup(
 	# dependencies for development and testing
 	# $ pip3 install -e .[dev]
 	extras_require={
-		'dev': ['pytest', 'sphinx', 'wheel', 'twine']
+		'dev': ['pytest', 'sphinx', 'sphinx-autobuild', 'wheel', 'twine']
 	},
 
 	# define the scripts that should be created on installation
