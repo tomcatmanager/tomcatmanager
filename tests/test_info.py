@@ -73,6 +73,7 @@ class TestInfo(TestManagerBase):
         self.info_assertions(r)
         assert isinstance(r.resources, dict)
         assert len(r.resources) == 1
+        assert len(r.result.splitlines()) == len(r.resources)
     
     def test_resources_named_class_not_registered(self, tomcat):
         r = tomcat.resources('com.example.Nothing')
@@ -84,5 +85,12 @@ class TestInfo(TestManagerBase):
         r = tomcat.find_leakers()
         self.success_assertions(r)        
         assert isinstance(r.leakers, list)
+        
+    def test_find_leakers_duplicates(self, tomcat):
+        # set up our known leakers
+        r = tomcat.find_leakers()
+        self.success_assertions(r)        
         # make sure we don't have duplicates
         assert len(r.leakers) == len(set(r.leakers))
+        assert len(r.result.splitlines()) == 3
+        assert len(r.leakers) == 2
