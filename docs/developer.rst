@@ -83,10 +83,21 @@ You can run all the tests against a real Tomcat Server that you have running
 by utilizing the following command line options::
 
    $ pytest --url=http://localhost:8080/manager --userid=ace \
-   --password=newenglandclamchowder
+   --password=newenglandclamchowder --serverwar=/tmp/sample.war
 
-This will excercise your server well, and will definitely trigger garbage
-collection, so you might not want to run it against a production server.
+Running the test suite will deploy and undeploy an app dozens of times, and
+will definitely trigger garbage collection, so you might not want to run it
+against a production server. When an app is deployed, it will be at the path
+returned by the ``safe_path`` fixture in ``conftest.py``. You can modify that
+fixture if for some reason you need to deploy at a different path.
+
+The ``url``, ``userid``, and ``password``
+options are self-explanatory. The ``serverwar`` parameter is the full path
+to a war file on the server. There is a simple war file in
+``tests/war/sample.war`` which you can copy to the server. If you don't
+copy the war file, or if you don't specify the ``serverwar`` parameter, or
+the path you provide doesn't point to a valid war file, several of the
+tests will fail.
 
 
 Documentation
