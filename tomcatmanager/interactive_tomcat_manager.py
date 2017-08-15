@@ -189,28 +189,16 @@ class InteractiveTomcatManager(cmd2.Cmd):
     ###
     def pout(self, msg=''):
         """convenience method to print output"""
-        if isinstance(msg, list):
-            for line in msg:
-                print(line.rstrip(), file=self.stdout)
-        else:
-            print(msg, file=self.stdout)
+        print(msg, file=self.stdout)
         
     def perr(self, msg=''):
         """convenience method to print error messages"""
-        if isinstance(msg, list):
-            for line in msg:
-                print(line.rstrip(), file=sys.stderr)
-        else:
-            print(msg, file=sys.stderr)
+        print(msg, file=sys.stderr)
 
     def pdebug(self, msg=''):
         """convenience method to print debugging messages"""
         if self.debug_flag:
-            if isinstance(msg, list):
-                for line in msg:
-                    print("--" + line.rstrip(), file=self.stdout)
-            else:
-                print("--" + msg, file=self.stdout)
+            print("--" + msg, file=self.stdout)
     
     def pexception(self):
         if self.debug_flag:
@@ -247,22 +235,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         else:
             help_func()
             self.exit_code = 2
-
-    def deploy_base_help(self):
-        """common help string for the various flavors of deploy commands"""
-        return """
-  server|local  'server' to deploy a war file already on the server
-                'local' to transmit a locally available warfile to the server
-  warfile       Path to the war file to deploy.
-
-                For 'server', don't include the 'file:' at the beginning,
-                and use java style paths (i.e. '/' as path seperator).
-
-                For 'local', give a path according to your local operating
-                system conventions.
-
-  path          The path part of the URL where the application will be deployed.
-  version       The version string to associate with this deployment."""
 
     ###
     #
@@ -325,10 +297,199 @@ with no authentication""")
 
     ###
     #
-    # The info commands. These commands that don't affect change, they just
-    # return some information from the server.
+    # commands for managing applications
     #
     ###
+    def deploy_base(self, args, show_help, update):
+        """common method for deploy() and redeploy()"""
+        server = 'server'
+        local = 'local'
+        args = args.split()
+        if len(args) in [3, 4]:
+            src = args[0]
+            warfile = args[1]
+            path = args[2]
+            version = None
+            if len(args) == 4:
+                version = args[3]
+
+            if server.startswith(src): src = server
+            if local.startswith(src): src = local
+            
+            if src == server:
+                self.exit_code = 0
+                self.docmd(self.tomcat.deploy, path, serverwar=warfile,
+                        update=update, version=version)
+            elif src == local:
+                warfile = os.path.expanduser(warfile)
+                fileobj = open(warfile, 'rb')
+                self.exit_code = 0
+                self.docmd(self.tomcat.deploy, path, localwar=fileobj,
+                        update=update, version=version)
+            else:
+                show_help()
+                self.exit_code = 2
+        else:
+            show_help()
+            self.exit_code = 2
+
+    def deploy_base_help(self):
+        """common help string for the deploy() and redeploy()"""
+        return """
+  server|local  'server' to deploy a war file already on the server
+                'local' to transmit a locally available warfile to the server
+  warfile       Path to the war file to deploy.
+
+                For 'server', don't include the 'file:' at the beginning,
+                and use java style paths (i.e. '/' as path seperator).
+
+                For 'local', give a path according to your local operating
+                system conventions.
+
+  path          The path part of the URL where the application will be deployed.
+  version       The version string to associate with this deployment."""
+
+    def do_deploy(self, args):
+        self.deploy_base(args, self.help_deploy, False)
+
+    def help_deploy(self):
+        self.exit_code = 0
+        self.pout("""Usage: deploy server|local {warfile} {path} [version]
+
+Install a war file containing a tomcat application in the tomcat server.""")
+        self.pout(self.deploy_base_help())
+
+    def do_redeploy(self, args):
+        self.deploy_base(args, self.help_redeploy, True)
+
+    def help_redeploy(self):
+        self.exit_code = 0
+        self.pout("""Usage: redeploy server|local {warfile} {path} [version]
+
+Remove the application currently installed at a given path and install a
+new war file there.""")
+        self.pout(self.deploy_base_help())
+
+    def do_undeploy(self, args):
+        args = args.split()
+        version = None
+        if len(args) in [1, 2]:
+            path = args[0]
+            if len(args) == 2:
+                version = args[1]
+            self.exit_code = 0
+            self.docmd(self.tomcat.undeploy, path, version)
+        else:
+            self.help_undeploy()
+            self.exit_code = 2
+
+    def help_undeploy(self):
+        self.exit_code = 0
+        self.pout("""Usage: undeploy {path} [version]
+
+Remove an application from the tomcat server.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version string of the application to undeploy. If the
+           application was deployed with a version string, it must be
+           specified in order to undeploy the application.""")
+    
+    def do_start(self, args):
+        self.base_path_version(args, self.tomcat.start, self.help_start)
+
+    def help_start(self):
+        self.exit_code = 0
+        self.pout("""Usage: start {path} [version]
+
+Start a tomcat application that has been deployed but isn't running.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version string of the application to start. If the
+           application was deployed with a version string, it must be
+           specified in order to start the application.""")
+
+    def do_stop(self, args):
+        self.base_path_version(args, self.tomcat.stop, self.help_stop)
+
+    def help_stop(self):
+        self.exit_code = 0
+        self.pout("""Usage: stop {path} [version]
+
+Stop a tomcat application and leave it deployed on the server.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version string of the application to stop. If the
+           application was deployed with a version string, it must be
+           specified in order to stop the application.""")
+
+    def do_reload(self, args):
+        self.base_path_version(args, self.tomcat.reload, self.help_reload)
+
+    def help_reload(self):
+        self.exit_code = 0
+        self.pout("""Usage: reload {path} [version]
+
+Start and stop a tomcat application.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version string of the application to reload. If the
+           application was deployed with a version string, it must be
+           specified in order to reload the application.""")
+
+    def do_sessions(self, args):
+        args = args.split()
+        version = None
+        if len(args) in [1, 2]:
+            path = args[0]
+            if len(args) == 2:
+                version = args[1]
+            self.exit_code = 0
+            r = self.docmd(self.tomcat.sessions, path, version)
+            if r.ok: self.pout(r.sessions)
+        else:
+            self.help_sessions()
+            self.exit_code = 2
+
+    def help_sessions(self):
+        self.pout("""Usage: sessions {path} [version]
+
+Show active sessions for a tomcat application.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version string of the application from which to show
+           sessions. If the application was deployed with a version
+           string, it must be specified in order to show sessions.""")
+
+    def do_expire(self, args):
+        args = args.split()
+        version = None
+        if len(args) in [2, 3]:
+            path = args[0]
+            if len(args) == 2:
+                idle = args[1]
+            else:
+                version = args[1]
+                idle = args[2]
+            self.exit_code = 0
+            r = self.docmd(self.tomcat.expire, path, version, idle)
+            if r.ok: self.pout(r.sessions)
+        else:
+            self.help_expire()
+            self.exit_code = 2
+
+    def help_expire(self):
+        self.exit_code = 0
+        self.pout("""Usage: expire {path} [version] {idle}
+
+Expire idle sessions.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version string of the application from which to
+           expire sessions. If the application was deployed with a version
+           string, it must be specified in order to expire sessions.
+  idle     Expire sessions idle for more than this number of minutes. Use
+           0 to expire all sessions.""")
+
     def do_list(self, args):
         if args:
             self.help_list()
@@ -349,6 +510,12 @@ with no authentication""")
 
 Show all installed applications.""")
 
+    ###
+    #
+    # These commands that don't affect change, they just return some
+    # information from the server.
+    #
+    ###
     def do_serverinfo(self, args):
         if args:
             self.help_serverinfo()
@@ -448,7 +615,8 @@ class_name  Optional fully qualified java class name of the resource type
             self.exit_code = 2
         else:
             response = self.docmd(self.tomcat.find_leakers)
-            self.pout(response.leakers)
+            for leaker in response.leakers:
+                self.pout(leaker)
     
     def help_findleakers(self):
         self.exit_code = 0
@@ -458,185 +626,6 @@ Show tomcat applications that leak memory.
 
 WARNING: this triggers a full garbage collection on the server. Use with
 extreme caution on production systems.""")
-
-    def do_sessions(self, args):
-        args = args.split()
-        version = None
-        if len(args) in [1, 2]:
-            path = args[0]
-            if len(args) == 2:
-                version = args[1]
-            self.exit_code = 0
-            r = self.docmd(self.tomcat.sessions, path, version)
-            if r.ok: self.pout(r.sessions)
-        else:
-            self.help_sessions()
-            self.exit_code = 2
-
-    def help_sessions(self):
-        self.pout("""Usage: sessions {path} [version]
-
-Show active sessions for a tomcat application.
-
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application from which to show
-           sessions. If the application was deployed with a version
-           string, it must be specified in order to show sessions.""")
-
-    ###
-    #
-    # The action commands. These commands affect some change on the server.
-    #
-    ###
-    def do_expire(self, args):
-        args = args.split()
-        version = None
-        if len(args) in [2, 3]:
-            path = args[0]
-            if len(args) == 2:
-                idle = args[1]
-            else:
-                version = args[1]
-                idle = args[2]
-            self.exit_code = 0
-            r = self.docmd(self.tomcat.expire, path, version, idle)
-            if r.ok: self.pout(r.sessions)
-        else:
-            self.help_expire()
-            self.exit_code = 2
-
-    def help_expire(self):
-        self.exit_code = 0
-        self.pout("""Usage: expire {path} [version] {idle}
-
-Expire idle sessions.
-
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application from which to
-           expire sessions. If the application was deployed with a version
-           string, it must be specified in order to expire sessions.
-  idle     Expire sessions idle for more than this number of minutes. Use
-           0 to expire all sessions.""")
-
-    def do_start(self, args):
-        self.base_path_version(args, self.tomcat.start, self.help_start)
-
-    def help_start(self):
-        self.exit_code = 0
-        self.pout("""Usage: start {path} [version]
-
-Start a tomcat application that has been deployed but isn't running.
-
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to start. If the
-           application was deployed with a version string, it must be
-           specified in order to start the application.""")
-
-    def do_stop(self, args):
-        self.base_path_version(args, self.tomcat.stop, self.help_stop)
-
-    def help_stop(self):
-        self.exit_code = 0
-        self.pout("""Usage: stop {path} [version]
-
-Stop a tomcat application and leave it deployed on the server.
-
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to stop. If the
-           application was deployed with a version string, it must be
-           specified in order to stop the application.""")
-
-    def do_reload(self, args):
-        self.base_path_version(args, self.tomcat.reload, self.help_reload)
-
-    def help_reload(self):
-        self.exit_code = 0
-        self.pout("""Usage: reload {path} [version]
-
-Start and stop a tomcat application.
-
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to reload. If the
-           application was deployed with a version string, it must be
-           specified in order to reload the application.""")
-
-    def deploy_base(self, args, show_help, update):
-        server = 'server'
-        local = 'local'
-        args = args.split()
-        if len(args) in [3, 4]:
-            src = args[0]
-            warfile = args[1]
-            path = args[2]
-            version = None
-            if len(args) == 4:
-                version = args[3]
-
-            if server.startswith(src): src = server
-            if local.startswith(src): src = local
-            
-            if src == server:
-                self.exit_code = 0
-                self.docmd(self.tomcat.deploy, path, serverwar=warfile,
-                        update=update, version=version)
-            elif src == local:
-                warfile = os.path.expanduser(warfile)
-                fileobj = open(warfile, 'rb')
-                self.exit_code = 0
-                self.docmd(self.tomcat.deploy, path, localwar=fileobj,
-                        update=update, version=version)
-            else:
-                show_help()
-                self.exit_code = 2
-        else:
-            show_help()
-            self.exit_code = 2
-
-    def do_deploy(self, args):
-        self.deploy_base(args, self.help_deploy, False)
-
-    def help_deploy(self):
-        self.exit_code = 0
-        self.pout("""Usage: deploy server|local {warfile} {path} [version]
-
-Install a war file containing a tomcat application in the tomcat server.""")
-        self.pout(self.deploy_base_help())
-
-    def do_redeploy(self, args):
-        self.deploy_base(args, self.help_redeploy, True)
-
-    def help_redeploy(self):
-        self.exit_code = 0
-        self.pout("""Usage: redeploy server|local {warfile} {path} [version]
-
-Remove the application currently installed at a given path and install a
-new war file there.""")
-        self.pout(self.deploy_base_help())
-
-    def do_undeploy(self, args):
-        args = args.split()
-        version = None
-        if len(args) in [1, 2]:
-            path = args[0]
-            if len(args) == 2:
-                version = args[1]
-            self.exit_code = 0
-            self.docmd(self.tomcat.undeploy, path, version)
-        else:
-            self.help_undeploy()
-            self.exit_code = 2
-
-    def help_undeploy(self):
-        self.exit_code = 0
-        self.pout("""Usage: undeploy {path} [version]
-
-Remove an application from the tomcat server.
-
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to undeploy. If the
-           application was deployed with a version string, it must be
-           specified in order to undeploy the application.""")
-
 
     ###
     #
