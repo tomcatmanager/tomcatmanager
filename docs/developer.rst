@@ -119,35 +119,28 @@ To make a release and deploy it to `PyPI
 
 1. Merge everything to be included in the release into the develop branch.
 
-2. Ensure ``setup.py`` and ``docs/source/conf.py`` have the correct version
-   number. If not, commit the proper version number to the develop branch.
+2. Merge the develop branch into the master branch.
 
-3. Merge the develop branch into the master branch.
+3. Tag the master branch with the version number
 
-4. Tag the master branch with the version number
+4. Clean the build::
 
-5. Clean the build::
-
-    $ python3 setup.py clean --all
-    $ rm -rf dist/
-
-6. Build the source distribution::
+    $ python setup.py clean --dist --eggs --pycache
+   
+5. Build the source distribution::
 
     $ python3 setup.py sdist
 
-7. Build the wheel::
+6. Build the wheel::
 
     $ python3 setup.py bdist_wheel
 
-8. Build the docs::
+7. Build the docs::
 
     $ python3 setup.py build_docs
 
-9. Deploy the docs?
+8. Deploy the docs?
 
-10. Upload packages to PyPI::
+9. Upload packages to PyPI::
 
     $ twine upload dist/*
-
-11. Checkout the develop branch and update the version numbers in
-    ``setup.py`` and ``docs/source/conf.py``.

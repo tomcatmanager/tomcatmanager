@@ -1,9 +1,14 @@
+# backup files
+*~
+
+# compiled python
 *.py[cod]
 
 # C extensions
 *.so
 
 # Packages
+.eggs
 *.egg
 *.egg-info
 dist

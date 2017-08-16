@@ -8,6 +8,16 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
+try:
+   from setupext import janitor
+   CleanCommand = janitor.CleanCommand
+except ImportError:
+   CleanCommand = None
+
+cmd_classes = {}
+if CleanCommand is not None:
+   cmd_classes['clean'] = CleanCommand
+
 #
 # get the long description from the README file
 here = path.abspath(path.dirname(__file__))
@@ -16,9 +26,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
 	name='tomcatmanager',
-##    use_scm_version=True,
     use_scm_version=True,
-    setup_requires=['setuptools_scm'],
 
 	description='A command line tool and python library for managing a tomcat server.',
 	long_description=long_description,
@@ -47,10 +55,14 @@ setup(
 	python_requires='>=3.4',
 	install_requires=['cmd2', 'requests'],
 	
+    setup_requires=['setuptools_scm', 'setupext_janitor'],
+    cmdclass=cmd_classes,
+    
 	# dependencies for development and testing
 	# $ pip3 install -e .[dev]
 	extras_require={
-		'dev': ['pytest', 'sphinx', 'sphinx-autobuild', 'wheel', 'twine']
+		'dev': ['pytest', 'sphinx', 'sphinx-autobuild', 'wheel',
+                'setuptools_scm', 'setupext_janitor', 'twine']
 	},
 
 	# define the scripts that should be created on installation
