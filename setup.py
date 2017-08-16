@@ -8,10 +8,6 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
-name='tomcatmanager'
-version = '0.9'
-release = '0.9.2'
-
 #
 # get the long description from the README file
 here = path.abspath(path.dirname(__file__))
@@ -19,8 +15,10 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-	name=name,
-	version=release,
+	name='tomcatmanager',
+##    use_scm_version=True,
+    use_scm_version={'version_scheme': 'guess-next-dev-version'},
+    setup_requires=['setuptools_scm'],
 
 	description='A command line tool and python library for managing a tomcat server.',
 	long_description=long_description,

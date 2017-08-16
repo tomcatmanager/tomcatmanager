@@ -1,6 +1,8 @@
 tomcatmanager api
 =================
 
+API documentation for tomcatmanager |release|
+
 .. automodule:: tomcatmanager
 
 .. toctree::
