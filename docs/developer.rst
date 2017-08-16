@@ -126,6 +126,7 @@ To make a release and deploy it to `PyPI
 4. Clean the build::
 
     $ python setup.py clean --dist --eggs --pycache
+    $ (cd docs && make clean)
    
 5. Build the source distribution::
 
@@ -137,7 +138,7 @@ To make a release and deploy it to `PyPI
 
 7. Build the docs::
 
-    $ python3 setup.py build_docs
+    $ (cd docs && make html)
 
 8. Deploy the docs?
 
