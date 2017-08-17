@@ -91,6 +91,7 @@ import traceback
 import getpass
 import cmd2
 import urllib.request
+import xml.dom.minidom
 
 import tomcatmanager as tm
 
@@ -518,8 +519,9 @@ Show information about the server.""")
             self.help_status()
             self.exit_code = 2
         else:
-            response = self.docmd(self.tomcat.status_xml)
-            self.pout(response.status_xml)
+            r = self.docmd(self.tomcat.status_xml)
+            root = xml.dom.minidom.parseString(r.status_xml)
+            self.pout(root.toprettyxml(indent='   '))
 
     def help_status(self):
         self.exit_code = 0
