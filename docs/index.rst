@@ -4,8 +4,9 @@ tomcatmanager
 .. toctree::
    :maxdepth: 2
 
-   tomcat-manager
-   library
+   install
+   interactive
+   package
    api/index.rst
    contributing
 

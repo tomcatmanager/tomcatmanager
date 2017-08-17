@@ -1,5 +1,5 @@
-Command Line
-============
+Interactive Use
+===============
 
 Overview
 --------

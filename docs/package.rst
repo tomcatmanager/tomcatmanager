@@ -1,5 +1,5 @@
-Guide
-=====
+Use from Python
+===============
 
 Overview
 --------

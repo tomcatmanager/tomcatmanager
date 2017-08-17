@@ -1,7 +1,7 @@
-API
-===
+API Documentation
+=================
 
-API documentation for tomcatmanager |release|
+Python API documentation for tomcatmanager |release|
 
 .. automodule:: tomcatmanager
 
