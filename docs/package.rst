@@ -58,11 +58,11 @@ Other application commands
 .. automethod:: tomcatmanager.TomcatManager.list
 
 
-Parallel Deployments
---------------------
+Parallel Deployment
+-------------------
 
 Tomcat supports a `parallel deployment feature
-<https://tomcat.apache.org/tomcat-8.0-doc/config/context.html#Parallel_deplo
+<https://tomcat.apache.org/tomcat-8.5-doc/config/context.html#Parallel_deplo
 yment>`_ which allows multiple versions of the same WAR to be deployed
 simultaneously at the same URL. To utilize this feature, you need to deploy
 an application with a version string. The combination of path and version
