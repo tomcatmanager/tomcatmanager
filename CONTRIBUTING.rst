@@ -1,5 +1,5 @@
-Developing tomcatmanager
-========================
+Contributing
+============
 
 Get Source Code
 ---------------
@@ -103,13 +103,23 @@ tests will fail.
 Documentation
 -------------
 
-To build the documentation::
+The documentation is written in reStructured Test, and turned into HTML using
+`Sphinx <http://www.sphinx-doc.org>`_::
 
    $ cd docs
    $ make html
 
-The output will be in ``build/docs/html``.
+The output will be in ``docs/build/html``.
 
+If you are doing a lot of documentation work, the `sphinx-autobuild
+<https://github.com/GaretJax/sphinx-autobuild>`_ module has been integrated.
+Type::
+
+   $ cd docs
+   $ make livehtml
+
+Then point your browser at `<http://localhost:8000>`_ to see the documentation
+automatically rebuilt as you save your changes.
 
 Make a Release
 --------------

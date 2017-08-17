@@ -1,5 +1,5 @@
-Using TomcatManager from Python
-===============================
+Guide
+=====
 
 Overview
 --------

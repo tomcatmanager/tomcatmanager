@@ -1,5 +1,8 @@
-tomcat-manager command line tool
-================================
+Command Line
+============
+
+Overview
+--------
 
 This script can either be used in command line mode or interactive mode. To
 use interactive mode you can do::

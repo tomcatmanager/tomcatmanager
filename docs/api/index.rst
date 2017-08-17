@@ -1,5 +1,5 @@
-tomcatmanager api
-=================
+API
+===
 
 API documentation for tomcatmanager |release|
 
