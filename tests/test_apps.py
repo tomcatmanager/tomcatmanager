@@ -28,7 +28,7 @@ import pytest
 
 import tomcatmanager as tm
 
-from test_manager import TestManagerBase
+from tests.test_manager import TestManagerBase
 
 
 ###

@@ -4,8 +4,8 @@
 import os
 import pytest
 
-from tests.mock_server80 import start_mock_server80
 import tomcatmanager as tm
+from tests.mock_server80 import start_mock_server80
 
 ###
 #
