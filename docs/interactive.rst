@@ -111,15 +111,15 @@ one of the methods just described in :ref:`interactive_connect`.
 
 For our first example, let's assume we have a WAR file already on our server,
 in ``/tmp/myfancyapp.war``. To deploy this WAR file to
-``http://www.example.com/fancy``::
+``https://www.example.com/fancy``::
 
    tomcat-manager>deploy server /tmp/myfancyapp.war /fancy
 
 Now let's say I just compiled a WAR file on my laptop. It's available at
-``~/src/sparkles/dist/sparklesv2.0.5.war``. I'd like to deploy it to
-``https://www.example.com/sparkles``::
+``~/src/shiny/dist/shinyv2.0.5.war``. I'd like to deploy it to
+``https://www.example.com/shiny``::
 
-   tomcat-manager>deploy local ~/src/sparkles/dist/sparklesv2.0.5.war /sparkles
+   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny
 
 
 Parallel Deployment
@@ -132,46 +132,46 @@ simultaneously at the same URL. To utilize this feature, you need to deploy
 an application with a version string. The combination of path and version
 string uniquely identify the application.
 
-Let's revisit our 'sparkles' app. This time when I deploy, I'm going to specify a
+Let's revisit our 'shiny' app. This time when I deploy, I'm going to specify a
 version string:
 
 .. code-block:: none
 
-   tomcat-manager>deploy local ~/src/sparkles/dist/sparklesv2.0.5.war /sparkles v2.0.5
+   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny v2.0.5
    tomcat-manager>list
    Path                     Status  Sessions Directory
    ------------------------ ------- -------- ------------------------------------
    /                        running        0 ROOT
    /manager                 running        0 manager
-   /sparkles                running        0 sparkles##v2.0.5
+   /shiny.                  running        0 shiny##v2.0.5
 
-Later today, I make a bug fix to 'sparkles', and build version 2.0.6 of the
+Later today, I make a bug fix to 'shiny', and build version 2.0.6 of the
 app. Parallel deployment allows me to deploy two versions of that app at the
 same path, and Tomcat will migrate users to the new version over time as their
 sessions expire in version 2.0.5.
 
 .. code-block:: none
 
-   tomcat-manager>deploy local ~/src/sparkles/dist/sparklesv2.0.6.war /sparkles v2.0.6
+   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.6.war /shiny v2.0.6
    tomcat-manager>list
    Path                     Status  Sessions Directory
    ------------------------ ------- -------- ------------------------------------
    /                        running        0 ROOT
    /manager                 running        0 manager
-   /sparkles                running       12 sparkles##v2.0.5
-   /sparkles                running        0 sparkles##v2.0.6
+   /shiny                   running       12 shiny##v2.0.5
+   /shiny                   running        0 shiny##v2.0.6
 
 Once all the sessions have been migrated to version 2.0.6, I can undeploy version 2.0.5:
 
 .. code-block:: none
 
-   tomcat-manager>undeploy /sparkles v2.0.5
+   tomcat-manager>undeploy /shiny v2.0.5
    tomcat-manager>list
    Path                     Status  Sessions Directory
    ------------------------ ------- -------- ------------------------------------
    /                        running        0 ROOT
    /manager                 running        0 manager
-   /sparkles                running        9 sparkles##v2.0.6
+   /shiny.                  running        9 shiny##v2.0.6
    
 The following command support the optional version string, which makes parallel deployment possible:
 
