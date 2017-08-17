@@ -1,14 +1,18 @@
 Installation
 ============
 
-You need Python 3.4 or higher.
-
-After that, simply type::
+You need Python 3.4 or higher. Install using ``pip``::
 
    pip install tomcatmanager
 
-Works on Windows, macOS, and Linux. Now what?
+Works on Windows, macOS, and Linux.
 
-You can use tomcatmanager :doc:`interactively from the command line or shell
-<interactive>`, or you can :doc:`write your own python code which imports the
+Now what?
+
+If you are in a hurry to :doc:`get started with the command line tool
+<interactive>`, type::
+
+   tomcat-manager -h
+
+Or, you can start :doc:`writing your own python code which imports the
 package <package>`.
