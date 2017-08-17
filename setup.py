@@ -31,9 +31,9 @@ setup(
 	description='A command line tool and python library for managing a tomcat server.',
 	long_description=long_description,
 
-	author='Kotfu',
-	author_email='kotfu@kotfu.net',
-	url='https://github.com/kotfu/tomcat-manager',
+	author='Jared Crapo',
+	author_email='jared@kotfu.net',
+	url='https://github.com/tomcatmanager/tomcatmanager',
 	license='MIT',
 
 	classifiers=[
