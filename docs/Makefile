@@ -7,7 +7,7 @@ SPHINXBUILD   = python3 -msphinx
 SPHINXPROJ    = tomcatmanager
 SOURCEDIR     = .
 BUILDDIR      = build
-AUTOBUILDDIRS = -z ../tomcatmanager -z ../tests -z ..
+AUTOBUILDDIRS = -z ../tomcatmanager -z ../tests
 
 # Put it first so that "make" without argument is like "make help".
 help:
