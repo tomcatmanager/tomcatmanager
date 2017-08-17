@@ -62,6 +62,7 @@ html_theme_options = {
     'show_powered_by': 'false',
     'description': 'Command line tool and python library for managing a Tomcat server.',
     'sidebar_width': '260px',
+    'page_width': '1135px',
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
