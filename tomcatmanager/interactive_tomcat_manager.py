@@ -84,14 +84,14 @@ Options
     
     --help, -h        show command line usage
 """
-import argparse
 import sys
 import os
 import traceback
 import getpass
 import cmd2
-import urllib.request
 import xml.dom.minidom
+import appdirs
+import configparser
 
 import tomcatmanager as tm
 
@@ -100,7 +100,7 @@ import tomcatmanager as tm
 #
 version_number=tm.__version__
 prog_name='tomcat-manager'
-version_string='%s %s (works with Tomcat >= 7.0 and <= 8.5)' % (prog_name, version_number)
+version_string='{} {} (works with Tomcat >= 7.0 and <= 8.5)'.format(prog_name, version_number)
 
 
 def requires_connection(f):
@@ -136,6 +136,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.tomcat = None
         self.debug_flag = False
         self.exit_code = None
+        
+        # read in the user configuration file
+        self.config = self._get_config()
 
         # settings for cmd2.Cmd
         self.prompt = prog_name + '>'
@@ -155,6 +158,31 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.exit_code = 127
         self.perr('unknown command: ' + line)
 
+    ###
+    #
+    # Configuration file methods
+    #
+    ###
+    @property
+    def configfile(self):
+        dirs = appdirs.AppDirs(prog_name, prog_name)
+        filename = prog_name + '.ini'
+        return os.path.join(dirs.user_config_dir, filename)
+        
+    @staticmethod
+    def _get_config():
+        """
+        Find and parse the user config file and make it available
+        as self.config
+        """
+        config = configparser.ConfigParser()
+        try:
+            fileobj = open(self.configfile(), 'r')
+            config.read_file(fileobj)
+        except:
+            pass
+        return config
+        
     ###
     #
     # Convenience and shared methods.
@@ -211,22 +239,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     ###
     #
-    # Miscellaneous commands.
+    # Connecting to Tomcat
     #
     ###
-    def do_exit(self, args):
-        """exit the interactive manager"""
-        self.exit_code = 0
-        return self._STOP_AND_EXIT
-
-    def do_quit(self, args):
-        """same as exit"""
-        return self.do_exit(args)
-
-    def do_eof(self, args):
-        """Exit on the end-of-file character"""
-        return self.do_exit(args)
-
     def do_connect(self, args):
         url = None
         username = None
@@ -622,6 +637,44 @@ extreme caution on production systems.""")
     # miscellaneous user accessible commands
     #
     ###
+    def do_exit(self, args):
+        """exit the interactive manager"""
+        self.exit_code = 0
+        return self._STOP_AND_EXIT
+
+    def do_quit(self, args):
+        """same as exit"""
+        return self.do_exit(args)
+
+    def do_eof(self, args):
+        """Exit on the end-of-file character"""
+        return self.do_exit(args)
+
+    def do_config(self, args):
+        """show the location of the config file"""
+        if len(args.split()) == 1:
+            action = args.split()[0]
+            if action == 'file':
+                self.exit_code = 0
+                self.pout(self.configfile)
+            else:
+                self.help_config()
+                self.exit_code = 2                
+        else:
+            self.help_config()
+            self.exit_code = 2
+
+
+    def help_config(self):
+        self.exit_code = 0
+        self.pout("""Usage: config {action}
+
+Manage the user configuration file.
+
+{action} is one of the following:
+  
+  file  show the location of the user configuration file""")
+
     def do_version(self, args):
         self.exit_code = 0
         self.pout(version_string)
