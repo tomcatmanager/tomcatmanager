@@ -60,9 +60,9 @@ You have to specify all of this on the command line. In this example, we used
 ``list`` as our command. Any command that works in the interactive mode works
 on the command line.
 
-Note how we check the exit code in the shell. ``tomcat-manager`` knows whether the 
-command to the tomcat server completed successfully or not, and sets the shell exit
-code appropriately. The shell exit codes are:
+Note how we check the exit code in the shell. ``tomcat-manager`` knows whether
+the command to the tomcat server completed successfully or not, and sets the
+shell exit code appropriately. The shell exit codes are:
 
    | **0** - command completed succesfully
    | **1** - command had an error
