@@ -266,7 +266,9 @@ Of course tab completion works on shell commands.
 Python Interpreter
 ------------------------------------
 
-You can launch a python interpreter::
+You can launch a python interpreter:
+
+.. code-block:: none
 
    tomcat-manager> py
 	Python 3.6.1 (default, Apr  4 2017, 09:40:51)
