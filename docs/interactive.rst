@@ -105,7 +105,7 @@ file over the network so Tomcat can deploy it.
 
 For all of these examples, lets assume I have a Tomcat server running far away
 in a data center somewhere, accessible at ``https://www.example.com``. I'm
-running the command line ```tomcat-manager`` program on my laptop.
+running the command line ``tomcat-manager`` program on my laptop.
 We'll also assume that we have already connected to the Tomcat server, using
 one of the methods just described in :ref:`interactive_connect`.
 
@@ -115,9 +115,9 @@ in ``/tmp/myfancyapp.war``. To deploy this WAR file to
 
    tomcat-manager>deploy server /tmp/myfancyapp.war /fancy
 
-Now let's say I just compiled a WAR file on my laptop. It's available at
-``~/src/shiny/dist/shinyv2.0.5.war``. I'd like to deploy it to
-``https://www.example.com/shiny``::
+Now let's say I just compiled a WAR file on my laptop for an app called
+`shiny`. It's saved at ``~/src/shiny/dist/shinyv2.0.5.war``. I'd like to deploy
+it to ``https://www.example.com/shiny``::
 
    tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny
 
@@ -132,7 +132,7 @@ simultaneously at the same URL. To utilize this feature, you need to deploy
 an application with a version string. The combination of path and version
 string uniquely identify the application.
 
-Let's revisit our 'shiny' app. This time when I deploy, I'm going to specify a
+Let's revisit our `shiny` app. This time when I deploy, I'm going to specify a
 version string:
 
 .. code-block:: none

@@ -6,6 +6,7 @@ tomcatmanager
 
    install
    interactive
+   commandline
    package
    api/index.rst
    contributing
