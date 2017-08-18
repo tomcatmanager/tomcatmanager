@@ -61,38 +61,13 @@ class TomcatManager:
             not isinstance(obj, (str, bytes, list, tuple, collections.Mapping))
         ])
         
-    def __init__(self, url=None, user=None, password=None):
+    def __init__(self):
         """
         Initialize a new TomcatManager object.
-        
-        :param url:      url where the Tomcat Manager web application is
-                         deployed
-        :param userid:   userid to authenticate
-        :param password: password to authenticate
-
-        Initializing the object with a url and credentials does not try to
-        connect to the server. It just stores the url and credentials.
-        
-        Usage::
-        
-            >>> import tomcatmanager as tm
-            >>> url = 'http://localhost:8080/manager'
-            >>> userid = 'ace'
-            >>> password = 'newenglandclamchowder'        
-            >>> tomcat = tm.TomcatManager(url, userid, password)
-        
-        or::
-        
-            >>> tomcat = tm.TomcatManager(url=url, userid=userid, \\
-            ...     password=password)
-        
-        or::
-        
-            >>> tomcat = tm.TomcatManager()
         """
-        self._url = url
-        self._user = user
-        self._password = password
+        self._url = None
+        self._user = None
+        self._password = None
 
     def _get(self, cmd, payload=None):
         """
@@ -101,7 +76,12 @@ class TomcatManager:
         :return: `TomcatManagerResponse` object
         """
         base = self._url or ''
-        url = base + '/text/' + cmd
+        # if we have no _url, don't add other stuff to it because it makes
+        # the exceptions hard to understand
+        if base:
+            url = base + '/text/' + cmd
+        else:
+            url = ''
         r = TomcatManagerResponse()
         r.response = requests.get(
                 url,
@@ -115,14 +95,14 @@ class TomcatManager:
     # convenience and utility methods
     #
     ###
-    def connect(self, url=None, user=None, password=None):
+    def connect(self, url, user=None, password=None):
         """
         Connect to a Tomcat Manager server.
         
         :param url:      url where the Tomcat Manager web application is
                          deployed
-        :param user:     user to authenticate with
-        :param password: password to authenticate with
+        :param user:     (optional) user to authenticate with
+        :param password: (optional) password to authenticate with
         :return:         `TomcatManagerResponse` object
         
         You don't have to connect before using any other commands. If you
@@ -133,7 +113,7 @@ class TomcatManager:
         - provide a convenient mechanism to validate you can actually
           connect to the server
         - allow you to inspect the response so you can see why you can't connect
-
+        
         Usage::
         
             >>> import tomcatmanager as tm
@@ -184,7 +164,7 @@ class TomcatManager:
         r = self._get('serverinfo')
         
         if not r.ok:
-            # unset our saved parameters if we fail to connect
+            # don't save the parameters if we don't succeed
             self._url = None
             self._user = None
             self._password = None
