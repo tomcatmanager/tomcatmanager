@@ -124,8 +124,20 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     
     def __init__(self, prog_name):
 
-        cmd2.Cmd.__init__(self)
+        #
+        # configure Cmd2.Cmd
+        unused = ['abbrev', 'continuation_prompt', 'echo']
+        for setting in unused:
+            try:
+                self.settable.pop(setting)
+            except:
+                pass
         
+        cmd2.Cmd.__init__(self)
+        self.allow_cli_args = False
+        
+        #
+        # configure Cmd2Config
         self.config_defaults = {
             'settings': {
                 'prompt': prog_name + '>',
@@ -137,8 +149,6 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         self.debug_flag = False
         self.exit_code = None
         
-        # settings for cmd2.Cmd
-        self.allow_cli_args = False
 
 
     ###
