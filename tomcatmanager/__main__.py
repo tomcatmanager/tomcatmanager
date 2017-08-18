@@ -66,13 +66,13 @@ def main(argv=None):
                 if not args.password:
                     args.password = getpass.getpass()
                 itm.onecmd('connect %s %s %s' % (args.manager_url, args.user, args.password))
-                if itm.exit_code == 0:
+                if itm.exit_code == itm.exit_codes.success:
                     itm.onecmd( '%s %s' % (args.command, ' '.join(args.arg)) )
                 return itm.exit_code
 
             else:
                 itm.onecmd('connect %s' % args.manager_url)
-                if itm.exit_code == 0:
+                if itm.exit_code == itm.exit_codes.success:
                     itm.onecmd( '%s %s' % (args.command, ' '.join(args.arg)) )
                 return itm.exit_code
         else:
@@ -82,12 +82,12 @@ def main(argv=None):
                 if not args.password:
                     args.password = getpass.getpass()
                 itm.onecmd('connect %s %s %s' % (args.manager_url, args.user, args.password))
-                if itm.exit_code == 0:
+                if itm.exit_code == itm.exit_codes.success:
                     itm.cmdloop()
                 return itm.exit_code
             else:
                 itm.onecmd('connect %s' % args.manager_url)
-                if itm.exit_code == 0:
+                if itm.exit_code == itm.exit_codes.success:
                     itm.cmdloop()
                 return itm.exit_code
     else:

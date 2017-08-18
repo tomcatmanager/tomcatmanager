@@ -90,6 +90,7 @@ import traceback
 import getpass
 import cmd2
 import xml.dom.minidom
+from requests.structures import LookupDict
 
 import tomcatmanager as tm
 from .cmd2_config import Cmd2Config
@@ -102,7 +103,7 @@ def requires_connection(f):
             f(self, *args, **kwargs)
         else:
             # print the message
-            self.exit_code = 1
+            self.exit_code = self.exit_codes.error
             self.perr('not connected')
     return _requires_connection
 
@@ -111,13 +112,20 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     """an interactive command line tool for tomcat manager
     
     each command sets the value of the instance variable exit_code, which follows
-    bash behavior for exit codes (available via $?):
-    
-    0 - completed successfully
-    1 - error
-    2 - improper usage
-    127 - unknown command
+    bash behavior for exit codes (available via $?)
     """
+    EXIT_CODES = {
+
+        # 'number': 'name'
+        0: 'success',
+        1: 'error',
+        2: 'usage',
+      127: 'command_not_found',
+    }
+    
+    exit_codes = LookupDict(name='exit_codes')
+    for code, title in EXIT_CODES.items():
+        setattr(exit_codes, title, code)
 
     # settings for cmd2.Cmd
     cmd2.Cmd.shortcuts.update({'$?': 'exit_code' })
@@ -145,11 +153,12 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         }
         Cmd2Config.__init__(self, prog_name)
 
+        #
+        # prepare our own stuff
         self.tomcat = None
         self.debug_flag = False
         self.exit_code = None
         
-
 
     ###
     #
@@ -162,7 +171,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
 
     def default(self, line):
         """what to do if we don't recognize the command the user entered"""
-        self.exit_code = 127
+        self.exit_code = self.exit_codes.command_not_found
         self.perr('Unknown command: ' + line)
 
     ###
@@ -176,7 +185,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         
     def perr(self, msg=''):
         """convenience method to print error messages"""
-        print('Error: {}'.format(msg), file=sys.stderr)
+        print(msg, file=sys.stderr)
 
     def pdebug(self, msg=''):
         """convenience method to print debugging messages"""
@@ -196,12 +205,12 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         Sets exit_code to 0 and calls {func}. If func throws a TomcatError,
         set exit_code to 1 and print the exception
         """
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         r = func(*args, **kwargs)
         try:
             r.raise_for_status()
         except tm.TomcatError as err:
-            self.exit_code = 1
+            self.exit_code = self.exit_codes.failure
             self.perr(str(err))
         return r
 
@@ -213,11 +222,11 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
             path = args[0]
             if len(args) == 2:
                 version = args[1]
-            self.exit_code = 0
+            self.exit_code = self.exit_codes.success
             return self.docmd(func, path, version)
         else:
             help_func()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
 
     ###
     #
@@ -225,7 +234,6 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     #
     ###
     def do_connect(self, args):
-        import pdb; pdb.set_trace()
         url = None
         username = None
         password = None
@@ -248,16 +256,16 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
             self.tomcat = tm.TomcatManager(url, username, password)
             if self.tomcat.is_connected:
                 self.pdebug('connected to tomcat manager at {}'.format(url))
-                self.exit_code = 0
+                self.exit_code = self.exit_codes.success
             else:
                 self.perr('tomcat manager not found at {}'.format(url))
-                self.exit_code = 1
+                self.exit_code = self.exit_codes.error
         except ValueError:
             self.help_connect()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
 
     def help_connect(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: connect url [userid] [password]
 
 Connect to a tomcat manager instance.
@@ -288,21 +296,21 @@ with no authentication.""")
             if local.startswith(src): src = local
             
             if src == server:
-                self.exit_code = 0
+                self.exit_code = self.exit_codes.success
                 self.docmd(self.tomcat.deploy, path, serverwar=warfile,
                         update=update, version=version)
             elif src == local:
                 warfile = os.path.expanduser(warfile)
                 fileobj = open(warfile, 'rb')
-                self.exit_code = 0
+                self.exit_code = self.exit_codes.success
                 self.docmd(self.tomcat.deploy, path, localwar=fileobj,
                         update=update, version=version)
             else:
                 show_help()
-                self.exit_code = 2
+                self.exit_code = self.exit_codes.usage
         else:
             show_help()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
 
     def deploy_base_help(self):
         """common help string for the deploy() and redeploy()"""
@@ -325,7 +333,7 @@ with no authentication.""")
         self.deploy_base(args, self.help_deploy, False)
 
     def help_deploy(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: deploy server|local {warfile} {path} [version]
 
 Install a war file containing a tomcat application in the tomcat server.""")
@@ -336,7 +344,7 @@ Install a war file containing a tomcat application in the tomcat server.""")
         self.deploy_base(args, self.help_redeploy, True)
 
     def help_redeploy(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: redeploy server|local {warfile} {path} [version]
 
 Remove the application currently installed at a given path and install a
@@ -351,14 +359,14 @@ new war file there.""")
             path = args[0]
             if len(args) == 2:
                 version = args[1]
-            self.exit_code = 0
+            self.exit_code = self.exit_codes.success
             self.docmd(self.tomcat.undeploy, path, version)
         else:
             self.help_undeploy()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
 
     def help_undeploy(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: undeploy {path} [version]
 
 Remove an application from the tomcat server.
@@ -373,7 +381,7 @@ Remove an application from the tomcat server.
         self.base_path_version(args, self.tomcat.start, self.help_start)
 
     def help_start(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: start {path} [version]
 
 Start a tomcat application that has been deployed but isn't running.
@@ -388,7 +396,7 @@ Start a tomcat application that has been deployed but isn't running.
         self.base_path_version(args, self.tomcat.stop, self.help_stop)
 
     def help_stop(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: stop {path} [version]
 
 Stop a tomcat application and leave it deployed on the server.
@@ -403,7 +411,7 @@ Stop a tomcat application and leave it deployed on the server.
         self.base_path_version(args, self.tomcat.reload, self.help_reload)
 
     def help_reload(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: reload {path} [version]
 
 Start and stop a tomcat application.
@@ -421,12 +429,12 @@ Start and stop a tomcat application.
             path = args[0]
             if len(args) == 2:
                 version = args[1]
-            self.exit_code = 0
+            self.exit_code = self.exit_codes.success
             r = self.docmd(self.tomcat.sessions, path, version)
             if r.ok: self.pout(r.sessions)
         else:
             self.help_sessions()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
 
     def help_sessions(self):
         self.pout("""Usage: sessions {path} [version]
@@ -449,15 +457,15 @@ Show active sessions for a tomcat application.
             else:
                 version = args[1]
                 idle = args[2]
-            self.exit_code = 0
+            self.exit_code = self.exit_codes.success
             r = self.docmd(self.tomcat.expire, path, version, idle)
             if r.ok: self.pout(r.sessions)
         else:
             self.help_expire()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
 
     def help_expire(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: expire {path} [version] {idle}
 
 Expire idle sessions.
@@ -473,7 +481,7 @@ Expire idle sessions.
     def do_list(self, args):
         if args:
             self.help_list()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
         else:
             response = self.docmd(self.tomcat.list)
             fmt = '{:24.24} {:7.7} {:>8.8} {:36.36}'
@@ -485,7 +493,7 @@ Expire idle sessions.
                 self.pout(fmt.format(path, status, session, directory))
 
     def help_list(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: list
 
 Show all installed applications.""")
@@ -500,13 +508,13 @@ Show all installed applications.""")
     def do_serverinfo(self, args):
         if args:
             self.help_serverinfo()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
         else:
             r = self.docmd(self.tomcat.server_info)
             self.pout(r.result)
 
     def help_serverinfo(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: serverinfo
 
 Show information about the server.""")
@@ -515,14 +523,14 @@ Show information about the server.""")
     def do_status(self, args):
         if args:
             self.help_status()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
         else:
             r = self.docmd(self.tomcat.status_xml)
             root = xml.dom.minidom.parseString(r.status_xml)
             self.pout(root.toprettyxml(indent='   '))
 
     def help_status(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: status
 
 Show server status information in xml format.""")
@@ -531,13 +539,13 @@ Show server status information in xml format.""")
     def do_vminfo(self, args):
         if args:
             self.help_vminfo()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
         else:
             response = self.docmd(self.tomcat.vm_info)
             self.pout(response.vm_info)
 
     def help_vminfo(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: vminfo
 
 Show diagnostic information about the jvm.""")
@@ -546,13 +554,13 @@ Show diagnostic information about the jvm.""")
     def do_sslconnectorciphers(self, args):
         if args:
             self.help_sslconnectorciphers()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
         else:
             response = self.docmd(self.tomcat.ssl_connector_ciphers)
             self.pout(response.ssl_connector_ciphers)
     
     def help_sslconnectorciphers(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: sslconnectorciphers
 
 Show SSL/TLS ciphers configured for each connector.""")
@@ -561,13 +569,13 @@ Show SSL/TLS ciphers configured for each connector.""")
     def do_threaddump(self, args):
         if args:
             self.help_threaddump()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
         else:
             response = self.docmd(self.tomcat.thread_dump)
             self.pout(response.thread_dump)
 
     def help_threaddump(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: threaddump
 
 Show a jvm thread dump.""")
@@ -585,10 +593,10 @@ Show a jvm thread dump.""")
                 self.pout('{}: {}'.format(resource, classname))
         else:
             self.help_resources()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
 
     def help_resources(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: resources [class_name]
 
 Show global jndi resources configured in tomcat.
@@ -600,14 +608,14 @@ class_name  Optional fully qualified java class name of the resource type
     def do_findleakers(self, args):
         if args:
             self.help_findleakers()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.usage
         else:
             response = self.docmd(self.tomcat.find_leakers)
             for leaker in response.leakers:
                 self.pout(leaker)
     
     def help_findleakers(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: findleakers
 
 Show tomcat applications that leak memory.
@@ -622,7 +630,7 @@ extreme caution on production systems.""")
     ###
     def do_exit(self, args):
         """exit the interactive manager"""
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         return self._STOP_AND_EXIT
 
     def do_quit(self, args):
@@ -634,11 +642,11 @@ extreme caution on production systems.""")
         return self.do_exit(args)
 
     def do_version(self, args):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout('{} {} (works with Tomcat >= 7.0 and <= 8.5)'.format(self.prog_name, tm.__version__))
     
     def help_version(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: version
         
 Show version information.""")
@@ -649,17 +657,17 @@ Show version information.""")
         self.pout(self.exit_code)
 
     def help_exit_code(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: exit_code
         
 Show the value of the exit_code variable, similar to $? in ksh/bash""")
                 
     def help_commandline(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout(__doc__)
 
     def do_license(self, args):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""
 Copyright 2007 Jared Crapo
 
@@ -683,11 +691,11 @@ THE SOFTWARE.
 """)
 
     def help_license(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: license
         
 Show license information.""")
 
     def help_help(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout('here\'s a dollar, you\'ll have to buy a clue elsewhere')

@@ -26,6 +26,7 @@ import os
 import configparser
 import appdirs
 
+
 class Cmd2Config():
     """
     Mixin for Cmd2 which provides the following functionality:
@@ -89,22 +90,23 @@ class Cmd2Config():
         if len(args.split()) == 1:
             action = args.split()[0]
             if action == 'file':
-                self.exit_code = 0
                 self.pout(self._configfile)
+                self.exit_code = self.exit_codes.success
             elif action == 'edit':
                 self.config_edit()
             else:
                 self.help_config()
-                self.exit_code = 2                
+                self.exit_code = self.exit_codes.error
         else:
             self.help_config()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.error
 
     def config_edit(self):
         """do the 'config edit' command"""
         if not self.editor:
-            self.exit_code = 1
-            raise EnvironmentError("Please use 'set editor' to specify your text editing program of choice.")
+            self.perr("No editor. Use 'set editor={path}' to specify one.")
+            self.exit_code = self.exit_codes.error
+            return
         
         # ensure the configuration directory exists
         configdir = os.path.dirname(self._configfile)
@@ -113,22 +115,22 @@ class Cmd2Config():
 
         # go edit the file
         cmd = '{} "{}"'.format(self.editor, self._configfile)
-        self.pdebug("Executing '{}'".format(cmd))
+        self.pdebug("Executing '{}'...".format(cmd))
         os.system(cmd)
         
         # read it back in and apply it
         self.pout('Reloading configuration...')
         self.config = self._load_config()
         self._apply_config()
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
 
     def help_config(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: config {action}
 
 Manage the user configuration file.
 
-{action} is one of the following:
+action is one of the following:
   
   file  show the location of the user configuration file
   edit  edit the user configuration file""")
@@ -141,7 +143,7 @@ Manage the user configuration file.
     def do_show(self, args):
         if len(args.split()) > 1:
             self.help_show()
-            self.exit_code = 2
+            self.exit_code = self.exit_codes.error
             return
 
         param = args.strip().lower()
@@ -152,16 +154,24 @@ Manage the user configuration file.
                 val = str(getattr(self, setting))
                 result[setting] = '{}={}'.format(setting, self._pythonize(val))
                 maxlen = max(maxlen, len(result[setting]))
+        # make a little extra space
         maxlen += 1
         if result:
             for setting in sorted(result):
                 self.pout('{} # {}'.format(result[setting].ljust(maxlen), self.settable[setting]))
+            self.exit_code = self.exit_codes.success
         else:
-            raise LookupError("Parameter '%s' not supported (type 'show' for list of parameters)." % param)        
-
+            self.perr("'{}' is not a valid setting.".format(param_name))
+            self.exit_code = self.exit_codes.error
 
     def help_show(self):
-        pass
+        self.exit_code = self.exit_codes.success
+        self.pout("""Usage: show [setting]
+
+Show one or more settings and their values.
+
+[setting]  Optional name of the setting to show the value for. If omitted
+           show the values of all settings.""")
 
     def do_set(self, args):
         if args:
@@ -171,25 +181,25 @@ Manage the user configuration file.
                 config.read_string(setting_string)
             except configparser.ParsingError as err:
                 self.perr(str(err))
-                self.exit_code = 1
+                self.exit_code = self.exit_code.error
                 return
             for param_name in config['settings']:
                 if param_name in self.settable:
                     self._change_setting(param_name, config['settings'][param_name])
-                    self.exit_code = 0
+                    self.exit_code = self.exit_codes.success
                 else:
                     self.perr("'{}' is not a valid setting".format(param_name))
-                    self.exit_code = 1
+                    self.exit_code = self.exit_code.error
         else:
-            self.exit_code = 2
+            self.exit_code = self.exit_code.usage
 
     def help_set(self):
-        self.exit_code = 0
+        self.exit_code = self.exit_codes.success
         self.pout("""Usage: set {setting}={value}
 
 Change a setting.
 
-  setting  Any one of the valid settings. Use 'show' to see a list of valie
+  setting  Any one of the valid settings. Use 'show' to see a list of valid
            settings.
   value    The value for the setting.
 """)
