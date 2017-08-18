@@ -96,7 +96,7 @@ class TestManager(TestManagerBase):
         tomcat = tm.TomcatManager()
         r = tomcat.connect(
                 tomcat_manager_server['url'],
-                tomcat_manager_server['userid'],
+                tomcat_manager_server['user'],
                 tomcat_manager_server['password']
             )
         assert isinstance(r, tm.models.TomcatManagerResponse)

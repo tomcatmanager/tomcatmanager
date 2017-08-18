@@ -34,14 +34,14 @@ import base64
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
 
-USERID='admin'
+USER='admin'
 PASSWORD='admin'
 
 
 class MockRequestHandler80(BaseHTTPRequestHandler):
     """Handle HTTP Requests like Tomcat Manager 8.0.x"""
 
-    AUTH_KEY = base64.b64encode('{}:{}'.format(USERID, PASSWORD).encode('utf-8')).decode('utf-8')
+    AUTH_KEY = base64.b64encode('{}:{}'.format(USER, PASSWORD).encode('utf-8')).decode('utf-8')
     TEXT_PATTERN = re.compile(r'^/manager/text/?$')
     # info commands
     LIST_PATTERN = re.compile(r'^/manager/text/list($|\?.*$)')
@@ -933,7 +933,7 @@ Default maximum session inactive interval 30 minutes
 def start_mock_server80():
     """start a mock Tomcat Manager application
     
-    returns the (url, userid, password) where the server is accessible
+    returns the (url, user, password) where the server is accessible
     """
 
     s = socket.socket(socket.AF_INET, type=socket.SOCK_STREAM)
@@ -948,5 +948,5 @@ def start_mock_server80():
     mock_server_thread.setDaemon(True)
     mock_server_thread.start()
     
-    return {'url': url, 'userid': USERID,
+    return {'url': url, 'user': USER,
             'password': PASSWORD, 'serverwar': '/path/to/server.war'}

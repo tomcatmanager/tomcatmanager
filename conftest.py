@@ -15,8 +15,8 @@ from tests.mock_server80 import start_mock_server80
 def pytest_addoption(parser):
     parser.addoption("--url", action="store", default=None,
         help="url: url of tomcat manager to test against instead of mock")
-    parser.addoption("--userid", action="store", default=None,
-        help="userid: use to authenticate")
+    parser.addoption("--user", action="store", default=None,
+        help="user: use to authenticate")
     parser.addoption("--password", action="store", default=None,
         help="password: use to authenticate")
     parser.addoption("--serverwar", action="store", default=None,
@@ -34,8 +34,8 @@ def tomcat_manager_server(request):
     if url:
         # use the server info specified on the command line
         tms = {'url': url}
-        userid = request.config.getoption("--userid")
-        tms.update({'userid': userid})
+        user = request.config.getoption("--user")
+        tms.update({'user': user})
         password = request.config.getoption("--password")
         tms.update({'password': password})
         return tms
@@ -55,7 +55,7 @@ def tomcat(tomcat_manager_server):
     tomcat = tm.TomcatManager()
     r = tomcat.connect(
             tomcat_manager_server['url'],
-            tomcat_manager_server['userid'],
+            tomcat_manager_server['user'],
             tomcat_manager_server['password']
         )
     return tomcat
