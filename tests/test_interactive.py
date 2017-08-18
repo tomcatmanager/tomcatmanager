@@ -41,22 +41,27 @@ def test__change_setting_with_invalid_param(itm):
         itm._change_setting(p, 'someval')
 
 
-setsuccess = [
+set_success = [
     ('prompt=tm>', 'tm>'),
+    ('prompt=tm> ', 'tm>'),
     ('prompt=t m>', 't m>'),
+    ('prompt="tm> "', 'tm> '),
+    ('prompt="tm> "   # some comment here', 'tm> '),
+    ('prompt="t\'m> "', "t\'m> "),
+    ('prompt="""h\'i"""', "h'i"),
 ]
-@pytest.mark.parametrize("arg, value", setsuccess)
+@pytest.mark.parametrize('arg, value', set_success)
 def test_do_set_success(itm, arg, value):
     itm.do_set(arg)
     assert itm.prompt == value
     assert itm.exit_code == 0
 
 
-setfail = [
+set_fail = [
     'thisisntaparam=somevalue',
     'thisisntaparam',
 ]
-@pytest.mark.parametrize("arg", setfail)
+@pytest.mark.parametrize('arg', set_fail)
 def test_do_set_fail(itm, arg):
     itm.do_set(arg)
     assert itm.exit_code == 1
@@ -91,6 +96,17 @@ booleans = [
     ('False', False),
     ('FALSE', False),
 ]
-@pytest.mark.parametrize("str, value", booleans)
+@pytest.mark.parametrize('str, value', booleans)
 def test__convert_to_boolean(itm, str, value):
     assert itm._convert_to_boolean(str) == value
+
+pythonizers = [
+    ('fred', 'fred'),
+    ('fred ', "'fred '"),
+    ("can't ", '"can\'t "'),
+    ('b"d', '\'b"d\''),
+    ('b\'|"d', "\'b\\'|\"d'"),
+]
+@pytest.mark.parametrize('str, value', pythonizers)
+def test_pythonize(itm, str, value):
+    assert itm._pythonize(str) == value

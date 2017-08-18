@@ -90,17 +90,9 @@ import traceback
 import getpass
 import cmd2
 import xml.dom.minidom
-import appdirs
-import configparser
 
 import tomcatmanager as tm
-
-
-#
-#
-version_number=tm.__version__
-prog_name='tomcat-manager'
-version_string='{} {} (works with Tomcat >= 7.0 and <= 8.5)'.format(prog_name, version_number)
+from .cmd2_config import Cmd2Config
 
 
 def requires_connection(f):
@@ -115,7 +107,7 @@ def requires_connection(f):
     return _requires_connection
 
 
-class InteractiveTomcatManager(cmd2.Cmd):
+class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     """an interactive command line tool for tomcat manager
     
     each command sets the value of the instance variable exit_code, which follows
@@ -127,34 +119,26 @@ class InteractiveTomcatManager(cmd2.Cmd):
     127 - unknown command
     """
 
-    # Possible boolean values
-    BOOLEAN_STATES = {'1': True, 'yes': True,  'y': True,   'true': True,   'on': True,
-                      '0': False, 'no': False, 'n': False, 'false': False, 'off': False}
-
     # settings for cmd2.Cmd
     cmd2.Cmd.shortcuts.update({'$?': 'exit_code' })
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, prog_name):
+
+        cmd2.Cmd.__init__(self)
+        
+        self.config_defaults = {
+            'settings': {
+                'prompt': prog_name + '>',
+            }
+        }
+        Cmd2Config.__init__(self, prog_name)
 
         self.tomcat = None
         self.debug_flag = False
         self.exit_code = None
         
-        self._config_defaults = {
-            'settings': {
-                'prompt': prog_name + '>',
-            }
-        }
-            
-        # read in the user configuration file
-        self.config = self._load_config()
-        self._apply_config()
-        
         # settings for cmd2.Cmd
         self.allow_cli_args = False
-
-        #self.prompt = prog_name + '>'
 
 
     ###
@@ -169,108 +153,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def default(self, line):
         """what to do if we don't recognize the command the user entered"""
         self.exit_code = 127
-        self.perr('unknown command: ' + line)
-
-    ###
-    #
-    # Configuration file methods
-    #
-    ###
-    @property
-    def configfile(self):
-        dirs = appdirs.AppDirs(prog_name, prog_name)
-        filename = prog_name + '.ini'
-        return os.path.join(dirs.user_config_dir, filename)
-        
-    def _load_config(self):
-        """
-        Find and parse the user config file and make it available
-        as self.config
-        
-        This starts with the defaults and overrides them with values
-        read from the config file.
-        """
-        config = EvaluatingConfigParser()
-        # load the defaults
-        config.read_dict(self._config_defaults)
-        
-        try:
-            with open(self.configfile, 'r') as f:
-                config.read_file(f)
-        except:
-            pass
-        return config
-
-    def _apply_config(self):
-        """apply the configuration to ourself"""
-        # settings will always exist because we put default values
-        # there in _get_config()
-        settings = self.config['settings']
-        for key in settings:
-            try:
-                self._change_setting(key, settings[key])
-            except ValueError:
-                pass
-
-    def do_set(self, args):
-        if args:
-            config = EvaluatingConfigParser()
-            setting_string = "[settings]\n{}".format(args)
-            try:
-                config.read_string(setting_string)
-            except configparser.ParsingError as err:
-                self.exit_code = 1
-                self.perr(str(err))
-                return
-            for param_name in config['settings']:
-                if param_name in self.settable:
-                    self._change_setting(param_name, config['settings'][param_name])
-                    self.exit_code = 0
-                else:
-                    self.perr("'{}' is not a valid setting".format(param_name))
-                    self.exit_code = 1
-        else:
-            self.exit_code = 2
-
-    def help_set(self):
-        self.exit_code = 0
-        self.pout("""Usage: set {setting}={value}
-
-Change a setting.
-
-  setting  Any one of the valid settings. Use 'show' to see a list of valie
-           settings.
-  value    The value for the setting.
-""")
-
-    def _change_setting(self, param_name, val):
-        """internal method to change a setting
-        
-        param_name must be in settable or this method with throw a ValueError
-        some parameters only accept boolean values, if you pass something that can't
-        be converted to a boolean, throw a ValueError
-        """
-        if param_name in self.settable:
-            current_val = getattr(self, param_name)
-            typ = type(current_val)
-            if typ == bool:
-                val = self._convert_to_boolean(val)
-            setattr(self, param_name, val)
-            if current_val != val:
-                try:
-                    onchange_hook = getattr(self, '_onchange_%s' % param_name)
-                    onchange_hook(old=current_val, new=val)
-                except AttributeError:
-                    pass
-        else:
-            raise ValueError
-
-    def _convert_to_boolean(self, value):
-        """Return a boolean value translating from other types if necessary.
-        """
-        if value.lower() not in self.BOOLEAN_STATES:
-            raise ValueError('Not a boolean: {}'.format(value))
-        return self.BOOLEAN_STATES[value.lower()]
+        self.perr('Unknown command: ' + line)
 
     ###
     #
@@ -740,57 +623,9 @@ extreme caution on production systems.""")
         """Exit on the end-of-file character"""
         return self.do_exit(args)
 
-    def do_config(self, args):
-        """show the location of the config file"""
-        if len(args.split()) == 1:
-            action = args.split()[0]
-            if action == 'file':
-                self.exit_code = 0
-                self.pout(self.configfile)
-            elif action == 'edit':
-                self.config_edit()
-            else:
-                self.help_config()
-                self.exit_code = 2                
-        else:
-            self.help_config()
-            self.exit_code = 2
-
-    def config_edit(self):
-        """do the 'config edit' command"""
-        if not self.editor:
-            self.exit_code = 1
-            raise EnvironmentError("Please use 'set editor' to specify your text editing program of choice.")
-        
-        # ensure the configuration directory exists
-        configdir = os.path.dirname(self.configfile)
-        if not os.path.exists(configdir):
-            os.makedirs(configdir)
-
-        # go edit the file
-        cmd = '{} "{}"'.format(self.editor, self.configfile)
-        self.pdebug("Executing '{}'".format(cmd))
-        os.system(cmd)
-        
-        # read it back in and apply it
-        self.config = self._load_config()
-        self._apply_config()
-        self.exit_code = 0
-
-    def help_config(self):
-        self.exit_code = 0
-        self.pout("""Usage: config {action}
-
-Manage the user configuration file.
-
-{action} is one of the following:
-  
-  file  show the location of the user configuration file
-  edit  edit the user configuration file""")
-
     def do_version(self, args):
         self.exit_code = 0
-        self.pout(version_string)
+        self.pout('{} {} (works with Tomcat >= 7.0 and <= 8.5)'.format(self.prog_name, tm.__version__))
     
     def help_version(self):
         self.exit_code = 0
@@ -846,15 +681,3 @@ Show license information.""")
     def help_help(self):
         self.exit_code = 0
         self.pout('here\'s a dollar, you\'ll have to buy a clue elsewhere')
-
-
-import ast
-class EvaluatingConfigParser(configparser.ConfigParser):
-    def get(self, section, option, **kwargs):
-        val = super().get(section, option, **kwargs)
-        if "'" in val or '"' in val:
-            try:
-                val = ast.literal_eval(val)
-            except:
-                pass
-        return val

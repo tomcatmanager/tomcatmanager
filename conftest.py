@@ -84,4 +84,4 @@ JVM Vendor: Oracle Corporation
 ###
 @pytest.fixture()
 def itm():
-    return tm.InteractiveTomcatManager()
+    return tm.InteractiveTomcatManager('tomcat-manager')
