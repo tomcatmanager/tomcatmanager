@@ -137,12 +137,21 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.debug_flag = False
         self.exit_code = None
         
+        self._config_defaults = {
+            'settings': {
+                'prompt': prog_name + '>',
+            }
+        }
+            
         # read in the user configuration file
-        self.config = self._get_config()
-
+        self.config = self._load_config()
+        self._apply_config()
+        
         # settings for cmd2.Cmd
-        self.prompt = prog_name + '>'
         self.allow_cli_args = False
+
+        #self.prompt = prog_name + '>'
+
 
     ###
     #
@@ -169,20 +178,34 @@ class InteractiveTomcatManager(cmd2.Cmd):
         filename = prog_name + '.ini'
         return os.path.join(dirs.user_config_dir, filename)
         
-    @staticmethod
-    def _get_config():
+    def _load_config(self):
         """
         Find and parse the user config file and make it available
         as self.config
+        
+        This starts with the defaults and overrides them with values
+        read from the config file.
         """
         config = configparser.ConfigParser()
+        # load the defaults
+        config.read_dict(self._config_defaults)
+        
         try:
-            fileobj = open(self.configfile(), 'r')
-            config.read_file(fileobj)
+            with open(self.configfile, 'r') as f:
+                config.read_file(f)
         except:
             pass
         return config
-        
+
+    def _apply_config(self):
+        """apply all settings from the config"""
+        # settings will always exist because we put default values
+        # there in _get_config()
+        settings = self.config['settings']
+
+        if 'prompt' in settings:
+            self.prompt = settings['prompt']
+
     ###
     #
     # Convenience and shared methods.
@@ -657,6 +680,8 @@ extreme caution on production systems.""")
             if action == 'file':
                 self.exit_code = 0
                 self.pout(self.configfile)
+            elif action == 'edit':
+                self.config_edit()
             else:
                 self.help_config()
                 self.exit_code = 2                
@@ -664,6 +689,26 @@ extreme caution on production systems.""")
             self.help_config()
             self.exit_code = 2
 
+    def config_edit(self):
+        """do the 'config edit' command"""
+        if not self.editor:
+            self.exit_code = 1
+            raise EnvironmentError("Please use 'set editor' to specify your text editing program of choice.")
+        
+        # ensure the configuration directory exists
+        configdir = os.path.dirname(self.configfile)
+        if not os.path.exists(configdir):
+            os.makedirs(configdir)
+
+        # go edit the file
+        cmd = '{} "{}"'.format(self.editor, self.configfile)
+        self.pdebug("Executing '{}'".format(cmd))
+        os.system(cmd)
+        
+        # read it back in and apply it
+        self.config = self._load_config()
+        self._apply_config()
+        self.exit_code = 0
 
     def help_config(self):
         self.exit_code = 0
@@ -673,7 +718,8 @@ Manage the user configuration file.
 
 {action} is one of the following:
   
-  file  show the location of the user configuration file""")
+  file  show the location of the user configuration file
+  edit  edit the user configuration file""")
 
     def do_version(self, args):
         self.exit_code = 0
