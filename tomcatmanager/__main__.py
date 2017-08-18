@@ -55,7 +55,7 @@ def main(argv=None):
         print("--" + str(args))
     
     itm = tm.InteractiveTomcatManager('tomcat-manager')
-    itm.change_setting('debug', args.debug)
+    itm._change_setting('debug', args.debug)
 
     if args.manager_url:
         if args.command:
