@@ -140,6 +140,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
                 self.settable.pop(setting)
             except:
                 pass
+        self.settable.update({'editor': 'Program used to edit files'})
         
         cmd2.Cmd.__init__(self)
         self.allow_cli_args = False
@@ -148,7 +149,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         # configure Cmd2Config
         self.config_defaults = {
             'settings': {
-                'prompt': prog_name + '>',
+                'prompt': prog_name + '> ',
             }
         }
         Cmd2Config.__init__(self, prog_name)
