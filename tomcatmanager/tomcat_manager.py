@@ -61,7 +61,7 @@ class TomcatManager:
             not isinstance(obj, (str, bytes, list, tuple, collections.Mapping))
         ])
         
-    def __init__(self, url=None, userid=None, password=None):
+    def __init__(self, url=None, user=None, password=None):
         """
         Initialize a new TomcatManager object.
         
@@ -91,7 +91,7 @@ class TomcatManager:
             >>> tomcat = tm.TomcatManager()
         """
         self._url = url
-        self._userid = userid
+        self._user = user
         self._password = password
 
     def _get(self, cmd, payload=None):
@@ -105,7 +105,7 @@ class TomcatManager:
         r = TomcatManagerResponse()
         r.response = requests.get(
                 url,
-                auth=(self._userid, self._password),
+                auth=(self._user, self._password),
                 params=payload
                 )
         return r
@@ -115,14 +115,14 @@ class TomcatManager:
     # convenience and utility methods
     #
     ###
-    def connect(self, url=None, userid=None, password=None):
+    def connect(self, url=None, user=None, password=None):
         """
         Connect to a Tomcat Manager server.
         
         :param url:      url where the Tomcat Manager web application is
                          deployed
-        :param userid:   userid to authenticate
-        :param password: password to authenticate
+        :param user:     user to authenticate with
+        :param password: password to authenticate with
         :return:         `TomcatManagerResponse` object
         
         You don't have to connect before using any other commands. If you
@@ -132,6 +132,7 @@ class TomcatManager:
         - give you a way to change the credentials on an existing object
         - provide a convenient mechanism to validate you can actually
           connect to the server
+        - allow you to inspect the response so you can see why you can't connect
 
         Usage::
         
@@ -178,9 +179,15 @@ class TomcatManager:
 
         """
         self._url = url
-        self._userid = userid
+        self._user = user
         self._password = password
         r = self._get('serverinfo')
+        
+        if not r.ok:
+            # unset our saved parameters if we fail to connect
+            self._url = None
+            self._user = None
+            self._password = None
         # hide the fact that we retrieved results, we don't
         # want people relying on or using this data
         r.result = ''
@@ -254,7 +261,7 @@ class TomcatManager:
             r = TomcatManagerResponse()
             r.response = requests.put(
                     url,
-                    auth=(self._userid, self._password),
+                    auth=(self._user, self._password),
                     params=params,
                     data=warobj,
                     )
@@ -484,7 +491,7 @@ class TomcatManager:
         r = TomcatManagerResponse()
         r.response = requests.get(
                 url,
-                auth=(self._userid, self._password),
+                auth=(self._user, self._password),
                 params={'XML': 'true'}
                 )
         r.result = r.response.text
