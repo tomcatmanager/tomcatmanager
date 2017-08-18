@@ -52,48 +52,39 @@ def main(argv=None):
 
     args = parser.parse_args()
     if args.debug:
-        print("--" + str(args))
+        print("--args=" + str(args), file=sys.stdout)
     
     itm = tm.InteractiveTomcatManager('tomcat-manager')
     itm._change_setting('debug', args.debug)
 
     if args.manager_url:
-        if args.command:
-            # we have a url and a command
-            # connect, and if successful, run the command
-            
-            if args.user:
-                if not args.password:
-                    args.password = getpass.getpass()
-                itm.onecmd('connect %s %s %s' % (args.manager_url, args.user, args.password))
-                if itm.exit_code == itm.exit_codes.success:
-                    itm.onecmd( '%s %s' % (args.command, ' '.join(args.arg)) )
-                return itm.exit_code
+        # try and connect
+        server_info = { 'url': args.manager_url, 'user': '', 'password': '' }
+        server_info['user'] = (args.user or '')
+        if args.user:
+            server_info['password'] = (args.password or '')
+        itm.onecmd('connect {url} {user} {password}'.format_map(server_info))
 
+        if args.command:
+            if itm.exit_code == itm.exit_codes.success:
+                # we connected successfully, go run the command
+                itm.onecmd('{} {}'.format(args.command, ' '.join(args.arg)))
+                return itm.exit_code
             else:
-                itm.onecmd('connect %s' % args.manager_url)
-                if itm.exit_code == itm.exit_codes.success:
-                    itm.onecmd( '%s %s' % (args.command, ' '.join(args.arg)) )
+                # we had a command, but we didn't successfully connect
+                # bail out without running the command
                 return itm.exit_code
         else:
-            # we have a url, but not a command
-            # connect, and if successful, enter the interactive command loop
-            if args.user:
-                if not args.password:
-                    args.password = getpass.getpass()
-                itm.onecmd('connect %s %s %s' % (args.manager_url, args.user, args.password))
-                if itm.exit_code == itm.exit_codes.success:
-                    itm.cmdloop()
-                return itm.exit_code
-            else:
-                itm.onecmd('connect %s' % args.manager_url)
-                if itm.exit_code == itm.exit_codes.success:
-                    itm.cmdloop()
-                return itm.exit_code
+            # we have no command, but we got a url, regardless of
+            # whether the connect command worked or didn't, let's drop
+            # into interactive mode
+            itm.cmdloop()
+            return itm.exit_code
     else:
-        # we don't have a manager url, enter the interactive command loop
+        # we don't have a manager url, enter the interactive mode
         itm.cmdloop()
         return itm.exit_code
+
 
 if __name__ == "__main__":
     sys.exit(main())
