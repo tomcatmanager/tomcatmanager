@@ -271,9 +271,12 @@ Change a setting.
     def _convert_to_boolean(self, value):
         """Return a boolean value translating from other types if necessary.
         """
-        if value.lower() not in self.BOOLEAN_STATES:
-            raise ValueError('Not a boolean: {}'.format(value))
-        return self.BOOLEAN_STATES[value.lower()]
+        if type(value) == bool:
+            return value
+        else:
+            if str(value).lower() not in self.BOOLEAN_STATES:
+                raise ValueError('Not a boolean: {}'.format(value))
+            return self.BOOLEAN_STATES[value.lower()]
 
     def _pythonize(self, value):
         """turn value into something the python interpreter can parse

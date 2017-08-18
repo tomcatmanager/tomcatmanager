@@ -95,6 +95,8 @@ booleans = [
     ('false', False),
     ('False', False),
     ('FALSE', False),
+    (   True, True),
+    (  False, False),
 ]
 @pytest.mark.parametrize('str, value', booleans)
 def test__convert_to_boolean(itm, str, value):
