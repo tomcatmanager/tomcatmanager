@@ -127,6 +127,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
     127 - unknown command
     """
 
+    # Possible boolean values
+    BOOLEAN_STATES = {'1': True, 'yes': True,  'y': True,   'true': True,   'on': True,
+                      '0': False, 'no': False, 'n': False, 'false': False, 'off': False}
+
     # settings for cmd2.Cmd
     cmd2.Cmd.shortcuts.update({'$?': 'exit_code' })
     
@@ -198,13 +202,75 @@ class InteractiveTomcatManager(cmd2.Cmd):
         return config
 
     def _apply_config(self):
-        """apply all settings from the config"""
+        """apply the configuration to ourself"""
         # settings will always exist because we put default values
         # there in _get_config()
         settings = self.config['settings']
+        for key in settings:
+            try:
+                self._change_setting(key, settings[key])
+            except ValueError:
+                pass
 
-        if 'prompt' in settings:
-            self.prompt = settings['prompt']
+    def do_set(self, args):
+        if args:
+            config = EvaluatingConfigParser()
+            setting_string = "[settings]\n{}".format(args)
+            try:
+                config.read_string(setting_string)
+            except configparser.ParsingError as err:
+                self.exit_code = 1
+                self.perr(str(err))
+                return
+            for param_name in config['settings']:
+                if param_name in self.settable:
+                    self._change_setting(param_name, config['settings'][param_name])
+                    self.exit_code = 0
+                else:
+                    self.perr("'{}' is not a valid setting".format(param_name))
+                    self.exit_code = 1
+        else:
+            self.exit_code = 2
+
+    def help_set(self):
+        self.exit_code = 0
+        self.pout("""Usage: set {setting}={value}
+
+Change a setting.
+
+  setting  Any one of the valid settings. Use 'show' to see a list of valie
+           settings.
+  value    The value for the setting.
+""")
+
+    def _change_setting(self, param_name, val):
+        """internal method to change a setting
+        
+        param_name must be in settable or this method with throw a ValueError
+        some parameters only accept boolean values, if you pass something that can't
+        be converted to a boolean, throw a ValueError
+        """
+        if param_name in self.settable:
+            current_val = getattr(self, param_name)
+            typ = type(current_val)
+            if typ == bool:
+                val = self._convert_to_boolean(val)
+            setattr(self, param_name, val)
+            if current_val != val:
+                try:
+                    onchange_hook = getattr(self, '_onchange_%s' % param_name)
+                    onchange_hook(old=current_val, new=val)
+                except AttributeError:
+                    pass
+        else:
+            raise ValueError
+
+    def _convert_to_boolean(self, value):
+        """Return a boolean value translating from other types if necessary.
+        """
+        if value.lower() not in self.BOOLEAN_STATES:
+            raise ValueError('Not a boolean: {}'.format(value))
+        return self.BOOLEAN_STATES[value.lower()]
 
     ###
     #
@@ -266,6 +332,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     #
     ###
     def do_connect(self, args):
+        import pdb; pdb.set_trace()
         url = None
         username = None
         password = None
@@ -304,7 +371,7 @@ Connect to a tomcat manager instance.
 
 If you specify a userid and no password, you will be prompted for the
 password. If you don't specify a userid or password, attempt to connect
-with no authentication""")
+with no authentication.""")
 
     ###
     #
