@@ -186,7 +186,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         This starts with the defaults and overrides them with values
         read from the config file.
         """
-        config = configparser.ConfigParser()
+        config = EvaluatingConfigParser()
         # load the defaults
         config.read_dict(self._config_defaults)
         
@@ -779,3 +779,15 @@ Show license information.""")
     def help_help(self):
         self.exit_code = 0
         self.pout('here\'s a dollar, you\'ll have to buy a clue elsewhere')
+
+
+import ast
+class EvaluatingConfigParser(configparser.ConfigParser):
+    def get(self, section, option, **kwargs):
+        val = super().get(section, option, **kwargs)
+        if "'" in val or '"' in val:
+            try:
+                val = ast.literal_eval(val)
+            except:
+                pass
+        return val
