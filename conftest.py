@@ -22,6 +22,11 @@ def pytest_addoption(parser):
     parser.addoption("--serverwar", action="store", default=None,
         help="serverwar: path to deployable war file on the tomcat server")
 
+###
+#
+# fixtures for testing TomcatManager()
+#
+###
 @pytest.fixture(scope='module')
 def tomcat_manager_server(request):
     """start a local http server which provides a similar interface to a real Tomcat Manager app"""
@@ -47,10 +52,13 @@ def serverwar_file(request):
 
 @pytest.fixture(scope='module')
 def tomcat(tomcat_manager_server):
-    return tm.TomcatManager(
+    tomcat = tm.TomcatManager()
+    r = tomcat.connect(
             tomcat_manager_server['url'],
             tomcat_manager_server['userid'],
-            tomcat_manager_server['password'] )
+            tomcat_manager_server['password']
+        )
+    return tomcat
 
 @pytest.fixture(scope='module')
 def localwar_file():
@@ -71,3 +79,12 @@ OS Architecture: amd64
 JVM Version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
 JVM Vendor: Oracle Corporation
 """
+
+###
+#
+# fixtures for testing InteractiveTomcatManager()
+#
+###
+@pytest.fixture()
+def itm():
+    return tm.InteractiveTomcatManager('tomcat-manager')

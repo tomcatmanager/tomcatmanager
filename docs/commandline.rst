@@ -67,4 +67,4 @@ shell exit code appropriately. The shell exit codes are:
    | **0** - command completed succesfully
    | **1** - command had an error
    | **2** - incorrect usage
-
+   | **127** - unknown command

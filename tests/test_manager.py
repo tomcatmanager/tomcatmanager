@@ -73,25 +73,6 @@ class TestManager(TestManagerBase):
         assert tm.TomcatManager()._is_stream('some string') == False
         assert tm.TomcatManager()._is_stream(['some', 'list']) == False
 
-    ###
-    #
-    # init
-    #
-    ###
-    def test_init_no_url(self, tomcat_manager_server):
-        tomcat = tm.TomcatManager()
-        assert tomcat.is_connected == False
-
-    def test_init_noauth(self, tomcat_manager_server):
-        tomcat = tm.TomcatManager(tomcat_manager_server['url'])
-        assert tomcat.is_connected == False
-
-    def test_init_auth(self, tomcat_manager_server):
-        tomcat = tm.TomcatManager(
-            tomcat_manager_server['url'],
-            tomcat_manager_server['userid'],
-            tomcat_manager_server['password'] )
-        assert tomcat.is_connected == True
 
     ###
     #
@@ -101,7 +82,7 @@ class TestManager(TestManagerBase):
     def test_connect_no_url(self, tomcat_manager_server):
         tomcat = tm.TomcatManager()
         with pytest.raises(requests.exceptions.MissingSchema):
-            r = tomcat.connect()
+            r = tomcat.connect('')
 
     def test_connect_noauth(self, tomcat_manager_server):
         tomcat = tm.TomcatManager()
@@ -114,9 +95,10 @@ class TestManager(TestManagerBase):
     def test_connect_auth(self, tomcat_manager_server):
         tomcat = tm.TomcatManager()
         r = tomcat.connect(
-            tomcat_manager_server['url'],
-            tomcat_manager_server['userid'],
-            tomcat_manager_server['password'] )
+                tomcat_manager_server['url'],
+                tomcat_manager_server['userid'],
+                tomcat_manager_server['password']
+            )
         assert isinstance(r, tm.models.TomcatManagerResponse)
         assert r.status_code == tm.codes.ok
         assert tomcat.is_connected == True
