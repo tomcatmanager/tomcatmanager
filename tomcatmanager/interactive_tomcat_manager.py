@@ -155,7 +155,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
 
         #
         # prepare our own stuff
-        self.tomcat = None
+        self.tomcat = tm.TomcatManager()
         self.debug_flag = False
         self.exit_code = None
         
@@ -235,42 +235,65 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     ###
     def do_connect(self, args):
         url = None
-        username = None
+        user = None
         password = None
         sargs = args.split()
         
-        try:
-            if len(sargs) == 1:
-                url = sargs[0]
-            elif len(sargs) == 2:
-                url = sargs[0]
-                username = sargs[1]
-                password = getpass.getpass()
-            elif len(sargs) == 3:
-                url = sargs[0]
-                username = sargs[1]
-                password = sargs[2]
+        if len(sargs) == 1:
+            # check the configuration file for values
+            s = sargs[0]
+            if self.config.has_section(s):
+                if self.config.has_option(s, 'url'):
+                    url = self.config[s]['url']
+                if self.config.has_option(s, 'user'):
+                    user = self.config[s]['user']
+                if self.config.has_option(s, 'password'):
+                    password = self.config[s]['password']
             else:
-                raise ValueError()
-
-            self.tomcat = tm.TomcatManager(url, username, password)
-            if self.tomcat.is_connected:
-                self.pdebug('connected to tomcat manager at {}'.format(url))
-                self.exit_code = self.exit_codes.success
-            else:
-                self.perr('tomcat manager not found at {}'.format(url))
-                self.exit_code = self.exit_codes.error
-        except ValueError:
+                url = sargs[0]
+        elif len(sargs) == 2:
+            url = sargs[0]
+            user = sargs[1]
+        elif len(sargs) == 3:
+            url = sargs[0]
+            user = sargs[1]
+            password = sargs[2]
+        else:
             self.help_connect()
             self.exit_code = self.exit_codes.usage
+            return
+            
+        # prompt for password if necessary
+        if url and user and not password:
+            password = getpass.getpass()
+
+        r = self.tomcat.connect(url, user, password)
+        if r.ok:
+            self.pdebug('connected to tomcat manager at {}'.format(url))
+            self.exit_code = self.exit_codes.success
+        else:
+            # TODO inspect r to see why we didn't connect so we can provide
+            # a useful error message and perhaps exit code
+            import pdb
+            pdb.set_trace()
+            self.perr('tomcat manager not found at {}'.format(url))
+            self.exit_code = self.exit_codes.error
 
     def help_connect(self):
         self.exit_code = self.exit_codes.success
-        self.pout("""Usage: connect url [userid] [password]
+        self.pout("""Usage: connect url [user] [password]
+       connect config_name
 
 Connect to a tomcat manager instance.
 
-If you specify a userid and no password, you will be prompted for the
+config_name  A section from the config file. This must contain url, user,
+             and password values.
+
+url          The url where the Tomcat Manager web app is located.
+user         Optional user to use for authentication.
+password     Optional password to use for authentication.
+
+If you specify a user and no password, you will be prompted for the
 password. If you don't specify a userid or password, attempt to connect
 with no authentication.""")
 
