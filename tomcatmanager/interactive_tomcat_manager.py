@@ -156,7 +156,6 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         #
         # prepare our own stuff
         self.tomcat = tm.TomcatManager()
-        self.debug_flag = False
         self.exit_code = None
         
 
@@ -189,11 +188,11 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
 
     def pdebug(self, msg=''):
         """convenience method to print debugging messages"""
-        if self.debug_flag:
+        if self.debug:
             print("--" + msg, file=self.stdout)
     
     def pexception(self):
-        if self.debug_flag:
+        if self.debug:
             self.perr(traceback.format_exc())
         else:
             etype, evalue, etraceback = sys.exc_info()
