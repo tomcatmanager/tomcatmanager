@@ -28,14 +28,15 @@ The interactive shell has a built-in list of all available commands::
 
    Documented commands (type help <topic>):
    ========================================
-   _relative_load  expire       py         save        sslconnectorciphers  vminfo
-   cmdenvironment  findleakers  pyscript   serverinfo  start
-   connect         help         quit       sessions    status
-   deploy          history      redeploy   set         stop
-   edit            license      reload     shell       threaddump
-   exit            list         resources  shortcuts   undeploy
-   exit_code       load         run        show        version
-
+   _relative_load  expire       pyscript    sessions             stop
+   cmdenvironment  findleakers  quit        set                  threaddump
+   config          help         redeploy    shell                undeploy
+   connect         history      reload      shortcuts            version
+   deploy          license      resources   show                 vminfo
+   edit            list         run         sslconnectorciphers
+   exit            load         save        start
+   exit_code       py           serverinfo  status
+   
    Miscellaneous help topics:
    ==========================
    commandline
@@ -132,8 +133,7 @@ simultaneously at the same URL. To utilize this feature, you need to deploy
 an application with a version string. The combination of path and version
 string uniquely identify the application.
 
-Let's revisit our `shiny` app. This time when I deploy, I'm going to specify a
-version string:
+Let's revisit our `shiny` app. This time I deploy with a version string:
 
 .. code-block:: none
 
@@ -216,10 +216,96 @@ Both ``history`` and ``run`` have more options: use the ``help`` command to get
 the details.
 
 
+Settings
+--------
+
+The ``show`` command displays list of settings which control the behavior of
+``tomcat-manager``:
+
+.. code-block:: none
+
+   tomcat-manager> show
+   autorun_on_edit=False       # Automatically run files after editing
+   colors=True                 # Colorized output (*nix only)
+   debug=False                 # Show full error stack on error
+   editor=/usr/local/bin/zile  # Program used to edit files
+   feedback_to_output=True     # Include nonessentials in `|`, `>` results
+   locals_in_py=True           # Allow access to your application in py via self
+   prompt='tomcat-manager> '   # The prompt issued to solicit input
+   quiet=False                 # Don't print nonessential feedback
+   timing=False                # Report execution times
+
+You can change any of these settings using the ``set`` command:
+
+.. code-block:: none
+
+   tomcat-manager> set prompt='tm> '
+   tm>
+
+Quotes around values are not required unless they contain spaces or other
+quotes.
+
+Configuration File
+------------------
+
+``tomcat-manager`` reads for a user configuration file on startup. This file allows you
+to:
+
+- define settings
+- define shortcuts for connecting to Tomcat servers
+
+The location of the configuration file is different depending on your operating
+system. To see the location of the file:
+
+.. code-block:: none
+
+   tomcat-manager> config file
+   /Users/kotfu/Library/Application Support/tomcat-manager/tomcat-manager.ini
+
+You can edit the file from within ``tomcat-manager`` too. Well, it really just
+launches the editor of your choice, you know, the one specified in the ``editor``
+setting. Do that by typing:
+
+.. code-block:: none
+
+   tomcat-manager> config edit
+
+This file uses the INI file format. If you create a section called
+``settings``, you can set the values of any of the supported settings. My
+config file contains:
+
+.. code-block:: ini
+
+   [settings]
+   prompt='tm> '
+   debug=True
+   editor=/usr/local/bin/zile
+
+You can also use the configuration file to set up shortcuts to various
+Tomcat servers. Define a section named the shortcut, and then include a property
+for ``url``, and optionally ``user`` and/or ``password``. Here's a simple example:
+
+.. code-block:: ini
+
+   [localhost]
+   url=http://localhost:8080/manager
+   user=ace
+   password=newenglandclamchowder
+
+With this defined in your configuration file, you can now connect using the
+name of the shortcut:
+
+.. code-block:: none
+
+   tomcat-manager> connect localhost
+
+If you define a ``user``, but omit ``password``, you will be prompted for it.
+
+
 Save and load command history
 -----------------------------
 
-Save and load command history. Type `help save`, `help load` for details. Using
+Save and load command history. Type ``help save``, ``help load`` for details. Using
 this functionality you can save a series of commands to a text file, and then
 quickly load and run them.
 
