@@ -45,18 +45,18 @@ class TomcatManagerResponse:
     the command completed succesfully before relying on the results::
     
         >>> import tomcatmanager as tm
-        >>> tomcat = tm.TomcatManager('http://localhost:8080/manager', \\
-        ...     'ace', 'newenglandclamchowder')
+        >>> tomcat = getfixture('tomcat')
         >>> try:
         ...     r = tomcat.server_info()
         ...     r.raise_for_status()
         ...     if r.ok:
-        ...         print(r.server_info)
+        ...         print(r.server_info.os_name)
         ...     else:
         ...         print('Error: {}'.format(r.status_message))
         ... except Exception as err:
         ...     # handle exception
         ...     pass
+        Linux
 
     """    
 
