@@ -54,7 +54,7 @@ set_success = [
 def test_do_set_success(itm, arg, value):
     itm.do_set(arg)
     assert itm.prompt == value
-    assert itm.exit_code == 0
+    assert itm.exit_code == itm.exit_codes.success
 
 
 set_fail = [
@@ -64,11 +64,11 @@ set_fail = [
 @pytest.mark.parametrize('arg', set_fail)
 def test_do_set_fail(itm, arg):
     itm.do_set(arg)
-    assert itm.exit_code == 1
+    assert itm.exit_code == itm.exit_codes.error
 
 def test_do_set_usage(itm):
     itm.do_set('')
-    assert itm.exit_code == 2
+    assert itm.exit_code == itm.exit_codes.usage
 
 booleans = [
     (    '1', True),

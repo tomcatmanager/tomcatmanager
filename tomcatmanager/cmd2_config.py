@@ -181,7 +181,7 @@ Show one or more settings and their values.
                 config.read_string(setting_string)
             except configparser.ParsingError as err:
                 self.perr(str(err))
-                self.exit_code = self.exit_code.error
+                self.exit_code = self.exit_codes.error
                 return
             for param_name in config['settings']:
                 if param_name in self.settable:
@@ -189,9 +189,9 @@ Show one or more settings and their values.
                     self.exit_code = self.exit_codes.success
                 else:
                     self.perr("'{}' is not a valid setting".format(param_name))
-                    self.exit_code = self.exit_code.error
+                    self.exit_code = self.exit_codes.error
         else:
-            self.exit_code = self.exit_code.usage
+            self.exit_code = self.exit_codes.usage
 
     def help_set(self):
         self.exit_code = self.exit_codes.success
