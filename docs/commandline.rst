@@ -68,3 +68,30 @@ shell exit code appropriately. The shell exit codes are:
    | **1** - command had an error
    | **2** - incorrect usage
    | **127** - unknown command
+
+
+Server Shortcuts
+----------------
+
+You an also use :ref:`server_shortcuts` from the command line with or without
+commands:
+
+.. code-block:: none
+
+   $ tomcat-manager localhost
+   tomcat-manager>list
+   Path                     Status  Sessions Directory
+   ------------------------ ------- -------- ------------------------------------
+   /                        running        0 ROOT
+   /manager                 running        0 manager
+
+Or:
+
+.. code-block:: none
+
+   $ tomcat-manager localhost list
+   Path                     Status  Sessions Directory
+   ------------------------ ------- -------- ------------------------------------
+   /                        running        0 ROOT
+   /manager                 running        0 manager
+

@@ -245,6 +245,7 @@ You can change any of these settings using the ``set`` command:
 Quotes around values are not required unless they contain spaces or other
 quotes.
 
+
 Configuration File
 ------------------
 
@@ -280,6 +281,12 @@ config file contains:
    prompt='tm> '
    debug=True
    editor=/usr/local/bin/zile
+
+
+.. _server_shortcuts:
+
+Server Shortcuts
+----------------
 
 You can also use the configuration file to set up shortcuts to various
 Tomcat servers. Define a section named the shortcut, and then include a property
