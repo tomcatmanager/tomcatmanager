@@ -27,12 +27,27 @@ import pytest
 
 import tomcatmanager as tm
 
+###
+#
+# fixtures
+#
+###
+@pytest.fixture()
+def itm():
+    return tm.InteractiveTomcatManager()
 
+
+###
+#
+# tests
+#
+###
 def test__change_setting(itm):
     p = str(uuid.uuid1())
     # we know prompt is in itm.settable
     itm._change_setting('prompt', p)
     assert itm.prompt == p
+
 
 def test__change_setting_with_invalid_param(itm):
     # this uuid won't be in itm.settable
@@ -66,9 +81,12 @@ def test_do_set_fail(itm, arg):
     itm.do_set(arg)
     assert itm.exit_code == itm.exit_codes.error
 
-def test_do_set_usage(itm):
+
+def test_do_set_with_no_args(itm):
+    # this is supposed to be a success and show the usage information
     itm.do_set('')
-    assert itm.exit_code == itm.exit_codes.usage
+    assert itm.exit_code == itm.exit_codes.success
+
 
 booleans = [
     (    '1', True),
@@ -100,7 +118,8 @@ booleans = [
 ]
 @pytest.mark.parametrize('str, value', booleans)
 def test__convert_to_boolean(itm, str, value):
-    assert itm._convert_to_boolean(str) == value
+    assert itm.convert_to_boolean(str) == value
+
 
 pythonizers = [
     ('fred', 'fred'),

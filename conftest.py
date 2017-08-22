@@ -80,11 +80,3 @@ JVM Version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
 JVM Vendor: Oracle Corporation
 """
 
-###
-#
-# fixtures for testing InteractiveTomcatManager()
-#
-###
-@pytest.fixture()
-def itm():
-    return tm.InteractiveTomcatManager('tomcat-manager')

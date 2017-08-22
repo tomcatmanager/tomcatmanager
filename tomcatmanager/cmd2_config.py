@@ -29,36 +29,51 @@ import appdirs
 
 class Cmd2Config():
     """
-    Mixin for Cmd2 which provides the following functionality:
+    Mixin for Cmd2 which adds configuration file support for settings.
     
-    - new 'set' command
-    - new 'show' command
-    - load settings from a config file
+    This mixin provides the following additional capabilities to any Cmd2
+    based application:
+    
+    - on startup, load settings from configuration file (in INI format)
+    - new 'config' command which launches editor on the config file
+    - new 'set' command  (overrides Cmd2) which allows you to change settings
+      in INI format
+    - new 'show' command (overrides Cmd2) which shows the settings in INI
+      format
+    - calls _onchange_{setting}(old,new) after a setting changes value
+    - makes self.appdirs available, see https://github.com/ActiveState/appdirs
+    - makes self.config available, a ConfigParser object of the configuration file
     
     We want the methods in this class to override those present in Cmd2.Cmd, so you
     must define your parent class with Cmd2Config before Cmd2.Cmd:
     
-        class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
+        class MyApp(Cmd2Config, cmd2.Cmd):
     
-    In your initializer, you have to initialier cmd2.Cmd before Cmd2Config, like this:
+    In your initializer, you have to initialize cmd2.Cmd before Cmd2Config. You
+    also need to define two attributes, `app_name` and `app_author`. These are
+    used to determine the platform-specific directory where your configuration
+    file should reside.
     
         def __init__(self, prog_name):
 
-            cmd2.Cmd.__init__(self)
-            Cmd2Config.__init__(self, prog_name)
+            self.app_name = 'MyApp'
+            self.app_author = 'Acme'
     
-    You also need to pass in the program name to the initializer, which will be used
-    to determine the location and name of the config file.
+            cmd2.Cmd.__init__(self)
+            Cmd2Config.__init__(self)
+    
+    If you don't define `app_name` and `app_author`, then all these fancy new
+    features will be disabled.
     
     If you have default configuration settings you want to use, set them before calling
     the initializer for this class:
     
         self.config_defaults = {
             'settings': {
-                'prompt': prog_name + '>',
+                'prompt': app_name + '>',
             }
         }
-        Cmd2Config.__init__(self, prog_name)
+        Cmd2Config.__init__(self)
     
     This mixin makes a configuration item from configparser available at self.config, you
     can use this to get any other configuration data you want/need from the user specified
@@ -66,19 +81,19 @@ class Cmd2Config():
     """
 
     # Possible boolean values
-    BOOLEAN_STATES = {'1': True, 'yes': True,  'y': True,   'true': True,   'on': True,
+    BOOLEAN_VALUES = {'1': True, 'yes': True,  'y': True,   'true': True,   'on': True,
                       '0': False, 'no': False, 'n': False, 'false': False, 'off': False}
 
-    def __init__(self, prog_name):
-
-        self.prog_name=prog_name
-
+    def __init__(self):
         if not self.config_defaults:
-            self.config_defaults = {}
-        
-        # read in the user configuration file
-        self.config = self._load_config()
-        self._apply_config()
+            self.config_defaults = {}        
+        self.appdirs = None
+        try:
+            if self.app_name and self.app_author:
+                self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
+        except AttributeError:
+            pass
+        self.load_config()
 
     ###
     #
@@ -109,19 +124,18 @@ class Cmd2Config():
             return
         
         # ensure the configuration directory exists
-        configdir = os.path.dirname(self._configfile)
+        configdir = os.path.dirname(self.config_file)
         if not os.path.exists(configdir):
             os.makedirs(configdir)
 
         # go edit the file
-        cmd = '{} "{}"'.format(self.editor, self._configfile)
+        cmd = '"{}" "{}"'.format(self.editor, self.config_file)
         self.pdebug("Executing '{}'...".format(cmd))
         os.system(cmd)
         
         # read it back in and apply it
         self.pout('Reloading configuration...')
-        self.config = self._load_config()
-        self._apply_config()
+        self.load_config()
         self.exit_code = self.exit_codes.success
 
     def help_config(self):
@@ -181,6 +195,8 @@ Show one or more settings and their values.
                 config.read_string(setting_string)
             except configparser.ParsingError as err:
                 self.perr(str(err))
+                self.pout('')
+                self.help_set()
                 self.exit_code = self.exit_codes.error
                 return
             for param_name in config['settings']:
@@ -191,7 +207,7 @@ Show one or more settings and their values.
                     self.perr("'{}' is not a valid setting".format(param_name))
                     self.exit_code = self.exit_codes.error
         else:
-            self.exit_code = self.exit_codes.usage
+            self.do_show(args)
 
     def help_set(self):
         self.exit_code = self.exit_codes.success
@@ -203,83 +219,91 @@ Change a setting.
            settings.
   value    The value for the setting.
 """)
-    
+
+    ###
+    #
+    # other properties/attributes and methods available to our subclasses
+    #
+    ###
+    @property
+    def config_file(self):
+        f = None
+        try:
+            if self.appdirs and self.app_name:
+                filename = self.app_name + '.ini'
+                return os.path.join(self.appdirs.user_config_dir, filename)
+        except AttributeError:
+            pass
+
+    def load_config(self):
+        """
+        Find and parse the user config file and set self.config
+        
+        This starts with the defaults and overrides them with values
+        read from the config file.
+        """
+        config = None
+        if self.config_file is not None:
+            config = EvaluatingConfigParser()
+            # load the defaults
+            config.read_dict(self.config_defaults)
+            try:
+                with open(self.config_file, 'r') as f:
+                    config.read_file(f)
+            except:
+                pass
+        try:
+            settings = config['settings']
+            for key in settings:
+                self._change_setting(key, settings[key])
+        except KeyError:
+            pass
+        except ValueError:
+            pass
+        self.config = config
+
+    def convert_to_boolean(self, value):
+        """Return a boolean value translating from other types if necessary.
+        """
+        if type(value) == bool:
+            return value
+        else:
+            if str(value).lower() not in self.BOOLEAN_VALUES:
+                raise ValueError('Not a boolean: {}'.format(value))
+            return self.BOOLEAN_VALUES[value.lower()]
 
     ###
     #
     # private methods
     #
-    ###
-    @property
-    def _configfile(self):
-        dirs = appdirs.AppDirs(self.prog_name, self.prog_name)
-        filename = self.prog_name + '.ini'
-        return os.path.join(dirs.user_config_dir, filename)
-        
-    def _load_config(self):
-        """
-        Find and parse the user config file and make it available
-        as self.config
-        
-        This starts with the defaults and overrides them with values
-        read from the config file.
-        """
-        config = EvaluatingConfigParser()
-        # load the defaults
-        config.read_dict(self.config_defaults)
-        
-        try:
-            with open(self._configfile, 'r') as f:
-                config.read_file(f)
-        except:
-            pass
-        return config
-
-    def _apply_config(self):
-        """apply the configuration to ourself"""
-        # settings will always exist because we put default values
-        # there in _get_config()
-        settings = self.config['settings']
-        for key in settings:
-            try:
-                self._change_setting(key, settings[key])
-            except ValueError:
-                pass
-
+    ### 
     def _change_setting(self, param_name, val):
         """internal method to change a setting
         
         param_name must be in settable or this method with throw a ValueError
         some parameters only accept boolean values, if you pass something that can't
         be converted to a boolean, throw a ValueError
+        
+        Call _onchange_{param_name}(old, new) after the setting changes value
         """
         if param_name in self.settable:
             current_val = getattr(self, param_name)
             typ = type(current_val)
             if typ == bool:
-                val = self._convert_to_boolean(val)
+                val = self.convert_to_boolean(val)
             setattr(self, param_name, val)
             if current_val != val:
                 try:
-                    onchange_hook = getattr(self, '_onchange_%s' % param_name)
+                    onchange_hook = getattr(self, '_onchange_{}'.format(param_name))
                     onchange_hook(old=current_val, new=val)
                 except AttributeError:
                     pass
         else:
             raise ValueError
 
-    def _convert_to_boolean(self, value):
-        """Return a boolean value translating from other types if necessary.
-        """
-        if type(value) == bool:
-            return value
-        else:
-            if str(value).lower() not in self.BOOLEAN_STATES:
-                raise ValueError('Not a boolean: {}'.format(value))
-            return self.BOOLEAN_STATES[value.lower()]
-
     def _pythonize(self, value):
         """turn value into something the python interpreter can parse
+        
         we are going to turn val into pval such that
 
             val = ast.literal_eval(pval)

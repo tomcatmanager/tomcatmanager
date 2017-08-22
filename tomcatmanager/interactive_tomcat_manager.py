@@ -123,6 +123,10 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
       127: 'command_not_found',
     }
     
+    # for Cmd2Config
+    app_name = 'tomcat-manager'
+    app_author = 'tomcatmanager'
+    
     exit_codes = LookupDict(name='exit_codes')
     for code, title in EXIT_CODES.items():
         setattr(exit_codes, title, code)
@@ -130,7 +134,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     # settings for cmd2.Cmd
     cmd2.Cmd.shortcuts.update({'$?': 'exit_code' })
     
-    def __init__(self, prog_name):
+    def __init__(self):
 
         #
         # configure Cmd2.Cmd
@@ -147,12 +151,15 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         
         #
         # configure Cmd2Config
+        #self.app_name = self.APP_NAME
+        #self.app_author = self.APP_AUTHOR
+
         self.config_defaults = {
             'settings': {
-                'prompt': prog_name + '> ',
+                'prompt': self.app_name + '> ',
             }
         }
-        Cmd2Config.__init__(self, prog_name)
+        Cmd2Config.__init__(self)
 
         #
         # prepare our own stuff
