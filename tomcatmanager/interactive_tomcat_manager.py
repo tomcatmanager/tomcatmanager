@@ -304,6 +304,23 @@ If you specify a user and no password, you will be prompted for the
 password. If you don't specify a userid or password, attempt to connect
 with no authentication.""")
 
+    @requires_connection
+    def do_which(self, args):
+        if args:
+            self.help_which()
+            self.exit_code = self.exit_codes.usage
+        else:
+            out = 'connected to {}'.format(self.tomcat._url)
+            if self.tomcat._user is not None:
+                out += ' as {}'.format(self.tomcat._user)
+            self.pout(out)
+    
+    def help_which(self):
+        self.exit_code = self.exit_codes.success
+        self.pout("""Usage: which
+
+Show the url of the tomcat server you are connected to.""")
+        
     ###
     #
     # commands for managing applications
