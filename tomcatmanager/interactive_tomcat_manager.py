@@ -22,68 +22,6 @@
 # THE SOFTWARE.
 #
 
-"""
-tomcat-manager
-==============
-
-    Manage a tomcat server from the command line or from an interactive
-    shell
-
-
-Command Line Use
-----------------
-
-    tomcat-manager --user=userid, --password=mypass [--debug] \\
-        manager_url command [arguments]
-        
-    connect to the tomcat manager at manager_url, using userid and
-    mypass for authentication, and run command with any supplied
-    arguments.  For a list of commands enter the interactive
-    shell and type "help".  For a list of the arguments for any
-    command, enter the interactive shell and type "help \{command\}"
-
-
-Interactive Use
----------------
-
-    tomcat-manager [--help | -h]
-
-        display help and exit
-
-
-    tomcat-manager [--version]
-
-        display version information and exit
-
-
-    tomcat-manager --user=userid, --password=mypass [--debug] manager_url
-
-        connect to the tomcat manager at manager_url, using userid and
-        mypass for authentication, and then enter the interactive shell
-
-
-    Once you are in the interactive shell, type "help" for a list of
-    commands and their arguments.
-    
-    To view the license for this software, enter the interactive shell
-    and type "license"
-
-
-Options
--------
-
-    --user, -u        the user to use for authentication
-                      with the tomcat application
-
-    --password, -p    the password to use for authentication
-                      with the tomcat application
-    
-    --debug           show additional debugging information
-    
-    --version         show the version information and exit
-    
-    --help, -h        show command line usage
-"""
 import sys
 import os
 import traceback
@@ -716,10 +654,6 @@ Show version information.""")
         self.pout("""Usage: exit_code
         
 Show the value of the exit_code variable, similar to $? in ksh/bash""")
-                
-    def help_commandline(self):
-        self.exit_code = self.exit_codes.success
-        self.pout(__doc__)
 
     def do_license(self, args):
         self.exit_code = self.exit_codes.success
@@ -751,6 +685,3 @@ THE SOFTWARE.
         
 Show license information.""")
 
-    def help_help(self):
-        self.exit_code = self.exit_codes.success
-        self.pout('here\'s a dollar, you\'ll have to buy a clue elsewhere')
