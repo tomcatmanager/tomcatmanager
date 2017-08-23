@@ -462,6 +462,21 @@ Start and stop a tomcat application.
            specified in order to reload the application.""")
 
     @requires_connection
+    def do_restart(self, args):
+        self.do_reload(args)
+    
+    def help_restart(self):
+        self.exit_code = self.exit_codes.success
+        self.pout("""Usage: restart {path} [version]
+
+Start and stop a tomcat application. Synonym for reload.
+
+  path     The path part of the URL where the application is deployed.
+  version  Optional version string of the application to reload. If the
+           application was deployed with a version string, it must be
+           specified in order to reload the application.""")
+        
+    @requires_connection
     def do_sessions(self, args):
         args = args.split()
         version = None

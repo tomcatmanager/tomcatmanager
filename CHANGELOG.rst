@@ -16,6 +16,7 @@ develop
 - server shortcuts: save url, user, and password in config file
 - `which` command to show which tomcat server you are connected to
 - `timeout` setting for HTTP timeouts
+- `restart` command as synonym for `reload`
 
 **Improved**
 
