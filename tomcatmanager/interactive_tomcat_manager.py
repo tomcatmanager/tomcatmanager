@@ -690,7 +690,7 @@ extreme caution on production systems.""")
 
     def do_version(self, args):
         self.exit_code = self.exit_codes.success
-        self.pout('{} {} (works with Tomcat >= 7.0 and <= 8.5)'.format(self.prog_name, tm.__version__))
+        self.pout('{} {} (works with Tomcat >= 7.0 and <= 8.5)'.format(self.app_name, tm.__version__))
     
     def help_version(self):
         self.exit_code = self.exit_codes.success
