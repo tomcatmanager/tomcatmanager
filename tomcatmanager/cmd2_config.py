@@ -65,15 +65,16 @@ class Cmd2Config():
     If you don't define `app_name` and `app_author`, then all these fancy new
     features will be disabled.
     
-    If you have default configuration settings you want to use, set them before calling
+    You should set a value for all setting attributes in code before calling
     the initializer for this class:
     
-        self.config_defaults = {
-            'settings': {
-                'prompt': app_name + '>',
-            }
-        }
+        self.timing = 10
         Cmd2Config.__init__(self)
+    
+    Settings read from the configuration file are all strings. This class will
+    coerce the strings into whatever type is contained in the attribute for
+    that setting. If your setting attribute is None, then config will assume
+    you wanted a string.
     
     This mixin makes a configuration item from configparser available at self.config, you
     can use this to get any other configuration data you want/need from the user specified
@@ -85,8 +86,6 @@ class Cmd2Config():
                       '0': False, 'no': False, 'n': False, 'false': False, 'off': False}
 
     def __init__(self):
-        if not self.config_defaults:
-            self.config_defaults = {}        
         self.appdirs = None
         try:
             if self.app_name and self.app_author:
@@ -237,16 +236,11 @@ Change a setting.
 
     def load_config(self):
         """
-        Find and parse the user config file and set self.config
-        
-        This starts with the defaults and overrides them with values
-        read from the config file.
+        Find and parse the user config file and set self.config        
         """
         config = None
         if self.config_file is not None:
             config = EvaluatingConfigParser()
-            # load the defaults
-            config.read_dict(self.config_defaults)
             try:
                 with open(self.config_file, 'r') as f:
                     config.read_file(f)
@@ -288,9 +282,11 @@ Change a setting.
         """
         if param_name in self.settable:
             current_val = getattr(self, param_name)
-            typ = type(current_val)
-            if typ == bool:
+            type_ = type(current_val)
+            if type_ == bool:
                 val = self.convert_to_boolean(val)
+            elif type_ == int:
+                val = int(val)
             setattr(self, param_name, val)
             if current_val != val:
                 try:

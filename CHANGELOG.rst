@@ -14,11 +14,16 @@ develop
 - read settings from a config file
 - add `config` command which allows user to edit config file
 - server shortcuts: save url, user, and password in config file
-- new `which` command to show which tomcat server you are connected to
+- `which` command to show which tomcat server you are connected to
+- `timeout` setting for HTTP timeouts
 
 **Improved**
 
 - pretty print xml from `status` command
+
+**Changed**
+
+- `TomcatManager.__init__` no long accepts paramemeters: use `connect` instead
 
 
 0.9.2 (2017-08-16)

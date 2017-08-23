@@ -127,17 +127,20 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     app_name = 'tomcat-manager'
     app_author = 'tomcatmanager'
     
+    # settings for cmd2.Cmd
+    prompt = '{}> '.format(app_name)
+    cmd2.Cmd.shortcuts.update({'$?': 'exit_code' })
+
+    # our own settings
     exit_codes = LookupDict(name='exit_codes')
     for code, title in EXIT_CODES.items():
         setattr(exit_codes, title, code)
 
-    # settings for cmd2.Cmd
-    cmd2.Cmd.shortcuts.update({'$?': 'exit_code' })
+    timeout = 10
+    
     
     def __init__(self):
-
-        #
-        # configure Cmd2.Cmd
+        # initialize Cmd2.Cmd
         unused = ['abbrev', 'continuation_prompt', 'echo']
         for setting in unused:
             try:
@@ -145,27 +148,17 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
             except:
                 pass
         self.settable.update({'editor': 'Program used to edit files'})
-        
+        self.settable.update({'timeout': 'Seconds to wait for HTTP connections'})
         cmd2.Cmd.__init__(self)
         self.allow_cli_args = False
         
-        #
-        # configure Cmd2Config
-        #self.app_name = self.APP_NAME
-        #self.app_author = self.APP_AUTHOR
-
-        self.config_defaults = {
-            'settings': {
-                'prompt': self.app_name + '> ',
-            }
-        }
+        # initialize Cmd2Config
         Cmd2Config.__init__(self)
 
-        #
         # prepare our own stuff
         self.tomcat = tm.TomcatManager()
-        self.exit_code = None
-        
+        self.tomcat.timeout = self.timeout
+        self.exit_code = None        
 
     ###
     #

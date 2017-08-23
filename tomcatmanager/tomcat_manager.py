@@ -75,6 +75,8 @@ class TomcatManager:
         self._url = None
         self._user = None
         self._password = None
+        
+        self.timeout = 15
 
     def _get(self, cmd, payload=None):
         """
@@ -93,7 +95,8 @@ class TomcatManager:
         r.response = requests.get(
                 url,
                 auth=(self._user, self._password),
-                params=payload
+                params=payload,
+                timeout=self.timeout,
                 )
         return r
 
@@ -242,6 +245,7 @@ class TomcatManager:
                     auth=(self._user, self._password),
                     params=params,
                     data=warobj,
+                    timeout=self.timeout,
                     )
         elif serverwar:
             params['war'] = serverwar
@@ -470,7 +474,8 @@ class TomcatManager:
         r.response = requests.get(
                 url,
                 auth=(self._user, self._password),
-                params={'XML': 'true'}
+                params={'XML': 'true'},
+                timeout=self.timeout,
                 )
         r.result = r.response.text
         r.status_xml = r.result
