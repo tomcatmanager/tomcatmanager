@@ -88,7 +88,7 @@ Changes in 2014 and 2015
 0.4 (2013-07-07)
 ++++++++++++++++
 
-- Port to python 3
+- Port to python 3, no support for python 2
 - New `resources` command
 
 
