@@ -1,16 +1,17 @@
 tomcatmanager
 =============
-.. image:: https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version)
+.. image:: https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version
       :target: https://pypi.python.org/pypi/tomcatmanager
-      :alt: Latest Version
+      :alt: latest version
 .. image:: https://img.shields.io/pypi/pyversions/tomcatmanager.svg
-      :alt: Python Versions
-
-
-.. image:: https://travis-ci.org/tomcatmanager/tomcatmanager.svg?branch=develop&label=unix%20build
+      :target: https://pypi.python.org/pypi/tomcatmanager
+      :alt: python versions
+.. image:: https://travis-ci.org/tomcatmanager/tomcatmanager.svg?label=unix%20build&branch=develop
       :target: https://travis-ci.org/tomcatmanager/tomcatmanager
+      :alt: build status
 .. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg
-
+      :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
+      :alt: code coverage
 
 If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
 
