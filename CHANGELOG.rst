@@ -17,6 +17,7 @@ develop
 - `which` command to show which tomcat server you are connected to
 - `timeout` setting for HTTP timeouts
 - `restart` command as synonym for `reload`
+- Add tox for testing against multiple versions of python
 
 **Improved**
 
