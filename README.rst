@@ -7,6 +7,8 @@ tomcatmanager
       :target: https://pypi.python.org/pypi/tomcatmanager
       :alt: python 
 
+.. |br| raw:: html
+
 .. image:: https://travis-ci.org/tomcatmanager/tomcatmanager.svg?label=unix%20build&branch=develop
       :target: https://travis-ci.org/tomcatmanager/tomcatmanager
       :alt: build status
