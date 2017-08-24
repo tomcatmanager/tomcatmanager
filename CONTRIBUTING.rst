@@ -8,27 +8,64 @@ Clone the repo from github::
 
 		$ git clone git@github.com:tomcatmanager/tomcatmanager.git
 
-I recommend using `pyenv <https://github.com/pyenv/pyenv>`_ with the
-`pyenv-virtualenv <https://github.com/pyenv/pyenv-virtualenv>`_ plugin.
-Create a new environment, and then install development
-dependencies::
+
+Create python environments
+--------------------------
+
+tomcatamanger uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run
+the test suite against multiple python versions. I recommend using `pyenv
+<https://github.com/pyenv/pyenv>`_ with the `pyenv-virtualenv
+<https://github.com/pyenv/pyenv-virtualenv>`_ plugin to manage these
+various versions.
+
+This project uses tox for testing, and you will need several versions of
+python, with a virtualenv for each one::
 
     $ cd tomcatmanager
     $ pyenv install 3.6.2
-    $ pyenv virtualenv 3.6.2 tomcatmanager
-    $ pyenv local tomcatmanager
+    $ pyenv virtualenv -p python3.6 3.6.2 tomcatmanager-3.6
+    $ pyenv install 3.5.3
+    $ pyenv virtualenv -p python3.5 3.5.3 tomcatmanager-3.5
+    $ pyenv install 3.4.6
+    $ pyenv virtualenv -p python3.4 3.4.6 tomcatmanager-3.4
+
+Now set pyenv to make all three of those available at the same time::
+
+    $ pyenv local tomcatmanager-3.6 tomcatmanager-3.5 tomcatmanager-3.4
+
+You now have isolated virtualenvs just for tomcatmanager for each of the
+three python versions. This table shows commands on the left, and which
+virtualenv it will utilize.
+
+=======    ======  ================
+Command    python  virtualenv
+=======    ======  =================
+python     3.6.2   tomcatmanager-3.6
+python3    3.6.2   tomcatmanager-3.6
+python3.6  3.6.2   tomcatmanager-3.6
+python3.5  3.5.3   tomcatmanager-3.5
+python3.4  3.4.6   tomcatmanager-3.4
+
+Same pattern for ``pip`` and other stuff installed with python.
+
+
+Install dependencies
+--------------------
+
+Now install all the development dependencies::
+
     $ pip install -e .[dev]
 
+This installs the tomcatmanager package "in-place", so the package points
+to the source code instead of copying files to the python
+``site-packages`` folder.
 
-Install in place
-----------------
+All the dependencies now have been installed in the ``tomcatmanager-3.6``
+virtualenv. If you want to work in other virtualenvs, you'll need to manually
+select it, and install again::
 
-If you want to use the code in your repo as the module that everything
-else imports, you can have setup.py deploy the package as links to your
-source code instead of copying files to your python ``site-packages``
-folder::
-
-    $ pip install -e .
+   $ pyenv shell tomcatmanager-3.4
+   $ pip install -e .[dev]
 
 
 Branches, tags, and versions
@@ -40,7 +77,6 @@ don't use release branches, and we generally don't do hotfixes, so we
 don't have any of those branches either. The master branch always
 contains the latest release of the code uploaded to PyPI, with a tag for
 the version number of that release.
-
 
 The develop branch is where all the action occurs. Feature branches are
 welcome. When it's time for a release, we merge develop into master.
@@ -56,7 +92,11 @@ To ensure the tests can run without an external dependencies,
 the behavior of Tomcat Manager 8.0. There is a test fixture to start
 this server, and all the tests run against this fixture.
 
-To run the tests::
+You can run the tests in all three versions of python using tox::
+
+    $ tox
+
+If you just want to run the tests in your current python environment, use pytest::
 
 	$ pytest
 
