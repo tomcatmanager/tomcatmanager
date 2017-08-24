@@ -39,8 +39,10 @@ setup(
 	classifiers=[
 	'Development Status :: 4 - Beta',
 	'Environment :: Console',
+    'Operating System :: OS Independent',
 	'Topic :: System :: Systems Administration',
 	'Topic :: Utilities',
+    'Topic :: Software Development :: Libraries :: Python Modules',
 	'Intended Audience :: Developers',
 	'Intended Audience :: System Administrators',
 	'License :: OSI Approved :: MIT License',
