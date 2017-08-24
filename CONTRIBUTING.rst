@@ -98,6 +98,15 @@ is the full path to a war file on the server. There is a simple war file in
 the war file, or if you don't specify the ``serverwar`` parameter, or the path
 you provide doesn't point to a valid war file, several of the tests will fail.
 
+.. note::
+
+   If you test against a real Tomcat Server, you should not use the
+   ``pytest-xdist`` plugin to parallelize testing across multiple CPUs or many
+   platforms. Many of the tests depend on deploying and undeploying an app at a
+   specific path, and that path is shared across the entire test suite. It
+   wouldn't help much anyway because the testing would be constrained by the
+   speed of the Tomcat Server.
+
 
 Documentation
 -------------
