@@ -8,17 +8,27 @@ Clone the repo from github::
 
 		$ git clone git@github.com:tomcatmanager/tomcatmanager.git
 
-I recommend using ``virtualenvwrapper`` and friends, especially for
-development use. tomcatmanager requires python 3, I assume you've
-already got that installed. Create a new environment, and then install
-development dependencies::
+I recommend using `pyenv <https://github.com/pyenv/pyenv>`_ with the
+`pyenv-virtualenv <https://github.com/pyenv/pyenv-virtualenv>`_ plugin.
+Create a new environment, and then install development
+dependencies::
 
     $ cd tomcatmanager
-    $ mkvirtualenv --python=/usr/local/bin/python3 tomcatmanager
-    $ setvirtualenvproject ~/.virtualenvs/tomcatmanager .
-    $ workon tomcatmanager
-    $ pip install -e .
+    $ pyenv install 3.6.2
+    $ pyenv virtualenv 3.6.2 tomcatmanager
+    $ pyenv local tomcatmanager
     $ pip install -e .[dev]
+
+
+Install in place
+----------------
+
+If you want to use the code in your repo as the module that everything
+else imports, you can have setup.py deploy the package as links to your
+source code instead of copying files to your python ``site-packages``
+folder::
+
+    $ pip install -e .
 
 
 Branches, tags, and versions
@@ -36,21 +46,6 @@ The develop branch is where all the action occurs. Feature branches are
 welcome. When it's time for a release, we merge develop into master.
 
 This project uses `semantic versioning <http://semver.org/>`_.
-
-
-Install in place
-----------------
-
-If you want to use the code in your repo as the module that everything
-else imports, you can have setup.py deploy the package as links to your
-source code instead of copying files to your python ``site-packages``
-folder::
-
-    $ python3 setup.py develop
-
-To remove the development links::
-
-    $ python3 setup.py develop --uninstall
 
 
 Testing
@@ -137,29 +132,33 @@ To make a release and deploy it to `PyPI
 
 1. Merge everything to be included in the release into the develop branch.
 
-2. Merge the develop branch into the master branch.
+2. Test
 
-3. Tag the master branch with the version number
+3. Review and update CHANGELOG.rst
 
-4. Clean the build::
+4. Merge the develop branch into the master branch.
+
+5. Tag the master branch with the version number
+
+6. Clean the build::
 
     $ python setup.py clean --dist --eggs --pycache
     $ (cd docs && make clean)
    
-5. Build the source distribution::
+7. Build the source distribution::
 
     $ python3 setup.py sdist
 
-6. Build the wheel::
+8. Build the wheel::
 
     $ python3 setup.py bdist_wheel
 
-7. Build the docs::
+9. Build the docs::
 
     $ (cd docs && make html)
 
-8. Deploy the docs?
+10. Deploy the docs?
 
-9. Upload packages to PyPI::
+11. Upload packages to PyPI::
 
     $ twine upload dist/*
