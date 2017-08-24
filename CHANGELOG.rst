@@ -20,11 +20,15 @@ develop
 
 **Improved**
 
-- pretty print xml from `status` command
+- `status` command now pretty prints the xml response
 
 **Changed**
 
-- `TomcatManager.__init__` no long accepts paramemeters: use `connect` instead
+- `TomcatManager.__init__` no long accepts paramemeters: use `connect`
+  instead
+- `TomcatManager` methods which act on apps (`deploy`, `sessions`,
+   `stop`, etc.) now throw exceptions if no path is specified. Previously
+   they returned a response with `r.ok == False`
 
 
 0.9.2 (2017-08-16)

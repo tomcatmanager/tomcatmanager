@@ -44,55 +44,50 @@ class TestApps(TestManagerBase):
     #
     ###
     def test_deploy_path_only(self, tomcat, safe_path):
-        r = tomcat.deploy(safe_path)
-        self.failure_assertions(r)
+        with pytest.raises(ValueError):
+            r = tomcat.deploy(safe_path)
 
     def test_deploy_serverwar_and_localwar(self, tomcat, localwar_file, safe_path, serverwar_file):
-        localwar_fileobj = open(localwar_file, 'rb')
-        try:
-            r = tomcat.deploy(safe_path, localwar=localwar_fileobj, serverwar=serverwar_file)
-        except ValueError:
-            # we expect this exception
-            pass
-        finally:
-            localwar_fileobj.close()
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            with pytest.raises(ValueError):
+                r = tomcat.deploy(safe_path, localwar=localwar_fileobj, serverwar=serverwar_file)
 
     def test_deploy_localwar_no_path(self, tomcat, localwar_file):
         with open(localwar_file, 'rb') as localwar_fileobj:
-            r = tomcat.deploy(None, localwar=localwar_fileobj)
-        self.failure_assertions(r)
-        with open(localwar_file, 'rb') as localwar_fileobj:            
-            r = tomcat.deploy('', localwar=localwar_fileobj)
-        self.failure_assertions(r)
+            with pytest.raises(ValueError):
+                r = tomcat.deploy(None, localwar=localwar_fileobj)
+        with open(localwar_file, 'rb') as localwar_fileobj:
+            with pytest.raises(ValueError):
+                r = tomcat.deploy('', localwar=localwar_fileobj)
 
     def test_deploy_localwar(self, tomcat, localwar_file, safe_path):
         with open(localwar_file, 'rb') as localwar_fileobj:
             r = tomcat.deploy(safe_path, localwar=localwar_fileobj)
-        self.success_assertions(r)
+            self.success_assertions(r)
         r = tomcat.undeploy(safe_path)
         self.success_assertions(r)
 
     def test_deploy_localwar_version(self, tomcat, localwar_file, safe_path):
         with open(localwar_file, 'rb') as localwar_fileobj:
             r = tomcat.deploy(safe_path, localwar=localwar_fileobj, version='42')
-        self.success_assertions(r)
+            self.success_assertions(r)
         r = tomcat.undeploy(safe_path, version='42')
         self.success_assertions(r)
     
     def test_deploy_localwar_update(self, tomcat, localwar_file, safe_path):
         with open(localwar_file, 'rb') as localwar_fileobj:
             r = tomcat.deploy(safe_path, localwar=localwar_fileobj)
-        self.success_assertions(r)        
+            self.success_assertions(r)        
         with open(localwar_file, 'rb') as localwar_fileobj:
             r = tomcat.deploy(safe_path, localwar=localwar_fileobj, update=True)
-        self.success_assertions(r)
+            self.success_assertions(r)
         r = tomcat.undeploy(safe_path)
         self.success_assertions(r)
 
     def test_deploy_localwar_version_update(self, tomcat, localwar_file, safe_path):
         with open(localwar_file, 'rb') as localwar_fileobj:
             r = tomcat.deploy(safe_path, localwar=localwar_fileobj, version='42')
-        self.success_assertions(r)
+            self.success_assertions(r)
         with open(localwar_file, 'rb') as localwar_fileobj:
             r = tomcat.deploy(safe_path, localwar=localwar_fileobj, version='42', update=True)
         self.success_assertions(r)
@@ -100,10 +95,10 @@ class TestApps(TestManagerBase):
         self.success_assertions(r)
 
     def test_deploy_serverwar_no_path(self, tomcat, serverwar_file):
-        r = tomcat.deploy(None, serverwar=serverwar_file)
-        self.failure_assertions(r)
-        r = tomcat.deploy('', serverwar=serverwar_file)
-        self.failure_assertions(r)
+        with pytest.raises(ValueError):
+            r = tomcat.deploy(None, serverwar=serverwar_file)
+        with pytest.raises(ValueError):
+            r = tomcat.deploy('', serverwar=serverwar_file)
 
     def test_deploy_serverwar(self, tomcat, serverwar_file, safe_path):
         r = tomcat.deploy(safe_path, serverwar=serverwar_file)
@@ -139,11 +134,10 @@ class TestApps(TestManagerBase):
     #
     ###
     def test_undeploy_no_path(self, tomcat):
-        """ensure we throw an exception if we don't have a path to undeploy"""
-        r = tomcat.undeploy(None)
-        self.failure_assertions(r)
-        r = tomcat.undeploy('')
-        self.failure_assertions(r)        
+        with pytest.raises(ValueError):
+            r = tomcat.undeploy(None)
+        with pytest.raises(ValueError):
+            r = tomcat.undeploy('')
 
     ###
     #
@@ -151,18 +145,16 @@ class TestApps(TestManagerBase):
     #
     ###
     def test_start_no_path(self, tomcat):
-        """start requires a path"""
-        r = tomcat.start(None)
-        self.failure_assertions(r)
-        r = tomcat.start('')
-        self.failure_assertions(r)
+        with pytest.raises(ValueError):
+            r = tomcat.start(None)
+        with pytest.raises(ValueError):
+            r = tomcat.start('')
 
     def test_stop_no_path(self, tomcat):
-        """stop requires a path"""
-        r = tomcat.stop(None)
-        self.failure_assertions(r)
-        r = tomcat.stop('')
-        self.failure_assertions(r)
+        with pytest.raises(ValueError):
+            r = tomcat.stop(None)
+        with pytest.raises(ValueError):
+            r = tomcat.stop('')
 
     def test_stop_start(self, tomcat, localwar_file, safe_path):
         with open(localwar_file, 'rb') as localwar_fileobj:
@@ -199,12 +191,10 @@ class TestApps(TestManagerBase):
     #
     ###
     def test_reload_no_path(self, tomcat):
-        """reload requires a path"""
-        r = tomcat.reload(None)
-        self.failure_assertions(r)
-        # this reloads /
-        r = tomcat.reload('')
-        self.failure_assertions(r)
+        with pytest.raises(ValueError):
+            r = tomcat.reload(None)
+        with pytest.raises(ValueError):
+            r = tomcat.reload('')
 
     def test_reload(self, tomcat, localwar_file, safe_path):
         with open(localwar_file, 'rb') as localwar_fileobj:
@@ -235,12 +225,10 @@ class TestApps(TestManagerBase):
     #
     ###
     def test_sessions_no_path(self, tomcat):
-        """sessions requires a path"""
-        r = tomcat.sessions(None)
-        self.failure_assertions(r)
-        # this gives sessions for /
-        r = tomcat.sessions('')
-        self.failure_assertions(r)
+        with pytest.raises(ValueError):
+            r = tomcat.sessions(None)
+        with pytest.raises(ValueError):
+            r = tomcat.sessions('')
         
     def test_sessions(self, tomcat, localwar_file, safe_path):
         with open(localwar_file, 'rb') as localwar_fileobj:
@@ -273,12 +261,10 @@ class TestApps(TestManagerBase):
     #
     ###
     def test_expire_no_path(self, tomcat):
-        """expire requires a path"""
-        r = tomcat.expire(None)
-        self.failure_assertions(r)
-        # this expires /
-        r = tomcat.expire('')
-        self.failure_assertions(r)
+        with pytest.raises(ValueError):
+            r = tomcat.expire(None)
+        with pytest.raises(ValueError):
+            r = tomcat.expire('')
 
     def test_expire(self, tomcat, localwar_file, safe_path):
         with open(localwar_file, 'rb') as localwar_fileobj:

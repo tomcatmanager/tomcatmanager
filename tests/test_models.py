@@ -33,10 +33,6 @@ class TestTomcatManagerResponse:
         r = tomcat.list()
         assert r.ok == True
 
-    def test_not_ok(self, tomcat):
-        r = tomcat.expire(None)
-        assert r.ok == False
-
 class TestServerInfo:
 
     def test_dict(self, server_info):

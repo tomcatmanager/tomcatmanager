@@ -202,27 +202,30 @@ class TomcatManager:
         the WAR file is local to where python is running, use the ``localwar``
         parameter. Specify either ``localwar`` or ``serverwar``, but not both. 
         
-        :param path:      The path on the server to deploy this war to,
-                          i.e. /sampleapp
-        :param localwar:  (optional) The path (specified using your
-                          particular operating system convention) to a war
-                          file on the local file system. This will be sent
-                          to the server for deployment.
-        :param serverwar: (optional) The java-style path (use slashes not
-                          backslashes) to the war file on the server. Don't
-                          include ``file:`` at the beginning.
-        :param version:   (optional) For tomcat parallel deployments, the
-                          version string to associate with this version
-                          of the app
-        :param update:    (optional) Whether to undeploy the existing path
-                          first (default False)
-        :return:          `TomcatManagerResponse` object
-        
-        
+        :param path:         The path on the server to deploy this war to,
+                             i.e. /sampleapp
+        :param localwar:     (optional) The path (specified using your
+                             particular operating system convention) to a war
+                             file on the local file system. This will be sent
+                             to the server for deployment.
+        :param serverwar:    (optional) The java-style path (use slashes not
+                             backslashes) to the war file on the server. Don't
+                             include ``file:`` at the beginning.
+        :param version:      (optional) For tomcat parallel deployments, the
+                             version string to associate with this version
+                             of the app
+        :param update:       (optional) Whether to undeploy the existing path
+                             first (default False)
+        :return:             `TomcatManagerResponse` object
+        :raises ValueError:  if no path is specified;
+                             if both `localwar` and `serverwar` are given;
+                             if neither `localwar` or `serverwar` are given
         """
         params = {}
         if path:
             params['path'] = path
+        else:
+            raise ValueError('no path specified')
         if update:
             params['update'] = 'true'
         if version:
@@ -251,24 +254,27 @@ class TomcatManager:
             params['war'] = serverwar
             r = self._get('deploy', params)
         else:
-            r = self._get('deploy', params)
+            raise ValueError('neither localwar or serverwar specified: nothing to deploy')
 
         return r
 
     def undeploy(self, path, version=None):
         """Undeploy the application at a given path.
         
-        :param path:    The path of the application to undeploy
-        :param version: (optional) The version string of the app to
-                        undeploy
-        :return:        `TomcatManagerResponse` object
-                
+        :param path:         The path of the application to undeploy
+        :param version:      (optional) The version string of the app to
+                             undeploy
+        :return:             `TomcatManagerResponse` object
+        :raises ValueError:  if no path is specified
+        
         If the application was deployed with a version string, it must be
         specified in order to undeploy the application.
         """
         params = {}
         if path:
             params = {'path': path}
+        else:
+            raise ValueError('no path specified')
         if version:
             params['version'] = version
         return self._get('undeploy', params)
@@ -277,16 +283,19 @@ class TomcatManager:
         """
         Start the application at a given path.
     
-        :param path:    The path of the application to start
-        :param version: (optional) The version string of the app to start
-        :return:        `TomcatManagerResponse` object
-                
+        :param path:         The path of the application to start
+        :param version:      (optional) The version string of the app to start
+        :return:             `TomcatManagerResponse` object
+        :raises ValueError:  if no path is specified
+        
         If the application was deployed with a version string, it must be
         specified in order to start the application.
         """
         params = {}
         if path:
             params['path'] = path
+        else:
+            raise ValueError('no path specified')
         if version:
             params['version'] = version
         return self._get('start', params)
@@ -295,16 +304,19 @@ class TomcatManager:
         """
         Stop the application at a given path.
     
-        :param path:    The path of the application to stop
-        :param version: (optional) The version string of the app to stop
-        :return:        `TomcatManagerResponse` object
-                
+        :param path:         The path of the application to stop
+        :param version:      (optional) The version string of the app to stop
+        :return:             `TomcatManagerResponse` object
+        :raises ValueError:  if no path is specified
+        
         If the application was deployed with a version string, it must be
         specified in order to stop the application.
         """
         params = {}
         if path:
             params['path'] = path
+        else:
+            raise ValueError('no path specified')
         if version:
             params['version'] = version
         return self._get('stop', params)
@@ -313,9 +325,10 @@ class TomcatManager:
         """
         Reload (stop and start) the application at a given path.
         
-        :param path:    The path of the application to reload
-        :param version: (optional) The version string of the app to reload
-        :return:        `TomcatManagerResponse` object
+        :param path:         The path of the application to reload
+        :param version:      (optional) The version string of the app to reload
+        :return:             `TomcatManagerResponse` object
+        :raises ValueError:  if no path is specified
                 
         If the application was deployed with a version string, it must be
         specified in order to reload the application.
@@ -323,6 +336,8 @@ class TomcatManager:
         params = {}
         if path:
             params['path'] = path
+        else:
+            raise ValueError('no path specified')
         if version:
             params['version'] = version
         return self._get('reload', params)
@@ -331,13 +346,14 @@ class TomcatManager:
         """
         Get the age of the sessions in an application.
 
-        :param path:    The path of the application to get session
-                        information about
-        :param version: (optional) The version string of the app to get
-                        session information about
-        :return:        `TomcatManagerResponse` object with the session
-                        summary in both the ``result`` attribute and the
-                        ``sessions`` attribute
+        :param path:         The path of the application to get session
+                             information about
+        :param version:      (optional) The version string of the app to get
+                             session information about
+        :return:             `TomcatManagerResponse` object with the session
+                             summary in both the ``result`` attribute and the
+                             ``sessions`` attribute
+        :raises ValueError:  if no path is specified
     
         Usage::
         
@@ -350,6 +366,8 @@ class TomcatManager:
         params = {}
         if path:
             params['path'] = path
+        else:
+            raise ValueError('no path specified')
         if version:
             params['version'] = version
         r = self._get('sessions', params)
@@ -361,12 +379,15 @@ class TomcatManager:
         """
         Expire sessions idle for longer than idle minutes.
         
-        :param path: the path to the app on the server whose sessions
-                     you want to expire
-        :param idle: sessions idle for more than this number of minutes
-                     will be expired. Use idle=0 to expire all sessions.
-        :return:     `TomcatManagerResponse` with the session summary in
-                     the ``result`` attribute and in the ``sessions`` attribute
+        :param path:         the path to the app on the server whose
+                             sessions you want to expire
+        :param idle:         sessions idle for more than this number of
+                             minutes will be expired. Use idle=0 to expire
+                             all sessions.
+        :return:             `TomcatManagerResponse` with the session
+                             summary in the ``result`` attribute and in
+                             the ``sessions`` attribute
+        :raises ValueError:  if no path is specified
         
         Usage::
         
@@ -378,6 +399,8 @@ class TomcatManager:
         params = {}
         if path:        
             params['path'] = path
+        else:
+            raise ValueError('no path specified')
         if version:
             params['version'] = version
         if idle:
