@@ -5,7 +5,8 @@ tomcatmanager
       :alt: latest version
 .. image:: https://img.shields.io/pypi/pyversions/tomcatmanager.svg
       :target: https://pypi.python.org/pypi/tomcatmanager
-      :alt: python versions
+      :alt: python 
+
 .. image:: https://travis-ci.org/tomcatmanager/tomcatmanager.svg?label=unix%20build&branch=develop
       :target: https://travis-ci.org/tomcatmanager/tomcatmanager
       :alt: build status
