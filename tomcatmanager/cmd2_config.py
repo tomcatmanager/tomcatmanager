@@ -21,19 +21,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+"""
+Classes to mixin to InteractiveTomcatManager to support configuration file.
+"""
 
 import os
+import ast
 import configparser
+
 import appdirs
 
 
 class Cmd2Config():
     """
     Mixin for Cmd2 which adds configuration file support for settings.
-    
+
     This mixin provides the following additional capabilities to any Cmd2
     based application:
-    
+
     - on startup, load settings from configuration file (in INI format)
     - new 'config' command which launches editor on the config file
     - new 'set' command  (overrides Cmd2) which allows you to change settings
@@ -43,46 +48,46 @@ class Cmd2Config():
     - calls _onchange_{setting}(old,new) after a setting changes value
     - makes self.appdirs available, see https://github.com/ActiveState/appdirs
     - makes self.config available, a ConfigParser object of the configuration file
-    
+
     We want the methods in this class to override those present in Cmd2.Cmd, so you
     must define your parent class with Cmd2Config before Cmd2.Cmd:
-    
+
         class MyApp(Cmd2Config, cmd2.Cmd):
-    
+
     In your initializer, you have to initialize cmd2.Cmd before Cmd2Config. You
     also need to define two attributes, `app_name` and `app_author`. These are
     used to determine the platform-specific directory where your configuration
     file should reside.
-    
+
         def __init__(self, prog_name):
 
             self.app_name = 'MyApp'
             self.app_author = 'Acme'
-    
+
             cmd2.Cmd.__init__(self)
             Cmd2Config.__init__(self)
-    
+
     If you don't define `app_name` and `app_author`, then all these fancy new
     features will be disabled.
-    
+
     You should set a value for all setting attributes in code before calling
     the initializer for this class:
-    
+
         self.timing = 10
         Cmd2Config.__init__(self)
-    
+
     Settings read from the configuration file are all strings. This class will
     coerce the strings into whatever type is contained in the attribute for
     that setting. If your setting attribute is None, then config will assume
     you wanted a string.
-    
+
     This mixin makes a configuration item from configparser available at self.config, you
     can use this to get any other configuration data you want/need from the user specified
     config file.
     """
 
     # Possible boolean values
-    BOOLEAN_VALUES = {'1': True, 'yes': True,  'y': True,   'true': True,   'on': True,
+    BOOLEAN_VALUES = {'1': True, 'yes': True, 'y': True, 'true': True, 'on': True,
                       '0': False, 'no': False, 'n': False, 'false': False, 'off': False}
 
     def __init__(self):
@@ -100,7 +105,7 @@ class Cmd2Config():
     #
     ###
     def do_config(self, args):
-        """show the location of the config file"""
+        """Show the location of the user configuration file."""
         if len(args.split()) == 1:
             action = args.split()[0]
             if action == 'file':
@@ -116,12 +121,12 @@ class Cmd2Config():
             self.exit_code = self.exit_codes.error
 
     def config_edit(self):
-        """do the 'config edit' command"""
+        """Edit the user configuration file."""
         if not self.editor:
             self.perr("No editor. Use 'set editor={path}' to specify one.")
             self.exit_code = self.exit_codes.error
             return
-        
+
         # ensure the configuration directory exists
         configdir = os.path.dirname(self.config_file)
         if not os.path.exists(configdir):
@@ -131,20 +136,21 @@ class Cmd2Config():
         cmd = '"{}" "{}"'.format(self.editor, self.config_file)
         self.pdebug("Executing '{}'...".format(cmd))
         os.system(cmd)
-        
+
         # read it back in and apply it
         self.pout('Reloading configuration...')
         self.load_config()
         self.exit_code = self.exit_codes.success
 
     def help_config(self):
+        """Show help for the 'config' command."""
         self.exit_code = self.exit_codes.success
         self.pout("""Usage: config {action}
 
 Manage the user configuration file.
 
 action is one of the following:
-  
+
   file  show the location of the user configuration file
   edit  edit the user configuration file""")
 
@@ -154,6 +160,7 @@ action is one of the following:
     #
     ###
     def do_show(self, args):
+        """Show all settings or a specific setting."""
         if len(args.split()) > 1:
             self.help_show()
             self.exit_code = self.exit_codes.error
@@ -174,10 +181,11 @@ action is one of the following:
                 self.pout('{} # {}'.format(result[setting].ljust(maxlen), self.settable[setting]))
             self.exit_code = self.exit_codes.success
         else:
-            self.perr("'{}' is not a valid setting.".format(param_name))
+            self.perr("'{}' is not a valid setting.".format(param))
             self.exit_code = self.exit_codes.error
 
     def help_show(self):
+        """Show help for the 'show' command."""
         self.exit_code = self.exit_codes.success
         self.pout("""Usage: show [setting]
 
@@ -187,6 +195,7 @@ Show one or more settings and their values.
            show the values of all settings.""")
 
     def do_set(self, args):
+        """Change the value of a setting."""
         if args:
             config = EvaluatingConfigParser()
             setting_string = "[settings]\n{}".format(args)
@@ -209,6 +218,7 @@ Show one or more settings and their values.
             self.do_show(args)
 
     def help_set(self):
+        """Show help for the 'set' command."""
         self.exit_code = self.exit_codes.success
         self.pout("""Usage: set {setting}={value}
 
@@ -226,25 +236,28 @@ Change a setting.
     ###
     @property
     def config_file(self):
-        f = None
+        """
+        The location of the user configuration file.
+
+        :return: The full path to the user configuration file, or None
+                 if self.app_name has not been defined.
+        """
         try:
             if self.appdirs and self.app_name:
                 filename = self.app_name + '.ini'
                 return os.path.join(self.appdirs.user_config_dir, filename)
         except AttributeError:
-            pass
+            return None
 
     def load_config(self):
-        """
-        Find and parse the user config file and set self.config        
-        """
+        """Open and parse the user config file and set self.config."""
         config = None
         if self.config_file is not None:
             config = EvaluatingConfigParser()
             try:
-                with open(self.config_file, 'r') as f:
-                    config.read_file(f)
-            except:
+                with open(self.config_file, 'r') as fobj:
+                    config.read_file(fobj)
+            except FileNotFoundError:
                 pass
         try:
             settings = config['settings']
@@ -257,9 +270,8 @@ Change a setting.
         self.config = config
 
     def convert_to_boolean(self, value):
-        """Return a boolean value translating from other types if necessary.
-        """
-        if type(value) == bool:
+        """Return a boolean value translating from other types if necessary."""
+        if isinstance(value, bool) == True:
             return value
         else:
             if str(value).lower() not in self.BOOLEAN_VALUES:
@@ -270,15 +282,16 @@ Change a setting.
     #
     # private methods
     #
-    ### 
+    ###
     def _change_setting(self, param_name, val):
-        """internal method to change a setting
-        
+        """
+        Apply a change to a setting, calling a hook if it is defined.
+
         param_name must be in settable or this method with throw a ValueError
         some parameters only accept boolean values, if you pass something that can't
         be converted to a boolean, throw a ValueError
-        
-        Call _onchange_{param_name}(old, new) after the setting changes value
+
+        Call _onchange_{param_name}(old, new) after the setting changes value.
         """
         if param_name in self.settable:
             current_val = getattr(self, param_name)
@@ -297,41 +310,42 @@ Change a setting.
         else:
             raise ValueError
 
-    def _pythonize(self, value):
-        """turn value into something the python interpreter can parse
-        
-        we are going to turn val into pval such that
+    @staticmethod
+    def _pythonize(value):
+        """Transform value into something the python interpreter can parse.
 
-            val = ast.literal_eval(pval)
-        
+        Transform value into pvalue such that:
+
+            value = ast.literal_eval(pvalue)
+
         This isn't quite true, because if there are no spaces or quote marks in value, then
-        
-            pval = val
+
+            pvalue = value
         """
-        sq = "'"
-        dq = '"'
-        if (sq in value) and (dq in value):
+        single_quote = "'"
+        double_quote = '"'
+        pvalue = value
+        if (single_quote in value) and (double_quote in value):
             # use sq as the outer quote, which means we have to
             # backslash all the other sq in the string
-            value = value.replace(sq, '\\'+sq)
-            return "'{}'".format(value)
-        elif sq in value:
-            return '"{}"'.format(value)
-        elif dq in value:
-            return "'{}'".format(value)
+            value = value.replace(single_quote, '\\' + single_quote)
+            pvalue = "'{}'".format(value)
+        elif single_quote in value:
+            pvalue = '"{}"'.format(value)
+        elif double_quote in value:
+            pvalue = "'{}'".format(value)
         elif ' ' in value:
-            return "'{}'".format(value)
-        else:
-            return value
+            pvalue = "'{}'".format(value)
+        return pvalue
 
 
-import ast
 class EvaluatingConfigParser(configparser.ConfigParser):
+    """Subclass of configparser.ConfigParser which evaluates values on get()."""
     def get(self, section, option, **kwargs):
         val = super().get(section, option, **kwargs)
         if "'" in val or '"' in val:
             try:
                 val = ast.literal_eval(val)
-            except:
+            except ValueError:
                 pass
         return val

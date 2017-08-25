@@ -21,18 +21,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-"""
-Package documentation for tomcatmanager package
-"""
 
 from pkg_resources import get_distribution, DistributionNotFound
-try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:
-    # package is not installed
-    pass
 
 from .tomcat_manager import TomcatManager
 from .models import TomcatError
 from .models import codes
 from .interactive_tomcat_manager import InteractiveTomcatManager
+
+try:
+    __version__ = get_distribution(__name__).version
+except DistributionNotFound:
+    # package is not installed
+    pass

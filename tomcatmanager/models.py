@@ -21,10 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-
 """
 tomcatmanager.models
-~~~~~~~~~~~~~~~
+--------------------
 
 This module contains the data objects created by and used by tomcatmanager.
 """
@@ -34,16 +33,19 @@ from requests.structures import LookupDict
 
 
 class TomcatError(Exception):
-	pass
+    """
+    Raised when the Tomcat Server responds with an error.
+    """
+    pass
 
 
 class TomcatManagerResponse:
     """
     Returned as the response for :class:`TomcatManager` commands.
-    
+
     After running a command, it's a good idea to check and make sure that
     the command completed succesfully before relying on the results::
-    
+
         >>> import tomcatmanager as tm
         >>> tomcat = getfixture('tomcat')
         >>> try:
@@ -58,7 +60,7 @@ class TomcatManagerResponse:
         ...     pass
         Linux
 
-    """    
+    """
 
     def __init__(self, response=None):
         self._response = response
@@ -80,7 +82,7 @@ class TomcatManagerResponse:
             self.response != None,
             self.response.status_code == requests.codes.ok,
             self.status_code == codes.ok,
-             ])
+            ])
 
     def raise_for_status(self):
         """
@@ -107,12 +109,12 @@ class TomcatManagerResponse:
         because it checks for http errors as well as tomcat errors.
         However, if you want specific access to the status of the tomcat
         command, use this method.
-        
+
         Currently there are only two known status codes
-        
+
         - ``OK``
         - ``FAIL``
-        
+
         A lookup object, `tomcatmanager.codes`, makes it easy to check
         `status_code` against known values::
 
@@ -134,7 +136,7 @@ class TomcatManagerResponse:
         The message on the first line of the response from the Tomcat Server.
         """
         return self._status_message
-    
+
     @status_message.setter
     def status_message(self, value):
         self._status_message = value
@@ -155,14 +157,14 @@ class TomcatManagerResponse:
     def response(self):
         """
         The server's response to an HTTP request.
-    
+
         `TomcatManager` uses the excellent Requests package for HTTP
         communication. This property returns the `requests.models.Response`
         object which contains the server's response to the HTTP request.
-    
+
         Of particular use is `requests.models.Response.text` which
         contains the content of the response in unicode. If you want raw access to
-        the content returned by the Tomcat Server, this is where you can get it.        
+        the content returned by the Tomcat Server, this is where you can get it.
         """
         return self._response
 
@@ -176,7 +178,7 @@ class TomcatManagerResponse:
             try:
                 statusline = response.text.splitlines()[0]
                 self.status_code = statusline.split(' ', 1)[0]
-                self.status_message = statusline.split(' ',1)[1][2:]
+                self.status_message = statusline.split(' ', 1)[1][2:]
             except IndexError:
                 pass
             # set the result
@@ -187,12 +189,12 @@ class TomcatManagerResponse:
 class ServerInfo(dict):
     """
     Discrete data about the Tomcat server.
-    
+
     This object is a dictionary of keys and values as returned from the
     Tomcat server. It also has properties for well-known values.
-    
+
     Usage::
-    
+
         >>> tomcat = getfixture('tomcat')
         >>> r = tomcat.server_info()
         >>> r.server_info['OS Architecture']
@@ -201,16 +203,17 @@ class ServerInfo(dict):
         'Oracle Corporation'
     """
 
-    def __init__(self, result=None):
+    def __init__(self, result=None, *args, **kwargs):
         """
         Initialize from the plain text response from a Tomcat server.
-        
+
         :param result: the plain text from the server, minus the first
         line with the status info
         """
+        super().__init__(*args, **kwargs)
         self._tomcat_version = None
         self._os_name = None
-        self._os_version= None
+        self._os_version = None
         self._os_architecture = None
         self._jvm_version = None
         self._jvm_vendor = None
@@ -220,16 +223,16 @@ class ServerInfo(dict):
         """Parse up a list of lines from the server."""
         if result:
             for line in result.splitlines():
-                key, value = line.rstrip().split(':',1)
+                key, value = line.rstrip().split(':', 1)
                 self[key] = value.lstrip()
-        
+
             self._tomcat_version = self['Tomcat Version']
             self._os_name = self['OS Name']
-            self._os_version= self['OS Version']
+            self._os_version = self['OS Version']
             self._os_architecture = self['OS Architecture']
             self._jvm_version = self['JVM Version']
             self._jvm_vendor = self['JVM Vendor']
-        
+
     @property
     def tomcat_version(self):
         """The tomcat version string."""
@@ -265,7 +268,7 @@ class ServerInfo(dict):
 # build status codes
 #
 ###
-_codes = {
+CODES = {
 
     # 'sent from tomcat': 'friendly name'
     'OK': 'ok',
@@ -274,5 +277,5 @@ _codes = {
 
 codes = LookupDict(name='status_codes')
 
-for code, title in _codes.items():
+for code, title in CODES.items():
     setattr(codes, title, code)
