@@ -41,7 +41,6 @@ tomcatmanager
 .. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
-      :align: right
 
 
 If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
