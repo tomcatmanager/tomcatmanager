@@ -25,6 +25,7 @@
 import requests
 import io
 import pytest
+import unittest.mock as mock
 
 import tomcatmanager as tm
 
@@ -50,6 +51,16 @@ class TestInfo(TestManagerBase):
         assert r.result == r.status_xml
         assert r.status_xml[:6] == '<?xml '
 
+    def test_status_xml_fail(self, tomcat, monkeypatch):
+        with mock.patch('requests.models.Response.status_code', create=True,
+                new_callable=mock.PropertyMock) as mock_status:
+            # chose a status value that won't raise an exception, but
+            # that isn't 200, OK
+            mock_status.return_value = 204 # No Content
+            r = tomcat.status_xml()
+            self.failure_assertions(r)
+            assert r.status_code == tm.codes.fail        
+        
     def test_vm_info(self, tomcat):
         r = tomcat.vm_info()
         self.info_assertions(r)
