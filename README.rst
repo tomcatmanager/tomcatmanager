@@ -1,20 +1,21 @@
 tomcatmanager
 =============
-.. image:: https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version
+
+.. image:: https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version&colorB=1074b5
       :target: https://pypi.python.org/pypi/tomcatmanager
       :alt: latest version
-.. image:: https://img.shields.io/pypi/pyversions/tomcatmanager.svg
+.. image:: https://img.shields.io/pypi/pyversions/tomcatmanager.svg?colorB=1074b5
       :target: https://pypi.python.org/pypi/tomcatmanager
-      :alt: python 
-
+      :alt: python
+.. image:: https://img.shields.io/badge/license-MIT-orange.svg
+      :target: https://github.com/tomcatmanager/tomcatmanager/blob/master/LICENSE
+      :alt: license
 .. image:: https://travis-ci.org/tomcatmanager/tomcatmanager.svg?label=unix%20build&branch=develop
       :target: https://travis-ci.org/tomcatmanager/tomcatmanager
       :alt: build status
-      :align: right
 .. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
-      :align: right
 
 If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
 
@@ -43,7 +44,7 @@ easily scriptable using your favorite shell:
 
 There is also an interactive mode:
 
-.. code-block:: bash
+.. code-block:: none
 
    $ tomcat-manager
    tomcat-manager>connect http://localhost:8080/manager ace newenglandclamchowder
@@ -58,16 +59,18 @@ There is also an interactive mode:
 
 And for the ultimate in flexibility, you can use the python package directly:
 
->>> import tomcatmanager as tm
->>> tomcat = tm.TomcatManager(url='http://localhost:8080/manager',
-... userid='ace', password='newenglandclamchowder')
->>> tomcat.is_connected
-True
->>> r = tomcat.stop('/someapp')
->>> r.status_code == tm.codes.ok
-False
->>> r.status_message
-'No context exists named /someapp'
+.. code-block:: python
+
+   >>> import tomcatmanager as tm
+   >>> tomcat = tm.TomcatManager(url='http://localhost:8080/manager',
+   ... userid='ace', password='newenglandclamchowder')
+   >>> tomcat.is_connected
+   True
+   >>> r = tomcat.stop('/someapp')
+   >>> r.status_code == tm.codes.ok
+   False
+   >>> r.status_message
+   'No context exists named /someapp'
 
 
 Installation
