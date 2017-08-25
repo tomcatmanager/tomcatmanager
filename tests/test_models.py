@@ -23,6 +23,7 @@
 #
 
 import pytest
+import unittest.mock as mock
 
 import tomcatmanager as tm
 
@@ -32,6 +33,38 @@ class TestTomcatManagerResponse:
     def test_ok(self, tomcat):
         r = tomcat.list()
         assert r.ok == True
+    
+    def test_empty_http_response(self, tomcat):
+        # say we get http response code 200, but tomcat doesn't
+        # return a status line with OK or FAIL at the beginning
+        with mock.patch('requests.models.Response.text', create=True,
+                new_callable=mock.PropertyMock) as mock_text:
+            # chose a status value that won't raise an exception, but
+            # that isn't 200, OK
+            mock_text.return_value = None
+            r = tomcat.vm_info()
+            assert r.status_code == None
+            assert r.status_message == None
+            assert r.result == None
+
+            mock_text.return_value = ''
+            r = tomcat.vm_info()
+            assert r.status_code == None
+            assert r.status_message == None
+            assert r.result == None
+
+            mock_text.return_value = 'FAIL - some message'
+            r = tomcat.vm_info()
+            assert r.status_code == tm.codes.fail
+            assert r.status_message == 'some message'
+            assert r.result == None
+
+            mock_text.return_value = 'OK - some message\nthe result'
+            r = tomcat.vm_info()
+            assert r.status_code == tm.codes.ok
+            assert r.status_message == 'some message'
+            assert r.result == 'the result'
+
 
 class TestServerInfo:
 

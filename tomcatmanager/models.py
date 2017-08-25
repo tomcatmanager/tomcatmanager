@@ -180,10 +180,8 @@ class TomcatManagerResponse:
             except IndexError:
                 pass
             # set the result
-            try:
+            if len(lines) > 1:
                 self.result = "\n".join(lines[1:])
-            except IndexError:
-                pass
 
 
 class ServerInfo(dict):
