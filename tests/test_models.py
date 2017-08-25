@@ -65,6 +65,14 @@ class TestTomcatManagerResponse:
             assert r.status_message == 'some message'
             assert r.result == 'the result'
 
+            mock_text.return_value = 'malformedwithnospace'
+            r = tomcat.vm_info()
+            # we don't care what this is, but it better not be OK
+            assert r.status_code != tm.codes.ok
+            assert r.status_message == None
+            assert r.result == None
+
+
 
 class TestServerInfo:
 
