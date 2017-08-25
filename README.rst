@@ -4,7 +4,7 @@ tomcatmanager
 .. raw:: html
 
    <table style="border:none">
-      <tr>
+      <tr style="border:none;background-color:#fff;">
          <td>
             <a href="https://pypi.python.org/pypi/tomcatmanager">
             <img style="float: left" src="https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version&colorB=1074b5">
@@ -13,8 +13,6 @@ tomcatmanager
             <img style="float: left" src="https://img.shields.io/pypi/pyversions/tomcatmanager.svg?colorB=1074b5">
             </a>
          </td>
-      </tr>
-      <tr>
          <td>
             <a href="https://travis-ci.org/tomcatmanager/tomcatmanager">
             <img style="float: right" src="https://travis-ci.org/tomcatmanager/tomcatmanager.svg?label=unix%20build&branch=develop">
