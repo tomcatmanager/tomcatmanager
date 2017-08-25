@@ -64,8 +64,9 @@ setup(
 	# dependencies for development and testing
 	# $ pip3 install -e .[dev]
 	extras_require={
-		'dev': ['pytest', 'tox', 'codecov', 'sphinx', 'sphinx-autobuild',
-                'wheel', 'setuptools_scm', 'setupext_janitor', 'twine']
+		'dev': ['pytest', 'tox', 'codecov', 'pytest-cov',
+                'setuptools_scm','setupext_janitor',
+                'sphinx', 'sphinx-autobuild', 'wheel', 'twine']
 	},
 
 	# define the scripts that should be created on installation
