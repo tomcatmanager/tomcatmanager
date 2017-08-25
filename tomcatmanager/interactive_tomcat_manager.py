@@ -279,10 +279,10 @@ Show the url of the tomcat server you are connected to.""")
                         update=update, version=version)
             elif src == local:
                 warfile = os.path.expanduser(warfile)
-                fileobj = open(warfile, 'rb')
-                self.exit_code = self.exit_codes.success
-                self.docmd(self.tomcat.deploy, path, localwar=fileobj,
-                        update=update, version=version)
+                with open(warfile, 'rb') as fileobj:
+                    self.exit_code = self.exit_codes.success
+                    self.docmd(self.tomcat.deploy, path, localwar=fileobj,
+                            update=update, version=version)
             else:
                 show_help()
                 self.exit_code = self.exit_codes.usage
