@@ -25,8 +25,6 @@
 Components to run the 'tomcat-manager' command line program.
 """
 
-# pylint: disable=too-many-public-methods
-
 import sys
 import os
 import traceback
@@ -51,7 +49,7 @@ def requires_connection(func):
             self.perr('not connected')
     return _requires_connection
 
-
+# pylint: disable=too-many-public-methods
 class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     """an interactive command line tool for tomcat manager
 

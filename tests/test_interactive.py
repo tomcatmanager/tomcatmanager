@@ -22,6 +22,11 @@
 # THE SOFTWARE.
 #
 
+# pylint: disable=unused-variable
+# pylint: disable=invalid-name,redefined-outer-name
+
+# redefined-outer-name is a known problem with pylint fixtures
+
 import uuid
 import pytest
 
@@ -43,20 +48,20 @@ def itm():
 #
 ###
 def test__change_setting(itm):
-    p = str(uuid.uuid1())
+    prompt = str(uuid.uuid1())
     # we know prompt is in itm.settable
-    itm._change_setting('prompt', p)
-    assert itm.prompt == p
+    itm._change_setting('prompt', prompt)
+    assert itm.prompt == prompt
 
 
 def test__change_setting_with_invalid_param(itm):
     # this uuid won't be in itm.settable
-    p = str(uuid.uuid1())
+    invalid_setting = str(uuid.uuid1())
     with pytest.raises(ValueError):
-        itm._change_setting(p, 'someval')
+        itm._change_setting(invalid_setting, 'someval')
 
 
-set_success = [
+SETTINGS_SUCCESSFUL = [
     ('prompt=tm>', 'tm>'),
     ('prompt=tm> ', 'tm>'),
     ('prompt=t m>', 't m>'),
@@ -65,18 +70,18 @@ set_success = [
     ('prompt="t\'m> "', "t\'m> "),
     ('prompt="""h\'i"""', "h'i"),
 ]
-@pytest.mark.parametrize('arg, value', set_success)
+@pytest.mark.parametrize('arg, value', SETTINGS_SUCCESSFUL)
 def test_do_set_success(itm, arg, value):
     itm.do_set(arg)
     assert itm.prompt == value
     assert itm.exit_code == itm.exit_codes.success
 
 
-set_fail = [
+SETTINGS_FAILURE = [
     'thisisntaparam=somevalue',
     'thisisntaparam',
 ]
-@pytest.mark.parametrize('arg', set_fail)
+@pytest.mark.parametrize('arg', SETTINGS_FAILURE)
 def test_do_set_fail(itm, arg):
     itm.do_set(arg)
     assert itm.exit_code == itm.exit_codes.error
@@ -88,46 +93,46 @@ def test_do_set_with_no_args(itm):
     assert itm.exit_code == itm.exit_codes.success
 
 
-booleans = [
-    (    '1', True),
-    (    '0', False),    
-    (    'y', True),
-    (    'Y', True),
-    (  'yes', True),
-    (  'Yes', True),
-    (  'YES', True),
-    (    'n', False),
-    (    'N', False),
-    (   'no', False),
-    (   'No', False),
-    (   'NO', False),
-    (   'on', True),
-    (   'On', True),
-    (   'ON', True),
-    (  'off', False),
-    (  'Off', False),
-    (  'OFF', False),
-    ( 'true', True),
-    ( 'True', True),
-    ( 'TRUE', True),
+BOOLEANS = [
+    ('1', True),
+    ('0', False),
+    ('y', True),
+    ('Y', True),
+    ('yes', True),
+    ('Yes', True),
+    ('YES', True),
+    ('n', False),
+    ('N', False),
+    ('no', False),
+    ('No', False),
+    ('NO', False),
+    ('on', True),
+    ('On', True),
+    ('ON', True),
+    ('off', False),
+    ('Off', False),
+    ('OFF', False),
+    ('true', True),
+    ('True', True),
+    ('TRUE', True),
     ('false', False),
     ('False', False),
     ('FALSE', False),
-    (   True, True),
-    (  False, False),
+    (True, True),
+    (False, False),
 ]
-@pytest.mark.parametrize('str, value', booleans)
-def test__convert_to_boolean(itm, str, value):
-    assert itm.convert_to_boolean(str) == value
+@pytest.mark.parametrize('param, value', BOOLEANS)
+def test__convert_to_boolean(itm, param, value):
+    assert itm.convert_to_boolean(param) == value
 
 
-pythonizers = [
+LITERALS = [
     ('fred', 'fred'),
     ('fred ', "'fred '"),
     ("can't ", '"can\'t "'),
     ('b"d', '\'b"d\''),
     ('b\'|"d', "\'b\\'|\"d'"),
 ]
-@pytest.mark.parametrize('str, value', pythonizers)
-def test_pythonize(itm, str, value):
-    assert itm._pythonize(str) == value
+@pytest.mark.parametrize('param, value', LITERALS)
+def test_pythonize(itm, param, value):
+    assert itm._pythonize(param) == value

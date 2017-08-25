@@ -22,21 +22,18 @@
 # THE SOFTWARE.
 #
 
-import requests
-import io
-import pytest
+# pylint: disable=unused-variable
+# pylint: disable=invalid-name
 
-import tomcatmanager as tm
+import pytest
 
 from tests.test_manager import TestManagerBase
 
 
-###
-#
-# test the methods for managing applications on the server
-#
-###
 class TestApps(TestManagerBase):
+    """
+    Test TomcatManager methods related to Tomcat applications.
+    """
 
     ###
     #
@@ -75,10 +72,10 @@ class TestApps(TestManagerBase):
         self.success_assertions(r)
         r = tomcat.undeploy(safe_path, version='42')
         self.success_assertions(r)
-    
+
     def test_deploy_localwar_update(self, tomcat, localwar_file, safe_path):
         r = tomcat.deploy(safe_path, localwar=localwar_file)
-        self.success_assertions(r)        
+        self.success_assertions(r)
         r = tomcat.deploy(safe_path, localwar=localwar_file, update=True)
         self.success_assertions(r)
         r = tomcat.undeploy(safe_path)
@@ -117,7 +114,7 @@ class TestApps(TestManagerBase):
         self.success_assertions(r)
         r = tomcat.undeploy(safe_path)
         self.success_assertions(r)
-    
+
     def test_deploy_serverwar_version_update(self, tomcat, serverwar_file, safe_path):
         r = tomcat.deploy(safe_path, serverwar=serverwar_file, version='42')
         self.success_assertions(r)
@@ -158,7 +155,7 @@ class TestApps(TestManagerBase):
         with open(localwar_file, 'rb') as localwar_fileobj:
             r = tomcat.deploy(safe_path, localwar=localwar_fileobj)
         self.success_assertions(r)
-        
+
         r = tomcat.stop(safe_path)
         self.success_assertions(r)
 
@@ -171,7 +168,7 @@ class TestApps(TestManagerBase):
     def test_stop_start_version(self, tomcat, localwar_file, safe_path):
         r = tomcat.deploy(safe_path, localwar=localwar_file, version='42')
         self.success_assertions(r)
-        
+
         r = tomcat.stop(safe_path, version='42')
         self.success_assertions(r)
 
@@ -180,8 +177,8 @@ class TestApps(TestManagerBase):
 
         r = tomcat.undeploy(safe_path, version='42')
         self.success_assertions(r)
-        
-    
+
+
     ###
     #
     # reload
@@ -196,7 +193,7 @@ class TestApps(TestManagerBase):
     def test_reload(self, tomcat, localwar_file, safe_path):
         r = tomcat.deploy(safe_path, localwar=localwar_file)
         self.success_assertions(r)
-        
+
         r = tomcat.reload(safe_path)
         self.success_assertions(r)
 
@@ -206,7 +203,7 @@ class TestApps(TestManagerBase):
     def test_reload_version(self, tomcat, localwar_file, safe_path):
         r = tomcat.deploy(safe_path, localwar=localwar_file, version='42')
         self.success_assertions(r)
-        
+
         r = tomcat.reload(safe_path, version='42')
         self.success_assertions(r)
 
@@ -224,11 +221,11 @@ class TestApps(TestManagerBase):
             r = tomcat.sessions(None)
         with pytest.raises(ValueError):
             r = tomcat.sessions('')
-        
+
     def test_sessions(self, tomcat, localwar_file, safe_path):
         r = tomcat.deploy(safe_path, localwar=localwar_file)
         self.success_assertions(r)
-        
+
         r = tomcat.sessions(safe_path)
         self.info_assertions(r)
         assert r.result == r.sessions
@@ -240,14 +237,14 @@ class TestApps(TestManagerBase):
     def test_sessions_version(self, tomcat, localwar_file, safe_path):
         r = tomcat.deploy(safe_path, localwar=localwar_file, version='42')
         self.success_assertions(r)
-        
+
         r = tomcat.sessions(safe_path, version='42')
         self.info_assertions(r)
         assert r.result == r.sessions
 
         r = tomcat.undeploy(safe_path, version='42')
         self.success_assertions(r)
-    
+
     ###
     #
     # expire
@@ -262,7 +259,7 @@ class TestApps(TestManagerBase):
     def test_expire(self, tomcat, localwar_file, safe_path):
         r = tomcat.deploy(safe_path, localwar=localwar_file)
         self.success_assertions(r)
-        
+
         r = tomcat.expire(safe_path, idle=30)
         self.info_assertions(r)
         assert r.result == r.sessions
@@ -273,7 +270,7 @@ class TestApps(TestManagerBase):
     def test_expire_version(self, tomcat, localwar_file, safe_path):
         r = tomcat.deploy(safe_path, localwar=localwar_file, version='42')
         self.success_assertions(r)
-        
+
         r = tomcat.expire(safe_path, version='42', idle=30)
         self.info_assertions(r)
         assert r.result == r.sessions

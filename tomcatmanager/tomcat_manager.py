@@ -186,6 +186,7 @@ class TomcatManager:
 
         :return: True if connected to a tomcat server, otherwise, False.
         """
+        # pylint: disable=broad-except
         try:
             r = self._get('list')
             return r.ok

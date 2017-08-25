@@ -1,0 +1,9 @@
+[basic]
+# BaseHTTPRequestHandler requires us to override these
+good-names=r,do_GET,do_PUT
+
+[messages control]
+# too-many-public-methods - test classes can have lots of methods, so let's ignore those
+# missing-docstring - prefer method names instead of docstrings
+# no-self-use - test methods part of a class hardly ever use self
+disable=too-many-public-methods,missing-docstring,no-self-use
