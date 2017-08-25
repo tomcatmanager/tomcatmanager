@@ -3,9 +3,9 @@ tomcatmanager
 
 .. raw:: html
 
-   <table style="border:none">
-      <tr style="border:none;background-color:#fff;">
-         <td>
+   <table style="border:none; width=100%;">
+      <tr style="border:none; background-color:#fff;">
+         <td style="border:none; width=50%;">
             <a href="https://pypi.python.org/pypi/tomcatmanager">
             <img style="float: left" src="https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version&colorB=1074b5">
             </a>
