@@ -11,6 +11,7 @@ tomcatmanager
       :target: https://github.com/tomcatmanager/tomcatmanager/blob/master/LICENSE
       :alt: license
 
+| 
 
 .. image:: https://travis-ci.org/tomcatmanager/tomcatmanager.svg?label=unix%20build&branch=develop
       :target: https://travis-ci.org/tomcatmanager/tomcatmanager
@@ -47,7 +48,7 @@ easily scriptable using your favorite shell:
 
 There is also an interactive mode:
 
-.. code-block:: bash
+.. code-block:: none
 
    $ tomcat-manager
    tomcat-manager>connect http://localhost:8080/manager ace newenglandclamchowder
@@ -62,16 +63,18 @@ There is also an interactive mode:
 
 And for the ultimate in flexibility, you can use the python package directly:
 
->>> import tomcatmanager as tm
->>> tomcat = tm.TomcatManager(url='http://localhost:8080/manager',
-... userid='ace', password='newenglandclamchowder')
->>> tomcat.is_connected
-True
->>> r = tomcat.stop('/someapp')
->>> r.status_code == tm.codes.ok
-False
->>> r.status_message
-'No context exists named /someapp'
+.. code-block:: python
+
+   >>> import tomcatmanager as tm
+   >>> tomcat = tm.TomcatManager(url='http://localhost:8080/manager',
+   ... userid='ace', password='newenglandclamchowder')
+   >>> tomcat.is_connected
+   True
+   >>> r = tomcat.stop('/someapp')
+   >>> r.status_code == tm.codes.ok
+   False
+   >>> r.status_message
+   'No context exists named /someapp'
 
 
 Installation
