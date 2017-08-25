@@ -10,17 +10,12 @@ tomcatmanager
 .. image:: https://img.shields.io/badge/license-MIT-orange.svg
       :target: https://github.com/tomcatmanager/tomcatmanager/blob/master/LICENSE
       :alt: license
-
-| 
-
 .. image:: https://travis-ci.org/tomcatmanager/tomcatmanager.svg?label=unix%20build&branch=develop
       :target: https://travis-ci.org/tomcatmanager/tomcatmanager
       :alt: build status
 .. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
-
-| 
 
 If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
 
