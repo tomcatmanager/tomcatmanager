@@ -1,12 +1,41 @@
 tomcatmanager
 =============
-.. image:: https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version
+
+.. raw:: html
+
+   <table style="border:none">
+      <tr>
+         <td>
+            <a href="https://pypi.python.org/pypi/tomcatmanager">
+            <img style="float: left" src="https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version&colorB=1074b5">
+            </a>
+            <a href="https://pypi.python.org/pypi/tomcatmanager">
+            <img style="float: left" src="https://img.shields.io/pypi/pyversions/tomcatmanager.svg?colorB=1074b5">
+            </a>
+         </td>
+      </tr>
+      <tr>
+         <td>
+            <a href="https://travis-ci.org/tomcatmanager/tomcatmanager">
+            <img style="float: right" src="https://travis-ci.org/tomcatmanager/tomcatmanager.svg?label=unix%20build&branch=develop">
+            </a>
+            <a href="https://codecov.io/gh/tomcatmanager/tomcatmanager">
+            <img style="float: right" src="https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg">
+            </a>
+         </td>
+      </tr>
+   </table>
+
+
+.. image:: https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version&colorB=1074b5
       :target: https://pypi.python.org/pypi/tomcatmanager
       :alt: latest version
-.. image:: https://img.shields.io/pypi/pyversions/tomcatmanager.svg
+.. image:: https://img.shields.io/pypi/pyversions/tomcatmanager.svg?colorB=1074b5
       :target: https://pypi.python.org/pypi/tomcatmanager
-      :alt: python 
-
+      :alt: python
+.. image:: https://img.shields.io/badge/license-MIT-orange.svg
+      :target: https://github.com/tomcatmanager/tomcatmanager/blob/master/LICENSE
+      :alt: license
 .. image:: https://travis-ci.org/tomcatmanager/tomcatmanager.svg?label=unix%20build&branch=develop
       :target: https://travis-ci.org/tomcatmanager/tomcatmanager
       :alt: build status
@@ -15,6 +44,7 @@ tomcatmanager
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
       :align: right
+
 
 If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
 
