@@ -3,26 +3,22 @@ tomcatmanager
 
 .. raw:: html
 
-   <table style="border:none; width=100%;">
-      <tr style="border:none; background-color:#fff;">
-         <td style="border:none; width=50%;">
-            <a href="https://pypi.python.org/pypi/tomcatmanager">
-            <img style="float: left" src="https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version&colorB=1074b5">
-            </a>
-            <a href="https://pypi.python.org/pypi/tomcatmanager">
-            <img style="float: left" src="https://img.shields.io/pypi/pyversions/tomcatmanager.svg?colorB=1074b5">
-            </a>
-         </td>
-         <td>
-            <a href="https://travis-ci.org/tomcatmanager/tomcatmanager">
-            <img style="float: right" src="https://travis-ci.org/tomcatmanager/tomcatmanager.svg?label=unix%20build&branch=develop">
-            </a>
-            <a href="https://codecov.io/gh/tomcatmanager/tomcatmanager">
-            <img style="float: right" src="https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg">
-            </a>
-         </td>
-      </tr>
-   </table>
+   <div align="left">
+      <a href="https://pypi.python.org/pypi/tomcatmanager">
+      <img style="float: left" src="https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version&colorB=1074b5">
+      </a>
+      <a href="https://pypi.python.org/pypi/tomcatmanager">
+      <img style="float: left" src="https://img.shields.io/pypi/pyversions/tomcatmanager.svg?colorB=1074b5">
+      </a>
+   </div>
+   <div align="right">
+      <a href="https://travis-ci.org/tomcatmanager/tomcatmanager">
+      <img style="float: right" src="https://travis-ci.org/tomcatmanager/tomcatmanager.svg?label=unix%20build&branch=develop">
+      </a>
+      <a href="https://codecov.io/gh/tomcatmanager/tomcatmanager">
+      <img style="float: right" src="https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg">
+      </a>
+   </div>
 
 
 .. container::
