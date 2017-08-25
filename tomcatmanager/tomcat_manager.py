@@ -206,7 +206,8 @@ class TomcatManager:
                              i.e. /sampleapp
         :param localwar:     (optional) The path (specified using your
                              particular operating system convention) to a war
-                             file on the local file system. This will be sent
+                             file on the local file system. You can also pass
+                             a stream or file-like object. This will be sent
                              to the server for deployment.
         :param serverwar:    (optional) The java-style path (use slashes not
                              backslashes) to the war file on the server. Don't
@@ -237,19 +238,26 @@ class TomcatManager:
             # PUT a local stream
             base = self._url or ''
             url = base + '/text/deploy'
-            if self._is_stream(localwar):
-                warobj = localwar
-            else:
-                warobj = open(localwar, 'rb')   
-
             r = TomcatManagerResponse()
-            r.response = requests.put(
-                    url,
-                    auth=(self._user, self._password),
-                    params=params,
-                    data=warobj,
-                    timeout=self.timeout,
-                    )
+            # have to have the requests.put call in two places so we can
+            # properly close the file if we open it
+            if self._is_stream(localwar):
+                r.response = requests.put(
+                        url,
+                        auth=(self._user, self._password),
+                        params=params,
+                        data=localwar,
+                        timeout=self.timeout,
+                        )
+            else:
+                with open(localwar, 'rb') as warobj:
+                    r.response = requests.put(
+                            url,
+                            auth=(self._user, self._password),
+                            params=params,
+                            data=warobj,
+                            timeout=self.timeout,
+                            )
         elif serverwar:
             params['war'] = serverwar
             r = self._get('deploy', params)
