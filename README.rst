@@ -35,7 +35,7 @@ What Can It Do?
 This package installs a command line utility called ``tomcat-manager``. It's
 easily scriptable using your favorite shell:
 
-.. code-block:: bash
+.. code-block:: none
 
    $ tomcat-manager --user=ace --password=newenglandclamchowder \
    http://localhost:8080/manager deploy local sample.war /sampleapp
@@ -78,7 +78,7 @@ Installation
 
 You'll need Python >= 3.4. Install using pip:
 
-.. code-block:: bash
+.. code-block:: none
 
    $ pip install tomcatmanager
 
