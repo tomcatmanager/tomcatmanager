@@ -22,9 +22,6 @@
 # THE SOFTWARE.
 #
 
-# pylint: disable=unused-variable
-# pylint: disable=invalid-name
-
 import unittest.mock as mock
 
 import tomcatmanager as tm

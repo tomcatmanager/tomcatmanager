@@ -22,11 +22,6 @@
 # THE SOFTWARE.
 #
 
-# pylint: disable=unused-variable
-# pylint: disable=invalid-name,redefined-outer-name
-
-# redefined-outer-name is a known problem with pylint fixtures
-
 import uuid
 import pytest
 

@@ -339,8 +339,10 @@ Change a setting.
         return pvalue
 
 
+# pylint: disable=too-many-ancestors
 class EvaluatingConfigParser(configparser.ConfigParser):
     """Subclass of configparser.ConfigParser which evaluates values on get()."""
+    # pylint: disable=arguments-differ
     def get(self, section, option, **kwargs):
         val = super().get(section, option, **kwargs)
         if "'" in val or '"' in val:

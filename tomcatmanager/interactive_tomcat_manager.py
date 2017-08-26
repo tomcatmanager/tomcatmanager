@@ -219,8 +219,6 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         else:
             # TODO inspect r to see why we didn't connect so we can provide
             # a useful error message and perhaps exit code
-            import pdb
-            pdb.set_trace()
             self.perr('tomcat manager not found at {}'.format(url))
             self.exit_code = self.exit_codes.error
 

@@ -1,2 +1,8 @@
+#
+# pylint configuration for tomcatmanager package
+#
+#   $ pylint --rcfile=tomcatmanager/pylintrc tomcatmanager
+#
+
 [basic]
 good-names=ok,r

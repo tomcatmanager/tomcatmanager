@@ -22,7 +22,8 @@
 # THE SOFTWARE.
 #
 
-"""Mock up a Tomcat Manager application that behaves like tomcat version 8.0.x
+"""
+Mock up a Tomcat Manager application that behaves like tomcat version 8.0.x
 """
 
 import re
@@ -145,7 +146,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         self.send_header('WWW-Authenticate', 'Basic realm=\"tomcatmanager\"')
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        msg = "not authorized"
+        msg = 'not authorized'
         self.wfile.write(msg.encode('utf-8'))
         return False
 

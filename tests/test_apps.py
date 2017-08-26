@@ -22,9 +22,6 @@
 # THE SOFTWARE.
 #
 
-# pylint: disable=unused-variable
-# pylint: disable=invalid-name
-
 import pytest
 
 from tests.test_manager import TestManagerBase
