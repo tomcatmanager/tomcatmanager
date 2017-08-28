@@ -6,3 +6,7 @@
 
 [basic]
 good-names=ok,r
+
+[messages control]
+# no-member          requests uses LookupDict which makes all these errors
+disable=no-member

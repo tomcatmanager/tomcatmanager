@@ -271,7 +271,7 @@ Change a setting.
 
     def convert_to_boolean(self, value):
         """Return a boolean value translating from other types if necessary."""
-        if isinstance(value, bool) == True:
+        if isinstance(value, bool) is True:
             return value
         else:
             if str(value).lower() not in self.BOOLEAN_VALUES:
