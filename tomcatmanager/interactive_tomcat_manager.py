@@ -249,8 +249,8 @@ with no authentication.""")
             self.exit_code = self.exit_codes.usage
         else:
             out = 'connected to {}'.format(self.tomcat.url)
-            if self.tomcat._user is not None:
-                out += ' as {}'.format(self.tomcat._user)
+            if self.tomcat.user is not None:
+                out += ' as {}'.format(self.tomcat.user)
             self.pout(out)
 
     def help_which(self):

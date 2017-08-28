@@ -77,7 +77,7 @@ class TomcatManager:
         Initialize a new TomcatManager object.
         """
         self.url = None
-        self._user = None
+        self.user = None
         self._password = None
 
         self.timeout = 15
@@ -98,7 +98,7 @@ class TomcatManager:
         r = TomcatManagerResponse()
         r.response = requests.get(
             url,
-            auth=(self._user, self._password),
+            auth=(self.user, self._password),
             params=payload,
             timeout=self.timeout,
             )
@@ -164,14 +164,14 @@ class TomcatManager:
 
         """
         self.url = url
-        self._user = user
+        self.user = user
         self._password = password
         r = self._get('serverinfo')
 
         if not r.ok:
             # don't save the parameters if we don't succeed
             self.url = None
-            self._user = None
+            self.user = None
             self._password = None
         # hide the fact that we retrieved results, we don't
         # want people relying on or using this data
@@ -251,7 +251,7 @@ class TomcatManager:
             if self._is_stream(localwar):
                 r.response = requests.put(
                     url,
-                    auth=(self._user, self._password),
+                    auth=(self.user, self._password),
                     params=params,
                     data=localwar,
                     timeout=self.timeout,
@@ -260,7 +260,7 @@ class TomcatManager:
                 with open(localwar, 'rb') as warobj:
                     r.response = requests.put(
                         url,
-                        auth=(self._user, self._password),
+                        auth=(self.user, self._password),
                         params=params,
                         data=warobj,
                         timeout=self.timeout,
@@ -511,7 +511,7 @@ class TomcatManager:
         r = TomcatManagerResponse()
         r.response = requests.get(
             url,
-            auth=(self._user, self._password),
+            auth=(self.user, self._password),
             params={'XML': 'true'},
             timeout=self.timeout,
             )

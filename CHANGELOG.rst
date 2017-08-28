@@ -6,8 +6,10 @@ Release History
 develop
 -------
 
-**New**
+**Changed**
 
+- `TomcatManager._user` is now `TomcatManager.user`
+- `TomcatManager._url` is now `TomcatManager.url`
 
 0.10.0 (2017-08-24)
 -------------------
