@@ -76,7 +76,7 @@ class TomcatManager:
         """
         Initialize a new TomcatManager object.
         """
-        self._url = None
+        self.url = None
         self._user = None
         self._password = None
 
@@ -88,8 +88,8 @@ class TomcatManager:
 
         :return: `TomcatManagerResponse` object
         """
-        base = self._url or ''
-        # if we have no _url, don't add other stuff to it because it makes
+        base = self.url or ''
+        # if we have no url, don't add other stuff to it because it makes
         # the exceptions hard to understand
         if base:
             url = base + '/text/' + cmd
@@ -163,14 +163,14 @@ class TomcatManager:
         `TomcatManagerResponse.raise_for_status()`.
 
         """
-        self._url = url
+        self.url = url
         self._user = user
         self._password = password
         r = self._get('serverinfo')
 
         if not r.ok:
             # don't save the parameters if we don't succeed
-            self._url = None
+            self.url = None
             self._user = None
             self._password = None
         # hide the fact that we retrieved results, we don't
@@ -243,7 +243,7 @@ class TomcatManager:
             raise ValueError('can not deploy localwar and serverwar at the same time')
         elif localwar:
             # PUT a local stream
-            base = self._url or ''
+            base = self.url or ''
             url = base + '/text/deploy'
             r = TomcatManagerResponse()
             # have to have the requests.put call in two places so we can
@@ -506,7 +506,7 @@ class TomcatManager:
         say it does.
         """
         # this command isn't in the /manager/text url space, so we can't use _get()
-        base = self._url or ''
+        base = self.url or ''
         url = base + '/status/all'
         r = TomcatManagerResponse()
         r.response = requests.get(
