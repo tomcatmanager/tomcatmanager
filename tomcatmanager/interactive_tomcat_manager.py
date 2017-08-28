@@ -172,6 +172,14 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
 
     ###
     #
+    # Settings
+    #
+    ###
+    def _onchange_timeout(self, old, new):
+        self.tomcat.timeout = new
+
+    ###
+    #
     # Connecting to Tomcat
     #
     ###
