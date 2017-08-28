@@ -56,7 +56,7 @@ setup(
 	packages=find_packages(),
 
 	python_requires='>=3.4',
-	install_requires=['cmd2', 'requests', 'appdirs'],
+	install_requires=['cmd2', 'requests', 'appdirs', 'attrdict'],
 	
     setup_requires=['setuptools_scm', 'setupext_janitor'],
     cmdclass=cmd_classes,

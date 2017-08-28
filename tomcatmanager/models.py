@@ -28,8 +28,8 @@ tomcatmanager.models
 This module contains the data objects created by and used by tomcatmanager.
 """
 
+from attrdict import AttrDict
 import requests
-from requests.structures import LookupDict
 
 
 class TomcatError(Exception):
@@ -275,7 +275,8 @@ CODES = {
     'FAIL': 'fail',
 }
 
-codes = LookupDict(name='status_codes')
+# pylint: disable=invalid-name
+codes = AttrDict()
 
 for code, title in CODES.items():
-    setattr(codes, title, code)
+    codes[title] = code
