@@ -220,7 +220,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
 
         r = self.tomcat.connect(url, user, password)
         if r.ok:
-            self.pfeedback('connected to Tomcat Manager at {}'.format(url))
+            self.pfeedback('connected to tomcat manager at {}'.format(url))
             self.exit_code = self.exit_codes.success
         else:
             # TODO inspect r to see why we didn't connect so we can provide
