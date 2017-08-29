@@ -87,8 +87,8 @@ class Cmd2Config():
     """
 
     # Possible boolean values
-    BOOLEAN_VALUES = {'1': True, 'yes': True, 'y': True, 'true': True, 'on': True,
-                      '0': False, 'no': False, 'n': False, 'false': False, 'off': False}
+    BOOLEAN_VALUES = {'1': True, 'yes': True, 'y': True, 'true': True, 't': True, 'on': True,
+                      '0': False, 'no': False, 'n': False, 'false': False, 'f': False, 'off': False}
 
     def __init__(self):
         self.appdirs = None
@@ -109,7 +109,7 @@ class Cmd2Config():
         if len(args.split()) == 1:
             action = args.split()[0]
             if action == 'file':
-                self.poutput(self._configfile)
+                self.poutput(self.config_file)
                 self.exit_code = self.exit_codes.success
             elif action == 'edit':
                 self.config_edit()
@@ -123,7 +123,7 @@ class Cmd2Config():
     def config_edit(self):
         """Edit the user configuration file."""
         if not self.editor:
-            self.perror("No editor. Use 'set editor={path}' to specify one.")
+            self.perror("no editor: use 'set editor={path}' to specify one")
             self.exit_code = self.exit_codes.error
             return
 
@@ -134,11 +134,11 @@ class Cmd2Config():
 
         # go edit the file
         cmd = '"{}" "{}"'.format(self.editor, self.config_file)
-        self.pfeedback("Executing '{}'...".format(cmd))
+        self.pfeedback("executing {}".format(cmd))
         os.system(cmd)
 
         # read it back in and apply it
-        self.poutput('Reloading configuration...')
+        self.pfeedback("reloading configuration")
         self.load_config()
         self.exit_code = self.exit_codes.success
 
@@ -181,7 +181,7 @@ action is one of the following:
                 self.poutput('{} # {}'.format(result[setting].ljust(maxlen), self.settable[setting]))
             self.exit_code = self.exit_codes.success
         else:
-            self.perror("'{}' is not a valid setting.".format(param))
+            self.perror("unknown setting: '{}'".format(param))
             self.exit_code = self.exit_codes.error
 
     def help_show(self):
@@ -223,7 +223,7 @@ Show one or more settings and their values.
                     self._change_setting(param_name, config['settings'][param_name])
                     self.exit_code = self.exit_codes.success
                 else:
-                    self.perror("'{}' is not a valid setting".format(param_name))
+                    self.perror("unknown setting: '{}'".format(param_name))
                     self.exit_code = self.exit_codes.error
         else:
             self.do_show(args)
@@ -286,7 +286,7 @@ Change a setting.
             return value
         else:
             if str(value).lower() not in self.BOOLEAN_VALUES:
-                raise ValueError('Not a boolean: {}'.format(value))
+                raise ValueError('not a boolean: {}'.format(value))
             return self.BOOLEAN_VALUES[value.lower()]
 
     ###

@@ -82,6 +82,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
 
     def __init__(self):
         # initialize Cmd2.Cmd
+        self.abbrev = False
         unused = ['abbrev', 'continuation_prompt', 'echo']
         for setting in unused:
             try:
@@ -90,6 +91,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
                 pass
         self.settable.update({'editor': 'Program used to edit files'})
         self.settable.update({'timeout': 'Seconds to wait for HTTP connections'})
+        self.settable.update({'debug': 'Show stack trace for exceptions'})
         cmd2.Cmd.__init__(self)
         self.allow_cli_args = False
 
@@ -106,14 +108,33 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     # Override cmd2.Cmd methods.
     #
     ###
+    def perror(self, msg, exception_type=None, traceback_war=False):
+        sys.stderr.write('{}\n'.format(msg))
+
+    def pfeedback(self, msg):
+        """
+        Print nonessential feedback.
+        
+        Set quiet=True to supress all feedback. If feedback_to_output=True,
+        then feedback will be included in the output stream. Otherwise, it
+        will be sent to sys.stderr.
+        """
+        if not self.quiet:
+            fmt = '--{}\n'
+            if self.feedback_to_output:
+                self.poutput(fmt.format(msg))
+            else:
+                sys.stderr.write(fmt.format(msg))
+
     def emptyline(self):
         """Do nothing on an empty line"""
         pass
 
-    def default(self, line):
+    def default(self, statement):
         """what to do if we don't recognize the command the user entered"""
         self.exit_code = self.exit_codes.command_not_found
-        self.perror('Unknown command: ' + line)
+        command = statement.parsed['command']
+        self.perror('unknown command: {}'.format(command))
 
     ###
     #
@@ -167,8 +188,6 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         url = None
         user = None
         password = None
-        # TODO investigate using args.parsed to see if it has
-        # the list already for us
         args_list = args.split()
 
         if len(args_list) == 1:
@@ -201,7 +220,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
 
         r = self.tomcat.connect(url, user, password)
         if r.ok:
-            self.pfeedback('connected to tomcat manager at {}'.format(url))
+            self.pfeedback('connected to Tomcat Manager at {}'.format(url))
             self.exit_code = self.exit_codes.success
         else:
             # TODO inspect r to see why we didn't connect so we can provide
