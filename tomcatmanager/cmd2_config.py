@@ -87,8 +87,8 @@ class Cmd2Config():
     """
 
     # Possible boolean values
-    BOOLEAN_VALUES = {'1': True, 'yes': True, 'y': True, 'true': True, 'on': True,
-                      '0': False, 'no': False, 'n': False, 'false': False, 'off': False}
+    BOOLEAN_VALUES = {'1': True, 'yes': True, 'y': True, 'true': True, 't': True, 'on': True,
+                      '0': False, 'no': False, 'n': False, 'false': False, 'f': False, 'off': False}
 
     def __init__(self):
         self.appdirs = None
@@ -109,7 +109,7 @@ class Cmd2Config():
         if len(args.split()) == 1:
             action = args.split()[0]
             if action == 'file':
-                self.pout(self._configfile)
+                self.poutput(self.config_file)
                 self.exit_code = self.exit_codes.success
             elif action == 'edit':
                 self.config_edit()
@@ -123,7 +123,7 @@ class Cmd2Config():
     def config_edit(self):
         """Edit the user configuration file."""
         if not self.editor:
-            self.perr("No editor. Use 'set editor={path}' to specify one.")
+            self.perror("no editor: use 'set editor={path}' to specify one")
             self.exit_code = self.exit_codes.error
             return
 
@@ -134,18 +134,18 @@ class Cmd2Config():
 
         # go edit the file
         cmd = '"{}" "{}"'.format(self.editor, self.config_file)
-        self.pdebug("Executing '{}'...".format(cmd))
+        self.pfeedback("executing {}".format(cmd))
         os.system(cmd)
 
         # read it back in and apply it
-        self.pout('Reloading configuration...')
+        self.pfeedback("reloading configuration")
         self.load_config()
         self.exit_code = self.exit_codes.success
 
     def help_config(self):
         """Show help for the 'config' command."""
         self.exit_code = self.exit_codes.success
-        self.pout("""Usage: config {action}
+        self.poutput("""Usage: config {action}
 
 Manage the user configuration file.
 
@@ -178,16 +178,29 @@ action is one of the following:
         maxlen += 1
         if result:
             for setting in sorted(result):
-                self.pout('{} # {}'.format(result[setting].ljust(maxlen), self.settable[setting]))
+                self.poutput('{} # {}'.format(result[setting].ljust(maxlen), self.settable[setting]))
             self.exit_code = self.exit_codes.success
         else:
-            self.perr("'{}' is not a valid setting.".format(param))
+            self.perror("unknown setting: '{}'".format(param))
             self.exit_code = self.exit_codes.error
 
     def help_show(self):
         """Show help for the 'show' command."""
         self.exit_code = self.exit_codes.success
-        self.pout("""Usage: show [setting]
+        self.poutput("""Usage: show [setting]
+
+Show one or more settings and their values.
+
+[setting]  Optional name of the setting to show the value for. If omitted
+           show the values of all settings.""")
+
+    def do_settings(self, args):
+        self.do_show(args)
+               
+    def help_settings(self):
+        """Show help for the 'settings' command."""
+        self.exit_code = self.exit_codes.success
+        self.poutput("""Usage: settings [setting]
 
 Show one or more settings and their values.
 
@@ -202,9 +215,7 @@ Show one or more settings and their values.
             try:
                 config.read_string(setting_string)
             except configparser.ParsingError as err:
-                self.perr(str(err))
-                self.pout('')
-                self.help_set()
+                self.perror(str(err))
                 self.exit_code = self.exit_codes.error
                 return
             for param_name in config['settings']:
@@ -212,7 +223,7 @@ Show one or more settings and their values.
                     self._change_setting(param_name, config['settings'][param_name])
                     self.exit_code = self.exit_codes.success
                 else:
-                    self.perr("'{}' is not a valid setting".format(param_name))
+                    self.perror("unknown setting: '{}'".format(param_name))
                     self.exit_code = self.exit_codes.error
         else:
             self.do_show(args)
@@ -220,7 +231,7 @@ Show one or more settings and their values.
     def help_set(self):
         """Show help for the 'set' command."""
         self.exit_code = self.exit_codes.success
-        self.pout("""Usage: set {setting}={value}
+        self.poutput("""Usage: set {setting}={value}
 
 Change a setting.
 
@@ -275,7 +286,7 @@ Change a setting.
             return value
         else:
             if str(value).lower() not in self.BOOLEAN_VALUES:
-                raise ValueError('Not a boolean: {}'.format(value))
+                raise ValueError('not a boolean: {}'.format(value))
             return self.BOOLEAN_VALUES[value.lower()]
 
     ###
