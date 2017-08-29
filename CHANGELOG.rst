@@ -6,6 +6,10 @@ Release History
 develop
 -------
 
+**Improved**
+- If we get an http redirect during `TomcatManager.connect()`, save the new
+  url so we don't have to re-traverse the redirect on every command.
+
 **Changed**
 
 - `TomcatManager._user` is now `TomcatManager.user`

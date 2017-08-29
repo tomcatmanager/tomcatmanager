@@ -26,6 +26,7 @@ Interact with the Tomcat Manager web application.
 """
 
 import collections
+import re
 
 import requests
 
@@ -157,6 +158,10 @@ class TomcatManager:
         method won't raise exceptions for everything. If the credentials
         are incorrect, you won't get an exception unless you ask for it.
 
+        Requesting url's via http can also result in redirection to another
+        url. If that occurs, the new url, not the one you passed, will be
+        stored in the url attribute.
+        
         You can also use `is_connected()` to check if you are connected.
 
         If you want to raise more exceptions see
@@ -168,7 +173,14 @@ class TomcatManager:
         self._password = password
         r = self._get('serverinfo')
 
-        if not r.ok:
+        if r.ok:
+            # _get added /text/serverinfo onto the end of the passed in url
+            # we may have been redirected, and we want to store the new
+            # url, not the one passed in
+            match = re.search(r"(.*)/text/serverinfo$", r.response.url)
+            if match:
+                self.url = match.group(1)
+        else:
             # don't save the parameters if we don't succeed
             self.url = None
             self.user = None
