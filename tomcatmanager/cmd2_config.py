@@ -194,6 +194,19 @@ Show one or more settings and their values.
 [setting]  Optional name of the setting to show the value for. If omitted
            show the values of all settings.""")
 
+    def do_settings(self, args):
+        self.do_show(args)
+               
+    def help_settings(self):
+        """Show help for the 'settings' command."""
+        self.exit_code = self.exit_codes.success
+        self.poutput("""Usage: settings [setting]
+
+Show one or more settings and their values.
+
+[setting]  Optional name of the setting to show the value for. If omitted
+           show the values of all settings.""")
+
     def do_set(self, args):
         """Change the value of a setting."""
         if args:
