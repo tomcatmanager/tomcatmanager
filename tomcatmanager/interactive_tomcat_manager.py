@@ -120,14 +120,6 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     # Convenience and shared methods.
     #
     ###
-    def pexception(self):
-        """print an exception or a traceback"""
-        if self.debug:
-            self.perror(traceback.format_exc())
-        else:
-            etype, evalue, etraceback = sys.exc_info()
-            self.perror(traceback.format_exception_only(etype, evalue))
-
     def docmd(self, func, *args, **kwargs):
         """Call a function and return, printing any exceptions that occur
 
