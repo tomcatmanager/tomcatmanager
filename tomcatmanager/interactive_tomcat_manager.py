@@ -30,9 +30,11 @@ import os
 import traceback
 import getpass
 import xml.dom.minidom
+from http.client import responses
 
 from attrdict import AttrDict
 import cmd2
+import requests
 
 import tomcatmanager as tm
 from .cmd2_config import Cmd2Config
@@ -241,14 +243,44 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         if url and user and not password:
             password = getpass.getpass()
 
-        r = self.tomcat.connect(url, user, password)
-        if r.ok:
-            self.pfeedback('connected to tomcat manager at {}'.format(url))
-            self.exit_code = self.exit_codes.success
-        else:
-            # TODO inspect r to see why we didn't connect so we can provide
-            # a useful error message and perhaps exit code
-            self.perror('tomcat manager not found at {}'.format(url))
+        try:
+            r = self.tomcat.connect(url, user, password)
+            if r.ok:
+                self.pfeedback('connected to tomcat manager at {}'.format(url))
+                self.exit_code = self.exit_codes.success
+            else:
+                if self.debug:
+                    # raise the exception and print the output
+                    try:
+                        r.raise_for_status()
+                    except Exception:
+                        self.perror(None)
+                        self.exit_code = self.exit_codes.error
+                else:
+                    # need to see whether we got an http error or whether
+                    # tomcat wasn't at the url
+                    if r.response.status_code == requests.codes.ok:
+                        # there was some problem with the request, but we
+                        # got http 200 OK. That means there was no tomcat
+                        # at the url
+                        self.perror('tomcat manager not found at {}'.format(url))
+                    elif r.response.status_code == requests.codes.not_found:
+                        # we connected, but the url was bad. No tomcat there
+                        self.perror('tomcat manager not found at {}'.format(url))
+                    else:
+                        self.perror('http error: {} {}'.format(r.response.status_code, responses[r.response.status_code]))
+                    self.exit_code = self.exit_codes.error
+        except requests.exceptions.ConnectionError:
+            if self.debug:
+                self.perror(None)
+            else:
+                self.perror('connection error')
+            self.exit_code = self.exit_codes.error
+        except requests.exceptions.Timeout:
+            if self.debug:
+                self.perror(None)
+            else:
+                self.perror('connection timeout')
             self.exit_code = self.exit_codes.error
 
     def help_connect(self):
