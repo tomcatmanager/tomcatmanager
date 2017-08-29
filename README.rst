@@ -62,8 +62,9 @@ And for the ultimate in flexibility, you can use the python package directly:
 .. code-block:: python
 
    >>> import tomcatmanager as tm
-   >>> tomcat = tm.TomcatManager(url='http://localhost:8080/manager',
-   ... userid='ace', password='newenglandclamchowder')
+   >>> tomcat = tm.TomcatManager()
+   >>> r = tomcat.connect(url='http://localhost:8080/manager',
+   ... user='ace', password='newenglandclamchowder')
    >>> tomcat.is_connected
    True
    >>> r = tomcat.stop('/someapp')
