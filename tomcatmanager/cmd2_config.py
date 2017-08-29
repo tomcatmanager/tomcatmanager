@@ -203,8 +203,6 @@ Show one or more settings and their values.
                 config.read_string(setting_string)
             except configparser.ParsingError as err:
                 self.perror(str(err))
-                self.poutput('')
-                self.help_set()
                 self.exit_code = self.exit_codes.error
                 return
             for param_name in config['settings']:
