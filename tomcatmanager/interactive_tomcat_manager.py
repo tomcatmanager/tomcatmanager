@@ -85,7 +85,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     def __init__(self):
         # initialize Cmd2.Cmd
         self.abbrev = False
-        unused = ['abbrev', 'continuation_prompt', 'echo']
+        unused = ['abbrev', 'continuation_prompt']
         for setting in unused:
             try:
                 self.settable.pop(setting)
