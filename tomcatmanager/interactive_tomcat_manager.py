@@ -66,25 +66,24 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         127: 'command_not_found',
     }
 
-    # for Cmd2Config
-    app_name = 'tomcat-manager'
-    app_author = 'tomcatmanager'
-
-    # settings for cmd2.Cmd
-    prompt = '{}> '.format(app_name)
-    cmd2.Cmd.shortcuts.update({'$?': 'exit_code'})
-
-    # our own settings
     exit_codes = AttrDict()
     for code, title in EXIT_CODES.items():
         exit_codes[title] = code
 
+    # for Cmd2Config
+    app_name = 'tomcat-manager'
+    app_author = 'tomcatmanager'
+
+    # new setting needs to be defined at the class, not the instance
     timeout = 10
 
 
     def __init__(self):
-        # initialize Cmd2.Cmd
+        # settings for cmd2.Cmd
+        self.allow_cli_args = False
+
         self.abbrev = False
+        self.echo = False
         unused = ['abbrev', 'continuation_prompt']
         for setting in unused:
             try:
@@ -94,8 +93,10 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         self.settable.update({'editor': 'Program used to edit files'})
         self.settable.update({'timeout': 'Seconds to wait for HTTP connections'})
         self.settable.update({'debug': 'Show stack trace for exceptions'})
+        self.prompt = '{}> '.format(self.app_name)
+        cmd2.Cmd.shortcuts.update({'$?': 'exit_code'})
+
         cmd2.Cmd.__init__(self)
-        self.allow_cli_args = False
 
         # initialize Cmd2Config
         Cmd2Config.__init__(self)
