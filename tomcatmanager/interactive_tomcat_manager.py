@@ -110,22 +110,21 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     # Override cmd2.Cmd methods.
     #
     ###
-    def perror(self, msg, exception_type=None, traceback_war=False):
+    def perror(self, errmsg, exception_type=None, traceback_war=True):
         """
         Print an error message or an exception.
-        
+
         :param: msg             The error message to print. If None, then
                                 print information about the exception
                                 currently beging handled.
         :param: exception_type  From superclass. Ignored here.
         :param: traceback_war   From superclass. Ignored here.
-        
+
         If debug=True, you will get a full stack trace, otherwise just the
         exception.
         """
-
-        if msg:
-            sys.stderr.write('{}\n'.format(msg))
+        if errmsg:
+            sys.stderr.write('{}\n'.format(errmsg))
         else:
             _type, _exception, _traceback = sys.exc_info()
             if _exception:
@@ -135,11 +134,10 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
                     output = ''.join(traceback.format_exception_only(_type, _exception))
                 sys.stderr.write(output)
 
-
     def pfeedback(self, msg):
         """
         Print nonessential feedback.
-        
+
         Set quiet=True to supress all feedback. If feedback_to_output=True,
         then feedback will be included in the output stream. Otherwise, it
         will be sent to sys.stderr.
@@ -733,13 +731,13 @@ extreme caution on production systems.""")
         self.exit_code = self.exit_codes.success
         return self._STOP_AND_EXIT
 
-    def do_quit(self, args):
+    def do_quit(self, arg):
         """Synonym for the 'exit' command."""
-        return self.do_exit(args)
+        return self.do_exit(arg)
 
-    def do_eof(self, args):
+    def do_eof(self, arg):
         """Exit on the end-of-file character."""
-        return self.do_exit(args)
+        return self.do_exit(arg)
 
     def do_version(self, args):
         """Show version information."""
