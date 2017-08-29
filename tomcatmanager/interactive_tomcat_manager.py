@@ -31,8 +31,8 @@ import traceback
 import getpass
 import xml.dom.minidom
 
+from attrdict import AttrDict
 import cmd2
-from requests.structures import LookupDict
 
 import tomcatmanager as tm
 from .cmd2_config import Cmd2Config
@@ -73,9 +73,9 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     cmd2.Cmd.shortcuts.update({'$?': 'exit_code'})
 
     # our own settings
-    exit_codes = LookupDict(name='exit_codes')
+    exit_codes = AttrDict()
     for code, title in EXIT_CODES.items():
-        setattr(exit_codes, title, code)
+        exit_codes[title] = code
 
     timeout = 10
 
