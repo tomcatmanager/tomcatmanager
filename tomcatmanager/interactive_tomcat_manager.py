@@ -109,7 +109,30 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     #
     ###
     def perror(self, msg, exception_type=None, traceback_war=False):
-        sys.stderr.write('{}\n'.format(msg))
+        """
+        Print an error message or an exception.
+        
+        :param: msg             The error message to print. If None, then
+                                print information about the exception
+                                currently beging handled.
+        :param: exception_type  From superclass. Ignored here.
+        :param: traceback_war   From superclass. Ignored here.
+        
+        If debug=True, you will get a full stack trace, otherwise just the
+        exception.
+        """
+
+        if msg:
+            sys.stderr.write('{}\n'.format(msg))
+        else:
+            _type, _exception, _traceback = sys.exc_info()
+            if _exception:
+                if self.debug:
+                    output = ''.join(traceback.format_exception(_type, _exception, _traceback))
+                else:
+                    output = ''.join(traceback.format_exception_only(_type, _exception))
+                sys.stderr.write(output)
+
 
     def pfeedback(self, msg):
         """
