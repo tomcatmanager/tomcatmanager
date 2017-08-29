@@ -174,13 +174,14 @@ class TomcatManagerResponse:
         # parse the text to get the status code and results
         if response.text:
             lines = response.text.splitlines()
-            # get the status line
-            try:
-                statusline = response.text.splitlines()[0]
-                self.status_code = statusline.split(' ', 1)[0]
-                self.status_message = statusline.split(' ', 1)[1][2:]
-            except IndexError:
-                pass
+            # get the status line, if the request completed OK
+            if response.status_code == requests.codes.ok:
+                try:
+                    statusline = response.text.splitlines()[0]
+                    self.status_code = statusline.split(' ', 1)[0]
+                    self.status_message = statusline.split(' ', 1)[1][2:]
+                except IndexError:
+                    pass
             # set the result
             if len(lines) > 1:
                 self.result = "\n".join(lines[1:])
