@@ -30,14 +30,16 @@ import os
 import traceback
 import getpass
 import xml.dom.minidom
+import ast
+import configparser
 from http.client import responses
 
 from attrdict import AttrDict
 import cmd2
 import requests
+import appdirs
 
 import tomcatmanager as tm
-from .cmd2_config import Cmd2Config
 
 
 def requires_connection(func):
@@ -52,7 +54,7 @@ def requires_connection(func):
     return _requires_connection
 
 # pylint: disable=too-many-public-methods
-class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
+class InteractiveTomcatManager(cmd2.Cmd):
     """An interactive command line tool for the Tomcat Manager web application.
 
     each command sets the value of the instance variable exit_code, which follows
@@ -65,6 +67,10 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         2: 'usage',
         127: 'command_not_found',
     }
+
+    # Possible boolean values
+    BOOLEAN_VALUES = {'1': True, 'yes': True, 'y': True, 'true': True, 't': True, 'on': True,
+                      '0': False, 'no': False, 'n': False, 'false': False, 'f': False, 'off': False}
 
     exit_codes = AttrDict()
     for code, title in EXIT_CODES.items():
@@ -110,7 +116,9 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         cmd2.Cmd.__init__(self)
 
         # initialize Cmd2Config
-        Cmd2Config.__init__(self)
+        self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
+        self.config = None
+        self.load_config()
 
         # prepare our own stuff
         self.tomcat = tm.TomcatManager()
@@ -208,12 +216,254 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
 
     ###
     #
-    # Settings
+    # Configuration and Settings
     #
     ###
+    def do_config(self, args):
+        """Show the location of the user configuration file."""
+        if len(args.split()) == 1:
+            action = args.split()[0]
+            if action == 'file':
+                self.poutput(self.config_file)
+                self.exit_code = self.exit_codes.success
+            elif action == 'edit':
+                self.config_edit()
+            else:
+                self.help_config()
+                self.exit_code = self.exit_codes.error
+        else:
+            self.help_config()
+            self.exit_code = self.exit_codes.error
+
+    def config_edit(self):
+        """Edit the user configuration file."""
+        if not self.editor:
+            self.perror("no editor: use 'set editor={path}' to specify one")
+            self.exit_code = self.exit_codes.error
+            return
+
+        # ensure the configuration directory exists
+        configdir = os.path.dirname(self.config_file)
+        if not os.path.exists(configdir):
+            os.makedirs(configdir)
+
+        # go edit the file
+        cmd = '"{}" "{}"'.format(self.editor, self.config_file)
+        self.pfeedback("executing {}".format(cmd))
+        os.system(cmd)
+
+        # read it back in and apply it
+        self.pfeedback("reloading configuration")
+        self.load_config()
+        self.exit_code = self.exit_codes.success
+
+    def help_config(self):
+        """Show help for the 'config' command."""
+        self.exit_code = self.exit_codes.success
+        self.poutput("""Usage: config {action}
+
+Manage the user configuration file.
+
+action is one of the following:
+
+  file  show the location of the user configuration file
+  edit  edit the user configuration file""")
+
+    ###
+    #
+    # user accessable settings commands
+    #
+    ###
+    def do_show(self, args):
+        """
+        Show all settings or a specific setting.
+        
+        Overrides cmd2.Cmd.do_show()
+        """
+        if len(args.split()) > 1:
+            self.help_show()
+            self.exit_code = self.exit_codes.error
+            return
+
+        param = args.strip().lower()
+        result = {}
+        maxlen = 0
+        for setting in self.settable:
+            if (not param) or (setting == param):
+                val = str(getattr(self, setting))
+                result[setting] = '{}={}'.format(setting, self._pythonize(val))
+                maxlen = max(maxlen, len(result[setting]))
+        # make a little extra space
+        maxlen += 1
+        if result:
+            for setting in sorted(result):
+                self.poutput('{} # {}'.format(result[setting].ljust(maxlen), self.settable[setting]))
+            self.exit_code = self.exit_codes.success
+        else:
+            self.perror("unknown setting: '{}'".format(param))
+            self.exit_code = self.exit_codes.error
+
+    def help_show(self):
+        """Show help for the 'show' command."""
+        self.exit_code = self.exit_codes.success
+        self.poutput("""Usage: show [setting]
+
+Show one or more settings and their values.
+
+[setting]  Optional name of the setting to show the value for. If omitted
+           show the values of all settings.""")
+
+    def do_settings(self, args):
+        self.do_show(args)
+               
+    def help_settings(self):
+        """Show help for the 'settings' command."""
+        self.exit_code = self.exit_codes.success
+        self.poutput("""Usage: settings [setting]
+
+Show one or more settings and their values.
+
+[setting]  Optional name of the setting to show the value for. If omitted
+           show the values of all settings.""")
+
+    def do_set(self, args):
+        """
+        Change a setting.
+        
+        Overrides cmd2.Cmd.do_set()
+        """
+        if args:
+            config = EvaluatingConfigParser()
+            setting_string = "[settings]\n{}".format(args)
+            try:
+                config.read_string(setting_string)
+            except configparser.ParsingError as err:
+                self.perror(str(err))
+                self.exit_code = self.exit_codes.error
+                return
+            for param_name in config['settings']:
+                if param_name in self.settable:
+                    self._change_setting(param_name, config['settings'][param_name])
+                    self.exit_code = self.exit_codes.success
+                else:
+                    self.perror("unknown setting: '{}'".format(param_name))
+                    self.exit_code = self.exit_codes.error
+        else:
+            self.do_show(args)
+
+    def help_set(self):
+        """Show help for the 'set' command."""
+        self.exit_code = self.exit_codes.success
+        self.poutput("""Usage: set {setting}={value}
+
+Change a setting.
+
+  setting  Any one of the valid settings. Use 'show' to see a list of valid
+           settings.
+  value    The value for the setting.
+""")
+
     def _onchange_timeout(self, old, new):
         """Pass the new timeout through to the TomcatManager object."""
         self.tomcat.timeout = new
+
+    @property
+    def config_file(self):
+        """
+        The location of the user configuration file.
+
+        :return: The full path to the user configuration file, or None
+                 if self.app_name has not been defined.
+        """
+        filename = self.app_name + '.ini'
+        return os.path.join(self.appdirs.user_config_dir, filename)
+
+    def load_config(self):
+        """Open and parse the user config file and set self.config."""
+        config = None
+        if self.config_file is not None:
+            config = EvaluatingConfigParser()
+            try:
+                with open(self.config_file, 'r') as fobj:
+                    config.read_file(fobj)
+            except FileNotFoundError:
+                pass
+        try:
+            settings = config['settings']
+            for key in settings:
+                self._change_setting(key, settings[key])
+        except KeyError:
+            pass
+        except ValueError:
+            pass
+        self.config = config
+
+    def convert_to_boolean(self, value):
+        """Return a boolean value translating from other types if necessary."""
+        if isinstance(value, bool) is True:
+            return value
+        else:
+            if str(value).lower() not in self.BOOLEAN_VALUES:
+                raise ValueError('not a boolean: {}'.format(value))
+            return self.BOOLEAN_VALUES[value.lower()]
+
+    def _change_setting(self, param_name, val):
+        """
+        Apply a change to a setting, calling a hook if it is defined.
+        
+        This method is intended to only be called when the user requests the setting
+        to be changed, either interactively or by loading the configuration file.
+
+        param_name must be in settable or this method with throw a ValueError
+        some parameters only accept boolean values, if you pass something that can't
+        be converted to a boolean, throw a ValueError
+
+        Call _onchange_{param_name}(old, new) after the setting changes value.
+        """
+        if param_name in self.settable:
+            current_val = getattr(self, param_name)
+            type_ = type(current_val)
+            if type_ == bool:
+                val = self.convert_to_boolean(val)
+            elif type_ == int:
+                val = int(val)
+            setattr(self, param_name, val)
+            if current_val != val:
+                try:
+                    onchange_hook = getattr(self, '_onchange_{}'.format(param_name))
+                    onchange_hook(old=current_val, new=val)
+                except AttributeError:
+                    pass
+        else:
+            raise ValueError
+
+    @staticmethod
+    def _pythonize(value):
+        """Transform value into something the python interpreter can parse.
+
+        Transform value into pvalue such that:
+
+            value = ast.literal_eval(pvalue)
+
+        This isn't quite true, because if there are no spaces or quote marks in value, then
+
+            pvalue = value
+        """
+        single_quote = "'"
+        double_quote = '"'
+        pvalue = value
+        if (single_quote in value) and (double_quote in value):
+            # use sq as the outer quote, which means we have to
+            # backslash all the other sq in the string
+            value = value.replace(single_quote, '\\' + single_quote)
+            pvalue = "'{}'".format(value)
+        elif single_quote in value:
+            pvalue = '"{}"'.format(value)
+        elif double_quote in value:
+            pvalue = "'{}'".format(value)
+        elif ' ' in value:
+            pvalue = "'{}'".format(value)
+        return pvalue
 
     ###
     #
@@ -808,3 +1058,17 @@ THE SOFTWARE.
         self.poutput("""Usage: license
 
 Show license information.""")
+
+
+# pylint: disable=too-many-ancestors
+class EvaluatingConfigParser(configparser.ConfigParser):
+    """Subclass of configparser.ConfigParser which evaluates values on get()."""
+    # pylint: disable=arguments-differ
+    def get(self, section, option, **kwargs):
+        val = super().get(section, option, **kwargs)
+        if "'" in val or '"' in val:
+            try:
+                val = ast.literal_eval(val)
+            except ValueError:
+                pass
+        return val
