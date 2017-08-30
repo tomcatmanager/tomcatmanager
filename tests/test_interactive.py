@@ -22,19 +22,34 @@
 # THE SOFTWARE.
 #
 
+import collections
 import uuid
+
+import unittest.mock as mock
 import pytest
 
 import tomcatmanager as tm
 
+mocked_items = ['itm','mock_os_system']
+MockedInteractive = collections.namedtuple('MockedInteractive', mocked_items)
 ###
 #
 # fixtures
 #
 ###
 @pytest.fixture()
-def itm():
-    return tm.InteractiveTomcatManager()
+def mocked_itm(monkeypatch):
+    # Set a fake editor just to make sure we have one.  We aren't
+    # really going to call it due to the mock
+    mock_os_system = mock.MagicMock(name='system')
+    monkeypatch.setattr("os.system", mock_os_system)
+
+    itm = tm.InteractiveTomcatManager()
+    itm.editor = 'fooedit'
+    
+    mocked_itm = MockedInteractive(itm, mock_os_system)
+
+    return mocked_itm
 
 
 ###
@@ -42,18 +57,18 @@ def itm():
 # tests
 #
 ###
-def test__change_setting(itm):
+def test__change_setting(mocked_itm):
     prompt = str(uuid.uuid1())
     # we know prompt is in itm.settable
-    itm._change_setting('prompt', prompt)
-    assert itm.prompt == prompt
+    mocked_itm.itm._change_setting('prompt', prompt)
+    assert mocked_itm.itm.prompt == prompt
 
 
-def test__change_setting_with_invalid_param(itm):
+def test__change_setting_with_invalid_param(mocked_itm):
     # this uuid won't be in itm.settable
     invalid_setting = str(uuid.uuid1())
     with pytest.raises(ValueError):
-        itm._change_setting(invalid_setting, 'someval')
+        mocked_itm.itm._change_setting(invalid_setting, 'someval')
 
 
 SETTINGS_SUCCESSFUL = [
@@ -66,7 +81,8 @@ SETTINGS_SUCCESSFUL = [
     ('prompt="""h\'i"""', "h'i"),
 ]
 @pytest.mark.parametrize('arg, value', SETTINGS_SUCCESSFUL)
-def test_do_set_success(itm, arg, value):
+def test_do_set_success(mocked_itm, arg, value):
+    itm = mocked_itm.itm
     itm.do_set(arg)
     assert itm.prompt == value
     assert itm.exit_code == itm.exit_codes.success
@@ -77,13 +93,15 @@ SETTINGS_FAILURE = [
     'thisisntaparam',
 ]
 @pytest.mark.parametrize('arg', SETTINGS_FAILURE)
-def test_do_set_fail(itm, arg):
+def test_do_set_fail(mocked_itm, arg):
+    itm = mocked_itm.itm
     itm.do_set(arg)
     assert itm.exit_code == itm.exit_codes.error
 
 
-def test_do_set_with_no_args(itm):
+def test_do_set_with_no_args(mocked_itm):
     # this is supposed to be a success and show the usage information
+    itm = mocked_itm.itm
     itm.do_set('')
     assert itm.exit_code == itm.exit_codes.success
 
@@ -119,8 +137,8 @@ BOOLEANS = [
     (False, False),
 ]
 @pytest.mark.parametrize('param, value', BOOLEANS)
-def test__convert_to_boolean(itm, param, value):
-    assert itm.convert_to_boolean(param) == value
+def test__convert_to_boolean(mocked_itm, param, value):
+    assert mocked_itm.itm.convert_to_boolean(param) == value
 
 
 LITERALS = [
@@ -131,5 +149,5 @@ LITERALS = [
     ('b\'|"d', "\'b\\'|\"d'"),
 ]
 @pytest.mark.parametrize('param, value', LITERALS)
-def test_pythonize(itm, param, value):
-    assert itm._pythonize(param) == value
+def test_pythonize(mocked_itm, param, value):
+    assert mocked_itm.itm._pythonize(param) == value
