@@ -34,39 +34,66 @@ import tomcatmanager as tm
 # entry point for command line
 def main(argv=None):
     """Entry point for 'tomcat-manager' command line program."""
+    
+    # instantiate this first, becasue we need it to get the version string
+    itm = tm.InteractiveTomcatManager()
+    
     parser = argparse.ArgumentParser(
         description='Manage a tomcat server from the command line or an interactive shell'
     )
-    # add epilog with additional usage info
+    # TODO add epilog with additional usage info
     # should include something that says user, pass, and url all need to go together
-    version_help = 'show the version information and exit'
-    parser.add_argument('--version', action='version', version=tm.__version__,
-                        help=version_help)
     user_help = 'user to use for authentication with the tomcat manager web application'
-    parser.add_argument('-u', '--user',
-                        help=user_help)
+    parser.add_argument('-u', '--user', help=user_help)
+
     password_help = 'password to use for authentication with the tomcat manager web application'
-    parser.add_argument('-p', '--password',
-                        help=password_help)
+    parser.add_argument('-p', '--password', help=password_help)
+
+    echo_help = 'echo the command into the output'
+    parser.add_argument('-e', '--echo', action='store_true', help=echo_help)
+
+    quiet_help = 'suppress all status output'
+    parser.add_argument('-q', '--quiet',
+                        action='store_true', help=quiet_help)
+
+    status_help = 'send status information to stdout instead of stderr'
+    parser.add_argument('-s', '--status-to-stdout',
+                        action='store_true', help=status_help)
+
     debug_help = 'show additional debugging information while processing commands'
-    parser.add_argument('--debug', action='store_true',
-                        help=debug_help)
+    parser.add_argument('-d', '--debug',
+                        action='store_true', help=debug_help)
+
+    version_help = 'show the version information and exit'
+    parser.add_argument('-v', '--version', action='version',
+                        version=itm.version_string, help=version_help)
+
     url_help = 'url of the tomcat manager web application'
     parser.add_argument('manager_url', nargs='?',
                         help=url_help)
+
     command_help = 'optional command to run, if no command given, enter an interactive shell'
     parser.add_argument('command', nargs='?',
                         help=command_help)
+
     arg_help = 'optional arguments for command'
     parser.add_argument('arg', nargs='*',
                         help=arg_help)
 
     args = parser.parse_args(argv)
     if args.debug:
-        print("--args=" + str(args), file=sys.stdout)
+        print("--args=" + str(args), file=sys.stderr)
 
-    itm = tm.InteractiveTomcatManager()
-    itm._change_setting('debug', args.debug)
+    # if we have command line switches, set those values, and also prevent
+    # them from being changed by loading the configuration file
+    if args.echo:
+        itm.echo = True
+    if args.quiet:
+        itm.quiet = True
+    if args.status_to_stdout:
+        itm.status_to_stdout = True
+    if args.debug:
+        itm.debug = True
 
     if args.manager_url:
         # try and connect

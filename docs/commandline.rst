@@ -31,7 +31,7 @@ But you want to do it from a shell script. So here it is:
    PASSWD=newenglandclamchowder
    COMMAND=list
    TOMCAT="tomcat-manager --user=$USERID --password=$PASSWD $URL $COMMAND"
-   
+
    # get the output of the list into a shell variable
    LIST=$($TOMCAT)
 
@@ -88,23 +88,26 @@ In addition to redirecting with the shell, there are several command line
 switches which change what's included in the output. These options correspond
 to :ref:`settings` you can change in :doc:`Interactive Use <interactive>`.
 
-========================  ======================  ======================================
-Option                    Setting                 Description
-========================  ======================  ======================================
-``--debug``               ``debug``               If present or true, show detailed
-                                                  exception and stack trace information.
-``--echo``                ``echo``                Add the command to the output stream.
-``--quiet``               ``quiet``               Don't show non-essential feedback.
-                                                  Overrides the debug setting.
-``--feedback-to-output``  ``feedback_to_output``  Send feedback to ``stdout`` instead of
-                                                  ``stderr``.
-========================  ======================  ======================================
+==========================  ======================  ======================================
+Option                      Setting                 Description
+==========================  ======================  ======================================
+``-e, --echo``              ``echo``                Add the command to the output stream.
+``-q, --quiet``             ``quiet``               Don't show non-essential feedback.
+                                                    Overrides the ``debug`` setting.
+``-s, --status-to-stdout``  ``status_to_stdout``    Send status information to ``stdout``
+                                                    instead of ``stderr``.
+``-d, --debug``             ``debug``               Show detailed exception and stack
+                                                    trace.
+==========================  ======================  ======================================
 
-You will notice several references to 'feedback': some commands show additional
-status information during their execution which is not part of the output, but
-which can be helpful. If ``quiet=True`` then all feedback is suppressed. If
-``quite=False`` then feedback is send to ``stderr``. If
-``feedback_to_output=True`` then feedback is send to ``stdout``.
+Some commands show additional status information during their execution which
+is not part of the output, but which can be helpful. If ``quiet=True`` then
+all status output is suppressed. If ``quite=False`` then status information is
+sent to ``stderr``. If ``status_to_stdout=True`` then status information is
+sent to ``stdout``.
+
+Here's a couple of examples to demonstrate:
+
 
 
 Server Shortcuts

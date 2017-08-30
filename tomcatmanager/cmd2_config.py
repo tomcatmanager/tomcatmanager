@@ -97,6 +97,7 @@ class Cmd2Config():
                 self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
         except AttributeError:
             pass
+
         self.load_config()
 
     ###
@@ -160,7 +161,11 @@ action is one of the following:
     #
     ###
     def do_show(self, args):
-        """Show all settings or a specific setting."""
+        """
+        Show all settings or a specific setting.
+        
+        Overrides cmd2.Cmd.do_show()
+        """
         if len(args.split()) > 1:
             self.help_show()
             self.exit_code = self.exit_codes.error
@@ -208,7 +213,11 @@ Show one or more settings and their values.
            show the values of all settings.""")
 
     def do_set(self, args):
-        """Change the value of a setting."""
+        """
+        Change a setting.
+        
+        Overrides cmd2.Cmd.do_set()
+        """
         if args:
             config = EvaluatingConfigParser()
             setting_string = "[settings]\n{}".format(args)
@@ -297,6 +306,9 @@ Change a setting.
     def _change_setting(self, param_name, val):
         """
         Apply a change to a setting, calling a hook if it is defined.
+        
+        This method is intended to only be called when the user requests the setting
+        to be changed, either interactively or by loading the configuration file.
 
         param_name must be in settable or this method with throw a ValueError
         some parameters only accept boolean values, if you pass something that can't

@@ -73,9 +73,19 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     # for Cmd2Config
     app_name = 'tomcat-manager'
     app_author = 'tomcatmanager'
-
-    # new setting needs to be defined at the class, not the instance
+        
+    # new settings must to be defined at the class, not the instance
     timeout = 10
+    # status_to_stdout is a better-named proxy for feedback_to_output
+    @property
+    def status_to_stdout(self):
+        """Proxy property for feedback_to_output."""
+        return self.feedback_to_output
+
+    @status_to_stdout.setter
+    def status_to_stdout(self, value):
+        """Proxy property for feedback_to_output."""
+        self.feedback_to_output = value
 
 
     def __init__(self):
@@ -84,12 +94,13 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
 
         self.abbrev = False
         self.echo = False
-        unused = ['abbrev', 'continuation_prompt']
+        unused = ['abbrev', 'continuation_prompt', 'feedback_to_output']
         for setting in unused:
             try:
                 self.settable.pop(setting)
             except KeyError:
                 pass
+        self.settable.update({'status_to_stdout': 'Status information to stdout instead of stderr'})
         self.settable.update({'editor': 'Program used to edit files'})
         self.settable.update({'timeout': 'Seconds to wait for HTTP connections'})
         self.settable.update({'debug': 'Show stack trace for exceptions'})
@@ -105,6 +116,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
         self.tomcat = tm.TomcatManager()
         self.tomcat.timeout = self.timeout
         self.exit_code = None
+        self.version_string = '{} {} (works with Tomcat >= 7.0 and <= 8.5)'.format(self.app_name, tm.__version__)
 
     ###
     #
@@ -200,6 +212,7 @@ class InteractiveTomcatManager(Cmd2Config, cmd2.Cmd):
     #
     ###
     def _onchange_timeout(self, old, new):
+        """Pass the new timeout through to the TomcatManager object."""
         self.tomcat.timeout = new
 
     ###
@@ -743,8 +756,7 @@ extreme caution on production systems.""")
     def do_version(self, args):
         """Show version information."""
         self.exit_code = self.exit_codes.success
-        output = '{} {} (works with Tomcat >= 7.0 and <= 8.5)'
-        self.poutput(output.format(self.app_name, tm.__version__))
+        self.poutput(self.version_string)
 
     def help_version(self):
         """Show help for the 'version' command."""
