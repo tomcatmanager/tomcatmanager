@@ -26,73 +26,80 @@ import unittest.mock as mock
 
 import tomcatmanager as tm
 
+###
+#
+# test TomcatManagerResponse
+#
+###
+def test_ok(self, tomcat):
+    r = tomcat.list()
+    assert r.ok
 
-class TestTomcatManagerResponse:
+def test_empty_http_response(self, tomcat, mocker):
+    # say we get http response code 200, but tomcat doesn't
+    # return a status line with OK or FAIL at the beginning
+    mock_text = mocker.patch('requests.models.Response.text', create=True,
+                              new_callable=mock.PropertyMock)
+    mock_test.return_value = None
 
-    def test_ok(self, tomcat):
-        r = tomcat.list()
-        assert r.ok
+    # chose a status value that won't raise an exception, but
+    # that isn't 200, OK
+    mock_text.return_value = None
+    r = tomcat.vm_info()
+    assert r.status_code is None
+    assert r.status_message is None
+    assert r.result is None
 
-    def test_empty_http_response(self, tomcat):
-        # say we get http response code 200, but tomcat doesn't
-        # return a status line with OK or FAIL at the beginning
-        with mock.patch('requests.models.Response.text', create=True,
-                        new_callable=mock.PropertyMock) as mock_text:
-            # chose a status value that won't raise an exception, but
-            # that isn't 200, OK
-            mock_text.return_value = None
-            r = tomcat.vm_info()
-            assert r.status_code is None
-            assert r.status_message is None
-            assert r.result is None
+    mock_text.return_value = ''
+    r = tomcat.vm_info()
+    assert r.status_code is None
+    assert r.status_message is None
+    assert r.result is None
 
-            mock_text.return_value = ''
-            r = tomcat.vm_info()
-            assert r.status_code is None
-            assert r.status_message is None
-            assert r.result is None
+    mock_text.return_value = 'FAIL - some message'
+    r = tomcat.vm_info()
+    assert r.status_code == tm.codes.fail
+    assert r.status_message == 'some message'
+    assert r.result is None
 
-            mock_text.return_value = 'FAIL - some message'
-            r = tomcat.vm_info()
-            assert r.status_code == tm.codes.fail
-            assert r.status_message == 'some message'
-            assert r.result is None
+    mock_text.return_value = 'OK - some message\nthe result'
+    r = tomcat.vm_info()
+    assert r.status_code == tm.codes.ok
+    assert r.status_message == 'some message'
+    assert r.result == 'the result'
 
-            mock_text.return_value = 'OK - some message\nthe result'
-            r = tomcat.vm_info()
-            assert r.status_code == tm.codes.ok
-            assert r.status_message == 'some message'
-            assert r.result == 'the result'
-
-            mock_text.return_value = 'malformedwithnospace'
-            r = tomcat.vm_info()
-            # we don't care what this is, but it better not be OK
-            assert r.status_code != tm.codes.ok
-            assert r.status_message is None
-            assert r.result is None
+    mock_text.return_value = 'malformedwithnospace'
+    r = tomcat.vm_info()
+    # we don't care what this is, but it better not be OK
+    assert r.status_code != tm.codes.ok
+    assert r.status_message is None
+    assert r.result is None
 
 
-class TestServerInfo:
+###
+#
+# test ServerInfo
+#
+###
+def test_dict(self, server_info):
+    sinfo = tm.models.ServerInfo(server_info)
+    assert sinfo['Tomcat Version'] == 'Apache Tomcat/8.0.32 (Ubuntu)'
+    assert sinfo['OS Name'] == 'Linux'
+    assert sinfo['OS Version'] == '4.4.0-89-generic'
+    assert sinfo['OS Architecture'] == 'amd64'
+    assert sinfo['JVM Version'] == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
+    assert sinfo['JVM Vendor'] == 'Oracle Corporation'
 
-    def test_dict(self, server_info):
-        sinfo = tm.models.ServerInfo(server_info)
-        assert sinfo['Tomcat Version'] == 'Apache Tomcat/8.0.32 (Ubuntu)'
-        assert sinfo['OS Name'] == 'Linux'
-        assert sinfo['OS Version'] == '4.4.0-89-generic'
-        assert sinfo['OS Architecture'] == 'amd64'
-        assert sinfo['JVM Version'] == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
-        assert sinfo['JVM Vendor'] == 'Oracle Corporation'
+def test_properties(self, server_info):
+    sinfo = tm.models.ServerInfo(server_info)
+    assert sinfo.tomcat_version == 'Apache Tomcat/8.0.32 (Ubuntu)'
+    assert sinfo.os_name == 'Linux'
+    assert sinfo.os_version == '4.4.0-89-generic'
+    assert sinfo.os_architecture == 'amd64'
+    assert sinfo.jvm_version == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
+    assert sinfo.jvm_vendor == 'Oracle Corporation'
 
-    def test_properties(self, server_info):
-        sinfo = tm.models.ServerInfo(server_info)
-        assert sinfo.tomcat_version == 'Apache Tomcat/8.0.32 (Ubuntu)'
-        assert sinfo.os_name == 'Linux'
-        assert sinfo.os_version == '4.4.0-89-generic'
-        assert sinfo.os_architecture == 'amd64'
-        assert sinfo.jvm_version == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
-        assert sinfo.jvm_vendor == 'Oracle Corporation'
-
-    def test_parse_extra(self, server_info):
-        lines = server_info + "New Key: New Value\n"
-        sinfo = tm.models.ServerInfo(lines)
-        assert sinfo['New Key'] == 'New Value'
+def test_parse_extra(self, server_info):
+    lines = server_info + "New Key: New Value\n"
+    sinfo = tm.models.ServerInfo(lines)
+    assert sinfo['New Key'] == 'New Value'
