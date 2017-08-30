@@ -216,7 +216,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     ###
     #
-    # Configuration and Settings
+    # user accessable commands for configuration and settings
     #
     ###
     def do_config(self, args):
@@ -269,11 +269,6 @@ action is one of the following:
   file  show the location of the user configuration file
   edit  edit the user configuration file""")
 
-    ###
-    #
-    # user accessable settings commands
-    #
-    ###
     def do_show(self, args):
         """
         Show all settings or a specific setting.
@@ -363,10 +358,11 @@ Change a setting.
   value    The value for the setting.
 """)
 
-    def _onchange_timeout(self, old, new):
-        """Pass the new timeout through to the TomcatManager object."""
-        self.tomcat.timeout = new
-
+    ###
+    #
+    # other methods and properties related to configuration and settings
+    #
+    ###
     @property
     def config_file(self):
         """
@@ -398,15 +394,6 @@ Change a setting.
             pass
         self.config = config
 
-    def convert_to_boolean(self, value):
-        """Return a boolean value translating from other types if necessary."""
-        if isinstance(value, bool) is True:
-            return value
-        else:
-            if str(value).lower() not in self.BOOLEAN_VALUES:
-                raise ValueError('not a boolean: {}'.format(value))
-            return self.BOOLEAN_VALUES[value.lower()]
-
     def _change_setting(self, param_name, val):
         """
         Apply a change to a setting, calling a hook if it is defined.
@@ -436,6 +423,19 @@ Change a setting.
                     pass
         else:
             raise ValueError
+
+    def _onchange_timeout(self, old, new):
+        """Pass the new timeout through to the TomcatManager object."""
+        self.tomcat.timeout = new
+
+    def convert_to_boolean(self, value):
+        """Return a boolean value translating from other types if necessary."""
+        if isinstance(value, bool) is True:
+            return value
+        else:
+            if str(value).lower() not in self.BOOLEAN_VALUES:
+                raise ValueError('not a boolean: {}'.format(value))
+            return self.BOOLEAN_VALUES[value.lower()]
 
     @staticmethod
     def _pythonize(value):

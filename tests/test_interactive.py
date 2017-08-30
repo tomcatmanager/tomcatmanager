@@ -22,54 +22,85 @@
 # THE SOFTWARE.
 #
 
-import collections
 import uuid
-
 import unittest.mock as mock
+import tempfile
+import os
+
 import pytest
 
 import tomcatmanager as tm
 
-mocked_items = ['itm','mock_os_system']
-MockedInteractive = collections.namedtuple('MockedInteractive', mocked_items)
 ###
 #
 # fixtures
 #
 ###
 @pytest.fixture()
-def mocked_itm(monkeypatch):
-    # Set a fake editor just to make sure we have one.  We aren't
-    # really going to call it due to the mock
-    mock_os_system = mock.MagicMock(name='system')
-    monkeypatch.setattr("os.system", mock_os_system)
+def itm():
+    return tm.InteractiveTomcatManager()
 
+def fake_load_config(self):
+    self.config = None
+
+@pytest.fixture()
+def itm_nc(mocker):
+    """Don't allow it to load a config file"""
+    mocker.patch('tomcatmanager.InteractiveTomcatManager.load_config')
     itm = tm.InteractiveTomcatManager()
-    itm.editor = 'fooedit'
+    return itm
+
+###
+#
+# test config and settings commands
+#
+###
+def test_do_edit(itm_nc, mocker):
+    itm_nc.editor = 'fooedit'
+    mock_os_system = mocker.patch('os.system')
+    itm_nc.onecmd('config edit')
+    mock_os_system.assert_called_once()
+
+###
+#
+# test config and settings other methods
+#
+###
+def test_load_config(itm, mocker):
+    prompt = str(uuid.uuid1())
+    fd, fname = tempfile.mkstemp(prefix='', suffix='.ini')
+    os.close(fd)
+    with open(fname, 'w') as fobj:
+        fobj.write('[settings]\nprompt={}\n'.format(prompt))
+
+    # itm aleady tried to load a config file, which it may or may not
+    # have found, depending on if you have one or not
+    # we are now going to patch up the config_file to point to
+    # a known file, and the reload the config from that
+    try:
+        config_file = mocker.patch('tomcatmanager.InteractiveTomcatManager.config_file',
+                                   new_callable=mock.PropertyMock)
+        config_file.return_value = fname
+        itm.load_config()
+        # this just verifies that our patch worked
+        assert itm.config_file == fname
+        # now make sure that our file got loaded properly
+        assert itm.prompt == prompt
+    finally:
+        os.remove(fname)
+
     
-    mocked_itm = MockedInteractive(itm, mock_os_system)
-
-    return mocked_itm
-
-
-###
-#
-# tests
-#
-###
-def test__change_setting(mocked_itm):
+def test__change_setting(itm):
     prompt = str(uuid.uuid1())
     # we know prompt is in itm.settable
-    mocked_itm.itm._change_setting('prompt', prompt)
-    assert mocked_itm.itm.prompt == prompt
+    itm._change_setting('prompt', prompt)
+    assert itm.prompt == prompt
 
-
-def test__change_setting_with_invalid_param(mocked_itm):
+def test__change_setting_with_invalid_param(itm):
     # this uuid won't be in itm.settable
     invalid_setting = str(uuid.uuid1())
     with pytest.raises(ValueError):
-        mocked_itm.itm._change_setting(invalid_setting, 'someval')
-
+        itm._change_setting(invalid_setting, 'someval')
 
 SETTINGS_SUCCESSFUL = [
     ('prompt=tm>', 'tm>'),
@@ -81,27 +112,22 @@ SETTINGS_SUCCESSFUL = [
     ('prompt="""h\'i"""', "h'i"),
 ]
 @pytest.mark.parametrize('arg, value', SETTINGS_SUCCESSFUL)
-def test_do_set_success(mocked_itm, arg, value):
-    itm = mocked_itm.itm
+def test_do_set_success(itm, arg, value):
     itm.do_set(arg)
     assert itm.prompt == value
     assert itm.exit_code == itm.exit_codes.success
-
 
 SETTINGS_FAILURE = [
     'thisisntaparam=somevalue',
     'thisisntaparam',
 ]
 @pytest.mark.parametrize('arg', SETTINGS_FAILURE)
-def test_do_set_fail(mocked_itm, arg):
-    itm = mocked_itm.itm
+def test_do_set_fail(itm, arg):
     itm.do_set(arg)
     assert itm.exit_code == itm.exit_codes.error
 
-
-def test_do_set_with_no_args(mocked_itm):
+def test_do_set_with_no_args(itm):
     # this is supposed to be a success and show the usage information
-    itm = mocked_itm.itm
     itm.do_set('')
     assert itm.exit_code == itm.exit_codes.success
 
@@ -137,8 +163,8 @@ BOOLEANS = [
     (False, False),
 ]
 @pytest.mark.parametrize('param, value', BOOLEANS)
-def test__convert_to_boolean(mocked_itm, param, value):
-    assert mocked_itm.itm.convert_to_boolean(param) == value
+def test__convert_to_boolean(itm, param, value):
+    assert itm.convert_to_boolean(param) == value
 
 
 LITERALS = [
@@ -149,5 +175,5 @@ LITERALS = [
     ('b\'|"d', "\'b\\'|\"d'"),
 ]
 @pytest.mark.parametrize('param, value', LITERALS)
-def test_pythonize(mocked_itm, param, value):
-    assert mocked_itm.itm._pythonize(param) == value
+def test_pythonize(itm, param, value):
+    assert itm._pythonize(param) == value
