@@ -216,11 +216,13 @@ Both ``history`` and ``run`` have more options: use the ``help`` command to get
 the details.
 
 
+.. _settings:
+
 Settings
 --------
 
-The ``show`` command displays list of settings which control the behavior of
-``tomcat-manager``:
+The ``show`` or ``settings`` (they do exactly the same thing) commands display
+a list of settings which control the behavior of ``tomcat-manager``:
 
 .. code-block:: none
 

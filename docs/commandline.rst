@@ -64,10 +64,47 @@ Note how we check the exit code in the shell. ``tomcat-manager`` knows whether
 the command to the tomcat server completed successfully or not, and sets the
 shell exit code appropriately. The shell exit codes are:
 
-   | **0** - command completed succesfully
-   | **1** - command had an error
-   | **2** - incorrect usage
-   | **127** - unknown command
+
+   | **0** = command completed succesfully
+   | **1** = command had an error
+   | **2** = incorrect usage
+   | **127** = unknown command
+
+
+Controlling Output
+------------------
+
+When using ``tomcat-manager`` from the command line, you have fine grained
+control of what you want included in the output. As a well-behaved shell
+program it sends output to ``stdout`` and errors to ``stderr``. If you are
+using ``bash`` or one of the other ``sh`` variants, you can easily co-mingle
+them into a single stream:
+
+.. code-block:: bash
+
+   $ tomcat-manager http://localhost:8080/manager list > myapps.txt 2>&1
+
+In addition to redirecting with the shell, there are several command line
+switches which change what's included in the output. These options correspond
+to :ref:`settings` you can change in :doc:`Interactive Use <interactive>`.
+
+========================  ======================  ======================================
+Option                    Setting                 Description
+========================  ======================  ======================================
+``--debug``               ``debug``               If present or true, show detailed
+                                                  exception and stack trace information.
+``--echo``                ``echo``                Add the command to the output stream.
+``--quiet``               ``quiet``               Don't show non-essential feedback.
+                                                  Overrides the debug setting.
+``--feedback-to-output``  ``feedback_to_output``  Send feedback to ``stdout`` instead of
+                                                  ``stderr``.
+========================  ======================  ======================================
+
+You will notice several references to 'feedback': some commands show additional
+status information during their execution which is not part of the output, but
+which can be helpful. If ``quiet=True`` then all feedback is suppressed. If
+``quite=False`` then feedback is send to ``stderr``. If
+``feedback_to_output=True`` then feedback is send to ``stdout``.
 
 
 Server Shortcuts
