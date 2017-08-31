@@ -83,6 +83,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
     
     # new settings must to be defined at the class, not the instance
     timeout = 10
+    status_prefix = '--'
+
     # status_to_stdout is a better-named proxy for feedback_to_output
     @property
     def status_to_stdout(self):
@@ -111,6 +113,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.settable.update({'status_to_stdout': 'Status information to stdout instead of stderr'})
         self.settable.update({'editor': 'Program used to edit files'})
         self.settable.update({'timeout': 'Seconds to wait for HTTP connections'})
+        self.settable.update({'status_prefix': 'String to prepend to all status output'})
         self.settable.update({'debug': 'Show stack trace for exceptions'})
         self.prompt = '{}> '.format(self.app_name)
         cmd2.Cmd.shortcuts.update({'$?': 'exit_code'})
@@ -165,11 +168,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         will be sent to sys.stderr.
         """
         if not self.quiet:
-            fmt = '--{}\n'
+            fmt = '{}{}\n'
             if self.feedback_to_output:
-                self.poutput(fmt.format(msg))
+                self.poutput(fmt.format(self.status_prefix, msg))
             else:
-                sys.stderr.write(fmt.format(msg))
+                sys.stderr.write(fmt.format(self.status_prefix, msg))
 
     def emptyline(self):
         """Do nothing on an empty line"""
