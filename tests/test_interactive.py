@@ -163,9 +163,19 @@ BOOLEANS = [
     (False, False),
 ]
 @pytest.mark.parametrize('param, value', BOOLEANS)
-def test__convert_to_boolean(itm, param, value):
+def test_convert_to_boolean_valid(itm, param, value):
     assert itm.convert_to_boolean(param) == value
 
+NOT_BOOLEANS = [
+    None,
+    '',
+    10,
+    'ace',
+]
+@pytest.mark.parametrize('param', BOOLEANS)
+def test_convert_to_boolean_invalid(itm, param):
+    with pytest.raises(ValueError):
+        itm.convert_to_boolean(param)    
 
 LITERALS = [
     ('fred', 'fred'),
