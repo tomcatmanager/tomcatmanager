@@ -24,6 +24,8 @@
 
 import unittest.mock as mock
 
+import pytest
+
 import tomcatmanager as tm
 
 ###
@@ -31,57 +33,57 @@ import tomcatmanager as tm
 # test TomcatManagerResponse
 #
 ###
-def test_ok(self, tomcat):
+def test_ok(tomcat):
     r = tomcat.list()
     assert r.ok
 
-def test_empty_http_response(self, tomcat, mocker):
-    # say we get http response code 200, but tomcat doesn't
-    # return a status line with OK or FAIL at the beginning
-    mock_text = mocker.patch('requests.models.Response.text', create=True,
-                              new_callable=mock.PropertyMock)
-    mock_test.return_value = None
+@pytest.fixture()
+def mock_text(mocker):
+    return mocker.patch('requests.models.Response.text', create=True,
+                         new_callable=mock.PropertyMock)
 
-    # chose a status value that won't raise an exception, but
-    # that isn't 200, OK
-    mock_text.return_value = None
-    r = tomcat.vm_info()
-    assert r.status_code is None
-    assert r.status_message is None
-    assert r.result is None
+@pytest.mark.parametrize('value', [None, ''])
+def test_http_response_empty(tomcat, mock_text, value):
+    mock_text.return_value = value
+    response = tomcat.vm_info()
+    assert response.status_code is None
+    assert response.status_message is None
+    assert response.result is None
 
-    mock_text.return_value = ''
-    r = tomcat.vm_info()
-    assert r.status_code is None
-    assert r.status_message is None
-    assert r.result is None
-
-    mock_text.return_value = 'FAIL - some message'
-    r = tomcat.vm_info()
-    assert r.status_code == tm.codes.fail
-    assert r.status_message == 'some message'
-    assert r.result is None
-
-    mock_text.return_value = 'OK - some message\nthe result'
-    r = tomcat.vm_info()
-    assert r.status_code == tm.codes.ok
-    assert r.status_message == 'some message'
-    assert r.result == 'the result'
-
-    mock_text.return_value = 'malformedwithnospace'
+CONTENTS = [
+    'malformedwithnospace',
+    '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">',
+]
+@pytest.mark.parametrize('content', ['malformedwithnospace'])
+def test_http_response_not_tomcat(tomcat, mock_text, content):
+    # like we might get if they put a regular web page in for the URL
+    mock_text.return_value = content
     r = tomcat.vm_info()
     # we don't care what this is, but it better not be OK
     assert r.status_code != tm.codes.ok
     assert r.status_message is None
     assert r.result is None
 
+def test_http_response_valid(tomcat, mock_text):
+    mock_text.return_value = 'OK - some message\nthe result'
+    r = tomcat.vm_info()
+    assert r.status_code == tm.codes.ok
+    assert r.status_message == 'some message'
+    assert r.result == 'the result'
+
+def test_http_response_fail(tomcat, mock_text):
+    mock_text.return_value = 'FAIL - some message'
+    r = tomcat.vm_info()
+    assert r.status_code == tm.codes.fail
+    assert r.status_message == 'some message'
+    assert r.result is None
 
 ###
 #
 # test ServerInfo
 #
 ###
-def test_dict(self, server_info):
+def test_dict(server_info):
     sinfo = tm.models.ServerInfo(server_info)
     assert sinfo['Tomcat Version'] == 'Apache Tomcat/8.0.32 (Ubuntu)'
     assert sinfo['OS Name'] == 'Linux'
@@ -90,7 +92,7 @@ def test_dict(self, server_info):
     assert sinfo['JVM Version'] == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
     assert sinfo['JVM Vendor'] == 'Oracle Corporation'
 
-def test_properties(self, server_info):
+def test_properties(server_info):
     sinfo = tm.models.ServerInfo(server_info)
     assert sinfo.tomcat_version == 'Apache Tomcat/8.0.32 (Ubuntu)'
     assert sinfo.os_name == 'Linux'
@@ -99,7 +101,7 @@ def test_properties(self, server_info):
     assert sinfo.jvm_version == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
     assert sinfo.jvm_vendor == 'Oracle Corporation'
 
-def test_parse_extra(self, server_info):
+def test_parse_extra(server_info):
     lines = server_info + "New Key: New Value\n"
     sinfo = tm.models.ServerInfo(lines)
     assert sinfo['New Key'] == 'New Value'

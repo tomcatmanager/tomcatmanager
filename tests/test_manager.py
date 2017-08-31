@@ -25,7 +25,6 @@
 import io
 
 import requests
-
 import pytest
 
 import tomcatmanager as tm
