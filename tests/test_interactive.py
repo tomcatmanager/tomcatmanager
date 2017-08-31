@@ -98,7 +98,9 @@ def test_set_noargs(capsys):
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks('set')
     out, err = capsys.readouterr()
-    assert out == 'hi'
+    # not going to parse all the lines, but there
+    # should be one per setting
+    assert len(out.splitlines()) == len(itm.settable)
     assert itm.exit_code == itm.exit_codes.success
 
 def test_set_integer_valid():
