@@ -11,8 +11,9 @@ master_doc = 'index'
 
 
 project = 'tomcatmanager'
-copyright = '2017, Jared Crapo'
-author = 'Jared Crapo'
+copyright = ''
+author = ''
+html_show_copyright=False
 
 # get the version and release via setuptools_scm
 from pkg_resources import get_distribution
