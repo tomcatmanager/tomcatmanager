@@ -286,18 +286,18 @@ action is one of the following:
   file  show the location of the user configuration file
   edit  edit the user configuration file""")
 
-    def do_show(self, args):
+    def do_show(self, arg, opts=None):
         """
         Show all settings or a specific setting.
-        
+
         Overrides cmd2.Cmd.do_show()
         """
-        if len(args.split()) > 1:
+        if len(arg.split()) > 1:
             self.help_show()
             self.exit_code = self.exit_codes.error
             return
 
-        param = args.strip().lower()
+        param = arg.strip().lower()
         result = {}
         maxlen = 0
         for setting in self.settable:
@@ -414,7 +414,7 @@ Change a setting.
     def _change_setting(self, param_name, val):
         """
         Apply a change to a setting, calling a hook if it is defined.
-        
+
         This method is intended to only be called when the user requests the setting
         to be changed, either interactively or by loading the configuration file.
 
