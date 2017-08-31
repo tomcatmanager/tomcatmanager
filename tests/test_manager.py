@@ -94,7 +94,7 @@ class TestManager(TestManagerBase):
 
     def test_connect_noauth(self, tomcat_manager_server):
         tomcat = tm.TomcatManager()
-        r = tomcat.connect(tomcat_manager_server['url'])
+        r = tomcat.connect(tomcat_manager_server.url)
         assert isinstance(r, tm.models.TomcatManagerResponse)
         assert not tomcat.is_connected
         with pytest.raises(requests.exceptions.HTTPError):
@@ -103,9 +103,9 @@ class TestManager(TestManagerBase):
     def test_connect_auth(self, tomcat_manager_server):
         tomcat = tm.TomcatManager()
         r = tomcat.connect(
-            tomcat_manager_server['url'],
-            tomcat_manager_server['user'],
-            tomcat_manager_server['password']
+            tomcat_manager_server.url,
+            tomcat_manager_server.user,
+            tomcat_manager_server.password
         )
         assert isinstance(r, tm.models.TomcatManagerResponse)
         assert r.status_code == tm.codes.ok

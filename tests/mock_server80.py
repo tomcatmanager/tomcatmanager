@@ -35,6 +35,7 @@ import socket
 from threading import Thread
 
 import requests
+from attrdict import AttrDict
 
 USER = 'admin'
 PASSWORD = 'admin'
@@ -967,12 +968,15 @@ def start_mock_server80():
     address, port = sock.getsockname()
     sock.close()
 
-    url = 'http://localhost:{}/manager'.format(port)
+    tms = AttrDict()
+    tms.url = 'http://localhost:{}/manager'.format(port)
+    tms.user = USER
+    tms.password = PASSWORD
+    tms.serverwar = '/path/to/server.war'
 
     mock_server = HTTPServer(('localhost', port), MockRequestHandler80)
     mock_server_thread = Thread(target=mock_server.serve_forever)
     mock_server_thread.setDaemon(True)
     mock_server_thread.start()
 
-    return {'url': url, 'user': USER,
-            'password': PASSWORD, 'serverwar': '/path/to/server.war'}
+    return tms

@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import os
+
 import pytest
+from attrdict import AttrDict
 
 import tomcatmanager as tm
 from tests.mock_server80 import start_mock_server80
@@ -33,11 +35,10 @@ def tomcat_manager_server(request):
     url = request.config.getoption("--url")
     if url:
         # use the server info specified on the command line
-        tms = {'url': url}
-        user = request.config.getoption("--user")
-        tms.update({'user': user})
-        password = request.config.getoption("--password")
-        tms.update({'password': password})
+        tms = AttrDict()
+        tms.url = url
+        tms.user = request.config.getoption("--user")
+        tms.password = request.config.getoption("--password")
         return tms
     else:
         # go start up a fake server
@@ -54,9 +55,9 @@ def serverwar_file(request):
 def tomcat(tomcat_manager_server):
     tomcat = tm.TomcatManager()
     r = tomcat.connect(
-            tomcat_manager_server['url'],
-            tomcat_manager_server['user'],
-            tomcat_manager_server['password']
+            tomcat_manager_server.url,
+            tomcat_manager_server.user,
+            tomcat_manager_server.password
         )
     return tomcat
 
