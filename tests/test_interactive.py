@@ -89,18 +89,48 @@ def test_load_config(itm, mocker):
     finally:
         os.remove(fname)
 
-    
-def test__change_setting(itm):
+def test_set_string(itm):
     prompt = str(uuid.uuid1())
-    # we know prompt is in itm.settable
-    itm._change_setting('prompt', prompt)
+    command = 'set prompt={}'.format(prompt)
+    itm.onecmd_plus_hooks(command)
     assert itm.prompt == prompt
 
-def test__change_setting_with_invalid_param(itm):
+def test_set_noargs(itm, capfd):
+    pass
+
+def test_set_integer_valid(itm):
+    itm.timeout = 10
+    itm.onecmd_plus_hooks('set timeout=5')
+    assert itm.timeout == 5
+
+def test_set_integer_invalid(itm, capsys):
+    itm.timeout = 10
+    itm.onecmd_plus_hooks('set timeout=joe')
+    assert itm.timeout == 10
+
+def test_set_boolean_valid(itm):
+    itm.echo = False
+    itm.onecmd_plus_hooks('set echo=True')
+    assert itm.echo == True
+
+def test_set_boolean_invalid(itm):
+    itm.echo = False
+    itm.onecmd_plus_hooks('set echo=notaboolean')
+    assert itm.echo == False
+
+def test_set_with_invalid_param(itm):
     # this uuid won't be in itm.settable
     invalid_setting = str(uuid.uuid1())
     with pytest.raises(ValueError):
+        # pylint: disable=protected-access
         itm._change_setting(invalid_setting, 'someval')
+
+def test__change_setting_hook(itm):
+    # make sure the hook gets called
+    pass
+
+
+
 
 SETTINGS_SUCCESSFUL = [
     ('prompt=tm>', 'tm>'),
@@ -140,9 +170,9 @@ PREFIXES = [
 ]
 @pytest.mark.parametrize('prefix, expected', PREFIXES)
 def test_status_prefix(itm, tomcat_manager_server, prefix, expected, capsys):
-    args = '{url} {user} {password}'.format(**tomcat_manager_server)
+    args = 'connect {url} {user} {password}'.format(**tomcat_manager_server)
     itm.status_prefix = prefix
-    itm.do_connect(args)
+    itm.onecmd_plus_hooks(args)
     out, err = capsys.readouterr()
     assert err.startswith(expected)
 
@@ -189,7 +219,7 @@ NOT_BOOLEANS = [
 @pytest.mark.parametrize('param', BOOLEANS)
 def test_convert_to_boolean_invalid(itm, param):
     with pytest.raises(ValueError):
-        itm.convert_to_boolean(param)    
+        itm.convert_to_boolean(param)
 
 LITERALS = [
     ('fred', 'fred'),

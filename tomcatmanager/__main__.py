@@ -34,10 +34,10 @@ import tomcatmanager as tm
 # entry point for command line
 def main(argv=None):
     """Entry point for 'tomcat-manager' command line program."""
-    
+
     # instantiate this first, becasue we need it to get the version string
     itm = tm.InteractiveTomcatManager()
-    
+
     parser = argparse.ArgumentParser(
         description='Manage a tomcat server from the command line or an interactive shell'
     )

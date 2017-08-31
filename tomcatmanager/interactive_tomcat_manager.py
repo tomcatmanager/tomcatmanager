@@ -69,8 +69,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
     }
 
     # Possible boolean values
-    BOOLEAN_VALUES = {'1': True, 'yes': True, 'y': True, 'true': True, 't': True, 'on': True,
-                      '0': False, 'no': False, 'n': False, 'false': False, 'f': False, 'off': False}
+    BOOLEAN_VALUES = {'1': True, 'yes': True, 'y': True, 'true': True,
+                      't': True, 'on': True,
+                      '0': False, 'no': False, 'n': False,
+                      'false': False, 'f': False, 'off': False}
 
     exit_codes = AttrDict()
     for code, title in EXIT_CODES.items():
@@ -80,7 +82,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     app_name = 'tomcat-manager'
     app_author = 'tomcatmanager'
     config = None
-    
+
     # new settings must to be defined at the class, not the instance
     timeout = 10
     status_prefix = '--'
@@ -221,7 +223,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def _which_server(self):
         """
         What url are we connected to and who are we connected as.
-        
+
         Returns None if '.url` is None.
         """
         out = None
@@ -326,8 +328,9 @@ Show one or more settings and their values.
            show the values of all settings.""")
 
     def do_settings(self, args):
+        """Synonym for 'show' command."""
         self.do_show(args)
-               
+
     def help_settings(self):
         """Show help for the 'settings' command."""
         self.exit_code = self.exit_codes.success
@@ -338,30 +341,37 @@ Show one or more settings and their values.
 [setting]  Optional name of the setting to show the value for. If omitted
            show the values of all settings.""")
 
-    def do_set(self, args):
+    def do_set(self, arg):
         """
         Change a setting.
-        
+
         Overrides cmd2.Cmd.do_set()
         """
-        if args:
+        if arg:
             config = EvaluatingConfigParser()
-            setting_string = "[settings]\n{}".format(args)
+            setting_string = "[settings]\n{}".format(arg)
             try:
                 config.read_string(setting_string)
-            except configparser.ParsingError as err:
-                self.perror(str(err))
+            except configparser.ParsingError:
+                self.perror('invalid syntax: try {setting}={value}')
                 self.exit_code = self.exit_codes.error
                 return
             for param_name in config['settings']:
                 if param_name in self.settable:
-                    self._change_setting(param_name, config['settings'][param_name])
-                    self.exit_code = self.exit_codes.success
+                    try:
+                        self._change_setting(param_name, config['settings'][param_name])
+                        self.exit_code = self.exit_codes.success
+                    except ValueError as err:
+                        if self.debug:
+                            self.perror(None)
+                        else:
+                            self.perror(err)
+                        self.exit_code = self.exit_codes.error
                 else:
                     self.perror("unknown setting: '{}'".format(param_name))
                     self.exit_code = self.exit_codes.error
         else:
-            self.do_show(args)
+            self.do_show(arg, None)
 
     def help_set(self):
         """Show help for the 'set' command."""
@@ -430,7 +440,11 @@ Change a setting.
             if type_ == bool:
                 val = self.convert_to_boolean(val)
             elif type_ == int:
-                val = int(val)
+                try:
+                    val = int(val)
+                except ValueError:
+                    # make a nicer error message
+                    raise ValueError("invalid integer: '{}'".format(val))
             setattr(self, param_name, val)
             if current_val != val:
                 try:
@@ -451,7 +465,10 @@ Change a setting.
             return value
         else:
             if str(value).lower() not in self.BOOLEAN_VALUES:
-                raise ValueError('not a boolean: {}'.format(value))
+                if value is None or value == '':
+                    raise ValueError('invalid syntax: must be true-ish or false-ish')
+                else:
+                    raise ValueError("invalid syntax: not a boolean: '{}'".format(value))
             return self.BOOLEAN_VALUES[value.lower()]
 
     @staticmethod
