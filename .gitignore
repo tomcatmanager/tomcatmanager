@@ -1,8 +1,9 @@
-# python version
+# pyenv et all
 .python-version
 
-# backup files
+# editor stuff
 *~
+.tm_properties
 
 # compiled python
 *.py[cod]
