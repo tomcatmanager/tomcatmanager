@@ -76,10 +76,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
     for code, title in EXIT_CODES.items():
         exit_codes[title] = code
 
-    # for Cmd2Config
+    # for configuration
     app_name = 'tomcat-manager'
     app_author = 'tomcatmanager'
-        
+    config = None
+    
     # new settings must to be defined at the class, not the instance
     timeout = 10
     # status_to_stdout is a better-named proxy for feedback_to_output
@@ -116,9 +117,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         cmd2.Cmd.__init__(self)
 
-        # initialize Cmd2Config
+        # initialize configuration
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
-        self.config = None
         self.load_config()
 
         # prepare our own stuff
