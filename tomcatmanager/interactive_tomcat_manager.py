@@ -106,6 +106,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.settable.pop(setting)
             except KeyError:
                 pass
+        self.settable.update({'echo': 'For piped input, echo command to output'})
         self.settable.update({'status_to_stdout': 'Status information to stdout instead of stderr'})
         self.settable.update({'editor': 'Program used to edit files'})
         self.settable.update({'timeout': 'Seconds to wait for HTTP connections'})
@@ -213,6 +214,19 @@ class InteractiveTomcatManager(cmd2.Cmd):
         else:
             help_func()
             self.exit_code = self.exit_codes.usage
+
+    def _which_server(self):
+        """
+        What url are we connected to and who are we connected as.
+        
+        Returns None if '.url` is None.
+        """
+        out = None
+        if self.tomcat.url:
+            out = 'connected to {}'.format(self.tomcat.url)
+            if self.tomcat.user:
+                out += ' as {}'.format(self.tomcat.user)
+        return out
 
     ###
     #
@@ -508,7 +522,7 @@ Change a setting.
         try:
             r = self.tomcat.connect(url, user, password)
             if r.ok:
-                self.pfeedback('connected to tomcat manager at {}'.format(self.tomcat.url))
+                self.pfeedback(self._which_server())
                 self.exit_code = self.exit_codes.success
             else:
                 if self.debug:
@@ -571,10 +585,7 @@ with no authentication.""")
             self.help_which()
             self.exit_code = self.exit_codes.usage
         else:
-            out = 'connected to {}'.format(self.tomcat.url)
-            if self.tomcat.user is not None:
-                out += ' as {}'.format(self.tomcat.user)
-            self.poutput(out)
+            self.poutput(self._which_server())
 
     def help_which(self):
         """Show help for the 'which' command."""
