@@ -6,6 +6,9 @@ Release History
 develop
 -------
 
+**New**
+- New command line switches for `tomcat-manager`: --quiet, --echo, --status_to_stdout
+
 **Improved**
 - If we get an http redirect during `TomcatManager.connect()`, save the new
   url so we don't have to re-traverse the redirect on every command.
