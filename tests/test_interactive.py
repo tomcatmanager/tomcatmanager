@@ -59,7 +59,7 @@ def test_do_edit(itm_nc, mocker):
     itm_nc.editor = 'fooedit'
     mock_os_system = mocker.patch('os.system')
     itm_nc.onecmd('config edit')
-    mock_os_system.assert_called_once()
+    assert mock_os_system.call_count == 1
 
 ###
 #
