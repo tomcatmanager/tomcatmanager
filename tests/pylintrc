@@ -6,7 +6,7 @@
 
 [basic]
 # BaseHTTPRequestHandler requires us to override these
-good-names=r,do_GET,do_PUT
+good-names=r,fd,do_GET,do_PUT
 
 # allow for longer method and function names
 method-rgx=(([a-z][a-z0-9_]{2,50})|(_[a-z0-9_]*))$
