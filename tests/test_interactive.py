@@ -131,6 +131,20 @@ def test_do_set_with_no_args(itm):
     itm.do_set('')
     assert itm.exit_code == itm.exit_codes.success
 
+PREFIXES = [
+    ('--', '--'),
+    ('*', '*'),
+    ('>>>', '>>>'),
+    # with no prefix, we should see the connected message
+    ('', 'connected'),
+]
+@pytest.mark.parametrize('prefix, expected', PREFIXES)
+def test_status_prefix(itm, tomcat_manager_server, prefix, expected, capsys):
+    args = '{url} {user} {password}'.format(**tomcat_manager_server)
+    itm.status_prefix = prefix
+    itm.do_connect(args)
+    out, err = capsys.readouterr()
+    assert err.startswith(expected)
 
 BOOLEANS = [
     ('1', True),
