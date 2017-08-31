@@ -36,10 +36,6 @@ import tomcatmanager as tm
 # fixtures
 #
 ###
-@pytest.fixture()
-def itm():
-    return tm.InteractiveTomcatManager()
-
 def fake_load_config(self):
     self.config = None
 
@@ -66,7 +62,8 @@ def test_do_edit(itm_nc, mocker):
 # test config and settings other methods
 #
 ###
-def test_load_config(itm, mocker):
+def test_load_config(mocker):
+    itm = tm.InteractiveTomcatManager()
     prompt = str(uuid.uuid1())
     fd, fname = tempfile.mkstemp(prefix='', suffix='.ini')
     os.close(fd)
@@ -89,43 +86,58 @@ def test_load_config(itm, mocker):
     finally:
         os.remove(fname)
 
-def test_set_string(itm):
+def test_set_string():
+    itm = tm.InteractiveTomcatManager()
     prompt = str(uuid.uuid1())
     command = 'set prompt={}'.format(prompt)
     itm.onecmd_plus_hooks(command)
     assert itm.prompt == prompt
+    assert itm.exit_code == itm.exit_codes.success
 
-def test_set_noargs(itm, capfd):
-    pass
+def test_set_noargs(capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks('set')
+    out, err = capsys.readouterr()
+    assert out == 'hi'
+    assert itm.exit_code == itm.exit_codes.success
 
-def test_set_integer_valid(itm):
+def test_set_integer_valid():
+    itm = tm.InteractiveTomcatManager()
     itm.timeout = 10
     itm.onecmd_plus_hooks('set timeout=5')
     assert itm.timeout == 5
+    assert itm.exit_code == itm.exit_codes.success
 
-def test_set_integer_invalid(itm, capsys):
+def test_set_integer_invalid(capsys):
+    itm = tm.InteractiveTomcatManager()
     itm.timeout = 10
     itm.onecmd_plus_hooks('set timeout=joe')
     assert itm.timeout == 10
+    assert itm.exit_code == itm.exit_codes.error
 
-def test_set_boolean_valid(itm):
+def test_set_boolean_valid():
+    itm = tm.InteractiveTomcatManager()
     itm.echo = False
     itm.onecmd_plus_hooks('set echo=True')
     assert itm.echo == True
+    assert itm.exit_code == itm.exit_codes.success
 
-def test_set_boolean_invalid(itm):
+def test_set_boolean_invalid():
+    itm = tm.InteractiveTomcatManager()
     itm.echo = False
     itm.onecmd_plus_hooks('set echo=notaboolean')
     assert itm.echo == False
+    assert itm.exit_code == itm.exit_codes.error
 
-def test_set_with_invalid_param(itm):
+def test_set_with_invalid_param():
+    itm = tm.InteractiveTomcatManager()
     # this uuid won't be in itm.settable
     invalid_setting = str(uuid.uuid1())
     with pytest.raises(ValueError):
         # pylint: disable=protected-access
         itm._change_setting(invalid_setting, 'someval')
 
-def test__change_setting_hook(itm):
+def test__change_setting_hook():
     # make sure the hook gets called
     pass
 
@@ -142,7 +154,8 @@ SETTINGS_SUCCESSFUL = [
     ('prompt="""h\'i"""', "h'i"),
 ]
 @pytest.mark.parametrize('arg, value', SETTINGS_SUCCESSFUL)
-def test_do_set_success(itm, arg, value):
+def test_do_set_success(arg, value):
+    itm = tm.InteractiveTomcatManager()
     itm.do_set(arg)
     assert itm.prompt == value
     assert itm.exit_code == itm.exit_codes.success
@@ -152,14 +165,10 @@ SETTINGS_FAILURE = [
     'thisisntaparam',
 ]
 @pytest.mark.parametrize('arg', SETTINGS_FAILURE)
-def test_do_set_fail(itm, arg):
+def test_do_set_fail(arg):
+    itm = tm.InteractiveTomcatManager()
     itm.do_set(arg)
     assert itm.exit_code == itm.exit_codes.error
-
-def test_do_set_with_no_args(itm):
-    # this is supposed to be a success and show the usage information
-    itm.do_set('')
-    assert itm.exit_code == itm.exit_codes.success
 
 PREFIXES = [
     ('--', '--'),
@@ -169,12 +178,14 @@ PREFIXES = [
     ('', 'connected'),
 ]
 @pytest.mark.parametrize('prefix, expected', PREFIXES)
-def test_status_prefix(itm, tomcat_manager_server, prefix, expected, capsys):
+def test_status_prefix(tomcat_manager_server, prefix, expected, capsys):
+    itm = tm.InteractiveTomcatManager()
     args = 'connect {url} {user} {password}'.format(**tomcat_manager_server)
     itm.status_prefix = prefix
     itm.onecmd_plus_hooks(args)
     out, err = capsys.readouterr()
     assert err.startswith(expected)
+    assert itm.exit_code == itm.exit_codes.success
 
 BOOLEANS = [
     ('1', True),
@@ -207,7 +218,8 @@ BOOLEANS = [
     (False, False),
 ]
 @pytest.mark.parametrize('param, value', BOOLEANS)
-def test_convert_to_boolean_valid(itm, param, value):
+def test_convert_to_boolean_valid(param, value):
+    itm = tm.InteractiveTomcatManager()
     assert itm.convert_to_boolean(param) == value
 
 NOT_BOOLEANS = [
@@ -217,7 +229,8 @@ NOT_BOOLEANS = [
     'ace',
 ]
 @pytest.mark.parametrize('param', BOOLEANS)
-def test_convert_to_boolean_invalid(itm, param):
+def test_convert_to_boolean_invalid(param):
+    itm = tm.InteractiveTomcatManager()
     with pytest.raises(ValueError):
         itm.convert_to_boolean(param)
 
@@ -229,5 +242,6 @@ LITERALS = [
     ('b\'|"d', "\'b\\'|\"d'"),
 ]
 @pytest.mark.parametrize('param, value', LITERALS)
-def test_pythonize(itm, param, value):
+def test_pythonize(param, value):
+    itm = tm.InteractiveTomcatManager()
     assert itm._pythonize(param) == value
