@@ -248,13 +248,15 @@ Quotes around values are not required unless they contain spaces or other
 quotes.
 
 
+.. _configuration_file:
+
 Configuration File
 ------------------
 
-``tomcat-manager`` reads for a user configuration file on startup. This file allows you
+``tomcat-manager`` reads a user configuration file on startup. This file allows you
 to:
 
-- define settings
+- change settings on startup
 - define shortcuts for connecting to Tomcat servers
 
 The location of the configuration file is different depending on your operating
@@ -292,7 +294,7 @@ Server Shortcuts
 
 You can also use the configuration file to set up shortcuts to various
 Tomcat servers. Define a section named the shortcut, and then include a property
-for ``url``, and optionally ``user`` and/or ``password``. Here's a simple example:
+for ``url``, ``user``, and ``password``. Here's a simple example:
 
 .. code-block:: ini
 
@@ -314,9 +316,9 @@ If you define a ``user``, but omit ``password``, you will be prompted for it.
 Save and load command history
 -----------------------------
 
-Save and load command history. Type ``help save``, ``help load`` for details. Using
-this functionality you can save a series of commands to a text file, and then
-quickly load and run them.
+Save and load command history. Type ``help save``, and ``help load`` for
+details. Using this functionality you can save a series of commands to a text
+file, and then quickly load and run them.
 
 
 Shell-style Output Redirection

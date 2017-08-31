@@ -12,6 +12,7 @@ use interactive mode:
 
    $ tomcat-manager
    tomcat-manager>connect https://www.example.com/manager ace newenglandclamchowder
+   --connected to https://www.example.com/manager as ace
    tomcat-manager>list
    Path                     Status  Sessions Directory
    ------------------------ ------- -------- ------------------------------------
@@ -20,7 +21,12 @@ use interactive mode:
    /shiny                   running       17 shiny##v2.0.6
    /shiny                   running        6 shiny##v2.0.5
 
-But you want to do it from a shell script. So here it is:
+
+Using Shell Scripts
+-------------------
+
+If you need to automate a more complex sequence of commands or parse the
+output, you might choose to use ``tomcat-manager`` from within a shell script:
 
 .. code-block:: bash
 
@@ -62,13 +68,82 @@ on the command line.
 
 Note how we check the exit code in the shell. ``tomcat-manager`` knows whether
 the command to the tomcat server completed successfully or not, and sets the
-shell exit code appropriately. The shell exit codes are:
+shell exit code appropriately. The exit codes are:
 
 
    | **0** = command completed succesfully
    | **1** = command had an error
    | **2** = incorrect usage
    | **127** = unknown command
+
+
+Server Shortcuts
+----------------
+
+You can use :ref:`server_shortcuts` from the command line with or without
+commands:
+
+.. code-block:: none
+
+   $ tomcat-manager localhost
+   --connected to http://localhost:8080/manager as ace
+   tomcat-manager>list
+   Path                     Status  Sessions Directory
+   ------------------------ ------- -------- ------------------------------------
+   /                        running        0 ROOT
+   /manager                 running        0 manager
+
+Or:
+
+.. code-block:: none
+
+   $ tomcat-manager localhost list
+   --connected to http://localhost:8080/manager as ace
+   Path                     Status  Sessions Directory
+   ------------------------ ------- -------- ------------------------------------
+   /                        running        0 ROOT
+   /manager                 running        0 manager
+
+This mechanism allows you to keep all authentication credentials out of your
+scripts. Simply define shortcut(s) with credentials for the server(s) you want
+to manage, and reference the shortcuts in your scripts. Instead of this:
+
+.. code-block:: bash
+
+   TOMCAT="tomcat-manager --user=$USERID --password=$PASSWD $URL $COMMAND"
+
+you might use this:
+
+.. code-block:: bash
+
+   TOMCAT="tomcat-manager example $COMMAND"
+
+with the following in your configuration file:
+
+.. code-block:: ini
+
+   [example]
+   url=https://www.example.com
+   user=ace
+   password=newenglandclamchowder
+
+
+Piped Input
+-----------
+
+``tomcat-manager`` will process lines from standard input as though they were
+entered at the interactive prompt. There is no mechanism to check for errors
+this way, the commands are blindly run until the pipe is closed. The shell
+exit code of ``tomcat-manager`` will be the exit code of the last command run.
+
+If you want to see what the exit codes are, you can either use ``$?`` in your
+shell, or you can use the interactive command ``exit_code`` (``$?`` works too)
+to see the result.
+
+If you want more sophisticated error checking, then you should probably write
+a shell script and invoke ``tomcat-manager`` seperately for each command you
+want to execute. That will allow you to use the shell script for checking exit
+codes, logic branching, looping, etc.
 
 
 Controlling Output
@@ -82,56 +157,93 @@ them into a single stream:
 
 .. code-block:: bash
 
-   $ tomcat-manager http://localhost:8080/manager list > myapps.txt 2>&1
+   $ tomcat-manager localhost list > myapps.txt 2>&1
 
 In addition to redirecting with the shell, there are several command line
-switches which change what's included in the output. These options correspond
-to :ref:`settings` you can change in :doc:`Interactive Use <interactive>`.
+switches that change what's included in the output. These options correspond
+to :ref:`settings` you can change in :doc:`Interactive Use <interactive>`. All
+of the settings default to ``False``, but be aware that you may have altered
+them your :ref:`configuration_file`, which is read on startup.
 
 ==========================  ======================  ======================================
 Option                      Setting                 Description
 ==========================  ======================  ======================================
 ``-e, --echo``              ``echo``                Add the command to the output stream.
 ``-q, --quiet``             ``quiet``               Don't show non-essential feedback.
-                                                    Overrides the ``debug`` setting.
 ``-s, --status-to-stdout``  ``status_to_stdout``    Send status information to ``stdout``
                                                     instead of ``stderr``.
 ``-d, --debug``             ``debug``               Show detailed exception and stack
-                                                    trace.
+                                                    trace, even if ``quiet`` is True.
 ==========================  ======================  ======================================
 
 Some commands show additional status information during their execution which
-is not part of the output, but which can be helpful. If ``quiet=True`` then
-all status output is suppressed. If ``quite=False`` then status information is
-sent to ``stderr``. If ``status_to_stdout=True`` then status information is
-sent to ``stdout``.
+is not part of the output. If ``quiet=True`` then all status output is
+suppressed. If ``quiet=False`` then status information is sent to ``stderr``.
+If ``status_to_stdout=True`` then status information is sent to ``stdout``, as
+long as ``quiet=False``.
 
-Here's a couple of examples to demonstrate:
+Here's a couple of examples to demonstrate, using a :ref:`server_shortcuts` of
+``localhost``, which we assume gets you authenticated to a Tomcat Server web
+application:
 
-
-
-Server Shortcuts
-----------------
-
-You an also use :ref:`server_shortcuts` from the command line with or without
-commands:
+These two commands yield the same output, but by different mechanisms: the
+first one uses the shell to redirect status messages to the bitbucket, the
+second one uses the ``--quiet`` switch to instruct ``tomcat-manager`` to
+suppress status messages.
 
 .. code-block:: none
 
-   $ tomcat-manager localhost
-   tomcat-manager>list
+   $ tomcat-manager localhost list 2>/dev/null
+   Path                     Status  Sessions Directory
+   ------------------------ ------- -------- ------------------------------------
+   /                        running        0 ROOT
+   /manager                 running        0 manager
+   $ tomcat-manager --quiet localhost list 2>/dev/null
    Path                     Status  Sessions Directory
    ------------------------ ------- -------- ------------------------------------
    /                        running        0 ROOT
    /manager                 running        0 manager
 
-Or:
+If you pipe commands into ``tomcat-manager`` instead of providing them as
+arguments, the ``--echo`` command line switch can be included which will print
+the prompt and command to the output:
 
 .. code-block:: none
 
-   $ tomcat-manager localhost list
+   $ echo list | tomcat-manager --echo localhost
+   --connected to https://home.kotfu.net/manager as ace
+   tomcat-manager> list
    Path                     Status  Sessions Directory
    ------------------------ ------- -------- ------------------------------------
    /                        running        0 ROOT
    /manager                 running        0 manager
+
+For most common errors, like failed authorization, connection timeouts, and
+DNS lookup failures, ``tomcat-manager`` catches the exceptions raised by those
+errors, and outputs a terse message describing the problem. For example, if my
+Tomcat container is not currently running, or if the HTTP request fails for
+any other reason, you will see something like this:
+
+.. code-block:: none
+
+   $ tm vm list
+   connection error
+
+If you want all the gory detail, give the ``--debug`` command line switch or
+set ``debug=True``. Then you'll see something like this (stack trace truncated
+with '...'):
+
+.. code-block:: none
+
+   $ tm --debug vm list
+   Traceback (most recent call last):
+     File "/Users/kotfu/.pyenv/versions/3.6.2/envs/tomcatmanager-3.6/lib/python3.6/site-packages/urllib3/connection.py", line 141, in _new_conn
+       (self.host, self.port), self.timeout, **extra_kw)
+     File "/Users/kotfu/.pyenv/versions/3.6.2/envs/tomcatmanager-3.6/lib/python3.6/site-packages/urllib3/util/connection.py", line 83, in create_connection
+       raise err
+     File "/Users/kotfu/.pyenv/versions/3.6.2/envs/tomcatmanager-3.6/lib/python3.6/site-packages/urllib3/util/connection.py", line 73, in create_connection
+       sock.connect(sa)
+   socket.timeout: timed out
+   ...
+   requests.exceptions.ConnectTimeout: HTTPConnectionPool(host='192.168.13.66', port=8080): Max retries exceeded with url: /manager/text/serverinfo (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x103180a20>, 'Connection to 192.168.13.66 timed out. (connect timeout=2)'))
 
