@@ -161,7 +161,7 @@ class TomcatManager:
         Requesting url's via http can also result in redirection to another
         url. If that occurs, the new url, not the one you passed, will be
         stored in the url attribute.
-        
+
         You can also use `is_connected()` to check if you are connected.
 
         If you want to raise more exceptions see
