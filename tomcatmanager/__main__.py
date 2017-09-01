@@ -77,7 +77,7 @@ def main(argv=None):
                         help=command_help)
 
     arg_help = 'optional arguments for command'
-    parser.add_argument('arg', nargs='*',
+    parser.add_argument('arg', nargs=argparse.REMAINDER,
                         help=arg_help)
 
     args = parser.parse_args(argv)
