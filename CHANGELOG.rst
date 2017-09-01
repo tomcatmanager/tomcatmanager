@@ -7,7 +7,10 @@ develop
 -------
 
 **New**
-- New command line switches for `tomcat-manager`: --quiet, --echo, --status_to_stdout
+- New command line switches for `tomcat-manager`: --quiet, --echo,
+  --status_to_stdout
+- New setting `status_prefix` contains the string to emit prior to all
+  status messages
 
 **Improved**
 - If we get an http redirect during `TomcatManager.connect()`, save the new
