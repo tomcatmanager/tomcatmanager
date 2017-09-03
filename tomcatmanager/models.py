@@ -201,7 +201,7 @@ class TomcatApplication():
     """
     def __init__(self):
         self._path = None
-        self._status = None
+        self._state = None
         self._sessions = 0
         self._directory = None
         self._version = None
@@ -211,7 +211,7 @@ class TomcatApplication():
         Parse a line from the server into our data elements.
         """
         app_details = line.rstrip().split(":")
-        self._path, self._status, sessions, dirver = app_details[:4]
+        self._path, self._state, sessions, dirver = app_details[:4]
         self._sessions = int(sessions)
         dirver = dirver.split('##')
         self._directory = dirver[0]
@@ -223,28 +223,28 @@ class TomcatApplication():
     @property
     def path(self):
         """
-        The path or partial url where the applicaiton is deployed.
+        the relative URL where this app is deployed on the server.
         """
         return self._path
 
     @property
-    def status(self):
+    def state(self):
         """
-        The status of the application.
+        The state of the application.
         """
-        return self._status
+        return self._state
 
     @property
     def sessions(self):
         """
-        The number of active sessions in the application.
+        The number of currently active sessions.
         """
         return self._sessions
 
     @property
     def directory(self):
         """
-        The directory on the server where the application resides.
+        The directory on the server where this application resides.
         """
         return self._directory
 

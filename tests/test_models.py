@@ -88,7 +88,7 @@ def test_parse_root():
     ta = tm.models.TomcatApplication()
     ta.parse(line)
     assert ta.path == '/'
-    assert ta.status == tm.application_states.running
+    assert ta.state == tm.application_states.running
     assert ta.sessions == 0
     assert ta.directory == 'ROOT'
     assert ta.version == None
@@ -98,7 +98,7 @@ def test_parse_app_with_slash_in_directory():
     ta = tm.models.TomcatApplication()
     ta.parse(line)
     assert ta.path == '/manager'
-    assert ta.status == tm.application_states.running
+    assert ta.state == tm.application_states.running
     assert ta.sessions == 0
     assert ta.directory == '/usr/share/tomcat8-admin/manager' 
     assert ta.version == None
@@ -114,7 +114,7 @@ def test_parse_version():
     ta = tm.models.TomcatApplication()
     ta.parse(line)
     assert ta.path == '/shiny'
-    assert ta.status == tm.application_states.stopped
+    assert ta.state == tm.application_states.stopped
     assert ta.sessions == 17
     assert ta.directory == 'shiny'
     assert ta.version == 'v2.0.6'
