@@ -862,13 +862,19 @@ Expire idle sessions.
             self.exit_code = self.exit_codes.usage
         else:
             response = self.docmd(self.tomcat.list)
-            fmt = '{:24.24} {:7.7} {:>8.8} {:36.36}'
-            dashes = '-'*80
-            self.poutput(fmt.format('Path', 'Status', 'Sessions', 'Directory'))
-            self.poutput(fmt.format(dashes, dashes, dashes, dashes))
-            for app in response.apps:
-                path, status, session, directory = app[:4]
-                self.poutput(fmt.format(path, status, session, directory))
+            if response.ok:
+                fmt = '{:24.24} {:7.7} {:>8.8} {:36.36}'
+                dashes = '-'*80
+                self.poutput(fmt.format('Path', 'Status', 'Sessions', 'Directory'))
+                self.poutput(fmt.format(dashes, dashes, dashes, dashes))
+                grouped_apps = self.group_and_sort_apps(response.apps)
+                first = True
+                for group in grouped_apps:
+                    if not first:
+                        self.poutput('')
+                    first = False
+                    for app in group:
+                        self.poutput(fmt.format(app.path, app.status, app.sessions, app.directory_and_version))
 
     def help_list(self):
         """Show help for the 'list' command."""
@@ -877,6 +883,33 @@ Expire idle sessions.
 
 Show all installed applications.""")
 
+    def group_and_sort_apps(self, apps):
+        """
+        Sort and group a list of app objects.
+        
+        :return: a list of lists, each list is a group of apps
+        """
+        running = []
+        stopped = []
+        other = []
+        if apps:
+            for app in apps:
+                if app.state == tm.application_states.running:
+                    running.append(app)
+                elif app.state == tm.application_states.stopped:
+                    stopped.append(app)
+                else:
+                    other.append(app)
+        
+        rtn = []
+        if running:
+            rtn.append(running)
+        if stopped:
+            rtn.append(stopped)
+        if other:
+            rtn.append(other)
+        return rtn
+        
     ###
     #
     # These commands that don't affect change, they just return some
