@@ -133,6 +133,12 @@ def test_repr_with_version():
     ta = tm.models.TomcatApplication()
     ta.parse(line)
     assert ta.__repr__() == line
+
+def test_repr_with_zero_sessions():
+    line = '/shiny:running:0:shiny##v2.0.6'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert ta.__repr__() == line
     
 def test_directory_and_version_empty():
     ta = tm.models.TomcatApplication()

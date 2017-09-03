@@ -208,10 +208,13 @@ class TomcatApplication():
 
     def __repr__(self):
         fmt = '{}:{}:{}:{}'
+        sessions = ''
+        if self.sessions is not None:
+            sessions = self.sessions
         return fmt.format(
             self.path or '',
             self.state or '',
-            self.sessions or '',
+            sessions,
             self.directory_and_version or ''
             )
 
