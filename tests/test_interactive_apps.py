@@ -22,6 +22,10 @@
 # THE SOFTWARE.
 #
 
+import unittest.mock as mock
+
+import pytest
+
 import tomcatmanager as tm
 
 
@@ -47,27 +51,47 @@ def parse_apps(lines):
 # list
 #
 ###
+@pytest.fixture()
+def mock_apps(mocker):
+    return mocker.patch('tomcatmanager.models.TomcatManagerResponse.result', create=True,
+                         new_callable=mock.PropertyMock)
+
 def test_group_and_sort_empty():
     lines = ''
-    apps = parse_apps(lines)
     itm = tm.InteractiveTomcatManager()
-    grouped_apps = itm.group_and_sort_apps(apps)
+    args = itm.list_parse_args('')
+    apps = parse_apps(lines)
+    grouped_apps = itm.group_and_sort_apps(apps, args)
     assert isinstance(grouped_apps, list)
     assert len(grouped_apps) == 0
     
 def test_group_and_sort_two_groups():
     lines = """/:running:0:ROOT
-/shiny:stopped:17:shiny##v2.0.6"""
-    apps = parse_apps(lines)
+/shiny:stopped:17:shiny##v2.0.6
+"""
     itm = tm.InteractiveTomcatManager()
-    grouped_apps = itm.group_and_sort_apps(apps)
+    args = itm.list_parse_args('')
+    apps = parse_apps(lines)
+    grouped_apps = itm.group_and_sort_apps(apps, args)
     assert len(grouped_apps) == 2
     assert len(grouped_apps[0]) == 1
     assert len(grouped_apps[1]) == 1
 
-
-def test_list2(tomcat_manager_server, capsys):
+def test_list_parse_args_raw():
+    argv = '--raw'
+    itm = tm.InteractiveTomcatManager()
+    args = itm.list_parse_args(argv)
+    assert args.raw == True
+    
+def test_list_raw(tomcat_manager_server, mock_apps, capsys):
+    lines = """/:running:0:ROOT
+/shiny:stopped:17:shiny##v2.0.6
+/shiny:running:15:shiny##v2.0.7
+/host-manager:running:0:/usr/share/tomcat8-admin/host-manager
+/manager:running:0:/usr/share/tomcat8-admin/manager
+""" 
+    mock_apps.return_value = lines
     interactive_tomcat = get_itm(tomcat_manager_server)
-    interactive_tomcat.onecmd_plus_hooks('list')
+    interactive_tomcat.onecmd_plus_hooks('list --raw')
     out, err = capsys.readouterr()
-    # import pdb; pdb.set_trace()
+    assert out == lines
