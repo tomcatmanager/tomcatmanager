@@ -25,6 +25,7 @@
 import pytest
 
 from tests.test_manager import TestManagerBase
+import tomcatmanager as tm
 
 
 class TestApps(TestManagerBase):
@@ -284,3 +285,4 @@ class TestApps(TestManagerBase):
         r = tomcat.list()
         self.info_assertions(r)
         assert isinstance(r.apps, list)
+        assert isinstance(r.apps[0], tm.models.TomcatApplication)

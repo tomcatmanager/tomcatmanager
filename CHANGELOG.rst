@@ -11,6 +11,7 @@ develop
   --status_to_stdout
 - New setting `status_prefix` contains the string to emit prior to all
   status messages
+- New class `TomcatApplication`
 
 **Improved**
 - If we get an http redirect during `TomcatManager.connect()`, save the new
@@ -20,6 +21,8 @@ develop
 
 - `TomcatManager._user` is now `TomcatManager.user`
 - `TomcatManager._url` is now `TomcatManager.url`
+- `TomcatManager.list()` now returns a list of `TomcatApplication` objects
+
 
 0.10.0 (2017-08-24)
 -------------------
