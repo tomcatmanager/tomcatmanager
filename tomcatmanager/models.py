@@ -206,8 +206,12 @@ class TomcatApplication():
         self._directory = None
         self._version = None
 
-    def __repr__(self):
-        fmt = '{}:{}:{}:{}'
+    # def __repr__(self):
+    #     # TODO figure out the right thing here
+    #     return "'{}'".format(self.__str__())
+
+    def __str__(self):
+        fmt = "{}:{}:{}:{}"
         sessions = ''
         if self.sessions is not None:
             sessions = self.sessions
@@ -217,6 +221,26 @@ class TomcatApplication():
             sessions,
             self.directory_and_version or ''
             )
+        
+    def __lt__(self, other):
+        """
+        Compare one object to another. Useful for sorting lists of apps.
+        
+        The sort order is by state (as string), by path (as string), by version
+        (by string, if present).
+        """
+        cmp = False
+        if self.state < other.state:
+            cmp = True
+        elif self.state == other.state:
+            if self.path < other.path:
+                cmp = True
+            elif self.path == other.path:
+                if self.version and other.version:
+                    cmp = self.version < other.version
+                elif other.version:
+                    cmp = True
+        return cmp
 
     def parse(self, line):
         """

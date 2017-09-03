@@ -122,28 +122,63 @@ def test_parse_version():
     assert ta.version == 'v2.0.6'
     assert ta.directory_and_version == 'shiny##v2.0.6'
 
-def test_repr_without_version():
+def test_str_without_version():
     line = '/shiny:running:8:shiny'
     ta = tm.models.TomcatApplication()
     ta.parse(line)
-    assert ta.__repr__() == line
+    assert str(ta) == line
 
-def test_repr_with_version():
+def test_str_with_version():
     line = '/shiny:stopped:17:shiny##v2.0.6'
     ta = tm.models.TomcatApplication()
     ta.parse(line)
-    assert ta.__repr__() == line
+    assert str(ta) == line
 
-def test_repr_with_zero_sessions():
+def test_str_with_zero_sessions():
     line = '/shiny:running:0:shiny##v2.0.6'
     ta = tm.models.TomcatApplication()
     ta.parse(line)
-    assert ta.__repr__() == line
+    assert str(ta) == line
     
 def test_directory_and_version_empty():
     ta = tm.models.TomcatApplication()
     assert ta.directory_and_version == None
 
+def parse_apps(lines):
+    apps = []
+    for line in lines.splitlines():
+        app = tm.models.TomcatApplication()
+        app.parse(line)
+        apps.append(app)
+    return apps
+
+def test_lt():
+    raw_apps = """/:running:0:ROOT
+/contacts:running:3:running##4.1
+/shiny:stopped:17:shiny##v2.0.6
+/contacts:running:8:running
+/shiny:stopped:0:shiny##v2.0.5
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/shiny:running:12:shiny##v2.0.8
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+""" 
+    sorted_apps = """/:running:0:ROOT
+/contacts:running:8:running
+/contacts:running:3:running##4.1
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+/shiny:running:12:shiny##v2.0.8
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/shiny:stopped:0:shiny##v2.0.5
+/shiny:stopped:17:shiny##v2.0.6
+""" 
+    apps = parse_apps(raw_apps)
+    apps.sort()
+    result = ''
+    strapps = map(lambda x: str(x), apps)
+    result = '\n'.join(strapps) + '\n'
+    assert result == sorted_apps
 
 ###
 #
