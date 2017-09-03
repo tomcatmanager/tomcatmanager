@@ -457,6 +457,7 @@ class TomcatManager:
             ...             running.append(app)
 
         """
+        # TODO use lambda function in doctest
         r = self._get('list')
         apps = []
         for line in r.result.splitlines():
