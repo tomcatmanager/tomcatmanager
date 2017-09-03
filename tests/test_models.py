@@ -180,6 +180,65 @@ def test_lt():
     result = '\n'.join(strapps) + '\n'
     assert result == sorted_apps
 
+def test_sort_by_spv():
+    raw_apps = """/:running:0:ROOT
+/contacts:running:3:running##4.1
+/shiny:stopped:17:shiny##v2.0.6
+/contacts:running:8:running
+/shiny:stopped:0:shiny##v2.0.5
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/shiny:running:12:shiny##v2.0.8
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+""" 
+    sorted_apps = """/:running:0:ROOT
+/contacts:running:8:running
+/contacts:running:3:running##4.1
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+/shiny:running:12:shiny##v2.0.8
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/shiny:stopped:0:shiny##v2.0.5
+/shiny:stopped:17:shiny##v2.0.6
+""" 
+    apps = parse_apps(raw_apps)
+    apps.sort(key=tm.models.TomcatApplication.sort_by_state_by_path_by_version)
+    result = ''
+    strapps = map(lambda x: str(x), apps)
+    result = '\n'.join(strapps) + '\n'
+    assert result == sorted_apps
+
+def test_sort_by_pvs():
+    raw_apps = """/:running:0:ROOT
+/contacts:running:3:running##4.12
+/shiny:stopped:17:shiny##v2.0.6
+/contacts:running:5:running
+/contacts:running:8:running##4.10
+/shiny:stopped:0:shiny##v2.0.5
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/shiny:running:12:shiny##v2.0.8
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+""" 
+    sorted_apps = """/:running:0:ROOT
+/contacts:running:8:running##4.10
+/contacts:running:3:running##4.12
+/contacts:running:5:running
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:stopped:0:shiny##v2.0.5
+/shiny:stopped:17:shiny##v2.0.6
+/shiny:running:15:shiny##v2.0.7
+/shiny:running:12:shiny##v2.0.8
+""" 
+    apps = parse_apps(raw_apps)
+    apps.sort(key=tm.models.TomcatApplication.sort_by_path_by_version_by_state)
+    result = ''
+    strapps = map(lambda x: str(x), apps)
+    result = '\n'.join(strapps) + '\n'
+    assert result == sorted_apps
+
+
 ###
 #
 # test ServerInfo

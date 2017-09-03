@@ -199,6 +199,28 @@ class TomcatApplication():
     """
     Discrete data about an application running inside a Tomcat Server.
     """
+    @classmethod
+    def sort_by_state_by_path_by_version(cls, app):
+        """
+        Function to create a key usable by `sort` to sort by state, by path, by version.
+        """
+        return '{}:{}:{}'.format(
+            app.state or '',
+            app.path or '',
+            app.version or ''
+            )
+    
+    @classmethod
+    def sort_by_path_by_version_by_state(cls, app):
+        """
+        Function to create a key usable by `sort` to sort by path, by version, by state
+        """
+        return '{}:{}:{}'.format(
+            app.path or '',
+            app.version or '',
+            app.state or ''
+            )
+
     def __init__(self):
         self._path = None
         self._state = None
@@ -229,18 +251,9 @@ class TomcatApplication():
         The sort order is by state (as string), by path (as string), by version
         (by string, if present).
         """
-        cmp = False
-        if self.state < other.state:
-            cmp = True
-        elif self.state == other.state:
-            if self.path < other.path:
-                cmp = True
-            elif self.path == other.path:
-                if self.version and other.version:
-                    cmp = self.version < other.version
-                elif other.version:
-                    cmp = True
-        return cmp
+        self_key = self.sort_by_state_by_path_by_version(self)
+        other_key = self.sort_by_state_by_path_by_version(other)
+        return self_key < other_key
 
     def parse(self, line):
         """
