@@ -122,6 +122,18 @@ def test_parse_version():
     assert ta.version == 'v2.0.6'
     assert ta.directory_and_version == 'shiny##v2.0.6'
 
+def test_repr_without_version():
+    line = '/shiny:running:8:shiny'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert ta.__repr__() == line
+
+def test_repr_with_version():
+    line = '/shiny:stopped:17:shiny##v2.0.6'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert ta.__repr__() == line
+    
 def test_directory_and_version_empty():
     ta = tm.models.TomcatApplication()
     assert ta.directory_and_version == None

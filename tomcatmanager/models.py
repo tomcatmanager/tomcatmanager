@@ -202,9 +202,18 @@ class TomcatApplication():
     def __init__(self):
         self._path = None
         self._state = None
-        self._sessions = 0
+        self._sessions = None
         self._directory = None
         self._version = None
+
+    def __repr__(self):
+        fmt = '{}:{}:{}:{}'
+        return fmt.format(
+            self.path or '',
+            self.state or '',
+            self.sessions or '',
+            self.directory_and_version or ''
+            )
 
     def parse(self, line):
         """
