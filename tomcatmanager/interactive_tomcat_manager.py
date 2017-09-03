@@ -864,25 +864,19 @@ Expire idle sessions.
         if not response.ok:
             return
 
-        grouped_apps = self.group_and_sort_apps(response.apps, args)
+        apps = self.process_apps(response.apps, args)
 
         # TODO figure out how to check for usage errors
         if args.raw:
-            for group in grouped_apps:
-                for app in group:
-                    self.poutput(app)
+            for app in apps:
+                self.poutput(app)
         else:
             fmt = '{:24.24} {:7.7} {:>8.8} {:36.36}'
             dashes = '-'*80
             self.poutput(fmt.format('Path', 'State', 'Sessions', 'Directory'))
             self.poutput(fmt.format(dashes, dashes, dashes, dashes))
-            first = True
-            for group in grouped_apps:
-                if not first:
-                    self.poutput('')
-                first = False
-                for app in group:
-                    self.poutput(fmt.format(app.path, app.state, str(app.sessions), app.directory_and_version))
+            for app in apps:
+                self.poutput(fmt.format(app.path, app.state, str(app.sessions), app.directory_and_version))
 
     def help_list(self):
         """Show help for the 'list' command."""
@@ -898,39 +892,32 @@ Show all installed applications.""")
             prog = 'list',
             description = 'Show all installed applications',
         )
-        raw_help = 'echo the command into the output'
+        raw_help = 'show apps without formatting'
         parser.add_argument('-r', '--raw', action='store_true', help=raw_help)
+        state_help = 'only show apps in a given state'
+        parser.add_argument('-s', '--state', help=state_help)
         argv = shlex.split(argv)
         args = parser.parse_args(argv)
         return args
         
-    def group_and_sort_apps(self, apps, args):
+    def process_apps(self, apps, args):
         """
-        Sort and group a list of app objects.
+        Select and sort a list of `TomcatApplication` objects based on arguments
         
-        :return: a list of lists, each list is a group of apps
+        The list is sorted in place, relying on the TomcatApplication object to
+        determine the order.
+        
+        :return: a list of `TomcatApplication` objects
         """
         rtn = []
-        if args.raw:
-            rtn = [ apps ]
-        else:
-            running = []
-            stopped = []
-            other = []
+        # select the apps that should be included
+        if args.state:
             for app in apps:
-                if app.state == tm.application_states.running:
-                    running.append(app)
-                elif app.state == tm.application_states.stopped:
-                    stopped.append(app)
-                else:
-                    other.append(app)        
-            if running:
-                rtn.append(running)
-            if stopped:
-                rtn.append(stopped)
-            if other:
-                rtn.append(other)
-        return rtn
+                if app.state == args.state:
+                    rtn.append(app)
+        else:
+            rtn = apps
+        return sorted(rtn)
         
     ###
     #

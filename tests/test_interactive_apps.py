@@ -56,42 +56,47 @@ def mock_apps(mocker):
     return mocker.patch('tomcatmanager.models.TomcatManagerResponse.result', create=True,
                          new_callable=mock.PropertyMock)
 
-def test_group_and_sort_empty():
+def test_process_apps_empty():
     lines = ''
     itm = tm.InteractiveTomcatManager()
     args = itm.list_parse_args('')
     apps = parse_apps(lines)
-    grouped_apps = itm.group_and_sort_apps(apps, args)
+    grouped_apps = itm.process_apps(apps, args)
     assert isinstance(grouped_apps, list)
     assert len(grouped_apps) == 0
     
-def test_group_and_sort_two_groups():
-    lines = """/:running:0:ROOT
-/shiny:stopped:17:shiny##v2.0.6
-"""
-    itm = tm.InteractiveTomcatManager()
-    args = itm.list_parse_args('')
-    apps = parse_apps(lines)
-    grouped_apps = itm.group_and_sort_apps(apps, args)
-    assert len(grouped_apps) == 2
-    assert len(grouped_apps[0]) == 1
-    assert len(grouped_apps[1]) == 1
-
-def test_list_parse_args_raw():
-    argv = '--raw'
-    itm = tm.InteractiveTomcatManager()
-    args = itm.list_parse_args(argv)
-    assert args.raw == True
-    
 def test_list_raw(tomcat_manager_server, mock_apps, capsys):
-    lines = """/:running:0:ROOT
+    raw_apps = """/:running:0:ROOT
 /shiny:stopped:17:shiny##v2.0.6
 /shiny:running:15:shiny##v2.0.7
 /host-manager:running:0:/usr/share/tomcat8-admin/host-manager
 /manager:running:0:/usr/share/tomcat8-admin/manager
+"""
+    expected = """/:running:0:ROOT
+/host-manager:running:0:/usr/share/tomcat8-admin/host-manager
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+/shiny:stopped:17:shiny##v2.0.6
 """ 
-    mock_apps.return_value = lines
+    mock_apps.return_value = raw_apps
     interactive_tomcat = get_itm(tomcat_manager_server)
     interactive_tomcat.onecmd_plus_hooks('list --raw')
     out, err = capsys.readouterr()
-    assert out == lines
+    assert out == expected
+
+def test_list_state_running(tomcat_manager_server, mock_apps, capsys):
+    raw_apps = """/:running:0:ROOT
+/shiny:stopped:17:shiny##v2.0.6
+/shiny:running:15:shiny##v2.0.7
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/manager:running:0:/usr/share/tomcat8-admin/manager
+""" 
+    expected = """/:running:0:ROOT
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+""" 
+    mock_apps.return_value = raw_apps
+    interactive_tomcat = get_itm(tomcat_manager_server)
+    interactive_tomcat.onecmd_plus_hooks('list --raw -s running')
+    out, err = capsys.readouterr()
+    assert out == expected
