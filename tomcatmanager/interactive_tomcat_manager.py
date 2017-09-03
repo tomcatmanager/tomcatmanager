@@ -862,6 +862,7 @@ Expire idle sessions.
         args = self.list_parse_args(argv)
         response = self.docmd(self.tomcat.list)
         if not response.ok:
+            # TODO display errors
             return
 
         apps = self.process_apps(response.apps, args)
@@ -904,17 +905,14 @@ Show all installed applications.""")
         """
         Select and sort a list of `TomcatApplication` objects based on arguments
         
-        The list is sorted in place, relying on the TomcatApplication object to
-        determine the order.
+        We rely on the `TomcatApplication` object to determine the sort order.
         
         :return: a list of `TomcatApplication` objects
         """
         rtn = []
         # select the apps that should be included
         if args.state:
-            for app in apps:
-                if app.state == args.state:
-                    rtn.append(app)
+            rtn = filter(lambda app: app.state == args.state ,apps)
         else:
             rtn = apps
         return sorted(rtn)
