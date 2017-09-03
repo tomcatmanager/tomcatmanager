@@ -80,6 +80,48 @@ def test_http_response_fail(tomcat, mock_text):
 
 ###
 #
+# test TomcatApplication
+#
+###
+def test_parse_root():
+    line = '/:running:0:ROOT'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert ta.path == '/'
+    assert ta.status == tm.application_states.running
+    assert ta.sessions == 0
+    assert ta.directory == 'ROOT'
+    assert ta.version == None
+
+def test_parse_app_with_slash_in_directory():
+    line = '/manager:running:0:/usr/share/tomcat8-admin/manager'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert ta.path == '/manager'
+    assert ta.status == tm.application_states.running
+    assert ta.sessions == 0
+    assert ta.directory == '/usr/share/tomcat8-admin/manager' 
+    assert ta.version == None
+
+def test_parse_app_with_non_integer_sessions():
+    line = '/:running:not_an_integer:ROOT'
+    ta = tm.models.TomcatApplication()
+    with pytest.raises(ValueError):
+        ta.parse(line)
+
+def test_parse_version():
+    line = '/shiny:stopped:17:shiny##v2.0.6'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert ta.path == '/shiny'
+    assert ta.status == tm.application_states.stopped
+    assert ta.sessions == 17
+    assert ta.directory == 'shiny'
+    assert ta.version == 'v2.0.6'
+
+
+###
+#
 # test ServerInfo
 #
 ###

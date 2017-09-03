@@ -187,6 +187,75 @@ class TomcatManagerResponse:
                 self.result = "\n".join(lines[1:])
 
 
+APPLICATION_STATES = [
+    'running',
+    'stopped',
+]
+application_states = AttrDict()
+for state in APPLICATION_STATES:
+    application_states[state] = state
+
+class TomcatApplication():
+    """
+    Discrete data about an application running inside a Tomcat Server.
+    """
+    def __init__(self):
+        self._path = None
+        self._status = None
+        self._sessions = 0
+        self._directory = None
+        self._version = None
+
+    def parse(self, line):
+        """
+        Parse a line from the server into our data elements.
+        """
+        app_details = line.rstrip().split(":")
+        self._path, self._status, sessions, dirver = app_details[:4]
+        self._sessions = int(sessions)
+        dirver = dirver.split('##')
+        self._directory = dirver[0]
+        if len(dirver) == 1:
+            self._version = None
+        else:
+            self._version = dirver[1]
+
+    @property
+    def path(self):
+        """
+        The path or partial url where the applicaiton is deployed.
+        """
+        return self._path
+
+    @property
+    def status(self):
+        """
+        The status of the application.
+        """
+        return self._status
+
+    @property
+    def sessions(self):
+        """
+        The number of active sessions in the application.
+        """
+        return self._sessions
+
+    @property
+    def directory(self):
+        """
+        The directory on the server where the application resides.
+        """
+        return self._directory
+
+    @property
+    def version(self):
+        """
+        The version of the application given when it was deployed.
+        """
+        return self._version
+        
+
 class ServerInfo(dict):
     """
     Discrete data about the Tomcat server.
@@ -275,9 +344,7 @@ CODES = {
     'OK': 'ok',
     'FAIL': 'fail',
 }
-
 # pylint: disable=invalid-name
 codes = AttrDict()
-
 for code, title in CODES.items():
     codes[title] = code
