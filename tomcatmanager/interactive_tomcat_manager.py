@@ -865,7 +865,7 @@ Expire idle sessions.
             if response.ok:
                 fmt = '{:24.24} {:7.7} {:>8.8} {:36.36}'
                 dashes = '-'*80
-                self.poutput(fmt.format('Path', 'Status', 'Sessions', 'Directory'))
+                self.poutput(fmt.format('Path', 'State', 'Sessions', 'Directory'))
                 self.poutput(fmt.format(dashes, dashes, dashes, dashes))
                 grouped_apps = self.group_and_sort_apps(response.apps)
                 first = True
@@ -874,7 +874,7 @@ Expire idle sessions.
                         self.poutput('')
                     first = False
                     for app in group:
-                        self.poutput(fmt.format(app.path, app.status, app.sessions, app.directory_and_version))
+                        self.poutput(fmt.format(app.path, app.state, str(app.sessions), app.directory_and_version))
 
     def help_list(self):
         """Show help for the 'list' command."""
