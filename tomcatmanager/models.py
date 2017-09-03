@@ -254,7 +254,19 @@ class TomcatApplication():
         The version of the application given when it was deployed.
         """
         return self._version
-        
+
+    @property
+    def directory_and_version(self):
+        """
+        Combine directory and version together
+        """
+        dandv = None
+        if self.directory:
+            dandv = self.directory
+            if self.version:
+                dandv += '##{}'.format(self.version)
+        return dandv
+
 
 class ServerInfo(dict):
     """
@@ -332,6 +344,7 @@ class ServerInfo(dict):
     def jvm_vendor(self):
         """The java virtual machine vendor."""
         return self._jvm_vendor
+
 
 ###
 #

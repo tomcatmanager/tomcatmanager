@@ -92,6 +92,7 @@ def test_parse_root():
     assert ta.sessions == 0
     assert ta.directory == 'ROOT'
     assert ta.version == None
+    assert ta.directory_and_version == ta.directory
 
 def test_parse_app_with_slash_in_directory():
     line = '/manager:running:0:/usr/share/tomcat8-admin/manager'
@@ -102,6 +103,7 @@ def test_parse_app_with_slash_in_directory():
     assert ta.sessions == 0
     assert ta.directory == '/usr/share/tomcat8-admin/manager' 
     assert ta.version == None
+    assert ta.directory_and_version == ta.directory
 
 def test_parse_app_with_non_integer_sessions():
     line = '/:running:not_an_integer:ROOT'
@@ -118,6 +120,11 @@ def test_parse_version():
     assert ta.sessions == 17
     assert ta.directory == 'shiny'
     assert ta.version == 'v2.0.6'
+    assert ta.directory_and_version == 'shiny##v2.0.6'
+
+def test_directory_and_version_empty():
+    ta = tm.models.TomcatApplication()
+    assert ta.directory_and_version == None
 
 
 ###
