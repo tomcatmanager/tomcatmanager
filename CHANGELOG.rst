@@ -24,6 +24,7 @@ develop
 - `TomcatManager._user` is now `TomcatManager.user`
 - `TomcatManager._url` is now `TomcatManager.url`
 - `TomcatManager.list()` now returns a list of `TomcatApplication` objects
+- Renamed `tm.codes` to `tm.status_codes` to clarify what codes it contains
 
 
 0.10.0 (2017-08-24)

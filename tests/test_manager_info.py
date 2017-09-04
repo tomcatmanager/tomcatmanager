@@ -52,7 +52,7 @@ class TestInfo(TestManagerBase):
             mock_status.return_value = 204 # No Content
             r = tomcat.status_xml()
             self.failure_assertions(r)
-            assert r.status_code == tm.codes.fail
+            assert r.status_code == tm.status_codes.fail
 
     def test_vm_info(self, tomcat):
         r = tomcat.vm_info()

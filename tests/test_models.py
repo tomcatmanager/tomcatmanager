@@ -67,14 +67,14 @@ def test_http_response_not_tomcat(tomcat, mock_text, content):
 def test_http_response_valid(tomcat, mock_text):
     mock_text.return_value = 'OK - some message\nthe result'
     r = tomcat.vm_info()
-    assert r.status_code == tm.codes.ok
+    assert r.status_code == tm.status_codes.ok
     assert r.status_message == 'some message'
     assert r.result == 'the result'
 
 def test_http_response_fail(tomcat, mock_text):
     mock_text.return_value = 'FAIL - some message'
     r = tomcat.vm_info()
-    assert r.status_code == tm.codes.fail
+    assert r.status_code == tm.status_codes.fail
     assert r.status_message == 'some message'
     assert r.result is None
 

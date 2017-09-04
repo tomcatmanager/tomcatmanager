@@ -31,6 +31,8 @@ This module contains the data objects created by and used by tomcatmanager.
 from attrdict import AttrDict
 import requests
 
+import tomcatmanager as tm
+
 
 class TomcatError(Exception):
     """
@@ -81,7 +83,7 @@ class TomcatManagerResponse:
         return all([
             self.response != None,
             self.response.status_code == requests.codes.ok,
-            self.status_code == codes.ok,
+            self.status_code == tm.status_codes.ok,
             ])
 
     def raise_for_status(self):
@@ -97,7 +99,7 @@ class TomcatManagerResponse:
         from the Tomcat Manager web app.
         """
         self.response.raise_for_status()
-        if self.status_code != codes.ok:
+        if self.status_code != tm.status_codes.ok:
             raise TomcatError(self.status_message)
 
     @property
@@ -121,7 +123,7 @@ class TomcatManagerResponse:
             >>> import tomcatmanager as tm
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.server_info()
-            >>> r.status_code == tm.codes.ok
+            >>> r.status_code == tm.status_codes.ok
             True
         """
         return self._status_code
@@ -179,7 +181,7 @@ class TomcatManagerResponse:
                 try:
                     statusline = response.text.splitlines()[0]
                     code = statusline.split(' ', 1)[0] 
-                    if code in codes.values():
+                    if code in tm.status_codes.values():
                         self.status_code = code
                         self.status_message = statusline.split(' ', 1)[1][2:]
                         if len(lines) > 1:
@@ -401,12 +403,12 @@ class ServerInfo(dict):
 # build status codes
 #
 ###
-CODES = {
+STATUS_CODES = {
     # 'sent from tomcat': 'friendly name'
     'OK': 'ok',
     'FAIL': 'fail',
 }
 # pylint: disable=invalid-name
-codes = AttrDict()
-for code, title in CODES.items():
-    codes[title] = code
+status_codes = AttrDict()
+for code, title in STATUS_CODES.items():
+    status_codes[title] = code

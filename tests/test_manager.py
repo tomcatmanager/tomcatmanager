@@ -39,7 +39,7 @@ class TestManagerBase:
         """
         Assertions for every command that should complete successfully.
         """
-        assert r.status_code == tm.codes.ok, 'message from server: "{}"'.format(r.status_message)
+        assert r.status_code == tm.status_codes.ok, 'message from server: "{}"'.format(r.status_message)
         assert r.status_message != None
         assert r.status_message
         r.raise_for_status()
@@ -48,7 +48,7 @@ class TestManagerBase:
         """
         Assertions for every command that should fail.
         """
-        assert r.status_code == tm.codes.fail
+        assert r.status_code == tm.status_codes.fail
         with pytest.raises(tm.TomcatError):
             r.raise_for_status()
 
@@ -108,7 +108,7 @@ class TestManager(TestManagerBase):
             tomcat_manager_server.password
         )
         assert isinstance(r, tm.models.TomcatManagerResponse)
-        assert r.status_code == tm.codes.ok
+        assert r.status_code == tm.status_codes.ok
         assert tomcat.is_connected
         assert r.result == ''
         assert r.status_message == ''
