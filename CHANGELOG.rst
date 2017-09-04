@@ -16,6 +16,8 @@ develop
 **Improved**
 - If we get an http redirect during `TomcatManager.connect()`, save the new
   url so we don't have to re-traverse the redirect on every command.
+- Interactive list command now filters by application state, and has two
+  sort options
 
 **Changed**
 

@@ -859,15 +859,14 @@ Expire idle sessions.
     @requires_connection
     def do_list(self, argv):
         """Show all installed applications."""
-        args = self.list_parse_args(argv)
+        args = self._list_parse_args(argv)
         response = self.docmd(self.tomcat.list)
         if not response.ok:
-            # TODO display errors
             return
 
-        apps = self.process_apps(response.apps, args)
+        apps = self._list_process_apps(response.apps, args)
 
-        # TODO figure out how to check for usage errors
+        self.exit_code = self.exit_codes.success
         if args.raw:
             for app in apps:
                 self.poutput(app)
@@ -881,13 +880,10 @@ Expire idle sessions.
 
     def help_list(self):
         """Show help for the 'list' command."""
-        # TODO figure out how to get argparse -h output here
         self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: list
+        args = self._list_parse_args('-h')
 
-Show all installed applications.""")
-
-    def list_parse_args(self, argv):
+    def _list_parse_args(self, argv):
         """Use argparse to parse list command arguments"""
         parser = argparse.ArgumentParser(
             prog = 'list',
@@ -896,12 +892,20 @@ Show all installed applications.""")
         raw_help = 'show apps without formatting'
         parser.add_argument('-r', '--raw', action='store_true', help=raw_help)
         state_help = 'only show apps in a given state'
-        parser.add_argument('-s', '--state', help=state_help)
+        parser.add_argument('-s', '--state', choices=['running', 'stopped'], help=state_help)
+        by_help = 'sort by state (default), or sort by path'
+        parser.add_argument('-b', '--by', choices=['state', 'path'], default='state', help=by_help)
+        # set exit codes so if we raise exceptions, we have the right value
+        self.exit_code = self.exit_codes.error
         argv = shlex.split(argv)
+        # no parse error, assume we get a usage error
+        self.exit_code = self.exit_codes.usage
         args = parser.parse_args(argv)
+        # no usage error, assume success
+        self.exit_code = self.exit_codes.success
         return args
         
-    def process_apps(self, apps, args):
+    def _list_process_apps(self, apps, args):
         """
         Select and sort a list of `TomcatApplication` objects based on arguments
         
@@ -912,10 +916,15 @@ Show all installed applications.""")
         rtn = []
         # select the apps that should be included
         if args.state:
-            rtn = filter(lambda app: app.state == args.state ,apps)
+            rtn = filter(lambda app: app.state == args.state, apps)
         else:
             rtn = apps
-        return sorted(rtn)
+        # now sort them
+        if args.by == 'path':
+            rtn = sorted(rtn, key=tm.models.TomcatApplication.sort_by_path_by_version_by_state)
+        else:
+            rtn = sorted(rtn, key=tm.models.TomcatApplication.sort_by_state_by_path_by_version)
+        return rtn
         
     ###
     #
