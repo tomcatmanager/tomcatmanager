@@ -139,6 +139,28 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # Override cmd2.Cmd methods.
     #
     ###
+    def poutput(self, msg, end='\n'):
+        """Convenient shortcut for self.stdout.write(); by default adds newline to end if not already present.
+
+        Also handles BrokenPipeError exceptions for when a commands's output has been piped to another process and
+        that process terminates before the cmd2 command is finished executing.
+
+        :param msg: str - message to print to current stdout - anyting convertible to a str with '{}'.format() is OK
+        :param end: str - string appended after the end of the message if not already present, default a newline
+        """
+        if msg is not None:
+            try:
+                msg_str = '{}'.format(msg)
+                self.stdout.write(msg_str)
+                if not msg_str.endswith(end):
+                    self.stdout.write(end)
+            except BROKEN_PIPE_ERROR:
+                # This occurs if a command's output is being piped to another process and that process closes before the
+                # command is finished.  We intentionally don't print a warning message here since we know that stdout
+                # will be restored by the _restore_output() method.  If you would like your application to print a
+                # warning message, then override this method.
+                pass
+
     def perror(self, errmsg, exception_type=None, traceback_war=True):
         """
         Print an error message or an exception.
