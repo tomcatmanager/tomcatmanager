@@ -54,13 +54,13 @@ CONTENTS = [
     'malformedwithnospace',
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">',
 ]
-@pytest.mark.parametrize('content', ['malformedwithnospace'])
+@pytest.mark.parametrize('content', CONTENTS)
 def test_http_response_not_tomcat(tomcat, mock_text, content):
     # like we might get if they put a regular web page in for the URL
     mock_text.return_value = content
     r = tomcat.vm_info()
-    # we don't care what this is, but it better not be OK
-    assert r.status_code != tm.codes.ok
+    # ok, fail, and None are the only acceptable values. These better be None
+    assert r.status_code is None
     assert r.status_message is None
     assert r.result is None
 

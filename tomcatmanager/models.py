@@ -178,13 +178,14 @@ class TomcatManagerResponse:
             if response.status_code == requests.codes.ok:
                 try:
                     statusline = response.text.splitlines()[0]
-                    self.status_code = statusline.split(' ', 1)[0]
-                    self.status_message = statusline.split(' ', 1)[1][2:]
+                    code = statusline.split(' ', 1)[0] 
+                    if code in codes.values():
+                        self.status_code = code
+                        self.status_message = statusline.split(' ', 1)[1][2:]
+                        if len(lines) > 1:
+                            self.result = "\n".join(lines[1:])
                 except IndexError:
                     pass
-            # set the result
-            if len(lines) > 1:
-                self.result = "\n".join(lines[1:])
 
 
 APPLICATION_STATES = [
@@ -401,7 +402,6 @@ class ServerInfo(dict):
 #
 ###
 CODES = {
-
     # 'sent from tomcat': 'friendly name'
     'OK': 'ok',
     'FAIL': 'fail',
