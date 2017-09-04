@@ -30,7 +30,7 @@ import re
 
 import requests
 
-from .models import codes, TomcatManagerResponse, ServerInfo
+from .models import codes, TomcatManagerResponse, ServerInfo, TomcatApplication
 
 
 class TomcatManager:
@@ -442,28 +442,28 @@ class TomcatManager:
         Get a list of all applications currently installed.
 
         :return: `TomcatManagerResponse` object with an additional
-                 ``apps`` attribute
+                 ``apps`` attribute which contains a list of
+                 `TomcatApplication` objects
 
         Usage::
 
+            >>> import tomcatmanager as tm
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.list()
             >>> if r.ok:
             ...     running = []
-            ...     for (path, status, sessions, dir) in r.apps:
-            ...         if status == 'running': running.append(path)
+            ...     for app in r.apps:
+            ...         if app.state == tm.application_states.running:
+            ...             running.append(app)
 
-        ``apps`` is a list of tuples: (``path``, ``status``, ``sessions``, ``directory``)
-
-        * ``path`` - the relative URL where this app is deployed on the server
-        * ``status`` - whether the app is running or not
-        * ``sessions`` - number of currently active sessions
-        * ``directory`` - the directory on the server where this app resides
         """
+        # TODO use lambda function in doctest
         r = self._get('list')
         apps = []
         for line in r.result.splitlines():
-            apps.append(line.rstrip().split(":"))
+            app = TomcatApplication()
+            app.parse(line)
+            apps.append(app)
         r.apps = apps
         return r
 

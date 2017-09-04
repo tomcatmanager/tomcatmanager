@@ -192,8 +192,15 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         """Send a list of applications."""
         self.send_text("""OK - Listed applications for virtual host localhost
 /:running:0:ROOT
-/host-manager:running:0:/usr/share/tomcat8-admin/host-manager
-/manager:running:0:/usr/share/tomcat8-admin/manager""")
+/contacts:running:3:running##4.1
+/shiny:stopped:17:shiny##v2.0.6
+/contacts:running:8:running
+/shiny:stopped:0:shiny##v2.0.5
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/shiny:running:12:shiny##v2.0.8
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+""")
 
     def get_server_info(self):
         """Send the server information."""

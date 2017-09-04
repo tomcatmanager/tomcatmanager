@@ -178,13 +178,144 @@ class TomcatManagerResponse:
             if response.status_code == requests.codes.ok:
                 try:
                     statusline = response.text.splitlines()[0]
-                    self.status_code = statusline.split(' ', 1)[0]
-                    self.status_message = statusline.split(' ', 1)[1][2:]
+                    code = statusline.split(' ', 1)[0] 
+                    if code in codes.values():
+                        self.status_code = code
+                        self.status_message = statusline.split(' ', 1)[1][2:]
+                        if len(lines) > 1:
+                            self.result = "\n".join(lines[1:])
                 except IndexError:
                     pass
-            # set the result
-            if len(lines) > 1:
-                self.result = "\n".join(lines[1:])
+
+
+APPLICATION_STATES = [
+    'running',
+    'stopped',
+]
+application_states = AttrDict()
+for state in APPLICATION_STATES:
+    application_states[state] = state
+
+class TomcatApplication():
+    """
+    Discrete data about an application running inside a Tomcat Server.
+    """
+    @classmethod
+    def sort_by_state_by_path_by_version(cls, app):
+        """
+        Function to create a key usable by `sort` to sort by state, by path, by version.
+        """
+        return '{}:{}:{}'.format(
+            app.state or '',
+            app.path or '',
+            app.version or ''
+            )
+    
+    @classmethod
+    def sort_by_path_by_version_by_state(cls, app):
+        """
+        Function to create a key usable by `sort` to sort by path, by version, by state
+        """
+        return '{}:{}:{}'.format(
+            app.path or '',
+            app.version or '',
+            app.state or ''
+            )
+
+    def __init__(self):
+        self._path = None
+        self._state = None
+        self._sessions = None
+        self._directory = None
+        self._version = None
+
+    # def __repr__(self):
+    #     # TODO figure out the right thing here
+    #     return "'{}'".format(self.__str__())
+
+    def __str__(self):
+        fmt = "{}:{}:{}:{}"
+        sessions = ''
+        if self.sessions is not None:
+            sessions = self.sessions
+        return fmt.format(
+            self.path or '',
+            self.state or '',
+            sessions,
+            self.directory_and_version or ''
+            )
+        
+    def __lt__(self, other):
+        """
+        Compare one object to another. Useful for sorting lists of apps.
+        
+        The sort order is by state (as string), by path (as string), by version
+        (by string, if present).
+        """
+        self_key = self.sort_by_state_by_path_by_version(self)
+        other_key = self.sort_by_state_by_path_by_version(other)
+        return self_key < other_key
+
+    def parse(self, line):
+        """
+        Parse a line from the server into our data elements.
+        """
+        app_details = line.rstrip().split(":")
+        self._path, self._state, sessions, dirver = app_details[:4]
+        self._sessions = int(sessions)
+        dirver = dirver.split('##')
+        self._directory = dirver[0]
+        if len(dirver) == 1:
+            self._version = None
+        else:
+            self._version = dirver[1]
+
+    @property
+    def path(self):
+        """
+        the relative URL where this app is deployed on the server.
+        """
+        return self._path
+
+    @property
+    def state(self):
+        """
+        The state of the application.
+        """
+        return self._state
+
+    @property
+    def sessions(self):
+        """
+        The number of currently active sessions.
+        """
+        return self._sessions
+
+    @property
+    def directory(self):
+        """
+        The directory on the server where this application resides.
+        """
+        return self._directory
+
+    @property
+    def version(self):
+        """
+        The version of the application given when it was deployed.
+        """
+        return self._version
+
+    @property
+    def directory_and_version(self):
+        """
+        Combine directory and version together
+        """
+        dandv = None
+        if self.directory:
+            dandv = self.directory
+            if self.version:
+                dandv += '##{}'.format(self.version)
+        return dandv
 
 
 class ServerInfo(dict):
@@ -264,20 +395,18 @@ class ServerInfo(dict):
         """The java virtual machine vendor."""
         return self._jvm_vendor
 
+
 ###
 #
 # build status codes
 #
 ###
 CODES = {
-
     # 'sent from tomcat': 'friendly name'
     'OK': 'ok',
     'FAIL': 'fail',
 }
-
 # pylint: disable=invalid-name
 codes = AttrDict()
-
 for code, title in CODES.items():
     codes[title] = code

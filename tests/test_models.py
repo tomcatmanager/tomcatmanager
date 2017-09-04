@@ -54,13 +54,13 @@ CONTENTS = [
     'malformedwithnospace',
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">',
 ]
-@pytest.mark.parametrize('content', ['malformedwithnospace'])
+@pytest.mark.parametrize('content', CONTENTS)
 def test_http_response_not_tomcat(tomcat, mock_text, content):
     # like we might get if they put a regular web page in for the URL
     mock_text.return_value = content
     r = tomcat.vm_info()
-    # we don't care what this is, but it better not be OK
-    assert r.status_code != tm.codes.ok
+    # ok, fail, and None are the only acceptable values. These better be None
+    assert r.status_code is None
     assert r.status_message is None
     assert r.result is None
 
@@ -77,6 +77,167 @@ def test_http_response_fail(tomcat, mock_text):
     assert r.status_code == tm.codes.fail
     assert r.status_message == 'some message'
     assert r.result is None
+
+###
+#
+# test TomcatApplication
+#
+###
+def test_parse_root():
+    line = '/:running:0:ROOT'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert ta.path == '/'
+    assert ta.state == tm.application_states.running
+    assert ta.sessions == 0
+    assert ta.directory == 'ROOT'
+    assert ta.version == None
+    assert ta.directory_and_version == ta.directory
+
+def test_parse_app_with_slash_in_directory():
+    line = '/manager:running:0:/usr/share/tomcat8-admin/manager'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert ta.path == '/manager'
+    assert ta.state == tm.application_states.running
+    assert ta.sessions == 0
+    assert ta.directory == '/usr/share/tomcat8-admin/manager' 
+    assert ta.version == None
+    assert ta.directory_and_version == ta.directory
+
+def test_parse_app_with_non_integer_sessions():
+    line = '/:running:not_an_integer:ROOT'
+    ta = tm.models.TomcatApplication()
+    with pytest.raises(ValueError):
+        ta.parse(line)
+
+def test_parse_version():
+    line = '/shiny:stopped:17:shiny##v2.0.6'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert ta.path == '/shiny'
+    assert ta.state == tm.application_states.stopped
+    assert ta.sessions == 17
+    assert ta.directory == 'shiny'
+    assert ta.version == 'v2.0.6'
+    assert ta.directory_and_version == 'shiny##v2.0.6'
+
+def test_str_without_version():
+    line = '/shiny:running:8:shiny'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert str(ta) == line
+
+def test_str_with_version():
+    line = '/shiny:stopped:17:shiny##v2.0.6'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert str(ta) == line
+
+def test_str_with_zero_sessions():
+    line = '/shiny:running:0:shiny##v2.0.6'
+    ta = tm.models.TomcatApplication()
+    ta.parse(line)
+    assert str(ta) == line
+    
+def test_directory_and_version_empty():
+    ta = tm.models.TomcatApplication()
+    assert ta.directory_and_version == None
+
+def parse_apps(lines):
+    apps = []
+    for line in lines.splitlines():
+        app = tm.models.TomcatApplication()
+        app.parse(line)
+        apps.append(app)
+    return apps
+
+def test_lt():
+    raw_apps = """/:running:0:ROOT
+/contacts:running:3:running##4.1
+/shiny:stopped:17:shiny##v2.0.6
+/contacts:running:8:running
+/shiny:stopped:0:shiny##v2.0.5
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/shiny:running:12:shiny##v2.0.8
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+""" 
+    sorted_apps = """/:running:0:ROOT
+/contacts:running:8:running
+/contacts:running:3:running##4.1
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+/shiny:running:12:shiny##v2.0.8
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/shiny:stopped:0:shiny##v2.0.5
+/shiny:stopped:17:shiny##v2.0.6
+""" 
+    apps = parse_apps(raw_apps)
+    apps.sort()
+    result = ''
+    strapps = map(lambda x: str(x), apps)
+    result = '\n'.join(strapps) + '\n'
+    assert result == sorted_apps
+
+def test_sort_by_spv():
+    raw_apps = """/:running:0:ROOT
+/contacts:running:3:running##4.1
+/shiny:stopped:17:shiny##v2.0.6
+/contacts:running:8:running
+/shiny:stopped:0:shiny##v2.0.5
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/shiny:running:12:shiny##v2.0.8
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+""" 
+    sorted_apps = """/:running:0:ROOT
+/contacts:running:8:running
+/contacts:running:3:running##4.1
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+/shiny:running:12:shiny##v2.0.8
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/shiny:stopped:0:shiny##v2.0.5
+/shiny:stopped:17:shiny##v2.0.6
+""" 
+    apps = parse_apps(raw_apps)
+    apps.sort(key=tm.models.TomcatApplication.sort_by_state_by_path_by_version)
+    result = ''
+    strapps = map(lambda x: str(x), apps)
+    result = '\n'.join(strapps) + '\n'
+    assert result == sorted_apps
+
+def test_sort_by_pvs():
+    raw_apps = """/:running:0:ROOT
+/contacts:running:3:running##4.12
+/shiny:stopped:17:shiny##v2.0.6
+/contacts:running:5:running
+/contacts:running:8:running##4.10
+/shiny:stopped:0:shiny##v2.0.5
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/shiny:running:12:shiny##v2.0.8
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+""" 
+    sorted_apps = """/:running:0:ROOT
+/contacts:running:8:running##4.10
+/contacts:running:3:running##4.12
+/contacts:running:5:running
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:stopped:0:shiny##v2.0.5
+/shiny:stopped:17:shiny##v2.0.6
+/shiny:running:15:shiny##v2.0.7
+/shiny:running:12:shiny##v2.0.8
+""" 
+    apps = parse_apps(raw_apps)
+    apps.sort(key=tm.models.TomcatApplication.sort_by_path_by_version_by_state)
+    result = ''
+    strapps = map(lambda x: str(x), apps)
+    result = '\n'.join(strapps) + '\n'
+    assert result == sorted_apps
+
 
 ###
 #

@@ -32,7 +32,9 @@ import getpass
 import xml.dom.minidom
 import ast
 import configparser
+import shlex
 from http.client import responses
+import argparse
 
 from attrdict import AttrDict
 import cmd2
@@ -137,6 +139,28 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # Override cmd2.Cmd methods.
     #
     ###
+    def poutput(self, msg, end='\n'):
+        """Convenient shortcut for self.stdout.write(); by default adds newline to end if not already present.
+
+        Also handles BrokenPipeError exceptions for when a commands's output has been piped to another process and
+        that process terminates before the cmd2 command is finished executing.
+
+        :param msg: str - message to print to current stdout - anyting convertible to a str with '{}'.format() is OK
+        :param end: str - string appended after the end of the message if not already present, default a newline
+        """
+        if msg is not None:
+            try:
+                msg_str = '{}'.format(msg)
+                self.stdout.write(msg_str)
+                if not msg_str.endswith(end):
+                    self.stdout.write(end)
+            except BROKEN_PIPE_ERROR:
+                # This occurs if a command's output is being piped to another process and that process closes before the
+                # command is finished.  We intentionally don't print a warning message here since we know that stdout
+                # will be restored by the _restore_output() method.  If you would like your application to print a
+                # warning message, then override this method.
+                pass
+
     def perror(self, errmsg, exception_type=None, traceback_war=True):
         """
         Print an error message or an exception.
@@ -855,28 +879,75 @@ Expire idle sessions.
            0 to expire all sessions.""")
 
     @requires_connection
-    def do_list(self, args):
+    def do_list(self, argv):
         """Show all installed applications."""
-        if args:
-            self.help_list()
-            self.exit_code = self.exit_codes.usage
+        args = self._list_parse_args(argv)
+        response = self.docmd(self.tomcat.list)
+        if not response.ok:
+            return
+
+        apps = self._list_process_apps(response.apps, args)
+
+        self.exit_code = self.exit_codes.success
+        if args.raw:
+            for app in apps:
+                self.poutput(app)
         else:
-            response = self.docmd(self.tomcat.list)
             fmt = '{:24.24} {:7.7} {:>8.8} {:36.36}'
             dashes = '-'*80
-            self.poutput(fmt.format('Path', 'Status', 'Sessions', 'Directory'))
+            self.poutput(fmt.format('Path', 'State', 'Sessions', 'Directory'))
             self.poutput(fmt.format(dashes, dashes, dashes, dashes))
-            for app in response.apps:
-                path, status, session, directory = app[:4]
-                self.poutput(fmt.format(path, status, session, directory))
+            for app in apps:
+                self.poutput(fmt.format(app.path, app.state, str(app.sessions), app.directory_and_version))
 
     def help_list(self):
         """Show help for the 'list' command."""
         self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: list
+        args = self._list_parse_args('-h')
 
-Show all installed applications.""")
-
+    def _list_parse_args(self, argv):
+        """Use argparse to parse list command arguments"""
+        parser = argparse.ArgumentParser(
+            prog = 'list',
+            description = 'Show all installed applications',
+        )
+        raw_help = 'show apps without formatting'
+        parser.add_argument('-r', '--raw', action='store_true', help=raw_help)
+        state_help = 'only show apps in a given state'
+        parser.add_argument('-s', '--state', choices=['running', 'stopped'], help=state_help)
+        by_help = 'sort by state (default), or sort by path'
+        parser.add_argument('-b', '--by', choices=['state', 'path'], default='state', help=by_help)
+        # set exit codes so if we raise exceptions, we have the right value
+        self.exit_code = self.exit_codes.error
+        argv = shlex.split(argv)
+        # no parse error, assume we get a usage error
+        self.exit_code = self.exit_codes.usage
+        args = parser.parse_args(argv)
+        # no usage error, assume success
+        self.exit_code = self.exit_codes.success
+        return args
+        
+    def _list_process_apps(self, apps, args):
+        """
+        Select and sort a list of `TomcatApplication` objects based on arguments
+        
+        We rely on the `TomcatApplication` object to determine the sort order.
+        
+        :return: a list of `TomcatApplication` objects
+        """
+        rtn = []
+        # select the apps that should be included
+        if args.state:
+            rtn = filter(lambda app: app.state == args.state, apps)
+        else:
+            rtn = apps
+        # now sort them
+        if args.by == 'path':
+            rtn = sorted(rtn, key=tm.models.TomcatApplication.sort_by_path_by_version_by_state)
+        else:
+            rtn = sorted(rtn, key=tm.models.TomcatApplication.sort_by_state_by_path_by_version)
+        return rtn
+        
     ###
     #
     # These commands that don't affect change, they just return some
