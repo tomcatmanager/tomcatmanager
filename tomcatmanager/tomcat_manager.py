@@ -451,13 +451,8 @@ class TomcatManager:
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.list()
             >>> if r.ok:
-            ...     running = []
-            ...     for app in r.apps:
-            ...         if app.state == tm.application_states.running:
-            ...             running.append(app)
-
+            ...     running = filter(lambda app: app.state == tm.application_states.running, r.apps)
         """
-        # TODO use lambda function in doctest
         r = self._get('list')
         apps = []
         for line in r.result.splitlines():

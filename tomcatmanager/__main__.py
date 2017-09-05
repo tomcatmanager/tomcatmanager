@@ -41,8 +41,6 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         description='Manage a tomcat server from the command line or an interactive shell'
     )
-    # TODO add epilog with additional usage info
-    # should include something that says user, pass, and url all need to go together
     user_help = 'user to use for authentication with the tomcat manager web application'
     parser.add_argument('-u', '--user', help=user_help)
 
@@ -77,7 +75,7 @@ def main(argv=None):
                         help=command_help)
 
     arg_help = 'optional arguments for command'
-    parser.add_argument('arg', nargs=argparse.REMAINDER,
+    parser.add_argument('command_args', nargs=argparse.REMAINDER,
                         help=arg_help)
 
     args = parser.parse_args(argv)

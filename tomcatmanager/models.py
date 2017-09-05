@@ -231,10 +231,6 @@ class TomcatApplication():
         self._directory = None
         self._version = None
 
-    # def __repr__(self):
-    #     # TODO figure out the right thing here
-    #     return "'{}'".format(self.__str__())
-
     def __str__(self):
         fmt = "{}:{}:{}:{}"
         sessions = ''
