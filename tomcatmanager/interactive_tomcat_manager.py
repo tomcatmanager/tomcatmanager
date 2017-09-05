@@ -132,7 +132,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.tomcat = tm.TomcatManager()
         self.tomcat.timeout = self.timeout
         self.exit_code = None
-        self.version_string = '{} {} (works with Tomcat >= 7.0 and <= 8.5)'.format(self.app_name, tm.__version__)
+        vfmt = '{} {} (works with Tomcat >= 7.0 and <= 8.5)'
+        self.version_string = vfmt.format(self.app_name, tm.__version__)
 
     ###
     #
@@ -140,10 +141,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
     #
     ###
     def poutput(self, msg, end='\n'):
-        """Convenient shortcut for self.stdout.write(); by default adds newline to end if not already present.
+        """
+        Convenient shortcut for self.stdout.write();
+        by default adds newline to end if not already present.
 
-        Also handles BrokenPipeError exceptions for when a commands's output has been piped to another process and
-        that process terminates before the cmd2 command is finished executing.
+        Also handles BrokenPipeError exceptions for when a commands's output
+        has been piped to another process and that process terminates before
+        the cmd2 command is finished executing.
 
         :param msg: str - message to print to current stdout - anyting convertible to a str with '{}'.format() is OK
         :param end: str - string appended after the end of the message if not already present, default a newline
@@ -154,11 +158,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.stdout.write(msg_str)
                 if not msg_str.endswith(end):
                     self.stdout.write(end)
-            except BROKEN_PIPE_ERROR:
-                # This occurs if a command's output is being piped to another process and that process closes before the
-                # command is finished.  We intentionally don't print a warning message here since we know that stdout
-                # will be restored by the _restore_output() method.  If you would like your application to print a
-                # warning message, then override this method.
+            except BrokenPipeError:
+                # This occurs if a command's output is being piped to another
+                # process and that process closes before the command is
+                # finished.  We intentionally don't print a warning message
+                # here since we know that stdout will be restored by the
+                # _restore_output() method.  If you would like your application
+                # to print a warning message, then override this method.
                 pass
 
     def perror(self, errmsg, exception_type=None, traceback_war=True):
@@ -908,8 +914,8 @@ Expire idle sessions.
     def _list_parse_args(self, argv):
         """Use argparse to parse list command arguments"""
         parser = argparse.ArgumentParser(
-            prog = 'list',
-            description = 'Show all installed applications',
+            prog='list',
+            description='Show all installed applications',
         )
         raw_help = 'show apps without formatting'
         parser.add_argument('-r', '--raw', action='store_true', help=raw_help)
@@ -926,13 +932,13 @@ Expire idle sessions.
         # no usage error, assume success
         self.exit_code = self.exit_codes.success
         return args
-        
+
     def _list_process_apps(self, apps, args):
         """
         Select and sort a list of `TomcatApplication` objects based on arguments
-        
+
         We rely on the `TomcatApplication` object to determine the sort order.
-        
+
         :return: a list of `TomcatApplication` objects
         """
         rtn = []
@@ -947,7 +953,7 @@ Expire idle sessions.
         else:
             rtn = sorted(rtn, key=tm.models.TomcatApplication.sort_by_state_by_path_by_version)
         return rtn
-        
+
     ###
     #
     # These commands that don't affect change, they just return some

@@ -180,7 +180,7 @@ class TomcatManagerResponse:
             if response.status_code == requests.codes.ok:
                 try:
                     statusline = response.text.splitlines()[0]
-                    code = statusline.split(' ', 1)[0] 
+                    code = statusline.split(' ', 1)[0]
                     if code in tm.status_codes.values():
                         self.status_code = code
                         self.status_message = statusline.split(' ', 1)[1][2:]
@@ -212,7 +212,7 @@ class TomcatApplication():
             app.path or '',
             app.version or ''
             )
-    
+
     @classmethod
     def sort_by_path_by_version_by_state(cls, app):
         """
@@ -242,11 +242,11 @@ class TomcatApplication():
             sessions,
             self.directory_and_version or ''
             )
-        
+
     def __lt__(self, other):
         """
         Compare one object to another. Useful for sorting lists of apps.
-        
+
         The sort order is by state (as string), by path (as string), by version
         (by string, if present).
         """
