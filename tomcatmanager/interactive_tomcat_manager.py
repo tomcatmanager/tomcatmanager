@@ -149,8 +149,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         has been piped to another process and that process terminates before
         the cmd2 command is finished executing.
 
-        :param msg: str - message to print to current stdout - anyting convertible to a str with '{}'.format() is OK
-        :param end: str - string appended after the end of the message if not already present, default a newline
+        :param msg: str - message to print to current stdout - anyting
+                          convertible to a str with '{}'.format() is OK
+        :param end: str - string appended after the end of the message if
+                          not already present, default a newline
         """
         if msg is not None:
             try:
@@ -161,10 +163,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             except BrokenPipeError:
                 # This occurs if a command's output is being piped to another
                 # process and that process closes before the command is
-                # finished.  We intentionally don't print a warning message
-                # here since we know that stdout will be restored by the
-                # _restore_output() method.  If you would like your application
-                # to print a warning message, then override this method.
+                # finished.
                 pass
 
     def perror(self, errmsg, exception_type=None, traceback_war=True):
