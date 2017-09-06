@@ -110,7 +110,7 @@ def test_set_integer_valid():
     assert itm.timeout == 5
     assert itm.exit_code == itm.exit_codes.success
 
-def test_set_integer_invalid(capsys):
+def test_set_integer_invalid():
     itm = tm.InteractiveTomcatManager()
     itm.timeout = 10
     itm.onecmd_plus_hooks('set timeout=joe')
@@ -121,14 +121,14 @@ def test_set_boolean_valid():
     itm = tm.InteractiveTomcatManager()
     itm.echo = False
     itm.onecmd_plus_hooks('set echo=True')
-    assert itm.echo == True
+    assert itm.echo is True
     assert itm.exit_code == itm.exit_codes.success
 
 def test_set_boolean_invalid():
     itm = tm.InteractiveTomcatManager()
     itm.echo = False
     itm.onecmd_plus_hooks('set echo=notaboolean')
-    assert itm.echo == False
+    assert itm.echo is False
     assert itm.exit_code == itm.exit_codes.error
 
 def test_set_with_invalid_param():

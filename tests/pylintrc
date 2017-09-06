@@ -6,7 +6,7 @@
 
 [basic]
 # BaseHTTPRequestHandler requires us to override these
-good-names=r,fd,do_GET,do_PUT
+good-names=r,ta,fd,do_GET,do_PUT
 
 # allow for longer method and function names
 method-rgx=(([a-z][a-z0-9_]{2,50})|(_[a-z0-9_]*))$
@@ -18,4 +18,5 @@ function-rgx=(([a-z][a-z0-9_]{2,50})|(_[a-z0-9_]*))$
 # no-self-use -> test methods part of a class hardly ever use self
 # unused-variable -> sometimes we are expecting exceptions
 # redefined-outer-name -> pylint fixtures cause these
-disable=too-many-public-methods,missing-docstring,no-self-use,unused-variable,redefined-outer-name
+# protected-access -> we want to test private methods
+disable=too-many-public-methods,missing-docstring,no-self-use,unused-variable,redefined-outer-name,protected-access

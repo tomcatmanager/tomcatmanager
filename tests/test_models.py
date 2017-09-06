@@ -40,7 +40,7 @@ def test_ok(tomcat):
 @pytest.fixture()
 def mock_text(mocker):
     return mocker.patch('requests.models.Response.text', create=True,
-                         new_callable=mock.PropertyMock)
+                        new_callable=mock.PropertyMock)
 
 @pytest.mark.parametrize('value', [None, ''])
 def test_http_response_empty(tomcat, mock_text, value):
@@ -90,7 +90,7 @@ def test_parse_root():
     assert ta.state == tm.application_states.running
     assert ta.sessions == 0
     assert ta.directory == 'ROOT'
-    assert ta.version == None
+    assert ta.version is None
     assert ta.directory_and_version == ta.directory
 
 def test_parse_app_with_slash_in_directory():
@@ -100,8 +100,8 @@ def test_parse_app_with_slash_in_directory():
     assert ta.path == '/manager'
     assert ta.state == tm.application_states.running
     assert ta.sessions == 0
-    assert ta.directory == '/usr/share/tomcat8-admin/manager' 
-    assert ta.version == None
+    assert ta.directory == '/usr/share/tomcat8-admin/manager'
+    assert ta.version is None
     assert ta.directory_and_version == ta.directory
 
 def test_parse_app_with_non_integer_sessions():
@@ -138,10 +138,10 @@ def test_str_with_zero_sessions():
     ta = tm.models.TomcatApplication()
     ta.parse(line)
     assert str(ta) == line
-    
+
 def test_directory_and_version_empty():
     ta = tm.models.TomcatApplication()
-    assert ta.directory_and_version == None
+    assert ta.directory_and_version is None
 
 def parse_apps(lines):
     apps = []
@@ -161,7 +161,7 @@ def test_lt():
 /shiny:running:12:shiny##v2.0.8
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:running:15:shiny##v2.0.7
-""" 
+"""
     sorted_apps = """/:running:0:ROOT
 /contacts:running:8:running
 /contacts:running:3:running##4.1
@@ -171,11 +171,11 @@ def test_lt():
 /host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
 /shiny:stopped:0:shiny##v2.0.5
 /shiny:stopped:17:shiny##v2.0.6
-""" 
+"""
     apps = parse_apps(raw_apps)
     apps.sort()
     result = ''
-    strapps = map(lambda x: str(x), apps)
+    strapps = map(str, apps)
     result = '\n'.join(strapps) + '\n'
     assert result == sorted_apps
 
@@ -189,7 +189,7 @@ def test_sort_by_spv():
 /shiny:running:12:shiny##v2.0.8
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:running:15:shiny##v2.0.7
-""" 
+"""
     sorted_apps = """/:running:0:ROOT
 /contacts:running:8:running
 /contacts:running:3:running##4.1
@@ -199,11 +199,11 @@ def test_sort_by_spv():
 /host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
 /shiny:stopped:0:shiny##v2.0.5
 /shiny:stopped:17:shiny##v2.0.6
-""" 
+"""
     apps = parse_apps(raw_apps)
     apps.sort(key=tm.models.TomcatApplication.sort_by_state_by_path_by_version)
     result = ''
-    strapps = map(lambda x: str(x), apps)
+    strapps = map(str, apps)
     result = '\n'.join(strapps) + '\n'
     assert result == sorted_apps
 
@@ -218,7 +218,7 @@ def test_sort_by_pvs():
 /shiny:running:12:shiny##v2.0.8
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:running:15:shiny##v2.0.7
-""" 
+"""
     sorted_apps = """/:running:0:ROOT
 /contacts:running:8:running##4.10
 /contacts:running:3:running##4.12
@@ -229,11 +229,11 @@ def test_sort_by_pvs():
 /shiny:stopped:17:shiny##v2.0.6
 /shiny:running:15:shiny##v2.0.7
 /shiny:running:12:shiny##v2.0.8
-""" 
+"""
     apps = parse_apps(raw_apps)
     apps.sort(key=tm.models.TomcatApplication.sort_by_path_by_version_by_state)
     result = ''
-    strapps = map(lambda x: str(x), apps)
+    strapps = map(str, apps)
     result = '\n'.join(strapps) + '\n'
     assert result == sorted_apps
 

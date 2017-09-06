@@ -143,6 +143,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         if self.headers.get('Authorization') == 'Basic '+self.AUTH_KEY:
             return True
 
+        # pylint: disable=no-member
         self.send_response(requests.codes.unauthorized)
         self.send_header('WWW-Authenticate', 'Basic realm=\"tomcatmanager\"')
         self.send_header('Content-type', 'text/html')
@@ -177,6 +178,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 
     def send_text(self, content):
         """Send a status ok and content as text/html."""
+        # pylint: disable=no-member
         self.send_response(requests.codes.ok)
         self.send_header('Content-type', 'text/html')
         self.end_headers()

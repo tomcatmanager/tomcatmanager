@@ -23,7 +23,6 @@
 #
 
 import unittest.mock as mock
-import argparse
 
 import pytest
 
@@ -47,7 +46,7 @@ def get_itm(tms):
 @pytest.fixture()
 def mock_apps(mocker):
     return mocker.patch('tomcatmanager.models.TomcatManagerResponse.result', create=True,
-                         new_callable=mock.PropertyMock)
+                        new_callable=mock.PropertyMock)
 
 def parse_apps(lines):
     """helper function to turn colon seperated text into objects"""
@@ -65,7 +64,7 @@ def test_list_process_apps_empty():
     apps = parse_apps(lines)
     apps = itm._list_process_apps(apps, args)
     assert isinstance(apps, list)
-    assert len(apps) == 0
+    assert apps == []
 
 LIST_ARGV_BAD = [
     '-raw',
@@ -74,7 +73,7 @@ LIST_ARGV_BAD = [
     '-s loading',
     '-sl',
     '-bs',
-]    
+]
 @pytest.mark.parametrize('argv', LIST_ARGV_BAD)
 def test_list_parse_args_failure(argv):
     itm = tm.InteractiveTomcatManager()
@@ -103,7 +102,7 @@ def test_list_sort_by_state(tomcat_manager_server, mock_apps, capsys):
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:running:15:shiny##v2.0.7
 /shiny:stopped:0:shiny##v2.0.6
-""" 
+"""
     mock_apps.return_value = raw_apps
     interactive_tomcat = get_itm(tomcat_manager_server)
     interactive_tomcat.onecmd_plus_hooks('list --raw -b state')
@@ -122,7 +121,7 @@ def test_list_sort_by_path(tomcat_manager_server, mock_apps, capsys):
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:stopped:0:shiny##v2.0.6
 /shiny:running:15:shiny##v2.0.7
-""" 
+"""
     mock_apps.return_value = raw_apps
     interactive_tomcat = get_itm(tomcat_manager_server)
     interactive_tomcat.onecmd_plus_hooks('list --raw -b path')
@@ -135,11 +134,11 @@ def test_list_state_running(tomcat_manager_server, mock_apps, capsys):
 /shiny:running:15:shiny##v2.0.7
 /host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
 /manager:running:0:/usr/share/tomcat8-admin/manager
-""" 
+"""
     expected = """/:running:0:ROOT
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:running:15:shiny##v2.0.7
-""" 
+"""
     mock_apps.return_value = raw_apps
     interactive_tomcat = get_itm(tomcat_manager_server)
     interactive_tomcat.onecmd_plus_hooks('list --raw -s running')
