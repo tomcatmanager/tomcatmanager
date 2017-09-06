@@ -26,5 +26,3 @@ install:
 script:
     - tox
 
-after_success:
-    - codecov
