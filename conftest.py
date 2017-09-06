@@ -15,14 +15,14 @@ from tests.mock_server80 import start_mock_server80
 #
 ###
 def pytest_addoption(parser):
-    parser.addoption("--url", action="store", default=None,
-        help="url: url of tomcat manager to test against instead of mock")
-    parser.addoption("--user", action="store", default=None,
-        help="user: use to authenticate")
-    parser.addoption("--password", action="store", default=None,
-        help="password: use to authenticate")
-    parser.addoption("--serverwar", action="store", default=None,
-        help="serverwar: path to deployable war file on the tomcat server")
+    parser.addoption('--url', action='store', default=None,
+        help='url: url of tomcat manager to test against instead of mock')
+    parser.addoption('--user', action='store', default=None,
+        help='user: use to authenticate')
+    parser.addoption('--password', action='store', default=None,
+        help='password: use to authenticate')
+    parser.addoption('--serverwar', action='store', default=None,
+        help='serverwar: path to deployable war file on the tomcat server')
 
 ###
 #
@@ -32,24 +32,18 @@ def pytest_addoption(parser):
 @pytest.fixture(scope='module')
 def tomcat_manager_server(request):
     """start a local http server which provides a similar interface to a real Tomcat Manager app"""
-    url = request.config.getoption("--url")
+    url = request.config.getoption('--url')
     if url:
         # use the server info specified on the command line
         tms = AttrDict()
         tms.url = url
-        tms.user = request.config.getoption("--user")
-        tms.password = request.config.getoption("--password")
+        tms.user = request.config.getoption('--user')
+        tms.password = request.config.getoption('--password')
+        tms.serverwar = request.config.getoption('--serverwar')
         return tms
     else:
         # go start up a fake server
         return start_mock_server80()
-
-@pytest.fixture(scope='module')
-def serverwar_file(request):
-    war = request.config.getoption("--serverwar")
-    if not war:
-        war = '/tmp/sample.war'
-    return war    
 
 @pytest.fixture(scope='module')
 def tomcat(tomcat_manager_server):
