@@ -35,8 +35,8 @@ output, you might choose to use ``tomcat-manager`` from within a shell script:
    URL=https://www.example.com/manager
    USERID=ace
    PASSWD=newenglandclamchowder
-   COMMAND=list
-   TOMCAT="tomcat-manager --user=$USERID --password=$PASSWD $URL $COMMAND"
+   COMMAND='list --raw'
+   TOMCAT="tomcat-manager --quiet --user=$USERID --password=$PASSWD $URL $COMMAND"
 
    # get the output of the list into a shell variable
    LIST=$($TOMCAT)
@@ -44,8 +44,8 @@ output, you might choose to use ``tomcat-manager`` from within a shell script:
    # if the tomcat command completed successfully
    TOMCAT_EXIT=$?
    if [ "$TOMCAT_EXIT" -eq 0 ]; then
-       echo "$LIST" | grep '^/shiny' | awk '{ print $4, $3}' | \
-       sort | head -1 | cut -d' ' -f2
+       echo "$LIST" | grep '^/shiny' | awk -F ':' '{ print $4":"$3}' | \
+       sort | head -1 | awk -F ':' '{ print #2 }'
    else
        # list has an error message, not the list of tomcat apps
        echo -n "$LIST"
@@ -59,12 +59,11 @@ Save this script as ``~/bin/oldshiners.sh``, and then run it:
    $ ~/bin/oldshiners.sh
    6
 
-As you can see in the shell script, we build a ``tomcat-manager`` command which
-included authentication credentials, the url where the Tomcat Manager web app
-is deployed, as well as the command from :doc:`Interactive Use <interactive>`.
-You have to specify all of this on the command line. In this example, we used
-``list`` as our command. Any command that works in the interactive mode works
-on the command line.
+This script builds a ``tomcat-manager`` command which includes authentication
+credentials, the url where the Tomcat Manager web app is deployed, as well as
+the command from :doc:`Interactive Use <interactive>`. In this example, we
+used ``list`` as our command. Any command that works in the interactive mode
+works on the command line.
 
 Note how we check the exit code in the shell. ``tomcat-manager`` knows whether
 the command to the tomcat server completed successfully or not, and sets the
@@ -182,7 +181,7 @@ suppressed. If ``quiet=False`` then status information is sent to ``stderr``.
 If ``status_to_stdout=True`` then status information is sent to ``stdout``, as
 long as ``quiet=False``.
 
-Here's a couple of examples to demonstrate, using a :ref:`server_shortcuts` of
+Here's a couple of examples to demonstrate, using a :ref:`server shortcut <server_shortcuts>` of
 ``localhost``, which we assume gets you authenticated to a Tomcat Server web
 application:
 

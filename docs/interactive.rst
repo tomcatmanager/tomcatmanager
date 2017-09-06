@@ -33,18 +33,14 @@ The interactive shell has a built-in list of all available commands:
 
    Documented commands (type help <topic>):
    ========================================
-   _relative_load  expire       pyscript    sessions             stop
-   cmdenvironment  findleakers  quit        set                  threaddump
-   config          help         redeploy    shell                undeploy
-   connect         history      reload      shortcuts            version
-   deploy          license      resources   show                 vminfo
-   edit            list         run         sslconnectorciphers
-   exit            load         save        start
-   exit_code       py           serverinfo  status
-   
-   Miscellaneous help topics:
-   ==========================
-   commandline
+   _relative_load  expire       pyscript   serverinfo           start
+   cmdenvironment  findleakers  quit       sessions             status
+   config          help         redeploy   set                  stop
+   connect         history      reload     settings             threaddump
+   deploy          license      resources  shell                undeploy
+   edit            list         restart    shortcuts            version
+   exit            load         run        show                 vminfo
+   exit_code       py           save       sslconnectorciphers  which
 
 As well as help for each command:
 
@@ -60,10 +56,10 @@ As well as help for each command:
               application was deployed with a version string, it must be
               specified in order to stop the application.
 
-We won't include a detailed explanation of all of the commands here. We will
-walk through how to connect to a Tomcat server, and how to deploy a war file,
-since there are quite a few options for both of those commands. For everything
-else, the built-in help should be sufficient.
+This document does not include detailed explanations of every command. It does
+show how to connect to a Tomcat server and deploy a war file, since
+there are quite a few options for both of those commands. For everything else,
+the built-in help should be sufficient.
 
 .. _interactive_connect:
 
@@ -126,7 +122,7 @@ We'll also assume that we have already connected to the Tomcat server, using
 one of the methods just described in :ref:`interactive_connect`.
 
 For our first example, let's assume we have a WAR file already on our server,
-in ``/tmp/myfancyapp.war``. To deploy this WAR file to
+in ``/tmp/fancyapp.war``. To deploy this WAR file to
 ``https://www.example.com/fancy``:
 
 .. code-block:: none
@@ -152,7 +148,7 @@ simultaneously at the same URL. To utilize this feature, you need to deploy
 an application with a version string. The combination of path and version
 string uniquely identify the application.
 
-Let's revisit our `shiny` app. This time I deploy with a version string:
+Let's revisit our `shiny` app. This time we will deploy with a version string:
 
 .. code-block:: none
 
@@ -192,7 +188,7 @@ Once all the sessions have been migrated to version 2.0.6, I can undeploy versio
    /manager                 running        0 manager
    /shiny.                  running        9 shiny##v2.0.6
    
-The following command support the optional version string, which makes parallel deployment possible:
+The following commands support the optional version string, which makes parallel deployment possible:
 
 - deploy
 - undeploy
@@ -254,12 +250,15 @@ a list of settings which control the behavior of ``tomcat-manager``:
    tomcat-manager> show
    autorun_on_edit=False       # Automatically run files after editing
    colors=True                 # Colorized output (*nix only)
-   debug=False                 # Show full error stack on error
+   debug=False                 # Show stack trace for exceptions
+   echo=False                  # For piped input, echo command to output
    editor=/usr/local/bin/zile  # Program used to edit files
-   feedback_to_output=True     # Include nonessentials in `|`, `>` results
    locals_in_py=True           # Allow access to your application in py via self
    prompt='tomcat-manager> '   # The prompt issued to solicit input
    quiet=False                 # Don't print nonessential feedback
+   status_prefix=--            # String to prepend to all status output
+   status_to_stdout=False      # Status information to stdout instead of stderr
+   timeout=10                  # Seconds to wait for HTTP connections
    timing=False                # Report execution times
 
 You can change any of these settings using the ``set`` command:
@@ -301,7 +300,7 @@ setting. Do that by typing:
    tomcat-manager> config edit
 
 This file uses the INI file format. If you create a section called
-``settings``, you can set the values of any of the supported settings. My
+``settings``, you can set the values of any of the available settings. My
 config file contains:
 
 .. code-block:: ini
@@ -341,9 +340,9 @@ If you define a ``user``, but omit ``password``, you will be prompted for it.
 Save and load command history
 -----------------------------
 
-Save and load command history. Type ``help save``, and ``help load`` for
-details. Using this functionality you can save a series of commands to a text
-file, and then quickly load and run them.
+You can save a sequence of commands to a text file using the ``save`` command. Using
+the ``load`` command you can replay those commands. Type ``help save``, and ``help load`` for
+details.
 
 
 Shell-style Output Redirection
