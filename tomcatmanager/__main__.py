@@ -35,9 +35,6 @@ import tomcatmanager as tm
 def main(argv=None):
     """Entry point for 'tomcat-manager' command line program."""
 
-    # instantiate this first, becasue we need it to get the version string
-    itm = tm.InteractiveTomcatManager()
-
     parser = argparse.ArgumentParser(
         description='Manage a tomcat server from the command line or an interactive shell'
     )
@@ -64,7 +61,7 @@ def main(argv=None):
 
     version_help = 'show the version information and exit'
     parser.add_argument('-v', '--version', action='version',
-                        version=itm.version_string, help=version_help)
+                        version=tm.VERSION_STRING, help=version_help)
 
     url_help = 'url of the tomcat manager web application'
     parser.add_argument('manager_url', nargs='?',
@@ -84,6 +81,7 @@ def main(argv=None):
 
     # if we have command line switches, set those values, and also prevent
     # them from being changed by loading the configuration file
+    itm = tm.InteractiveTomcatManager()
     if args.echo:
         itm.echo = True
     if args.quiet:

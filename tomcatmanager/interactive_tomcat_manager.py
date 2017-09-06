@@ -78,8 +78,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
                       'false': False, 'f': False, 'off': False}
 
     exit_codes = AttrDict()
-    for code, title in EXIT_CODES.items():
-        exit_codes[title] = code
+    for _code, _title in EXIT_CODES.items():
+        exit_codes[_title] = _code
 
     # for configuration
     app_name = 'tomcat-manager'
@@ -132,8 +132,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.tomcat = tm.TomcatManager()
         self.tomcat.timeout = self.timeout
         self.exit_code = None
-        vfmt = '{} {} (works with Tomcat >= 7.0 and <= 8.5)'
-        self.version_string = vfmt.format(self.app_name, tm.__version__)
 
     ###
     #
@@ -231,7 +229,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         try:
             r.raise_for_status()
         except tm.TomcatError as err:
-            self.exit_code = self.exit_codes.failure
+            self.exit_code = self.exit_codes.error
             self.perror(str(err))
         return r
 
@@ -1113,7 +1111,7 @@ extreme caution on production systems.""")
     def do_version(self, args):
         """Show version information."""
         self.exit_code = self.exit_codes.success
-        self.poutput(self.version_string)
+        self.poutput(tm.VERSION_STRING)
 
     def help_version(self):
         """Show help for the 'version' command."""

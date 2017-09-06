@@ -43,6 +43,7 @@ from .interactive_tomcat_manager import InteractiveTomcatManager
 
 try:
     __version__ = get_distribution(__name__).version
+    VERSION_STRING = '{} (works with Tomcat >= 7.0 and <= 8.5)'.format(__version__)
 except DistributionNotFound:
     # package is not installed
     pass
