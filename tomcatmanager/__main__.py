@@ -29,12 +29,8 @@ import sys
 
 import tomcatmanager as tm
 
-
-#
-# entry point for command line
-def main(argv=None):
-    """Entry point for 'tomcat-manager' command line program."""
-
+def _build_parser():
+    """Build the argument parser"""
     parser = argparse.ArgumentParser(
         description='Manage a tomcat server from the command line or an interactive shell'
     )
@@ -75,13 +71,21 @@ def main(argv=None):
     parser.add_argument('command_args', nargs=argparse.REMAINDER,
                         help=arg_help)
 
+    return parser
+
+#
+# entry point for command line
+def main(argv=None):
+    """Entry point for 'tomcat-manager' command line program."""
+    parser = _build_parser()
+
     args = parser.parse_args(argv)
     if args.debug:
         print("--args=" + str(args), file=sys.stderr)
 
-    # if we have command line switches, set those values, and also prevent
-    # them from being changed by loading the configuration file
+    # if we have command line switches, set those values
     itm = tm.InteractiveTomcatManager()
+    # these override any user settings loaded from a config file
     if args.echo:
         itm.echo = True
     if args.quiet:
