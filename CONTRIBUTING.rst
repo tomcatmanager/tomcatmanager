@@ -92,9 +92,12 @@ To ensure the tests can run without an external dependencies,
 the behavior of Tomcat Manager 8.0. There is a test fixture to start
 this server, and all the tests run against this fixture.
 
-You can run the tests in all three versions of python using tox::
+You can run the tests against all the supported versions of python using tox::
 
     $ tox
+
+tox expects that when it runs ``python3.4`` it will actually get a python from
+the 3.4.x series. That's why we set up the various python environments earlier.
 
 If you just want to run the tests in your current python environment, use pytest::
 

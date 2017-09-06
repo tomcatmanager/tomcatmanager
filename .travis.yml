@@ -10,8 +10,21 @@ branches:
         - master
         - develop
 
+# tox-travis makes sure that when tox runs, it only
+# runs tox envs that match the travis env we are
+# currently running. This allows for tox to test
+# against multiple envs when run as
+#
+#    $ tox
+#
+# on a developer machine, but ensures that when run from
+# travis, it doesn't run every tox env against every version
+# of python specified by travis
 install:
     - pip install tox-travis
 
 script:
     - tox
+
+after_success:
+    - codecov
