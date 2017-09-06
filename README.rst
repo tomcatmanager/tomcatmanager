@@ -134,3 +134,5 @@ The ``tomcat-manager`` command line tool supports the following commands:
 More Information
 ----------------
 
+Complete documentation is available at `<http://tomcatmanager.readthedocs.io/en/master/>`_
+
