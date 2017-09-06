@@ -3,8 +3,8 @@
 Release History
 ===============
 
-develop
--------
+0.11.0 (2017-09-06)
+-------------------
 
 **New**
 - New command line switches for `tomcat-manager`: --quiet, --echo, --status_to_stdout
