@@ -54,8 +54,8 @@ STATUS_CODES = {
 }
 # pylint: disable=invalid-name
 status_codes = AttrDict()
-for code, title in STATUS_CODES.items():
-    status_codes[title] = code
+for _code, _title in STATUS_CODES.items():
+    status_codes[_title] = _code
 
 
 class TomcatManagerResponse:
@@ -217,8 +217,8 @@ APPLICATION_STATES = [
     'stopped',
 ]
 application_states = AttrDict()
-for state in APPLICATION_STATES:
-    application_states[state] = state
+for _state in APPLICATION_STATES:
+    application_states[_state] = _state
 
 class TomcatApplication():
     """
