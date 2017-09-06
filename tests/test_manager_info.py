@@ -103,3 +103,13 @@ class TestInfo(TestManagerBase):
         leakers = tomcat._parse_leakers(text)
         # make sure we don't have duplicates
         assert leakers == ['/leaker1', '/leaker2', '/leaker3']
+
+    def test_parse_leakers_empty(self, tomcat):
+        text = ''
+        leakers = tomcat._parse_leakers(text)
+        assert leakers == []
+
+    def test_parse_leakers_none(self, tomcat):
+        text = None
+        leakers = tomcat._parse_leakers(text)
+        assert leakers == []

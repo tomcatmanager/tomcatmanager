@@ -651,8 +651,9 @@ class TomcatManager:
         several data sets to ensure proper behavior.
         """
         leakers = []
-        for line in text.splitlines():
-            # don't add duplicates
-            if not line in leakers:
-                leakers.append(line)
+        if text:
+            for line in text.splitlines():
+                # don't add duplicates
+                if not line in leakers:
+                    leakers.append(line)
         return leakers
