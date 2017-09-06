@@ -184,25 +184,23 @@ To make a release and deploy it to `PyPI
 
 5. Tag the master branch with the version number
 
-6. Clean the build::
+6. Push the master branch and the tag
+
+7. Clean the build::
 
     $ python setup.py clean --dist --eggs --pycache
     $ (cd docs && make clean)
    
-7. Build the source distribution::
+8. Build the source distribution::
 
     $ python3 setup.py sdist
 
-8. Build the wheel::
+9. Build the wheel::
 
     $ python3 setup.py bdist_wheel
-
-9. Build the docs::
-
-    $ (cd docs && make html)
-
-10. Deploy the docs?
 
 11. Upload packages to PyPI::
 
     $ twine upload dist/*
+
+12. Check docs on http://tomcatmanager.readthedocs.io/en/stable/
