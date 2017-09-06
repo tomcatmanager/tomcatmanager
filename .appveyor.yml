@@ -1,8 +1,11 @@
 environment:
   matrix:
     - PYTHON: "C:\\Python34-x64"
+      TOXENV: "py34"
     - PYTHON: "C:\\Python35-x64"
+      TOXENV: "py35"
     - PYTHON: "C:\\Python36-x64"
+      TOXENV: "py36"
 
 install:
   - "%PYTHON%\\python.exe -m pip install tox"
