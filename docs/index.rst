@@ -50,7 +50,6 @@ And for the ultimate in flexibility, you can use the python package directly:
    'No context exists named /someapp'
 
 
-
 .. toctree::
    :maxdepth: 2
 
@@ -61,11 +60,3 @@ And for the ultimate in flexibility, you can use the python package directly:
    package
    api/index.rst
    contributing
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
