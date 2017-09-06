@@ -7,6 +7,7 @@ command interpreter::
 
    $ tomcat-manager
    tomcat-manager> connect http://localhost:8080/manager admin newenglandclamchowder
+   --connected to http://localhost:8080/manager as ace
    tomcat-manager> list
    Path                     Status  Sessions Directory
    ------------------------ ------- -------- ------------------------------------

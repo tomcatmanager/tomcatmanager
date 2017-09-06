@@ -223,6 +223,8 @@ for state in APPLICATION_STATES:
 class TomcatApplication():
     """
     Discrete data about an application running inside a Tomcat Server.
+
+    A list of these objects is returned by :meth:`tomcatmanager.TomcatManager.list`.
     """
     @classmethod
     def sort_by_state_by_path_by_version(cls, app):
@@ -278,7 +280,24 @@ class TomcatApplication():
 
     def parse(self, line):
         """
-        Parse a line from the server into our data elements.
+        Parse a line from the server into this object.
+
+        :param: line - the line of text from Tomcat Manager describing
+                       a deployed application
+
+        Tomcat Manager outputs a line like this for each application:
+
+        .. code-block:: none
+
+           /shiny:running:0:shiny##v2.0.6
+
+        The data elements in this line can be described as:
+
+        .. code-block:: none
+
+           {path}:{state}:{sessions}:{directory}##{version}
+
+        Where version and the two hash marks that precede it are optional.
         """
         app_details = line.rstrip().split(":")
         self._path, self._state, sessions, dirver = app_details[:4]
@@ -293,14 +312,24 @@ class TomcatApplication():
     @property
     def path(self):
         """
-        the relative URL where this app is deployed on the server.
+        The context path, or relative URL, where this app is available on the server.
         """
         return self._path
 
     @property
     def state(self):
         """
-        The state of the application.
+        The current state of the application.
+
+        `tomcatmanager.application_states` is a dictionary of all the valid
+        values for this property. In addition to being a dictionary, it also has
+        attributes for each possible state::
+
+            >>> import tomcatmanager as tm
+            >>> tm.application_states['stopped']
+            'stopped'
+            >>> tm.application_states.running
+            'running'
         """
         return self._state
 
@@ -322,13 +351,21 @@ class TomcatApplication():
     def version(self):
         """
         The version of the application given when it was deployed.
+
+        If deployed without a version, this property returns None.
         """
         return self._version
 
     @property
     def directory_and_version(self):
         """
-        Combine directory and version together
+        Combine directory and version together.
+
+        Tomcat provides this information as ``{directory}`` if there was no
+        version specified when the application was deployed, or
+        ``{directory}##{version}`` if the version was specified.
+
+        This method has the logic to determine if version was specified or not.
         """
         dandv = None
         if self.directory:

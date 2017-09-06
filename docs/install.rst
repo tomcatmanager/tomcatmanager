@@ -9,6 +9,8 @@ Works on Windows, macOS, and Linux.
 
 Now what?
 
+First you will need to :doc:`configuretomcat`.
+
 If you are in a hurry to :doc:`get started with the command line tool
 <interactive>`, type::
 

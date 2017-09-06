@@ -16,6 +16,9 @@ tomcatmanager
 .. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
+.. image:: https://readthedocs.org/projects/tomcatmanager/badge/?version=latest
+      :target: http://tomcatmanager.readthedocs.io/en/latest/?badge=latest
+      :alt: Documentation Status
 
 If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
 
@@ -48,6 +51,7 @@ There is also an interactive mode:
 
    $ tomcat-manager
    tomcat-manager>connect http://localhost:8080/manager ace newenglandclamchowder
+   --connected to http://localhost:8080/manager as ace
    tomcat-manager>list
    Path                     Status  Sessions Directory
    ------------------------ ------- -------- ------------------------------------
@@ -68,7 +72,7 @@ And for the ultimate in flexibility, you can use the python package directly:
    >>> tomcat.is_connected
    True
    >>> r = tomcat.stop('/someapp')
-   >>> r.status_code == tm.codes.ok
+   >>> r.status_code == tm.status_codes.ok
    False
    >>> r.status_message
    'No context exists named /someapp'
@@ -97,9 +101,10 @@ configure authentication in ``tomcat-users.xml`` with access to the
 .. code-block:: xml
 
    <tomcat-users>
-   .....
+     ...
      <role rolename="manager-script"/>
      <user username="ace" password="newenglandclamchowder" roles="manager-script"/>
+     ...
    </tomcat-users>
 
 
@@ -124,3 +129,8 @@ The ``tomcat-manager`` command line tool supports the following commands:
 - **threaddump** - show a jvm thread dump
 - **resources** - show the global jdni resources configured in tomcat
 - **findleakers** - show tomcat applications that leak memory
+
+
+More Information
+----------------
+

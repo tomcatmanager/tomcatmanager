@@ -1,22 +1,12 @@
 Use from Python
 ===============
 
-Overview
---------
-
-.. autoclass:: tomcatmanager.TomcatManager
-
 
 Connect to the server
 ---------------------
 
 Before you can do anything useful, you need to create a `TomcatManager`
-object and tell it how to connect to the server.
-
-.. automethod:: tomcatmanager.TomcatManager.__init__
-
-Alternatively, you can use the `connect()` method, which unlike
-creating the object, actually tries to connect to the server.
+object and connect to a server.
 
 .. automethod:: tomcatmanager.TomcatManager.connect
 

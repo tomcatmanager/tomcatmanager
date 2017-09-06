@@ -22,7 +22,7 @@
 # THE SOFTWARE.
 #
 """
-Components to run the 'tomcat-manager' command line program.
+Classes and functions for the 'tomcat-manager' command line program.
 """
 
 import sys
@@ -62,6 +62,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     each command sets the value of the instance variable exit_code, which follows
     bash behavior for exit codes (available via $?)
     """
+
     EXIT_CODES = {
         # 'number': 'name'
         0: 'success',
@@ -89,7 +90,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
     timeout = 10
     status_prefix = '--'
 
-    # status_to_stdout is a better-named proxy for feedback_to_output
     @property
     def status_to_stdout(self):
         """Proxy property for feedback_to_output."""

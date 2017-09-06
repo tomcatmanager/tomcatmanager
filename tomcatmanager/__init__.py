@@ -21,6 +21,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+"""
+tomcatmanager is a command line tool and python library for managing a Tomcat
+server.
+
+The most important class in the package is `TomcatManager`. This class connects
+to a Tomcat Manager web application, allows you to run various commands, and
+returns the responses to you as an instance of `TomcatManagerResponse`.
+
+The command line program ``tomcat-manager`` is run by an instance of
+`InteractiveTomcatManager`.
+"""
 
 from pkg_resources import get_distribution, DistributionNotFound
 
