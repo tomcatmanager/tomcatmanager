@@ -3,7 +3,9 @@ Interactive Use
 
 After installation, you will have a new tool called ``tomcat-manager``. Run
 this with no command line arguments to invoke an interactive, line-oriented
-command interpreter::
+command interpreter:
+
+.. code-block:: none
 
    $ tomcat-manager
    tomcat-manager> connect http://localhost:8080/manager admin newenglandclamchowder
@@ -23,7 +25,9 @@ operating system shell.
 Built In Help
 -------------
 
-The interactive shell has a built-in list of all available commands::
+The interactive shell has a built-in list of all available commands:
+
+.. code-block:: none
 
    tomcat-manager> help
 
@@ -42,7 +46,9 @@ The interactive shell has a built-in list of all available commands::
    ==========================
    commandline
 
-As well as help for each command::
+As well as help for each command:
+
+.. code-block:: none
 
    tomcat-manager> help stop
    Usage: stop {path} [version]
@@ -66,22 +72,30 @@ Connect To A Tomcat Server
 
 Before you can do anything to a Tomcat server, you need to enter the connection
 information, including the url and the authentication credentials. You can pass
-the connection information on the command line::
+the connection information on the command line:
+
+.. code-block:: none
 
    $ tomcat-manager --user=ace http://localhost:8080/manager
    Password: {you type your password here}
 
-Or::
+Or:
+
+.. code-block:: none
 
    $ tomcat-manager --user=ace --password=newenglandclamchowder \
    http://localhost:8080/manager
 
-You can also enter this information into the interactive prompt::
+You can also enter this information into the interactive prompt:
+
+.. code-block:: none
 
    $ tomcat-manager
    tomcat-manager> connect http://localhost:8080/manager ace newenglandclamchowder
 
-Or::
+Or:
+
+.. code-block:: none
 
    $ tomcat-manager
    tomcat-manager> connect http://localhost:8080/manager ace
@@ -113,13 +127,17 @@ one of the methods just described in :ref:`interactive_connect`.
 
 For our first example, let's assume we have a WAR file already on our server,
 in ``/tmp/myfancyapp.war``. To deploy this WAR file to
-``https://www.example.com/fancy``::
+``https://www.example.com/fancy``:
+
+.. code-block:: none
 
    tomcat-manager>deploy server /tmp/myfancyapp.war /fancy
 
 Now let's say I just compiled a WAR file on my laptop for an app called
 `shiny`. It's saved at ``~/src/shiny/dist/shinyv2.0.5.war``. I'd like to deploy
-it to ``https://www.example.com/shiny``::
+it to ``https://www.example.com/shiny``:
+
+.. code-block:: none
 
    tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny
 
@@ -144,7 +162,7 @@ Let's revisit our `shiny` app. This time I deploy with a version string:
    ------------------------ ------- -------- ------------------------------------
    /                        running        0 ROOT
    /manager                 running        0 manager
-   /shiny.                  running        0 shiny##v2.0.5
+   /shiny                   running        0 shiny##v2.0.5
 
 Later today, I make a bug fix to 'shiny', and build version 2.0.6 of the
 app. Parallel deployment allows me to deploy two versions of that app at the
@@ -201,15 +219,21 @@ Interactive mode keeps a command history, which you can navigate using the
 up and down arrow keys. and search the history of your commands with
 ``<control>+r``.
 
-You can view the list of previously issued commands::
+You can view the list of previously issued commands:
+
+.. code-block:: none
 
    tomcat-manager> history
 
-And run a previous command by string search::
+And run a previous command by string search:
+
+.. code-block:: none
 
    tomcat-manager> run rel
 
-Or by number::
+Or by number:
+
+.. code-block:: none
 
    tomcat-manager> run 5
 
@@ -325,16 +349,22 @@ file, and then quickly load and run them.
 Shell-style Output Redirection
 ------------------------------
 
-Save the output of the ``list`` command to a file::
+Save the output of the ``list`` command to a file:
+
+.. code-block:: none
 
 	tomcat-manager> list > /tmp/tomcat-apps.txt
 
-Search the output of the ``vminfo`` command::
+Search the output of the ``vminfo`` command:
+
+.. code-block:: none
 
 	tomcat-manager> vminfo | grep user.timezone
 	  user.timezone: US/Mountain
 
-Or the particularly useful::
+Or the particularly useful:
+
+.. code-block:: none
 
    tomcat-manager> threaddump | less
 
@@ -342,11 +372,15 @@ Or the particularly useful::
 Clipboard Integration
 ---------------------
 
-You can copy output to the clipboard by redirecting but not giving a filename::
+You can copy output to the clipboard by redirecting but not giving a filename:
+
+.. code-block:: none
 
 	tomcat-manager> list >
 
-You can also append output to the clipboard using a similar method::
+You can also append output to the clipboard using a similar method:
+
+.. code-block:: none
 
    tomcat-manager> serverinfo >>
 
@@ -354,7 +388,9 @@ You can also append output to the clipboard using a similar method::
 Run shell commands
 ------------------
 
-Use the ``shell`` or ``!`` commands to execute operating system commands (how meta)::
+Use the ``shell`` or ``!`` commands to execute operating system commands (how meta):
+
+.. code-block:: none
 
 	tomcat-manager> !ls
 
