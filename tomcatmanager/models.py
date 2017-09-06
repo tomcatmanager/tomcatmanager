@@ -40,6 +40,23 @@ class TomcatError(Exception):
     """
     pass
 
+###
+#
+# build status codes
+#
+###
+STATUS_CODES = {
+    # 'sent from tomcat': 'friendly name'
+    'OK': 'ok',
+    'FAIL': 'fail',
+    # if we can't find tomcat, we invent a NOTFOUND value
+    'NOTFOUND': 'notfound',
+}
+# pylint: disable=invalid-name
+status_codes = AttrDict()
+for code, title in STATUS_CODES.items():
+    status_codes[title] = code
+
 
 class TomcatManagerResponse:
     """
@@ -112,13 +129,15 @@ class TomcatManagerResponse:
         However, if you want specific access to the status of the tomcat
         command, use this method.
 
-        Currently there are only two known status codes
+        There are three status codes:
 
         - ``OK``
         - ``FAIL``
+        - ``NOTFOUND``
 
-        A lookup object, `tomcatmanager.codes`, makes it easy to check
-        `status_code` against known values::
+        `tomcatmanager.status_codes` is a dictionary which makes it easy to
+        check `status_code` against known values. It also has attributes with
+        friendly names, as shown here::
 
             >>> import tomcatmanager as tm
             >>> tomcat = getfixture('tomcat')
@@ -186,6 +205,9 @@ class TomcatManagerResponse:
                         self.status_message = statusline.split(' ', 1)[1][2:]
                         if len(lines) > 1:
                             self.result = "\n".join(lines[1:])
+                    else:
+                        self.status_code = tm.status_codes.notfound
+                        self.status_message = 'Tomcat Manager not found'
                 except IndexError:
                     pass
 
@@ -392,19 +414,3 @@ class ServerInfo(dict):
     def jvm_vendor(self):
         """The java virtual machine vendor."""
         return self._jvm_vendor
-
-
-###
-#
-# build status codes
-#
-###
-STATUS_CODES = {
-    # 'sent from tomcat': 'friendly name'
-    'OK': 'ok',
-    'FAIL': 'fail',
-}
-# pylint: disable=invalid-name
-status_codes = AttrDict()
-for code, title in STATUS_CODES.items():
-    status_codes[title] = code
