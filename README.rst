@@ -13,7 +13,7 @@ tomcatmanager
 .. image:: https://img.shields.io/travis/tomcatmanager/tomcatmanager/develop.svg
       :target: https://travis-ci.org/tomcatmanager/tomcatmanager
       :alt: build status
-.. image:: https://img.shields.io/appveyor/ci/tomcatmanager/tomcatmanager/develop.svg
+.. image:: https://img.shields.io/appveyor/ci/kotfu/tomcatmanager/develop.svg
       :target: https://ci.appveyor.com/project/kotfu/tomcatmanager
       :alt: build status
 .. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg
