@@ -4,6 +4,7 @@
 # editor stuff
 *~
 .tm_properties
+.idea
 
 # compiled python
 *.py[cod]
