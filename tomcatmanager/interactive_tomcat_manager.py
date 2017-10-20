@@ -651,12 +651,12 @@ Show the url of the tomcat server you are connected to.""")
         server = 'server'
         local = 'local'
         args = args.split()
-        if len(args) in [3, 4]:
+        if len(args) in [3, 4, 5]:
             src = args[0]
             warfile = args[1]
             path = args[2]
             version = None
-            if len(args) == 4:
+            if len(args) >= 4:
                 version = args[3]
 
             if server.startswith(src):
@@ -665,9 +665,12 @@ Show the url of the tomcat server you are connected to.""")
                 src = local
 
             if src == server:
+                context = None
+                if len (args) == 5:
+                   context = args[4]
                 self.exit_code = self.exit_codes.success
                 self.docmd(self.tomcat.deploy, path, serverwar=warfile,
-                           update=update, version=version)
+                           update=update, version=version, context=context)
             elif src == local:
                 warfile = os.path.expanduser(warfile)
                 with open(warfile, 'rb') as fileobj:

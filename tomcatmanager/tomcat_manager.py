@@ -212,7 +212,7 @@ class TomcatManager:
     ###
 
     # pylint: disable=too-many-arguments
-    def deploy(self, path, localwar=None, serverwar=None, version=None, update=False):
+    def deploy(self, path, localwar=None, serverwar=None, version=None, context=None, update=False):
         """
         Deploy an application to the Tomcat server.
 
@@ -231,6 +231,9 @@ class TomcatManager:
         :param serverwar:    (optional) The java-style path (use slashes not
                              backslashes) to the war file on the server. Don't
                              include ``file:`` at the beginning.
+        :param context:      (optional) The java-style path (use slashes not
+                             backslashes) to the context xml file on the server. 
+                             Don't include ``file:`` at the beginning.
         :param version:      (optional) For tomcat parallel deployments, the
                              version string to associate with this version
                              of the app
@@ -251,7 +254,7 @@ class TomcatManager:
         if version:
             params['version'] = version
 
-        if localwar and serverwar:
+        if localwar and (serverwar or context):
             raise ValueError('can not deploy localwar and serverwar at the same time')
         elif localwar:
             # PUT a local stream
@@ -277,11 +280,14 @@ class TomcatManager:
                         data=warobj,
                         timeout=self.timeout,
                         )
-        elif serverwar:
-            params['war'] = serverwar
+        elif serverwar or context:
+            if context:
+                params['config'] = context
+            if serverwar:
+                params['war'] = serverwar
             r = self._get('deploy', params)
         else:
-            raise ValueError('neither localwar or serverwar specified: nothing to deploy')
+            raise ValueError('neither localwar or serverwar or context specified: nothing to deploy')
 
         return r
 
