@@ -22,12 +22,12 @@ This project uses tox for testing, and you will need several versions of
 python, with a virtualenv for each one::
 
     $ cd tomcatmanager
-    $ pyenv install 3.6.2
-    $ pyenv virtualenv -p python3.6 3.6.2 tomcatmanager-3.6
-    $ pyenv install 3.5.3
-    $ pyenv virtualenv -p python3.5 3.5.3 tomcatmanager-3.5
-    $ pyenv install 3.4.6
-    $ pyenv virtualenv -p python3.4 3.4.6 tomcatmanager-3.4
+    $ pyenv install 3.6.4
+    $ pyenv virtualenv -p python3.6 3.6.4 tomcatmanager-3.6
+    $ pyenv install 3.5.4
+    $ pyenv virtualenv -p python3.5 3.5.4 tomcatmanager-3.5
+    $ pyenv install 3.4.7
+    $ pyenv virtualenv -p python3.4 3.4.7 tomcatmanager-3.4
 
 Now set pyenv to make all three of those available at the same time::
 
@@ -40,11 +40,11 @@ virtualenv it will utilize.
 =======    ======  ================
 Command    python  virtualenv
 =======    ======  =================
-python     3.6.2   tomcatmanager-3.6
-python3    3.6.2   tomcatmanager-3.6
-python3.6  3.6.2   tomcatmanager-3.6
-python3.5  3.5.3   tomcatmanager-3.5
-python3.4  3.4.6   tomcatmanager-3.4
+python     3.6.4   tomcatmanager-3.6
+python3    3.6.4   tomcatmanager-3.6
+python3.6  3.6.4   tomcatmanager-3.6
+python3.5  3.5.4   tomcatmanager-3.5
+python3.4  3.4.7   tomcatmanager-3.4
 
 Same pattern for ``pip`` and other stuff installed with python.
 
