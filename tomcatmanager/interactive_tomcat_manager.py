@@ -53,6 +53,7 @@ def requires_connection(func):
             # print the message
             self.exit_code = self.exit_codes.error
             self.perror('not connected')
+    _requires_connection.__doc__ = func.__doc__
     return _requires_connection
 
 # pylint: disable=too-many-public-methods
