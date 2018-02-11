@@ -981,7 +981,8 @@ def start_mock_server80():
     tms.url = 'http://localhost:{}/manager'.format(port)
     tms.user = USER
     tms.password = PASSWORD
-    tms.serverwar = '/path/to/server.war'
+    tms.warfile = '/path/to/server.war'
+    tms.contextfile = 'path/to/context.xml'
 
     mock_server = HTTPServer(('localhost', port), MockRequestHandler80)
     mock_server_thread = Thread(target=mock_server.serve_forever)

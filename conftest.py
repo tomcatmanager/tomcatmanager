@@ -39,7 +39,8 @@ def tomcat_manager_server(request):
         tms.url = url
         tms.user = request.config.getoption('--user')
         tms.password = request.config.getoption('--password')
-        tms.serverwar = request.config.getoption('--serverwar')
+        tms.warfile = request.config.getoption('--warfile')
+        tms.contextfile = request.config.getoption('--contextfile')
         return tms
     else:
         # go start up a fake server

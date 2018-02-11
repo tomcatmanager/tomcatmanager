@@ -121,7 +121,8 @@ You can run all the tests against a real Tomcat Server that you have running
 by utilizing the following command line options::
 
    $ pytest --url=http://localhost:8080/manager --user=ace \
-   --password=newenglandclamchowder --serverwar=/tmp/sample.war
+   --password=newenglandclamchowder --serverwar=/tmp/sample.war \
+   --servercontext=/tmp/context.xml
 
 Running the test suite will deploy and undeploy an app dozens of times, and
 will definitely trigger garbage collection, so you might not want to run it
@@ -131,12 +132,16 @@ modify that fixture if for some reason you need to deploy at a different
 path.
 
 The ``url``, ``user``, and ``password`` options describe the location anc
-credentials for the Tomcat server you wish to use. The ``serverwar``
-parameter is the full path to a war file on the server. There is a simple
-war file in ``tests/war/sample.war`` which you can copy to the server. If
-you don't copy the war file, or if you don't specify the ``serverwar``
-parameter, or the path you provide doesn't point to a valid war file,
-several of the tests will fail.
+credentials for the Tomcat server you wish to use.
+
+The ``warfile`` parameter is the full path to a war file on the server.
+There is a simple war file in ``tests/war/sample.war`` which you can copy
+to the server if you don't have a warfile you want to use. If you don't
+copy the war file, or if you don't specify the ``warfile`` parameter, or
+the path you provide doesn't point to a valid war file, several of the
+tests will fail.
+
+The ``contextfile`` parameter is the full path to a context XML file, which gives you an alternative way to specify additional deployment information to the Tomcat Server.
 
 .. note::
 
