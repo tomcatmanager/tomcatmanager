@@ -144,8 +144,8 @@ several of the tests will fail.
    ``pytest-xdist`` plugin to parallelize testing across multiple CPUs or
    many platforms. Many of the tests depend on deploying and undeploying an
    app at a specific path, and that path is shared across the entire test
-   suite. It wouldn't help much anyway because the testing would be
-   constrained by the speed of the Tomcat Server.
+   suite. It wouldn't help much anyway because the testing is constrained
+   by the speed of the Tomcat Server.
 
 
 Code Quality
