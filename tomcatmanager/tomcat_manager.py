@@ -210,85 +210,131 @@ class TomcatManager:
     # managing applications
     #
     ###
-
-    # pylint: disable=too-many-arguments
-    def deploy(self, path, localwar=None, serverwar=None, version=None, context=None, update=False):
+    def deploy_localwar(self, path, warfile, version=None, update=False):
         """
-        Deploy an application to the Tomcat server.
-
-        If the WAR file is already present somewhere on the same server
-        where Tomcat is running, you should use the ``serverwar`` parameter. If
-        the WAR file is local to where python is running, use the ``localwar``
-        parameter. Specify either ``localwar`` or ``serverwar``, but not both.
+        Deploy a warfile on the local file system to the Tomcat server.
 
         :param path:         The path on the server to deploy this war to,
                              i.e. /sampleapp
-        :param localwar:     (optional) The path (specified using your
-                             particular operating system convention) to a war
-                             file on the local file system. You can also pass
-                             a stream or file-like object. This will be sent
-                             to the server for deployment.
-        :param serverwar:    (optional) The java-style path (use slashes not
-                             backslashes) to the war file on the server. Don't
-                             include ``file:`` at the beginning.
-        :param context:      (optional) The java-style path (use slashes not
-                             backslashes) to the context xml file on the server. 
-                             Don't include ``file:`` at the beginning.
+        :param warfile:      The path (specified using your local operating
+                             system convention) to a war file on the local
+                             file system. You can also pass a stream or
+                             file-like object. This will be sent to the
+                             server for deployment.
         :param version:      (optional) For tomcat parallel deployments, the
-                             version string to associate with this version
-                             of the app
+                             version string to associate with this deployment
         :param update:       (optional) Whether to undeploy the existing path
                              first (default False)
         :return:             `TomcatManagerResponse` object
         :raises ValueError:  if no path is specified;
-                             if both `localwar` and `serverwar` are given;
-                             if neither `localwar` or `serverwar` are given
+                             if no warfile is specified
         """
         params = {}
         if path:
             params['path'] = path
         else:
             raise ValueError('no path specified')
-        if update:
-            params['update'] = 'true'
+        if not warfile:
+            raise ValueError('no warfile specified')
         if version:
             params['version'] = version
+        if update:
+            params['update'] = 'true'
 
-        if localwar and (serverwar or context):
-            raise ValueError('can not deploy localwar and serverwar at the same time')
-        elif localwar:
-            # PUT a local stream
-            base = self.url or ''
-            url = base + '/text/deploy'
-            r = TomcatManagerResponse()
-            # have to have the requests.put call in two places so we can
-            # properly close the file if we open it
-            if self._is_stream(localwar):
+        base = self.url or ''
+        url = base + '/text/deploy'
+        r = TomcatManagerResponse()
+        # have to have the requests.put call in two places so we can
+        # properly close the file if we open it
+        if self._is_stream(warfile):
+            r.response = requests.put(
+                url,
+                auth=(self.user, self._password),
+                params=params,
+                data=warfile,
+                timeout=self.timeout,
+                )
+        else:
+            with open(warfile, 'rb') as warobj:
                 r.response = requests.put(
                     url,
                     auth=(self.user, self._password),
                     params=params,
-                    data=localwar,
+                    data=warobj,
                     timeout=self.timeout,
                     )
-            else:
-                with open(localwar, 'rb') as warobj:
-                    r.response = requests.put(
-                        url,
-                        auth=(self.user, self._password),
-                        params=params,
-                        data=warobj,
-                        timeout=self.timeout,
-                        )
-        elif serverwar or context:
-            if context:
-                params['config'] = context
-            if serverwar:
-                params['war'] = serverwar
-            r = self._get('deploy', params)
-        else:
-            raise ValueError('neither localwar or serverwar or context specified: nothing to deploy')
+        return r
 
+    def deploy_serverwar(self, path, warfile, version=None, update=False):
+        """
+        Deploy a warfile on the local file system to the Tomcat server.
+
+        :param path:         The path on the server to deploy this war to,
+                             i.e. /sampleapp
+        :param warfile:      The java-style path (use slashes not backslashes)
+                             to the war file on the server. Don't include
+                             ``file:`` at the beginning.
+        :param version:      (optional) For tomcat parallel deployments, the
+                             version string to associate with this deployment
+        :param update:       (optional) Whether to undeploy the existing path
+                             first (default False)
+        :return:             `TomcatManagerResponse` object
+        :raises ValueError:  if no path is given;
+                             if no warfile is given
+        """
+        params = {}
+        if path:
+            params['path'] = path
+        else:
+            raise ValueError('no path specified')
+        if warfile:
+            params['war'] = warfile
+        else:
+            raise ValueError('no warfile specified')
+        if version:
+            params['version'] = version
+        if update:
+            params['update'] = 'true'
+        r = self._get('deploy', params)
+        return r
+
+    # pylint: disable=too-many-arguments
+    def deploy_servercontext(self, path, contextfile, warfile=None, version=None, update=False):
+        """
+        Deploy a warfile on the local file system to the Tomcat server.
+
+        :param path:         The path on the server to deploy this war to,
+                             i.e. /sampleapp
+        :param contextfile:  The java-style path (use slashes not backslashes)
+                             to the context file on the server. Don't include
+                             ``file:`` at the beginning.
+        :param warfile:      (optional) The java-style path (use slashes not
+                             backslashes) to the war file on the server.
+                             Don't include ``file:`` at the beginning.
+        :param version:      (optional) For tomcat parallel deployments, the
+                             version string to associate with this deployment
+        :param update:       (optional) Whether to undeploy the existing path
+                             first (default False)
+        :return:             `TomcatManagerResponse` object
+        :raises ValueError:  if no path is given;
+                             if no contextfile is given
+        """
+        params = {}
+        if path:
+            params['path'] = path
+        else:
+            raise ValueError('no path specified')
+        if contextfile:
+            params['context'] = contextfile
+        else:
+            raise ValueError('no contextfile specified')
+        if warfile:
+            params['war'] = warfile
+        if version:
+            params['version'] = version
+        if update:
+            params['update'] = 'true'
+        r = self._get('deploy', params)
         return r
 
     def undeploy(self, path, version=None):

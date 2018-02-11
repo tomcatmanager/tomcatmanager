@@ -62,11 +62,11 @@ string uniquely identify the application::
    >>> safe_path = '/tomcat-manager-test-app'
    >>> localwar_file = getfixture('localwar_file')
    >>> with open(localwar_file, 'rb') as localwar_fileobj:
-   ...     r = tomcat.deploy(path=safe_path, localwar=localwar_fileobj, version='42')
+   ...     r = tomcat.deploy_localwar(safe_path, localwar_fileobj, version='42')
    >>> r.ok
    True
    >>> with open(localwar_file, 'rb') as localwar_fileobj:
-   ...     r = tomcat.deploy(path=safe_path, localwar=localwar_fileobj, version='43')
+   ...     r = tomcat.deploy_localwar(safe_path, localwar_fileobj, version='43')
    >>> r.ok 
    True
 
