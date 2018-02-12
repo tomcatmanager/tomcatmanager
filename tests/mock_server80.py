@@ -949,11 +949,17 @@ Default maximum session inactive interval 30 minutes
             war = None
             if 'war' in query_string:
                 war = query_string['war']
+            context = None
+            if 'config' in query_string:
+                context = query_string['config']
 
-            if war:
+            if context:
                 self.send_text('OK - Deployed application at context path {}'.format(path))
             else:
-                self.send_text('FAIL - Invalid parameters supplied for command [/deploy]')
+                if war:
+                    self.send_text('OK - Deployed application at context path {}'.format(path))
+                else:
+                    self.send_text('FAIL - Invalid parameters supplied for command [/deploy]')
 
     def get_undeploy(self):
         """Remove an application from the server."""
