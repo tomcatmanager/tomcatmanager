@@ -325,7 +325,7 @@ class TomcatManager:
         else:
             raise ValueError('no path specified')
         if contextfile:
-            params['context'] = contextfile
+            params['config'] = contextfile
         else:
             raise ValueError('no contextfile specified')
         if warfile:

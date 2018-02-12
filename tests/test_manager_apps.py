@@ -147,6 +147,68 @@ class TestApps(TestManagerBase):
         with pytest.raises(ValueError):
             r = tomcat.deploy_servercontext('', tomcat_manager_server.contextfile)
 
+    def test_deploy_servercontext_contextfile_only(self, tomcat, tomcat_manager_server):
+        with pytest.raises(ValueError):
+            r = tomcat.deploy_servercontext(None, tomcat_manager_server.contextfile)
+        with pytest.raises(ValueError):
+            r = tomcat.deploy_servercontext('', tomcat_manager_server.contextfile)
+
+    def test_deploy_servercontext(self, tomcat, tomcat_manager_server, safe_path):
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile)
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path)
+        self.success_assertions(r)
+
+    def test_deploy_servercontext_update(self, tomcat, tomcat_manager_server, safe_path):
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile)
+        self.success_assertions(r)
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile, update=True)
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path)
+        self.success_assertions(r)
+
+    def test_deploy_servercontext_version(self, tomcat, tomcat_manager_server, safe_path):
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile, version='42')
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path, version='42')
+        self.success_assertions(r)
+
+    def test_deploy_servercontext_version_update(self, tomcat, tomcat_manager_server, safe_path):
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile, version='42')
+        self.success_assertions(r)
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile, version='42', update=True)
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path, version='42')
+        self.success_assertions(r)
+
+    def test_deploy_servercontext_warfile(self, tomcat, tomcat_manager_server, safe_path):
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile, tomcat_manager_server.warfile)
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path)
+        self.success_assertions(r)
+
+    def test_deploy_servercontext_warfile_update(self, tomcat, tomcat_manager_server, safe_path):
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile, tomcat_manager_server.warfile)
+        self.success_assertions(r)
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile, tomcat_manager_server.warfile, update=True)
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path)
+        self.success_assertions(r)
+
+    def test_deploy_servercontext_warfile_version(self, tomcat, tomcat_manager_server, safe_path):
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile, tomcat_manager_server.warfile, version='42')
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path, version='42')
+        self.success_assertions(r)
+
+    def test_deploy_servercontext_warfile_version_update(self, tomcat, tomcat_manager_server, safe_path):
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile, tomcat_manager_server.warfile, version='42')
+        self.success_assertions(r)
+        r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile, tomcat_manager_server.warfile, version='42', update=True)
+        self.success_assertions(r)
+        r = tomcat.undeploy(safe_path, version='42')
+        self.success_assertions(r)
+
     ###
     #
     # undeploy

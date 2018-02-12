@@ -21,8 +21,10 @@ def pytest_addoption(parser):
         help='user: use to authenticate')
     parser.addoption('--password', action='store', default=None,
         help='password: use to authenticate')
-    parser.addoption('--serverwar', action='store', default=None,
-        help='serverwar: path to deployable war file on the tomcat server')
+    parser.addoption('--warfile', action='store', default=None,
+        help='warfile: path to deployable war file on the tomcat server')
+    parser.addoption('--contextfile', action='store', default=None,
+        help='contextfile: path to context.xml file on the tomcat server')
 
 ###
 #
