@@ -301,7 +301,7 @@ class TomcatManager:
     # pylint: disable=too-many-arguments
     def deploy_servercontext(self, path, contextfile, warfile=None, version=None, update=False):
         """
-        Deploy a warfile on the local file system to the Tomcat server.
+        Deploy a Tomcat application defined by a context file.
 
         :param path:         The path on the server to deploy this war to,
                              i.e. /sampleapp
