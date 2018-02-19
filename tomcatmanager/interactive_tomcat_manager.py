@@ -625,7 +625,7 @@ user         Optional user to use for authentication.
 password     Optional password to use for authentication.
 
 If you specify a user and no password, you will be prompted for the
-password. If you don't specify a userid or password, attempt to connect
+password. If you don't specify a user or password, attempt to connect
 with no authentication.""")
 
     @requires_connection
