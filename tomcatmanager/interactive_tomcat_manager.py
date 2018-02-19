@@ -32,7 +32,6 @@ import getpass
 import xml.dom.minidom
 import ast
 import configparser
-import shlex
 from http.client import responses
 import argparse
 
@@ -59,8 +58,10 @@ def requires_connection(func):
 def _path_version_parser(cmdname, helpmsg):
     """Construct an argparser using the given parameters"""
     parser = argparse.ArgumentParser(prog=cmdname, description=helpmsg)
-    parser.add_argument('-v', '--version', help='Optional version string of the application to {cmdname}. If the application was deployed with a version string, it must be specified in order to {cmdname} the application.'.format(cmdname=cmdname))
-    parser.add_argument('path', help='The path part of the URL where the application is deployed.')
+    parser.add_argument('-v', '--version',
+                        help='Optional version string of the application to {cmdname}. If the application was deployed with a version string, it must be specified in order to {cmdname} the application.'.format(cmdname=cmdname))
+    parser.add_argument('path',
+                        help='The path part of the URL where the application is deployed.')
     return parser
 
 # pylint: disable=too-many-public-methods
@@ -337,7 +338,8 @@ action is one of the following:
         maxlen += 1
         if result:
             for setting in sorted(result):
-                self.poutput('{} # {}'.format(result[setting].ljust(maxlen), self.settable[setting]))
+                self.poutput('{} # {}'.format(result[setting].ljust(maxlen),
+                                              self.settable[setting]))
             self.exit_code = self.exit_codes.success
         else:
             self.perror("unknown setting: '{}'".format(param))
@@ -367,6 +369,7 @@ Show one or more settings and their values.
 [setting]  Optional name of the setting to show the value for. If omitted
            show the values of all settings.""")
 
+    # TODO update to match changes in cmd2 version 0.8.0
     def do_set(self, arg):
         """
         Change a setting.
@@ -590,7 +593,8 @@ Change a setting.
                         # we connected, but the url was bad. No tomcat there
                         self.perror('tomcat manager not found at {}'.format(url))
                     else:
-                        self.perror('http error: {} {}'.format(r.response.status_code, responses[r.response.status_code]))
+                        self.perror('http error: {} {}'.format(r.response.status_code,
+                                                               responses[r.response.status_code]))
                     self.exit_code = self.exit_codes.error
         except requests.exceptions.ConnectionError:
             if self.debug:
@@ -646,6 +650,7 @@ Show the url of the tomcat server you are connected to.""")
     #
     ###
     def deploy_local(self, args, update=False):
+        """Deploy a local war file to the tomcat server."""
         warfile = os.path.expanduser(args.warfile)
         with open(warfile, 'rb') as fileobj:
             self.exit_code = self.exit_codes.success
@@ -653,32 +658,58 @@ Show the url of the tomcat server you are connected to.""")
                        version=args.version, update=update)
 
     def deploy_server(self, args, update=False):
+        """Deploy a server war file to the tomcat server."""
         self.exit_code = self.exit_codes.success
         self.docmd(self.tomcat.deploy_serverwar, args.path, args.warfile,
                    version=args.version, update=update)
 
     def deploy_context(self, args, update=False):
+        """Deploy a context xml file to the tomcat server."""
         self.exit_code = self.exit_codes.success
         self.docmd(self.tomcat.deploy_servercontext, args.path, args.contextfile,
                    warfile=args.warfile, version=args.version, update=update)
 
-    deploy_parser = argparse.ArgumentParser(prog='deploy', description='Install a war file containing a tomcat application in the tomcat server')
-    deploy_subparsers =  deploy_parser.add_subparsers(title='methods', dest='method')
+    deploy_parser = argparse.ArgumentParser(
+        prog='deploy',
+        description='Install a war file containing a tomcat application in the tomcat server',
+    )
+    deploy_subparsers = deploy_parser.add_subparsers(title='methods', dest='method')
     # local subparser
-    deploy_local_parser = deploy_subparsers.add_parser('local', description='transmit a locally available warfile to the server', help='transmit a locally available warfile to the server')
-    deploy_local_parser.add_argument('-v', '--version', help='version string to associate with this deployment')
+    deploy_local_parser = deploy_subparsers.add_parser(
+        'local',
+        description='transmit a locally available warfile to the server',
+        help='transmit a locally available warfile to the server',
+    )
+    deploy_local_parser.add_argument(
+        '-v', '--version',
+        help='version string to associate with this deployment'
+    )
     deploy_local_parser.add_argument('warfile')
     deploy_local_parser.add_argument('path')
     deploy_local_parser.set_defaults(func=deploy_local)
     # server subparser
-    deploy_server_parser = deploy_subparsers.add_parser('server', description='deploy a warfile already on the server', help='deploy a warfile already on the server')
-    deploy_server_parser.add_argument('-v', '--version', help='version string to associate with this deployment')
+    deploy_server_parser = deploy_subparsers.add_parser(
+        'server',
+        description='deploy a warfile already on the server',
+        help='deploy a warfile already on the server'
+    )
+    deploy_server_parser.add_argument(
+        '-v', '--version',
+        help='version string to associate with this deployment'
+    )
     deploy_server_parser.add_argument('warfile')
     deploy_server_parser.add_argument('path')
     deploy_server_parser.set_defaults(func=deploy_server)
     # context subparser
-    deploy_context_parser = deploy_subparsers.add_parser('context', description='deploy a contextfile already on the server', help='deploy a contextfile already on the server')
-    deploy_context_parser.add_argument('-v', '--version', help='version string to associate with this deployment')
+    deploy_context_parser = deploy_subparsers.add_parser(
+        'context',
+        description='deploy a contextfile already on the server',
+        help='deploy a contextfile already on the server',
+    )
+    deploy_context_parser.add_argument(
+        '-v', '--version',
+        help='version string to associate with this deployment',
+    )
     deploy_context_parser.add_argument('contextfile')
     deploy_context_parser.add_argument('warfile', nargs='?')
     deploy_context_parser.add_argument('path')
@@ -688,29 +719,32 @@ Show the url of the tomcat server you are connected to.""")
     @requires_connection
     @cmd2.with_argparser(deploy_parser, deploy_subcommands)
     def do_deploy(self, args):
+        """Deploy an application to the tomcat server."""
         try:
             args.func(self, args, update=False)
         except AttributeError:
             self.do_help('deploy')
 
     def help_deploy(self):
+        """Show help for the deploy command."""
         self.show_help_from(self.deploy_parser)
 
     @requires_connection
     @cmd2.with_argparser(deploy_parser, deploy_subcommands)
     def do_redeploy(self, args):
+        """Redeploy an application to the tomcat server."""
         try:
             args.func(self, args, update=True)
         except AttributeError:
             self.do_help('redeploy')
 
     def help_redeploy(self):
+        """Show help for the redeploy command."""
         self.show_help_from(self.deploy_parser)
 
-    
 
     def _parse_args(self, parser, cmdline):
-        """Use argparse to parse list command arguments"""
+        """Use argparse to parse input string"""
         # set exit codes so if we raise exceptions, we have the right value
         self.exit_code = self.exit_codes.error
         lexed_cmdline = cmd2.parse_quoted_string(cmdline)
@@ -719,10 +753,13 @@ Show the url of the tomcat server you are connected to.""")
         args = parser.parse_args(lexed_cmdline)
         # no usage error, assume success
         self.exit_code = self.exit_codes.success
-        return args        
+        return args
 
 
-    undeploy_parser = _path_version_parser('undeploy', 'Remove an application at a given path from the tomcat server.')
+    undeploy_parser = _path_version_parser(
+        'undeploy',
+        'Remove an application at a given path from the tomcat server.'
+    )
 
     @requires_connection
     def do_undeploy(self, cmdline):
@@ -735,7 +772,10 @@ Show the url of the tomcat server you are connected to.""")
         self.show_help_from(self.undeploy_parser)
 
 
-    start_parser = _path_version_parser('start', "Start a tomcat application that has been deployed but isn't running.")
+    start_parser = _path_version_parser(
+        'start',
+        "Start a tomcat application that has been deployed but isn't running."
+    )
 
     @requires_connection
     def do_start(self, cmdline):
@@ -748,8 +788,10 @@ Show the url of the tomcat server you are connected to.""")
         self.show_help_from(self.start_parser)
 
 
-
-    stop_parser = _path_version_parser('stop', "Stop a running tomcat application and leave it deployed on the server.")
+    stop_parser = _path_version_parser(
+        'stop',
+        'Stop a running tomcat application and leave it deployed on the server.'
+    )
 
     @requires_connection
     def do_stop(self, cmdline):
@@ -762,7 +804,10 @@ Show the url of the tomcat server you are connected to.""")
         self.show_help_from(self.stop_parser)
 
 
-    reload_parser = _path_version_parser('reload', 'Start and stop a tomcat application.')
+    reload_parser = _path_version_parser(
+        'reload',
+        'Start and stop a tomcat application.',
+    )
 
     @requires_connection
     def do_reload(self, cmdline):
@@ -775,8 +820,11 @@ Show the url of the tomcat server you are connected to.""")
         self.show_help_from(self.reload_parser)
 
 
-    restart_parser = _path_version_parser('restart', 'Start and stop a tomcat application. Synonym for reload.')
-    
+    restart_parser = _path_version_parser(
+        'restart',
+        'Start and stop a tomcat application. Synonym for reload.',
+    )
+
     @requires_connection
     def do_restart(self, cmdline):
         """Start and stop a tomcat application. Synonym for reload."""
@@ -787,10 +835,18 @@ Show the url of the tomcat server you are connected to.""")
         self.show_help_from(self.restart_parser)
 
 
-    sessions_parser = argparse.ArgumentParser(prog='sessions',
-                      description='Show active sessions for a tomcat application.')
-    sessions_parser.add_argument('-v', '--version', help='Optional version string of the application from which to show sessions. If the application was deployed with a version string, it must be specified in order to show sessions.')
-    sessions_parser.add_argument('path', help='The path part of the URL where the application is deployed.')
+    sessions_parser = argparse.ArgumentParser(
+        prog='sessions',
+        description='Show active sessions for a tomcat application.'
+    )
+    sessions_parser.add_argument(
+        '-v', '--version',
+        help='Optional version string of the application from which to show sessions. If the application was deployed with a version string, it must be specified in order to show sessions.',
+    )
+    sessions_parser.add_argument(
+        'path',
+        help='The path part of the URL where the application is deployed.',
+    )
 
     @requires_connection
     def do_sessions(self, cmdline):
@@ -805,11 +861,22 @@ Show the url of the tomcat server you are connected to.""")
         self.show_help_from(self.sessions_parser)
 
 
-    expire_parser = argparse.ArgumentParser(prog='sessions',
-                      description='Show active sessions for a tomcat application.')
-    expire_parser.add_argument('-v', '--version', help='Optional version string of the application from which to expire sessions. If the application was deployed with a version string, it must be specified in order to expire sessions.')
-    expire_parser.add_argument('path', help='The path part of the URL where the application is deployed.')
-    expire_parser.add_argument('idle', help='Expire sessions idle for more than this number of minutes. Use 0 to expire all sessions.')
+    expire_parser = argparse.ArgumentParser(
+        prog='sessions',
+        description='Show active sessions for a tomcat application.',
+    )
+    expire_parser.add_argument(
+        '-v', '--version',
+        help='Optional version string of the application from which to expire sessions. If the application was deployed with a version string, it must be specified in order to expire sessions.',
+    )
+    expire_parser.add_argument(
+        'path',
+        help='The path part of the URL where the application is deployed.',
+    )
+    expire_parser.add_argument(
+        'idle',
+        help='Expire sessions idle for more than this number of minutes. Use 0 to expire all sessions.',
+    )
 
     @requires_connection
     def do_expire(self, cmdline):
@@ -828,8 +895,10 @@ Show the url of the tomcat server you are connected to.""")
         prog='list',
         description='Show all installed applications',
     )
-    raw_help = 'show apps without formatting'
-    list_parser.add_argument('-r', '--raw', action='store_true', help=raw_help)
+    list_parser.add_argument(
+        '-r', '--raw', action='store_true',
+        help='show apps without formatting',
+    )
     state_help = 'only show apps in a given state'
     list_parser.add_argument('-s', '--state', choices=['running', 'stopped'], help=state_help)
     by_help = 'sort by state (default), or sort by path'
@@ -855,7 +924,9 @@ Show the url of the tomcat server you are connected to.""")
             self.poutput(fmt.format('Path', 'State', 'Sessions', 'Directory'))
             self.poutput(fmt.format(dashes, dashes, dashes, dashes))
             for app in apps:
-                self.poutput(fmt.format(app.path, app.state, str(app.sessions), app.directory_and_version))
+                self.poutput(
+                    fmt.format(app.path, app.state, str(app.sessions), app.directory_and_version)
+                )
 
     def help_list(self):
         """Show help for the 'list' command."""
@@ -1031,13 +1102,13 @@ extreme caution on production systems.""")
         self.exit_code = self.exit_codes.success
         return self._STOP_AND_EXIT
 
-    def do_quit(self, arg):
+    def do_quit(self, args):
         """Synonym for the 'exit' command."""
-        return self.do_exit(arg)
+        return self.do_exit(args)
 
-    def do_eof(self, arg):
+    def do_eof(self, args):
         """Exit on the end-of-file character."""
-        return self.do_exit(arg)
+        return self.do_exit(args)
 
     def do_version(self, args):
         """Show version information."""

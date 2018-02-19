@@ -82,8 +82,14 @@ def test_list_parse_args_failure(argv):
     assert itm.exit_code == itm.exit_codes.usage
 
 @pytest.mark.parametrize('raw', ['', '-r', '--raw'])
-@pytest.mark.parametrize('state', ['', '-s running', '-s stopped', '--state=running', '--state=stopped'])
-@pytest.mark.parametrize('sort', ['', '-b state', '-b path', '--by=state', '--by=path'])
+@pytest.mark.parametrize(
+    'state',
+    ['', '-s running', '-s stopped', '--state=running', '--state=stopped'],
+)
+@pytest.mark.parametrize(
+    'sort',
+    ['', '-b state', '-b path', '--by=state', '--by=path'],
+)
 def test_list_parse_args(raw, state, sort):
     itm = tm.InteractiveTomcatManager()
     argv = '{} {} {}'.format(raw, state, sort)
