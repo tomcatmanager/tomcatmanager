@@ -6,6 +6,22 @@ Release History
 develop
 -------
 
+**New**
+
+- You can now deploy applications via a context xml file
+
+**Changed**
+
+- deploy() has been replaced by three new methods:
+   - deploy_localwar()
+   - deploy_serverwar()
+   - deploy_servercontext()
+- Interactive deploy command syntax has changed:
+   - Can now deploy context xml files
+   - Specify version with --version flag instead of optional positional
+     parameter
+- Most commands now have -h/--help options
+
 
 0.11.0 (2017-09-06)
 -------------------

@@ -38,6 +38,29 @@ def get_itm(tms):
     itm.onecmd_plus_hooks(args)
     return itm
 
+HELP_COMMANDS = [
+    'deploy',
+    'redeploy',
+    'undeploy',
+    'start',
+    'stop',
+    'reload',
+    'restart',
+    'sessions',
+    'expire',
+    'list',
+]
+@pytest.mark.parametrize('command', HELP_COMMANDS)
+def test_command_help(tomcat_manager_server, command):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('{} -h'.format(command))
+    assert itm.exit_code == itm.exit_codes.usage
+
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('{} --help'.format(command))
+    assert itm.exit_code == itm.exit_codes.usage
+
 ###
 #
 # list
@@ -60,7 +83,7 @@ def parse_apps(lines):
 def test_list_process_apps_empty():
     lines = ''
     itm = tm.InteractiveTomcatManager()
-    args = itm._parse_args(itm.list_parser, '')
+    args = itm.parse_args(itm.list_parser, '')
     apps = parse_apps(lines)
     apps = itm._list_process_apps(apps, args)
     assert isinstance(apps, list)
@@ -78,7 +101,7 @@ LIST_ARGV_BAD = [
 def test_list_parse_args_failure(argv):
     itm = tm.InteractiveTomcatManager()
     with pytest.raises(SystemExit):
-        args = itm._parse_args(itm.list_parser, argv)
+        args = itm.parse_args(itm.list_parser, argv)
     assert itm.exit_code == itm.exit_codes.usage
 
 @pytest.mark.parametrize('raw', ['', '-r', '--raw'])
@@ -93,7 +116,7 @@ def test_list_parse_args_failure(argv):
 def test_list_parse_args(raw, state, sort):
     itm = tm.InteractiveTomcatManager()
     argv = '{} {} {}'.format(raw, state, sort)
-    args = itm._parse_args(itm.list_parser, argv)
+    args = itm.parse_args(itm.list_parser, argv)
     assert itm.exit_code == itm.exit_codes.success
 
 def test_list_sort_by_state(tomcat_manager_server, mock_apps, capsys):
@@ -112,7 +135,7 @@ def test_list_sort_by_state(tomcat_manager_server, mock_apps, capsys):
     mock_apps.return_value = raw_apps
     interactive_tomcat = get_itm(tomcat_manager_server)
     interactive_tomcat.onecmd_plus_hooks('list --raw -b state')
-    out, err = capsys.readouterr()
+    out, _ = capsys.readouterr()
     assert out == expected
 
 def test_list_sort_by_path(tomcat_manager_server, mock_apps, capsys):
@@ -131,7 +154,7 @@ def test_list_sort_by_path(tomcat_manager_server, mock_apps, capsys):
     mock_apps.return_value = raw_apps
     interactive_tomcat = get_itm(tomcat_manager_server)
     interactive_tomcat.onecmd_plus_hooks('list --raw -b path')
-    out, err = capsys.readouterr()
+    out, _ = capsys.readouterr()
     assert out == expected
 
 def test_list_state_running(tomcat_manager_server, mock_apps, capsys):
@@ -148,5 +171,5 @@ def test_list_state_running(tomcat_manager_server, mock_apps, capsys):
     mock_apps.return_value = raw_apps
     interactive_tomcat = get_itm(tomcat_manager_server)
     interactive_tomcat.onecmd_plus_hooks('list --raw -s running')
-    out, err = capsys.readouterr()
+    out, _ = capsys.readouterr()
     assert out == expected

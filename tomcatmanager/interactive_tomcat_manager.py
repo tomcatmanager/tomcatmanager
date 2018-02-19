@@ -247,6 +247,18 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.exit_code = self.exit_codes.success
         self.poutput(argparser.format_help())
 
+    def parse_args(self, parser, cmdline):
+        """Use argparse to parse input string"""
+        # set exit codes so if we raise exceptions, we have the right value
+        self.exit_code = self.exit_codes.error
+        lexed_cmdline = cmd2.parse_quoted_string(cmdline)
+        # no parse error, assume we get a usage error
+        self.exit_code = self.exit_codes.usage
+        args = parser.parse_args(lexed_cmdline)
+        # no usage error, assume success
+        self.exit_code = self.exit_codes.success
+        return args
+
     def _which_server(self):
         """
         What url are we connected to and who are we connected as.
@@ -715,45 +727,33 @@ Show the url of the tomcat server you are connected to.""")
     deploy_context_parser.add_argument('path')
     deploy_context_parser.set_defaults(func=deploy_context)
 
-    deploy_subcommands = ['local', 'server', 'context']
     @requires_connection
-    @cmd2.with_argparser(deploy_parser, deploy_subcommands)
-    def do_deploy(self, args):
+    def do_deploy(self, cmdline):
         """Deploy an application to the tomcat server."""
+        args = self.parse_args(self.deploy_parser, cmdline)
         try:
             args.func(self, args, update=False)
         except AttributeError:
-            self.do_help('deploy')
+            self.help_deploy()
+            self.exit_code = self.exit_codes.error
 
     def help_deploy(self):
         """Show help for the deploy command."""
         self.show_help_from(self.deploy_parser)
 
     @requires_connection
-    @cmd2.with_argparser(deploy_parser, deploy_subcommands)
-    def do_redeploy(self, args):
+    def do_redeploy(self, cmdline):
         """Redeploy an application to the tomcat server."""
+        args = self.parse_args(self.deploy_parser, cmdline)
         try:
             args.func(self, args, update=True)
         except AttributeError:
-            self.do_help('redeploy')
+            self.help_deploy()
+            self.exit_code = self.exit_codes.error
 
     def help_redeploy(self):
         """Show help for the redeploy command."""
         self.show_help_from(self.deploy_parser)
-
-
-    def _parse_args(self, parser, cmdline):
-        """Use argparse to parse input string"""
-        # set exit codes so if we raise exceptions, we have the right value
-        self.exit_code = self.exit_codes.error
-        lexed_cmdline = cmd2.parse_quoted_string(cmdline)
-        # no parse error, assume we get a usage error
-        self.exit_code = self.exit_codes.usage
-        args = parser.parse_args(lexed_cmdline)
-        # no usage error, assume success
-        self.exit_code = self.exit_codes.success
-        return args
 
 
     undeploy_parser = _path_version_parser(
@@ -764,7 +764,7 @@ Show the url of the tomcat server you are connected to.""")
     @requires_connection
     def do_undeploy(self, cmdline):
         """Remove an application at a given path from the tomcat server."""
-        args = self._parse_args(self.undeploy_parser, cmdline)
+        args = self.parse_args(self.undeploy_parser, cmdline)
         self.docmd(self.tomcat.undeploy, args.path, args.version)
 
     def help_undeploy(self):
@@ -780,7 +780,7 @@ Show the url of the tomcat server you are connected to.""")
     @requires_connection
     def do_start(self, cmdline):
         """Start a tomcat application that has been deployed but isn't running."""
-        args = self._parse_args(self.start_parser, cmdline)
+        args = self.parse_args(self.start_parser, cmdline)
         self.docmd(self.tomcat.start, args.path, args.version)
 
     def help_start(self):
@@ -796,7 +796,7 @@ Show the url of the tomcat server you are connected to.""")
     @requires_connection
     def do_stop(self, cmdline):
         """Stop a tomcat application and leave it deployed on the server."""
-        args = self._parse_args(self.stop_parser, cmdline)
+        args = self.parse_args(self.stop_parser, cmdline)
         self.docmd(self.tomcat.stop, args.path, args.version)
 
     def help_stop(self):
@@ -812,7 +812,7 @@ Show the url of the tomcat server you are connected to.""")
     @requires_connection
     def do_reload(self, cmdline):
         """Start and stop a tomcat application."""
-        args = self._parse_args(self.reload_parser, cmdline)
+        args = self.parse_args(self.reload_parser, cmdline)
         self.docmd(self.tomcat.reload, args.path, args.version)
 
     def help_reload(self):
@@ -837,21 +837,21 @@ Show the url of the tomcat server you are connected to.""")
 
     sessions_parser = argparse.ArgumentParser(
         prog='sessions',
-        description='Show active sessions for a tomcat application.'
-    )
-    sessions_parser.add_argument(
-        '-v', '--version',
-        help='Optional version string of the application from which to show sessions. If the application was deployed with a version string, it must be specified in order to show sessions.',
+        description='Show active sessions for a tomcat application.',
     )
     sessions_parser.add_argument(
         'path',
         help='The path part of the URL where the application is deployed.',
     )
+    sessions_parser.add_argument(
+        '-v', '--version',
+        help='Optional version string of the application from which to show sessions. If the application was deployed with a version string, it must be specified in order to show sessions.',
+    )
 
     @requires_connection
     def do_sessions(self, cmdline):
         """Show active sessions for a tomcat application."""
-        args = self._parse_args(self.sessions_parser, cmdline)
+        args = self.parse_args(self.sessions_parser, cmdline)
         r = self.docmd(self.tomcat.sessions, args.path, args.version)
         if r.ok:
             self.poutput(r.sessions)
@@ -877,7 +877,7 @@ Show the url of the tomcat server you are connected to.""")
         'idle',
         help='Expire sessions idle for more than this number of minutes. Use 0 to expire all sessions.',
     )
-
+    
     @requires_connection
     def do_expire(self, cmdline):
         """Expire idle sessions."""
@@ -894,26 +894,35 @@ Show the url of the tomcat server you are connected to.""")
     list_parser = argparse.ArgumentParser(
         prog='list',
         description='Show all installed applications',
+        add_help=False,
     )
     list_parser.add_argument(
-        '-r', '--raw', action='store_true',
+        '-r', '--raw',
+        action='store_true',
         help='show apps without formatting',
     )
-    state_help = 'only show apps in a given state'
-    list_parser.add_argument('-s', '--state', choices=['running', 'stopped'], help=state_help)
-    by_help = 'sort by state (default), or sort by path'
-    list_parser.add_argument('-b', '--by', choices=['state', 'path'], default='state', help=by_help)
+    list_parser.add_argument(
+        '-s', '--state',
+        choices=['running', 'stopped'],
+        help='only show apps in a given state',
+    )
+    list_parser.add_argument(
+        '-b', '--by',
+        choices=['state', 'path'],
+        default='state',
+        help='sort by state (default), or sort by path',
+    )
 
     @requires_connection
     def do_list(self, cmdline):
         """Show all installed applications."""
-        args = self._parse_args(self.list_parser, cmdline)
+        args = self.parse_args(self.list_parser, cmdline)
+
         response = self.docmd(self.tomcat.list)
         if not response.ok:
             return
 
         apps = self._list_process_apps(response.apps, args)
-
         self.exit_code = self.exit_codes.success
         if args.raw:
             for app in apps:
