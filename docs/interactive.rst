@@ -98,12 +98,13 @@ Or:
    Password: {type your password here}
 
 
-Deploy a WAR File
------------------
+Deploy applications
+-------------------
 
-Tomcat applications are usually packaged as a WAR file, which is really just a
-zip file with a different extension. The ``deploy`` command sends a WAR file to
-the Tomcat server and tells it which URL to deploy that application at.
+Tomcat applications are usually packaged as a WAR file, which is really
+just a zip file with a different extension. The ``deploy`` command sends a
+WAR file to the Tomcat server and tells it which URL to deploy that
+application at.
 
 The WAR file can be located in one of two places: some path on the computer
 that is running Tomcat, or some path on the computer where the command line
@@ -127,7 +128,7 @@ in ``/tmp/fancyapp.war``. To deploy this WAR file to
 
 .. code-block:: none
 
-   tomcat-manager>deploy server /tmp/myfancyapp.war /fancy
+   tomcat-manager> deploy server /tmp/myfancyapp.war /fancy
 
 Now let's say I just compiled a WAR file on my laptop for an app called
 `shiny`. It's saved at ``~/src/shiny/dist/shinyv2.0.5.war``. I'd like to deploy
@@ -135,7 +136,29 @@ it to ``https://www.example.com/shiny``:
 
 .. code-block:: none
 
-   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny
+   tomcat-manager> deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny
+
+
+Sometimes when you deploy a WAR you want to specify additional configuration
+information. You can do so by using a `context file
+<https://tomcat.apache.org/tomcat-8.5-doc/config/context.html>`_. The context
+file must reside on the same server where Tomcat is running.
+
+.. code-block:: none
+
+  tomcat-manager> deploy context /tmp/context.xml /sample
+
+This command will deploy the WAR file specified in the ``docBase`` attribute of
+the ``Context`` element so it's available at ``https://www.example.com/sample``.
+
+.. note::
+
+  When deploying via context files, be aware of the following:
+
+  - The ``path`` attribute of the ``Context`` element is ignored by the Tomcat
+    Server when deploying from a context file.
+
+  - If the ``Context`` element specifies a ``docBase`` attribute, it will be      used even if you specify a war file on the command line.
 
 
 Parallel Deployment

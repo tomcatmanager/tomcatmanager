@@ -56,6 +56,20 @@ def requires_connection(func):
     _requires_connection.__doc__ = func.__doc__
     return _requires_connection
 
+def generate_help_from(argparser):
+    """Decorator which produces a help method.
+    
+    This decorator set the exit code, and outputs the help message from
+    the passed argparser. Finally, it calls the wrapped function.
+    """
+    def _decorator(func):
+        def _wrapper(instance):
+            instance.exit_code = instance.exit_codes.success
+            instance.poutput(argparser.format_help())
+            func(instance)
+        return _wrapper
+    return _decorator
+
 # pylint: disable=too-many-public-methods
 class InteractiveTomcatManager(cmd2.Cmd):
     """An interactive command line tool for the Tomcat Manager web application.
@@ -647,113 +661,83 @@ Show the url of the tomcat server you are connected to.""")
     # commands for managing applications
     #
     ###
-    def deploy_base(self, args, show_help, update):
-        """Common method for deploy() and redeploy()."""
-        server = 'server'
-        local = 'local'
-        args = args.split()
-        if len(args) in [3, 4, 5]:
-            src = args[0]
-            warfile = args[1]
-            path = args[2]
-            version = None
-            if len(args) >= 4:
-                version = args[3]
-
-            if server.startswith(src):
-                src = server
-            if local.startswith(src):
-                src = local
-
-            if src == server:
-                context = None
-                if len (args) == 5:
-                   context = args[4]
-                self.exit_code = self.exit_codes.success
-                self.docmd(self.tomcat.deploy, path, serverwar=warfile,
-                           update=update, version=version, context=context)
-            elif src == local:
-                warfile = os.path.expanduser(warfile)
-                with open(warfile, 'rb') as fileobj:
-                    self.exit_code = self.exit_codes.success
-                    self.docmd(self.tomcat.deploy, path, localwar=fileobj,
-                               update=update, version=version)
-            else:
-                show_help()
-                self.exit_code = self.exit_codes.usage
-        else:
-            show_help()
-            self.exit_code = self.exit_codes.usage
-
-    def deploy_base_help(self):
-        """Common help string for the deploy() and redeploy()."""
-        return """
-  server|local  'server' to deploy a war file already on the server
-                'local' to transmit a locally available warfile to the server
-  warfile       Path to the war file to deploy.
-
-                For 'server', don't include the 'file:' at the beginning,
-                and use java style paths (i.e. '/' as path seperator).
-
-                For 'local', give a path according to your local operating
-                system conventions.
-
-  path          The path part of the URL where the application will be deployed.
-  version       The version string to associate with this deployment."""
-
-    @requires_connection
-    def do_deploy(self, args):
-        """Install a war file containing a tomcat application in the tomcat server."""
-        self.deploy_base(args, self.help_deploy, False)
-
-    def help_deploy(self):
-        """Show help for the 'deploy' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: deploy server|local {warfile} {path} [version]
-
-Install a war file containing a tomcat application in the tomcat server.""")
-        self.poutput(self.deploy_base_help())
-
-    @requires_connection
-    def do_redeploy(self, args):
-        """Deploy an application to the Tomcat server at an existing path."""
-        self.deploy_base(args, self.help_redeploy, True)
-
-    def help_redeploy(self):
-        """Show help for the 'redeploy' command"""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: redeploy server|local {warfile} {path} [version]
-
-Remove the application currently installed at a given path and install a
-new war file there.""")
-        self.poutput(self.deploy_base_help())
-
-    @requires_connection
-    def do_undeploy(self, args):
-        """Remove an application from the tomcat server."""
-        args = args.split()
-        version = None
-        if len(args) in [1, 2]:
-            path = args[0]
-            if len(args) == 2:
-                version = args[1]
+    def deploy_local(self, args, update=False):
+        warfile = os.path.expanduser(args.warfile)
+        with open(warfile, 'rb') as fileobj:
             self.exit_code = self.exit_codes.success
-            self.docmd(self.tomcat.undeploy, path, version)
-        else:
-            self.help_undeploy()
-            self.exit_code = self.exit_codes.usage
+            self.docmd(self.tomcat.deploy_localwar, args.path, fileobj,
+                       version=args.version, update=update)
 
-    def help_undeploy(self):
-        """Show help for the 'undeploy' command."""
+    def deploy_server(self, args, update=False):
         self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: undeploy {path} [version]
+        self.docmd(self.tomcat.deploy_serverwar, args.path, args.warfile,
+                   version=args.version, update=update)
 
-Remove an application from the tomcat server.
+    def deploy_context(self, args, update=False):
+        self.exit_code = self.exit_codes.success
+        self.docmd(self.tomcat.deploy_servercontext, args.path, args.contextfile,
+                   warfile=args.warfile, version=args.version, update=update)
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to undeploy. If the
-           application was deployed with a version string, it must be
-           specified in order to undeploy the application.""")
+    deploy_parser = argparse.ArgumentParser(prog='deploy', description='Install a war file containing a tomcat application in the tomcat server')
+    deploy_subparsers =  deploy_parser.add_subparsers(title='methods', dest='method')
+    # local subparser
+    deploy_local_parser = deploy_subparsers.add_parser('local', description='transmit a locally available warfile to the server', help='transmit a locally available warfile to the server')
+    deploy_local_parser.add_argument('-v', '--version', help='version string to associate with this deployment')
+    deploy_local_parser.add_argument('warfile')
+    deploy_local_parser.add_argument('path')
+    deploy_local_parser.set_defaults(func=deploy_local)
+    # server subparser
+    deploy_server_parser = deploy_subparsers.add_parser('server', description='deploy a warfile already on the server', help='deploy a warfile already on the server')
+    deploy_server_parser.add_argument('-v', '--version', help='version string to associate with this deployment')
+    deploy_server_parser.add_argument('warfile')
+    deploy_server_parser.add_argument('path')
+    deploy_server_parser.set_defaults(func=deploy_server)
+    # context subparser
+    deploy_context_parser = deploy_subparsers.add_parser('context', description='deploy a contextfile already on the server', help='deploy a contextfile already on the server')
+    deploy_context_parser.add_argument('-v', '--version', help='version string to associate with this deployment')
+    deploy_context_parser.add_argument('contextfile')
+    deploy_context_parser.add_argument('warfile', nargs='?')
+    deploy_context_parser.add_argument('path')
+    deploy_context_parser.set_defaults(func=deploy_context)
+
+    deploy_subcommands = ['local', 'server', 'context']
+    @requires_connection
+    @cmd2.with_argparser(deploy_parser, deploy_subcommands)
+    def do_deploy(self, args):
+        try:
+            args.func(self, args, update=False)
+        except AttributeError:
+            self.do_help('deploy')
+
+    @generate_help_from(deploy_parser)
+    def help_deploy(self):
+        pass
+
+    @requires_connection
+    @cmd2.with_argparser(deploy_parser, deploy_subcommands)
+    def do_redeploy(self, args):
+        try:
+            args.func(self, args, update=True)
+        except AttributeError:
+            self.do_help('redeploy')
+
+    @generate_help_from(deploy_parser)
+    def help_redeploy(self):
+        pass
+    
+    undeploy_parser = argparse.ArgumentParser(prog='undeploy', description='Remove an application at a given path from the tomcat server.')
+    undeploy_parser.add_argument('-v', '--version', help='Optional version string of the application to undeploy. If the application was deployed with a version string, it must be specified in order to undeploy the application.')
+    undeploy_parser.add_argument('path')
+
+    @requires_connection
+    @cmd2.with_argparser(undeploy_parser)
+    def do_undeploy(self, args):
+        self.exit_code = self.exit_codes.success
+        self.docmd(self.tomcat.undeploy, args.path, args.version)
+
+    @generate_help_from(undeploy_parser)
+    def help_undeploy(self):
+        pass
 
     @requires_connection
     def do_start(self, args):
