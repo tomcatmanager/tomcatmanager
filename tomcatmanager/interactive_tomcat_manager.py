@@ -545,36 +545,55 @@ Change a setting.
     # Connecting to Tomcat
     #
     ###
-    def do_connect(self, args):
-        """Connect to a tomcat manager instance."""
+    connect_parser = argparse.ArgumentParser(
+        prog='connect',
+        description='connect to a tomcat manager instance',
+        usage='%(prog)s [-h] config_name\n       %(prog)s [-h] url [user] [password]',
+        epilog="If you specify a user and no password, you will be prompted for the password. If you don't specify a user or password, attempt to connect with no authentication.",
+    )
+    connect_parser.add_argument(
+        'config_name',
+        nargs='?',
+        help='a section from the config file which contains at least a url',
+    )
+    connect_parser.add_argument(
+        'url',
+        nargs='?',
+        help='the url where the tomcat manager web app is located',
+    )
+    connect_parser.add_argument(
+        'user',
+        nargs='?',
+        help='optional user to use for authentication',
+    )
+    connect_parser.add_argument(
+        'password',
+        nargs='?',
+        help='optional password to use for authentication',
+    )
+
+    def do_connect(self, cmdline):
         url = None
         user = None
         password = None
-        args_list = args.split()
-
-        if len(args_list) == 1:
-            # check the configuration file for values
-            server = args_list[0]
-            if self.config.has_section(server):
-                if self.config.has_option(server, 'url'):
-                    url = self.config[server]['url']
-                if self.config.has_option(server, 'user'):
-                    user = self.config[server]['user']
-                if self.config.has_option(server, 'password'):
-                    password = self.config[server]['password']
-            else:
-                url = args_list[0]
-        elif len(args_list) == 2:
-            url = args_list[0]
-            user = args_list[1]
-        elif len(args_list) == 3:
-            url = args_list[0]
-            user = args_list[1]
-            password = args_list[2]
+        args = self.parse_args(self.connect_parser, cmdline)
+        server = args.config_name
+        if self.config.has_section(server):
+            if self.config.has_option(server, 'url'):
+                url = self.config[server]['url']
+            if self.config.has_option(server, 'user'):
+                user = self.config[server]['user']
+            if self.config.has_option(server, 'password'):
+                password = self.config[server]['password']
         else:
-            self.help_connect()
-            self.exit_code = self.exit_codes.usage
-            return
+            # this is an ugly hack required to get argparse to show the help properly
+            # the argparser has both a config_name and a url positional argument
+            # if you only give config_name, and there isn't a section for it in
+            # the configuration file, then it must be a url, so we have to
+            # 'shift' the positional arguments to the left
+            url = args.config_name
+            user = args.url
+            password = args.user
 
         # prompt for password if necessary
         if url and user and not password:
@@ -622,39 +641,24 @@ Change a setting.
             self.exit_code = self.exit_codes.error
 
     def help_connect(self):
-        """Show help for the 'connect' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: connect url [user] [password]
-       connect config_name
+        """Show help for the connect command."""
+        self.show_help_from(self.connect_parser)
 
-Connect to a tomcat manager instance.
 
-config_name  A section from the config file. This must contain url, user,
-             and password values.
-
-url          The url where the Tomcat Manager web app is located.
-user         Optional user to use for authentication.
-password     Optional password to use for authentication.
-
-If you specify a user and no password, you will be prompted for the
-password. If you don't specify a user or password, attempt to connect
-with no authentication.""")
-
+    which_parser = argparse.ArgumentParser(
+        prog='which',
+        description='show the url of the tomcat server you are connected to',
+    )
     @requires_connection
-    def do_which(self, args):
+    def do_which(self, cmdline):
         """Show the url of the tomcat server you are connected to."""
-        if args:
-            self.help_which()
-            self.exit_code = self.exit_codes.usage
-        else:
-            self.poutput(self._which_server())
+        args = self.parse_args(self.which_parser, cmdline)
+        self.poutput(self._which_server())
 
     def help_which(self):
         """Show help for the 'which' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: which
+        self.show_help_from(self.which_parser)
 
-Show the url of the tomcat server you are connected to.""")
 
     ###
     #

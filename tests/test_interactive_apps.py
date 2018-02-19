@@ -39,6 +39,8 @@ def get_itm(tms):
     return itm
 
 HELP_COMMANDS = [
+    'connect',
+    'which',
     'deploy',
     'redeploy',
     'undeploy',
