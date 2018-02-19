@@ -60,7 +60,7 @@ def parse_apps(lines):
 def test_list_process_apps_empty():
     lines = ''
     itm = tm.InteractiveTomcatManager()
-    args = itm._list_parse_args('')
+    args = itm._parse_args(itm.list_parser, '')
     apps = parse_apps(lines)
     apps = itm._list_process_apps(apps, args)
     assert isinstance(apps, list)
@@ -78,7 +78,7 @@ LIST_ARGV_BAD = [
 def test_list_parse_args_failure(argv):
     itm = tm.InteractiveTomcatManager()
     with pytest.raises(SystemExit):
-        args = itm._list_parse_args(argv)
+        args = itm._parse_args(itm.list_parser, argv)
     assert itm.exit_code == itm.exit_codes.usage
 
 @pytest.mark.parametrize('raw', ['', '-r', '--raw'])
@@ -87,7 +87,7 @@ def test_list_parse_args_failure(argv):
 def test_list_parse_args(raw, state, sort):
     itm = tm.InteractiveTomcatManager()
     argv = '{} {} {}'.format(raw, state, sort)
-    args = itm._list_parse_args(argv)
+    args = itm._parse_args(itm.list_parser, argv)
     assert itm.exit_code == itm.exit_codes.success
 
 def test_list_sort_by_state(tomcat_manager_server, mock_apps, capsys):

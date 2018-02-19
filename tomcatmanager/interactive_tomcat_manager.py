@@ -56,19 +56,12 @@ def requires_connection(func):
     _requires_connection.__doc__ = func.__doc__
     return _requires_connection
 
-def generate_help_from(argparser):
-    """Decorator which produces a help method.
-    
-    This decorator set the exit code, and outputs the help message from
-    the passed argparser. Finally, it calls the wrapped function.
-    """
-    def _decorator(func):
-        def _wrapper(instance):
-            instance.exit_code = instance.exit_codes.success
-            instance.poutput(argparser.format_help())
-            func(instance)
-        return _wrapper
-    return _decorator
+def _path_version_parser(cmdname, helpmsg):
+    """Construct an argparser using the given parameters"""
+    parser = argparse.ArgumentParser(prog=cmdname, description=helpmsg)
+    parser.add_argument('-v', '--version', help='Optional version string of the application to {cmdname}. If the application was deployed with a version string, it must be specified in order to {cmdname} the application.'.format(cmdname=cmdname))
+    parser.add_argument('path', help='The path part of the URL where the application is deployed.')
+    return parser
 
 # pylint: disable=too-many-public-methods
 class InteractiveTomcatManager(cmd2.Cmd):
@@ -248,19 +241,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.perror(str(err))
         return r
 
-    def base_path_version(self, args, func, help_func):
-        """do any command that takes a path and an optional version"""
-        args = args.split()
-        version = None
-        if len(args) in [1, 2]:
-            path = args[0]
-            if len(args) == 2:
-                version = args[1]
-            self.exit_code = self.exit_codes.success
-            return self.docmd(func, path, version)
-        else:
-            help_func()
-            self.exit_code = self.exit_codes.usage
+    def show_help_from(self, argparser):
+        """Set exit code and output help from an argparser."""
+        self.exit_code = self.exit_codes.success
+        self.poutput(argparser.format_help())
 
     def _which_server(self):
         """
@@ -709,9 +693,8 @@ Show the url of the tomcat server you are connected to.""")
         except AttributeError:
             self.do_help('deploy')
 
-    @generate_help_from(deploy_parser)
     def help_deploy(self):
-        pass
+        self.show_help_from(self.deploy_parser)
 
     @requires_connection
     @cmd2.with_argparser(deploy_parser, deploy_subcommands)
@@ -721,158 +704,141 @@ Show the url of the tomcat server you are connected to.""")
         except AttributeError:
             self.do_help('redeploy')
 
-    @generate_help_from(deploy_parser)
     def help_redeploy(self):
-        pass
+        self.show_help_from(self.deploy_parser)
+
     
-    undeploy_parser = argparse.ArgumentParser(prog='undeploy', description='Remove an application at a given path from the tomcat server.')
-    undeploy_parser.add_argument('-v', '--version', help='Optional version string of the application to undeploy. If the application was deployed with a version string, it must be specified in order to undeploy the application.')
-    undeploy_parser.add_argument('path')
+
+    def _parse_args(self, parser, cmdline):
+        """Use argparse to parse list command arguments"""
+        # set exit codes so if we raise exceptions, we have the right value
+        self.exit_code = self.exit_codes.error
+        lexed_cmdline = cmd2.parse_quoted_string(cmdline)
+        # no parse error, assume we get a usage error
+        self.exit_code = self.exit_codes.usage
+        args = parser.parse_args(lexed_cmdline)
+        # no usage error, assume success
+        self.exit_code = self.exit_codes.success
+        return args        
+
+
+    undeploy_parser = _path_version_parser('undeploy', 'Remove an application at a given path from the tomcat server.')
 
     @requires_connection
-    @cmd2.with_argparser(undeploy_parser)
-    def do_undeploy(self, args):
-        self.exit_code = self.exit_codes.success
+    def do_undeploy(self, cmdline):
+        """Remove an application at a given path from the tomcat server."""
+        args = self._parse_args(self.undeploy_parser, cmdline)
         self.docmd(self.tomcat.undeploy, args.path, args.version)
 
-    @generate_help_from(undeploy_parser)
     def help_undeploy(self):
-        pass
+        """Help for the 'undeploy' command."""
+        self.show_help_from(self.undeploy_parser)
+
+
+    start_parser = _path_version_parser('start', "Start a tomcat application that has been deployed but isn't running.")
 
     @requires_connection
-    def do_start(self, args):
+    def do_start(self, cmdline):
         """Start a tomcat application that has been deployed but isn't running."""
-        self.base_path_version(args, self.tomcat.start, self.help_start)
+        args = self._parse_args(self.start_parser, cmdline)
+        self.docmd(self.tomcat.start, args.path, args.version)
 
     def help_start(self):
         """Help for the 'start' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: start {path} [version]
+        self.show_help_from(self.start_parser)
 
-Start a tomcat application that has been deployed but isn't running.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to start. If the
-           application was deployed with a version string, it must be
-           specified in order to start the application.""")
+
+    stop_parser = _path_version_parser('stop', "Stop a running tomcat application and leave it deployed on the server.")
 
     @requires_connection
-    def do_stop(self, args):
+    def do_stop(self, cmdline):
         """Stop a tomcat application and leave it deployed on the server."""
-        self.base_path_version(args, self.tomcat.stop, self.help_stop)
+        args = self._parse_args(self.stop_parser, cmdline)
+        self.docmd(self.tomcat.stop, args.path, args.version)
 
     def help_stop(self):
-        """Show help for the 'stop' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: stop {path} [version]
+        """Help for the 'stop' command."""
+        self.show_help_from(self.stop_parser)
 
-Stop a tomcat application and leave it deployed on the server.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to stop. If the
-           application was deployed with a version string, it must be
-           specified in order to stop the application.""")
+    reload_parser = _path_version_parser('reload', 'Start and stop a tomcat application.')
 
     @requires_connection
-    def do_reload(self, args):
+    def do_reload(self, cmdline):
         """Start and stop a tomcat application."""
-        self.base_path_version(args, self.tomcat.reload, self.help_reload)
+        args = self._parse_args(self.reload_parser, cmdline)
+        self.docmd(self.tomcat.reload, args.path, args.version)
 
     def help_reload(self):
-        """Show help for the 'reload' application."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: reload {path} [version]
+        """Help for the 'reload' application."""
+        self.show_help_from(self.reload_parser)
 
-Start and stop a tomcat application.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to reload. If the
-           application was deployed with a version string, it must be
-           specified in order to reload the application.""")
-
+    restart_parser = _path_version_parser('restart', 'Start and stop a tomcat application. Synonym for reload.')
+    
     @requires_connection
-    def do_restart(self, args):
+    def do_restart(self, cmdline):
         """Start and stop a tomcat application. Synonym for reload."""
-        self.do_reload(args)
+        self.do_reload(cmdline)
 
     def help_restart(self):
         """Show help for the 'restart' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: restart {path} [version]
+        self.show_help_from(self.restart_parser)
 
-Start and stop a tomcat application. Synonym for reload.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to reload. If the
-           application was deployed with a version string, it must be
-           specified in order to reload the application.""")
+    sessions_parser = argparse.ArgumentParser(prog='sessions',
+                      description='Show active sessions for a tomcat application.')
+    sessions_parser.add_argument('-v', '--version', help='Optional version string of the application from which to show sessions. If the application was deployed with a version string, it must be specified in order to show sessions.')
+    sessions_parser.add_argument('path', help='The path part of the URL where the application is deployed.')
 
     @requires_connection
-    def do_sessions(self, args):
+    def do_sessions(self, cmdline):
         """Show active sessions for a tomcat application."""
-        args = args.split()
-        version = None
-        if len(args) in [1, 2]:
-            path = args[0]
-            if len(args) == 2:
-                version = args[1]
-            self.exit_code = self.exit_codes.success
-            r = self.docmd(self.tomcat.sessions, path, version)
-            if r.ok:
-                self.poutput(r.sessions)
-        else:
-            self.help_sessions()
-            self.exit_code = self.exit_codes.usage
+        args = self._parse_args(self.sessions_parser, cmdline)
+        r = self.docmd(self.tomcat.sessions, args.path, args.version)
+        if r.ok:
+            self.poutput(r.sessions)
 
     def help_sessions(self):
-        """Show help for the 'sessions' command."""
-        self.poutput("""Usage: sessions {path} [version]
+        """Help for the 'sessions' command."""
+        self.show_help_from(self.sessions_parser)
 
-Show active sessions for a tomcat application.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application from which to show
-           sessions. If the application was deployed with a version
-           string, it must be specified in order to show sessions.""")
+    expire_parser = argparse.ArgumentParser(prog='sessions',
+                      description='Show active sessions for a tomcat application.')
+    expire_parser.add_argument('-v', '--version', help='Optional version string of the application from which to expire sessions. If the application was deployed with a version string, it must be specified in order to expire sessions.')
+    expire_parser.add_argument('path', help='The path part of the URL where the application is deployed.')
+    expire_parser.add_argument('idle', help='Expire sessions idle for more than this number of minutes. Use 0 to expire all sessions.')
 
     @requires_connection
-    def do_expire(self, args):
+    def do_expire(self, cmdline):
         """Expire idle sessions."""
-        args = args.split()
-        version = None
-        if len(args) in [2, 3]:
-            path = args[0]
-            if len(args) == 2:
-                idle = args[1]
-            else:
-                version = args[1]
-                idle = args[2]
-            self.exit_code = self.exit_codes.success
-            r = self.docmd(self.tomcat.expire, path, version, idle)
-            if r.ok:
-                self.poutput(r.sessions)
-        else:
-            self.help_expire()
-            self.exit_code = self.exit_codes.usage
+        args = self.parse_args(self.expire_parser, cmdline)
+        r = self.docmd(self.tomcat.expire, args.path, args.version, args.idle)
+        if r.ok:
+            self.poutput(r.sessions)
 
     def help_expire(self):
-        """Show help for the 'expire' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: expire {path} [version] {idle}
+        """Help for the 'expire' command."""
+        self.show_help_from(self.expire_parser)
 
-Expire idle sessions.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application from which to
-           expire sessions. If the application was deployed with a version
-           string, it must be specified in order to expire sessions.
-  idle     Expire sessions idle for more than this number of minutes. Use
-           0 to expire all sessions.""")
+    list_parser = argparse.ArgumentParser(
+        prog='list',
+        description='Show all installed applications',
+    )
+    raw_help = 'show apps without formatting'
+    list_parser.add_argument('-r', '--raw', action='store_true', help=raw_help)
+    state_help = 'only show apps in a given state'
+    list_parser.add_argument('-s', '--state', choices=['running', 'stopped'], help=state_help)
+    by_help = 'sort by state (default), or sort by path'
+    list_parser.add_argument('-b', '--by', choices=['state', 'path'], default='state', help=by_help)
 
     @requires_connection
-    def do_list(self, argv):
+    def do_list(self, cmdline):
         """Show all installed applications."""
-        args = self._list_parse_args(argv)
+        args = self._parse_args(self.list_parser, cmdline)
         response = self.docmd(self.tomcat.list)
         if not response.ok:
             return
@@ -893,30 +859,7 @@ Expire idle sessions.
 
     def help_list(self):
         """Show help for the 'list' command."""
-        self.exit_code = self.exit_codes.success
-        args = self._list_parse_args('-h')
-
-    def _list_parse_args(self, argv):
-        """Use argparse to parse list command arguments"""
-        parser = argparse.ArgumentParser(
-            prog='list',
-            description='Show all installed applications',
-        )
-        raw_help = 'show apps without formatting'
-        parser.add_argument('-r', '--raw', action='store_true', help=raw_help)
-        state_help = 'only show apps in a given state'
-        parser.add_argument('-s', '--state', choices=['running', 'stopped'], help=state_help)
-        by_help = 'sort by state (default), or sort by path'
-        parser.add_argument('-b', '--by', choices=['state', 'path'], default='state', help=by_help)
-        # set exit codes so if we raise exceptions, we have the right value
-        self.exit_code = self.exit_codes.error
-        argv = shlex.split(argv)
-        # no parse error, assume we get a usage error
-        self.exit_code = self.exit_codes.usage
-        args = parser.parse_args(argv)
-        # no usage error, assume success
-        self.exit_code = self.exit_codes.success
-        return args
+        self.show_help_from(self.list_parser)
 
     def _list_process_apps(self, apps, args):
         """
