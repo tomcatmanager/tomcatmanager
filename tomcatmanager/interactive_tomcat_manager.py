@@ -327,6 +327,7 @@ action is one of the following:
   file  show the location of the user configuration file
   edit  edit the user configuration file""")
 
+    # TODO show has been removed in cmd2 version 0.8.0
     def do_show(self, arg, opts=None):
         """
         Show all settings or a specific setting.
