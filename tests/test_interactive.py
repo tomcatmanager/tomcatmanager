@@ -26,6 +26,7 @@ import uuid
 import unittest.mock as mock
 import tempfile
 import os
+import getpass
 
 import pytest
 
@@ -33,42 +34,25 @@ import tomcatmanager as tm
 
 ###
 #
-# fixtures
+# helper functions and fixtures
 #
 ###
-def fake_load_config(self):
-    self.config = None
-
-@pytest.fixture()
-def itm_nc(mocker):
-    """Don't allow it to load a config file"""
-    mocker.patch('tomcatmanager.InteractiveTomcatManager.load_config')
+def get_itm(tms):
+    """
+    Using this as a fixture with capsys breaks capsys. So we use a function.
+    """
     itm = tm.InteractiveTomcatManager()
+    args = 'connect {url} {user} {password}'.format(**tms)
+    itm.onecmd_plus_hooks(args)
     return itm
 
-###
-#
-# test config and settings commands
-#
-###
-def test_do_edit(itm_nc, mocker):
-    itm_nc.editor = 'fooedit'
-    mock_os_system = mocker.patch('os.system')
-    itm_nc.onecmd('config edit')
-    assert mock_os_system.call_count == 1
-
-###
-#
-# test config and settings other methods
-#
-###
-def test_load_config(mocker):
+def itm_with_config(mocker, configstring):
+    """Return an InteractiveTomcatManager object with the config set from the passed string."""
     itm = tm.InteractiveTomcatManager()
-    prompt = str(uuid.uuid1())
     fd, fname = tempfile.mkstemp(prefix='', suffix='.ini')
     os.close(fd)
     with open(fname, 'w') as fobj:
-        fobj.write('[settings]\nprompt={}\n'.format(prompt))
+        fobj.write(configstring)
 
     # itm aleady tried to load a config file, which it may or may not
     # have found, depending on if you have one or not
@@ -81,10 +65,137 @@ def test_load_config(mocker):
         itm.load_config()
         # this just verifies that our patch worked
         assert itm.config_file == fname
-        # now make sure that our file got loaded properly
-        assert itm.prompt == prompt
     finally:
         os.remove(fname)
+    return itm
+
+def assert_connected_to(itm, url, capsys):
+    itm.onecmd_plus_hooks('which')
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.exit_codes.success
+    assert url in out
+
+@pytest.fixture()
+def itm_nc(mocker):
+    """Don't allow it to load a config file"""
+    mocker.patch('tomcatmanager.InteractiveTomcatManager.load_config')
+    itm = tm.InteractiveTomcatManager()
+    return itm
+
+###
+#
+# test help command line options
+#
+###
+HELP_COMMANDS = [
+    'connect',
+    'which',
+    'deploy',
+    'redeploy',
+    'undeploy',
+    'start',
+    'stop',
+    'reload',
+    'restart',
+    'sessions',
+    'expire',
+    'list',
+]
+@pytest.mark.parametrize('command', HELP_COMMANDS)
+def test_command_help(tomcat_manager_server, command):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('{} -h'.format(command))
+    assert itm.exit_code == itm.exit_codes.usage
+
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('{} --help'.format(command))
+    assert itm.exit_code == itm.exit_codes.usage
+
+###
+#
+# test connect and which commands
+#
+###
+def test_connect(tomcat_manager_server, capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = 'connect {url} {user} {password}'.format(**tomcat_manager_server)
+    itm.onecmd_plus_hooks(cmdline)
+    assert itm.exit_code == itm.exit_codes.success
+    assert_connected_to(itm, tomcat_manager_server['url'], capsys)
+
+def test_connect_password_prompt(tomcat_manager_server, capsys, mocker):
+    itm = tm.InteractiveTomcatManager()
+    mock_getpass = mocker.patch('getpass.getpass')
+    mock_getpass.return_value = tomcat_manager_server['password']
+    # this should call getpass.getpass, which is now mocked to return the password
+    cmdline = 'connect {url} {user}'.format(**tomcat_manager_server)
+    itm.onecmd_plus_hooks(cmdline)
+    # make sure it got called
+    assert mock_getpass.call_count == 1
+    assert itm.exit_code == itm.exit_codes.success
+    assert_connected_to(itm, tomcat_manager_server['url'], capsys)
+
+def test_connect_config(tomcat_manager_server, capsys, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={url}
+    user={user}
+    password={password}"""
+    configstring = config.format(configname, **tomcat_manager_server)
+    itm = itm_with_config(mocker, configstring)
+    cmdline = 'connect {}'.format(configname)
+    itm.onecmd_plus_hooks(cmdline)
+    assert itm.exit_code == itm.exit_codes.success    
+    assert_connected_to(itm, tomcat_manager_server['url'], capsys)
+
+def test_connect_config_password_prompt(tomcat_manager_server, capsys, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={url}
+    user={user}"""
+    configstring = config.format(configname, **tomcat_manager_server)
+    itm = itm_with_config(mocker, configstring)
+    mock_getpass = mocker.patch('getpass.getpass')
+    mock_getpass.return_value = tomcat_manager_server['password']
+    # this will call getpass.getpass, which is now mocked to return the password
+    cmdline = 'connect {}'.format(configname)
+    itm.onecmd_plus_hooks(cmdline)
+    assert mock_getpass.call_count == 1
+    assert itm.exit_code == itm.exit_codes.success    
+    assert_connected_to(itm, tomcat_manager_server['url'], capsys)
+    
+def test_which(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('which')
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.exit_codes.success
+    assert tomcat_manager_server['url'] in out
+
+
+###
+#
+# test config and settings commands
+#
+###
+def test_do_edit(itm_nc, mocker):
+    itm_nc.editor = 'fooedit'
+    mock_os_system = mocker.patch('os.system')
+    itm_nc.onecmd('config edit')
+    assert mock_os_system.call_count == 1
+
+
+###
+#
+# test config and settings other methods
+#
+###
+def test_load_config(mocker):
+    prompt = str(uuid.uuid1())
+    configstring = '[settings]\nprompt={}\n'.format(prompt)
+    itm = itm_with_config(mocker, configstring)
+    assert itm.prompt == prompt
 
 def test_set_string():
     itm = tm.InteractiveTomcatManager()
@@ -142,9 +253,6 @@ def test_set_with_invalid_param():
 def test__change_setting_hook():
     # make sure the hook gets called
     pass
-
-
-
 
 SETTINGS_SUCCESSFUL = [
     ('prompt=tm>', 'tm>'),

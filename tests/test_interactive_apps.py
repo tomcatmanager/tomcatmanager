@@ -38,30 +38,6 @@ def get_itm(tms):
     itm.onecmd_plus_hooks(args)
     return itm
 
-HELP_COMMANDS = [
-    'connect',
-    'which',
-    'deploy',
-    'redeploy',
-    'undeploy',
-    'start',
-    'stop',
-    'reload',
-    'restart',
-    'sessions',
-    'expire',
-    'list',
-]
-@pytest.mark.parametrize('command', HELP_COMMANDS)
-def test_command_help(tomcat_manager_server, command):
-    itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.error
-    itm.onecmd_plus_hooks('{} -h'.format(command))
-    assert itm.exit_code == itm.exit_codes.usage
-
-    itm.exit_code = itm.exit_codes.error
-    itm.onecmd_plus_hooks('{} --help'.format(command))
-    assert itm.exit_code == itm.exit_codes.usage
 
 ###
 #
