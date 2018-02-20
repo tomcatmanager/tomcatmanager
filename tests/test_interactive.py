@@ -26,7 +26,6 @@ import uuid
 import unittest.mock as mock
 import tempfile
 import os
-import getpass
 
 import pytest
 
