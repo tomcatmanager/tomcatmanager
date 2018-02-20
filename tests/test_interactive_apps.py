@@ -79,7 +79,7 @@ LIST_ARGV_BAD = [
 def test_list_parse_args_failure(argv):
     itm = tm.InteractiveTomcatManager()
     with pytest.raises(SystemExit):
-        args = itm.parse_args(itm.list_parser, argv)
+        itm.parse_args(itm.list_parser, argv)
     assert itm.exit_code == itm.exit_codes.usage
 
 @pytest.mark.parametrize('raw', ['', '-r', '--raw'])
@@ -94,7 +94,7 @@ def test_list_parse_args_failure(argv):
 def test_list_parse_args(raw, state, sort):
     itm = tm.InteractiveTomcatManager()
     argv = '{} {} {}'.format(raw, state, sort)
-    args = itm.parse_args(itm.list_parser, argv)
+    itm.parse_args(itm.list_parser, argv)
     assert itm.exit_code == itm.exit_codes.success
 
 def test_list_sort_by_state(tomcat_manager_server, mock_apps, capsys):
