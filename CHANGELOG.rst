@@ -8,7 +8,9 @@ develop
 
 **New**
 
-- You can now deploy applications via a context xml file
+- You can now deploy applications via a context xml file. A new
+  interactive command ``deploy context`` and a new method
+  ``deploy_servercontext()`` provide this capability.
 
 **Changed**
 
