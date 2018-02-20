@@ -367,9 +367,9 @@ Show one or more settings and their values.
 [setting]  Optional name of the setting to show the value for. If omitted
            show the values of all settings.""")
 
-    def do_settings(self, args):
+    def do_settings(self, cmdline):
         """Synonym for 'show' command."""
-        self.do_show(args)
+        self.do_show(cmdline)
 
     def help_settings(self):
         """Show help for the 'settings' command."""
@@ -573,6 +573,7 @@ Change a setting.
     )
 
     def do_connect(self, cmdline):
+        """Connect to a tomcat manager instance."""
         url = None
         user = None
         password = None
@@ -652,7 +653,7 @@ Change a setting.
     @requires_connection
     def do_which(self, cmdline):
         """Show the url of the tomcat server you are connected to."""
-        args = self.parse_args(self.which_parser, cmdline)
+        self.parse_args(self.which_parser, cmdline)
         self.poutput(self._which_server())
 
     def help_which(self):
@@ -881,7 +882,7 @@ Change a setting.
         'idle',
         help='Expire sessions idle for more than this number of minutes. Use 0 to expire all sessions.',
     )
-    
+
     @requires_connection
     def do_expire(self, cmdline):
         """Expire idle sessions."""
@@ -1100,20 +1101,20 @@ Change a setting.
     # miscellaneous user accessible commands
     #
     ###
-    def do_exit(self, args):
+    def do_exit(self, cmdline):
         """Exit the interactive command prompt."""
         self.exit_code = self.exit_codes.success
         return self._STOP_AND_EXIT
 
-    def do_quit(self, args):
+    def do_quit(self, cmdline):
         """Synonym for the 'exit' command."""
         return self.do_exit(args)
 
-    def do_eof(self, args):
+    def do_eof(self, cmdline):
         """Exit on the end-of-file character."""
         return self.do_exit(args)
 
-    def do_version(self, args):
+    def do_version(self, cmdline):
         """Show version information."""
         self.exit_code = self.exit_codes.success
         self.poutput(tm.VERSION_STRING)
@@ -1125,7 +1126,7 @@ Change a setting.
 
 Show version information.""")
 
-    def do_exit_code(self, args):
+    def do_exit_code(self, cmdline):
         """Show the value of the exit_code variable."""
         # don't set the exit code here, just show it
         self.poutput(self.exit_code)
@@ -1137,7 +1138,7 @@ Show version information.""")
 
 Show the value of the exit_code variable, similar to $? in ksh/bash.""")
 
-    def do_license(self, args):
+    def do_license(self, cmdline):
         """Show license information."""
         self.exit_code = self.exit_codes.success
         self.poutput("""

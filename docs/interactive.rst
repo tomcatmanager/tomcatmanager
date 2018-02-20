@@ -158,7 +158,8 @@ the ``Context`` element so it's available at ``https://www.example.com/sample``.
   - The ``path`` attribute of the ``Context`` element is ignored by the Tomcat
     Server when deploying from a context file.
 
-  - If the ``Context`` element specifies a ``docBase`` attribute, it will be      used even if you specify a war file on the command line.
+  - If the ``Context`` element specifies a ``docBase`` attribute, it will be
+    used even if you specify a war file on the command line.
 
 
 Parallel Deployment

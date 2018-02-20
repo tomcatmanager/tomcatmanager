@@ -147,9 +147,13 @@ class TestApps(TestManagerBase):
         with pytest.raises(ValueError):
             r = tomcat.deploy_servercontext('', tomcat_manager_server.contextfile)
 
-    def test_deploy_servercontext_contextfile_only(self, tomcat, tomcat_manager_server):
+    def test_deploy_servercontext_contextfile_and_war_only(self, tomcat, tomcat_manager_server):
         with pytest.raises(ValueError):
-            r = tomcat.deploy_servercontext(None, tomcat_manager_server.contextfile)
+            r = tomcat.deploy_servercontext(
+                None,
+                tomcat_manager_server.contextfile,
+                warfile=tomcat_manager_server.warfile
+            )
         with pytest.raises(ValueError):
             r = tomcat.deploy_servercontext('', tomcat_manager_server.contextfile)
 

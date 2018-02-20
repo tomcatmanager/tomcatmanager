@@ -145,7 +145,7 @@ def test_connect_config(tomcat_manager_server, capsys, mocker):
     itm = itm_with_config(mocker, configstring)
     cmdline = 'connect {}'.format(configname)
     itm.onecmd_plus_hooks(cmdline)
-    assert itm.exit_code == itm.exit_codes.success    
+    assert itm.exit_code == itm.exit_codes.success
     assert_connected_to(itm, tomcat_manager_server['url'], capsys)
 
 def test_connect_config_password_prompt(tomcat_manager_server, capsys, mocker):
@@ -161,9 +161,9 @@ def test_connect_config_password_prompt(tomcat_manager_server, capsys, mocker):
     cmdline = 'connect {}'.format(configname)
     itm.onecmd_plus_hooks(cmdline)
     assert mock_getpass.call_count == 1
-    assert itm.exit_code == itm.exit_codes.success    
+    assert itm.exit_code == itm.exit_codes.success
     assert_connected_to(itm, tomcat_manager_server['url'], capsys)
-    
+
 def test_which(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
     itm.exit_code = itm.exit_codes.error
