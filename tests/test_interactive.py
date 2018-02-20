@@ -337,7 +337,7 @@ NOT_BOOLEANS = [
     10,
     'ace',
 ]
-@pytest.mark.parametrize('param', BOOLEANS)
+@pytest.mark.parametrize('param', NOT_BOOLEANS)
 def test_convert_to_boolean_invalid(param):
     itm = tm.InteractiveTomcatManager()
     with pytest.raises(ValueError):
@@ -354,3 +354,93 @@ LITERALS = [
 def test_pythonize(param, value):
     itm = tm.InteractiveTomcatManager()
     assert itm._pythonize(param) == value
+
+
+###
+#
+# test informational commands
+#
+###
+NOARGS_INFO_COMMANDS = [
+    'serverinfo',
+    'status',
+    'vminfo',
+    'sslconnectorciphers',
+    'threaddump',
+    'findleakers',
+]
+@pytest.mark.parametrize('cmdname', NOARGS_INFO_COMMANDS)
+def test_info_commands_noargs(tomcat_manager_server, cmdname):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.success
+    itm.onecmd_plus_hooks('{} argument'.format(cmdname))
+    assert itm.exit_code == itm.exit_codes.usage
+
+def test_serverinfo(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('serverinfo')
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.exit_codes.success
+    assert 'Tomcat Version: ' in out
+    assert 'JVM Version: ' in out
+
+def test_status(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('status')
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.exit_codes.success
+    assert '</status>' in out
+    assert '</jvm>' in out
+    assert '</connector>' in out
+
+def test_vminfo(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('vminfo')
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.exit_codes.success
+    assert 'Runtime information:' in out
+    assert 'architecture:' in out
+    assert 'System properties:' in out
+
+def test_sslconnectorciphers(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('sslconnectorciphers')
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.exit_codes.success
+    assert 'Connector' in out
+    assert 'SSL' in out
+
+def test_threaddump(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('threaddump')
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.exit_codes.success
+    assert 'java.lang.Thread.State' in out
+
+def test_resources(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('resources')
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.exit_codes.success
+    assert 'UserDatabase: ' in out
+
+def test_resources_class_name(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.success
+    # this class has to be hand coded in the mock server
+    itm.onecmd('resources com.example.Nothing')
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.exit_codes.error
+    assert not out
+
+def test_findleakers(tomcat_manager_server):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.exit_codes.error
+    itm.onecmd_plus_hooks('findleakers')
+    assert itm.exit_code == itm.exit_codes.success

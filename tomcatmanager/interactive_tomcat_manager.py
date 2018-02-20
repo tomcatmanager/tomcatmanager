@@ -972,138 +972,128 @@ Change a setting.
     # information from the server.
     #
     ###
+    serverinfo_parser = argparse.ArgumentParser(
+        prog='serverinfo',
+        description='show information about the tomcat server',
+    )
     @requires_connection
-    def do_serverinfo(self, args):
-        """Show information about the Tomcat server."""
-        if args:
-            self.help_serverinfo()
-            self.exit_code = self.exit_codes.usage
-        else:
-            r = self.docmd(self.tomcat.server_info)
-            self.poutput(r.result)
+    def do_serverinfo(self, cmdline):
+        """Show information about the tomcat server."""
+        self.parse_args(self.serverinfo_parser, cmdline)
+        r = self.docmd(self.tomcat.server_info)
+        self.poutput(r.result)
 
     def help_serverinfo(self):
-        """Show help for the 'serverinfo' class."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: serverinfo
+        """Show help for the 'serverinfo' command."""
+        self.show_help_from(self.serverinfo_parser)
 
-Show information about the Tomcat server.""")
 
+    status_parser = argparse.ArgumentParser(
+        prog='status',
+        description='show server status information in xml format',
+    )
     @requires_connection
-    def do_status(self, args):
+    def do_status(self, cmdline):
         """Show server status information in xml format."""
-        if args:
-            self.help_status()
-            self.exit_code = self.exit_codes.usage
-        else:
-            r = self.docmd(self.tomcat.status_xml)
-            root = xml.dom.minidom.parseString(r.status_xml)
-            self.poutput(root.toprettyxml(indent='   '))
+        self.parse_args(self.status_parser, cmdline)
+        r = self.docmd(self.tomcat.status_xml)
+        root = xml.dom.minidom.parseString(r.status_xml)
+        self.poutput(root.toprettyxml(indent='   '))
 
     def help_status(self):
         """Show help for the 'status' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: status
+        self.show_help_from(self.status_parser)
 
-Show server status information in xml format.""")
 
+    vminfo_parser = argparse.ArgumentParser(
+        prog='vminfo',
+        description='show diagnostic information about the jvm',
+    )
     @requires_connection
-    def do_vminfo(self, args):
+    def do_vminfo(self, cmdline):
         """Show diagnostic information about the jvm."""
-        if args:
-            self.help_vminfo()
-            self.exit_code = self.exit_codes.usage
-        else:
-            response = self.docmd(self.tomcat.vm_info)
-            self.poutput(response.vm_info)
+        self.parse_args(self.vminfo_parser, cmdline)
+        r = self.docmd(self.tomcat.vm_info)
+        self.poutput(r.vm_info)
 
     def help_vminfo(self):
         """Show help for the 'vminfo' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: vminfo
+        self.show_help_from(self.vminfo_parser)
 
-Show diagnostic information about the jvm.""")
 
+    sslconnectorciphers_parser = argparse.ArgumentParser(
+        prog='sslconnectorciphers',
+        description='show SSL/TLS ciphers configured for each connector',
+    )
     @requires_connection
-    def do_sslconnectorciphers(self, args):
+    def do_sslconnectorciphers(self, cmdline):
         """Show SSL/TLS ciphers configured for each connector."""
-        if args:
-            self.help_sslconnectorciphers()
-            self.exit_code = self.exit_codes.usage
-        else:
-            response = self.docmd(self.tomcat.ssl_connector_ciphers)
-            self.poutput(response.ssl_connector_ciphers)
+        self.parse_args(self.sslconnectorciphers_parser, cmdline)
+        r = self.docmd(self.tomcat.ssl_connector_ciphers)
+        self.poutput(r.ssl_connector_ciphers)
 
     def help_sslconnectorciphers(self):
         """Show help for the 'sslconnectorciphers' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: sslconnectorciphers
+        self.show_help_from(self.sslconnectorciphers_parser)
 
-Show SSL/TLS ciphers configured for each connector.""")
 
+    threaddump_parser = argparse.ArgumentParser(
+        prog='threaddump',
+        description='show a jvm thread dump',
+    )
     @requires_connection
-    def do_threaddump(self, args):
+    def do_threaddump(self, cmdline):
         """Show a jvm thread dump."""
-        if args:
-            self.help_threaddump()
-            self.exit_code = self.exit_codes.usage
-        else:
-            response = self.docmd(self.tomcat.thread_dump)
-            self.poutput(response.thread_dump)
+        self.parse_args(self.threaddump_parser, cmdline)
+        r = self.docmd(self.tomcat.thread_dump)
+        self.poutput(r.thread_dump)
 
     def help_threaddump(self):
         """Show help for the 'threaddump' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: threaddump
+        self.show_help_from(self.threaddump_parser)
 
-Show a jvm thread dump.""")
 
+    resources_parser = argparse.ArgumentParser(
+        prog='resources',
+        description='show global JNDI resources configured in tomcat',
+    )
+    resources_parser.add_argument(
+        'class_name',
+        nargs='?',
+        help='Optional fully qualified java class name of the resource type to show.',
+    )
     @requires_connection
-    def do_resources(self, args):
+    def do_resources(self, cmdline):
         """Show global JNDI resources configured in Tomcat."""
-        if len(args.split()) in [0, 1]:
-            try:
-                # this nifty line barfs if there are other than 1 argument
-                type_, = args.split()
-            except ValueError:
-                type_ = None
-            r = self.docmd(self.tomcat.resources, type_)
+        args = self.parse_args(self.resources_parser, cmdline)
+        r = self.docmd(self.tomcat.resources, args.class_name)
+        if r.resources:
             for resource, classname in iter(sorted(r.resources.items())):
                 self.poutput('{}: {}'.format(resource, classname))
         else:
-            self.help_resources()
-            self.exit_code = self.exit_codes.usage
+            self.exit_code = self.exit_codes.error
 
     def help_resources(self):
         """Show help for the 'resources' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: resources [class_name]
+        self.show_help_from(self.resources_parser)
 
-Show global JNDI resources configured in Tomcat.
 
-class_name  Optional fully qualified java class name of the resource type
-            to show.""")
-
+    findleakers_parser = argparse.ArgumentParser(
+        prog='findleakers',
+        description='show tomcat applications that leak memory',
+        epilog='WARNING: this triggers a full garbage collection on the server. Use with extreme caution on production systems.'
+    )
     @requires_connection
-    def do_findleakers(self, args):
+    def do_findleakers(self, cmdline):
         """Show tomcat applications that leak memory."""
-        if args:
-            self.help_findleakers()
-            self.exit_code = self.exit_codes.usage
-        else:
-            response = self.docmd(self.tomcat.find_leakers)
-            for leaker in response.leakers:
-                self.poutput(leaker)
+        self.parse_args(self.findleakers_parser, cmdline)
+        r = self.docmd(self.tomcat.find_leakers)
+        for leaker in r.leakers:
+            self.poutput(leaker)
 
     def help_findleakers(self):
         """Show help for the 'findleakers' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: findleakers
-
-Show tomcat applications that leak memory.
-
-WARNING: this triggers a full garbage collection on the server. Use with
-extreme caution on production systems.""")
+        self.show_help_from(self.findleakers_parser)
 
     ###
     #
