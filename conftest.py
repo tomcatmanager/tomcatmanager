@@ -51,11 +51,11 @@ def tomcat_manager_server(request):
 @pytest.fixture(scope='module')
 def tomcat(tomcat_manager_server):
     tomcat = tm.TomcatManager()
-    r = tomcat.connect(
-            tomcat_manager_server.url,
-            tomcat_manager_server.user,
-            tomcat_manager_server.password
-        )
+    tomcat.connect(
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password
+    )
     return tomcat
 
 @pytest.fixture(scope='module')
