@@ -272,13 +272,80 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 out += ' as {}'.format(self.tomcat.user)
         return out
 
+    @cmd2.with_argument_list
+    def do_help(self, arglist):
+        if arglist:
+            # they want help on a specific command, use cmd2 for that
+            super().do_help(arglist)
+        else:
+            #super().do_help(arglist)
+
+            # show a custom list of commands, organized by category
+            help = []
+            help.append('tomcat-manager is a command line tool for managing a Tomcat server')
+
+            help = self._help_add_header(help, 'Connecting to a Tomcat server')
+            help.append('connect   {}'.format(self.do_connect.__doc__))
+            help.append('which     {}'.format(self.do_which.__doc__))
+
+            help = self._help_add_header(help, 'Managing Applications')
+            help.append('list            {}'.format(self.do_list.__doc__))
+            help.append('deploy local    {}'.format(self.deploy_local.__doc__))
+            help.append('deploy server   {}'.format(self.deploy_server.__doc__))
+            help.append('deploy context  {}'.format(self.deploy_context.__doc__))
+            help.append('redeploy        Undeploy an existing app and deploy a new one in its place.')
+            help.append('undeploy        {}'.format(self.do_undeploy.__doc__))
+            help.append('start           {}'.format(self.do_start.__doc__))
+            help.append('stop            {}'.format(self.do_stop.__doc__))
+            help.append('restart         {}'.format(self.do_restart.__doc__))
+            help.append('  reload        Synonym for restart.')
+            help.append('sessions        {}'.format(self.do_sessions.__doc__))
+            help.append('expire          {}'.format(self.do_expire.__doc__))
+
+            help = self._help_add_header(help, 'Server Information')
+            help.append('findleakers          {}'.format(self.do_findleakers.__doc__))
+            help.append('resources            {}'.format(self.do_resources.__doc__))
+            help.append('serverinfo           {}'.format(self.do_serverinfo.__doc__))
+            help.append('sslconnectorciphers  {}'.format(self.do_sslconnectorciphers.__doc__))
+            help.append('status               {}'.format(self.do_status.__doc__))
+            help.append('threaddump           {}'.format(self.do_threaddump.__doc__))
+            help.append('vminfo               {}'.format(self.do_vminfo.__doc__))
+
+            help = self._help_add_header(help, 'Settings, configuration, and tools')
+            help.append('config       {}'.format(self.do_config.__doc__))
+            help.append('edit         Edit a file in the preferred text editor.')
+            help.append('exit_code    {}'.format(self.do_exit_code.__doc__))
+            help.append('history      View, run, edit, and save previously entered commands.')
+            help.append('py           Execute python commands.')
+            help.append('pyscript     Run a file containing a python script.')
+            help.append('set          {}'.format(self.do_set.__doc__))
+            help.append('  settings   Synonym for set.')
+            help.append('shell        Execute a command in the operating system shell.')
+            help.append('shortcuts    Show shortcuts for other commands.')
+
+            help = self._help_add_header(help, 'Other')
+            help.append('exit     Exit this program.')
+            help.append('  quit   Synonym for \'exit\'')
+            help.append('help     Show description and usage of a command.')
+            help.append('version  Show the version number of this program.')
+            help.append('license  Show the MIT license.')
+
+            for line in help:
+                self.poutput(line)
+
+    def _help_add_header(self, help, header):
+        help.append('')
+        help.append(header)
+        help.append('=' * 60)
+        return help
+
     ###
     #
     # user accessable commands for configuration and settings
     #
     ###
     def do_config(self, args):
-        """Show the location of the user configuration file."""
+        """Edit or show the location of the user configuration file."""
         if len(args.split()) == 1:
             action = args.split()[0]
             if action == 'file':
@@ -384,11 +451,7 @@ Show one or more settings and their values.
 
     # TODO update to match changes in cmd2 version 0.8.0
     def do_set(self, arg):
-        """
-        Change a setting.
-
-        Overrides cmd2.Cmd.do_set()
-        """
+        """Show and change program settings."""
         if arg:
             config = EvaluatingConfigParser()
             setting_string = "[settings]\n{}".format(arg)
@@ -676,7 +739,7 @@ Change a setting.
                        version=args.version, update=update)
 
     def deploy_server(self, args, update=False):
-        """Deploy a server war file to the tomcat server."""
+        """Deploy a war file to the tomcat server."""
         self.exit_code = self.exit_codes.success
         self.docmd(self.tomcat.deploy_serverwar, args.path, args.warfile,
                    version=args.version, update=update)
@@ -785,7 +848,7 @@ Change a setting.
 
     @requires_connection
     def do_start(self, cmdline):
-        """Start a tomcat application that has been deployed but isn't running."""
+        """Start a deployed tomcat application that isn't running."""
         args = self.parse_args(self.start_parser, cmdline)
         self.docmd(self.tomcat.start, args.path, args.version)
 
@@ -1109,11 +1172,11 @@ Change a setting.
 
     def do_quit(self, cmdline):
         """Synonym for the 'exit' command."""
-        return self.do_exit(args)
+        return self.do_exit(cmdline)
 
     def do_eof(self, cmdline):
         """Exit on the end-of-file character."""
-        return self.do_exit(args)
+        return self.do_exit(cmdline)
 
     def do_version(self, cmdline):
         """Show version information."""
@@ -1128,7 +1191,7 @@ Change a setting.
 Show version information.""")
 
     def do_exit_code(self, cmdline):
-        """Show the value of the exit_code variable."""
+        """Show a number indicating the status of the previous command."""
         # don't set the exit code here, just show it
         self.poutput(self.exit_code)
 
@@ -1137,7 +1200,13 @@ Show version information.""")
         self.exit_code = self.exit_codes.success
         self.poutput("""Usage: exit_code
 
-Show the value of the exit_code variable, similar to $? in ksh/bash.""")
+Show the value of the exit_code variable, similar to $? in ksh/bash.
+
+The codes have the following meanings:
+
+""")
+        for number, name in self.EXIT_CODES.items():
+            self.poutput('    {:3}  {}'.format(number, name.replace('_', ' ')))
 
     def do_license(self, cmdline):
         """Show license information."""
