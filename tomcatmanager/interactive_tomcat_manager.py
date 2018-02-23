@@ -274,6 +274,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     @cmd2.with_argument_list
     def do_help(self, arglist):
+        """Show available commands, or help on a specific command."""
         if arglist:
             # they want help on a specific command, use cmd2 for that
             super().do_help(arglist)
@@ -286,7 +287,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help_.append('connect   {}'.format(self.do_connect.__doc__))
             help_.append('which     {}'.format(self.do_which.__doc__))
 
-            help_ = self._help_add_header(help_, 'Managing Applications')
+            help_ = self._help_add_header(help_, 'Managing applications')
             help_.append('list            {}'.format(self.do_list.__doc__))
             help_.append('deploy local    {}'.format(self.deploy_local.__doc__))
             help_.append('deploy server   {}'.format(self.deploy_server.__doc__))
@@ -296,11 +297,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help_.append('start           {}'.format(self.do_start.__doc__))
             help_.append('stop            {}'.format(self.do_stop.__doc__))
             help_.append('restart         {}'.format(self.do_restart.__doc__))
-            help_.append('  reload        Synonym for restart.')
+            help_.append('  reload        Synonym for \'restart\'.')
             help_.append('sessions        {}'.format(self.do_sessions.__doc__))
             help_.append('expire          {}'.format(self.do_expire.__doc__))
 
-            help_ = self._help_add_header(help_, 'Server Information')
+            help_ = self._help_add_header(help_, 'Server information')
             help_.append('findleakers          {}'.format(self.do_findleakers.__doc__))
             help_.append('resources            {}'.format(self.do_resources.__doc__))
             help_.append('serverinfo           {}'.format(self.do_serverinfo.__doc__))
@@ -317,14 +318,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help_.append('py           Execute python commands.')
             help_.append('pyscript     Run a file containing a python script.')
             help_.append('set          {}'.format(self.do_set.__doc__))
-            help_.append('  settings   Synonym for set.')
+            help_.append('  settings   Synonym for \'set\'.')
             help_.append('shell        Execute a command in the operating system shell.')
             help_.append('shortcuts    Show shortcuts for other commands.')
 
             help_ = self._help_add_header(help_, 'Other')
             help_.append('exit     Exit this program.')
-            help_.append('  quit   Synonym for \'exit\'')
-            help_.append('help     Show description and usage of a command.')
+            help_.append('  quit   Synonym for \'exit\'.')
+            help_.append('help     {}'.format(self.do_help.__doc__))
             help_.append('version  Show the version number of this program.')
             help_.append('license  Show the MIT license.')
 
