@@ -37,14 +37,15 @@ You now have isolated virtualenvs just for tomcatmanager for each of the
 three python versions. This table shows commands on the left, and which
 virtualenv it will utilize.
 
-=======    ======  ================
+=========  ======  =================
 Command    python  virtualenv
-=======    ======  =================
+=========  ======  =================
 python     3.6.4   tomcatmanager-3.6
 python3    3.6.4   tomcatmanager-3.6
 python3.6  3.6.4   tomcatmanager-3.6
 python3.5  3.5.4   tomcatmanager-3.5
 python3.4  3.4.7   tomcatmanager-3.4
+=========  ======  =================
 
 Same pattern for ``pip`` and other stuff installed with python.
 
