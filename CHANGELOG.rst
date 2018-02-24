@@ -12,6 +12,10 @@ develop
   interactive command ``deploy context`` and a new method
   ``deploy_servercontext()`` provide this capability.
 
+**Improved**
+
+- Better help messages in the interactive ``tomcat-manager`` tool
+
 **Changed**
 
 - deploy() has been replaced by three new methods:

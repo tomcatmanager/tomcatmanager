@@ -318,7 +318,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help_.append('py           Execute python commands.')
             help_.append('pyscript     Run a file containing a python script.')
             help_.append('set          {}'.format(self.do_set.__doc__))
-            help_.append('  settings   Synonym for \'set\'.')
+            help_.append('show         {}'.format(self.do_show.__doc__))
+            help_.append('  settings   Synonym for \'show\'.')
             help_.append('shell        Execute a command in the operating system shell.')
             help_.append('shortcuts    Show shortcuts for other commands.')
 
@@ -343,6 +344,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # user accessable commands for configuration and settings
     #
     ###
+    # TODO add argparser
     def do_config(self, args):
         """Edit or show the location of the user configuration file."""
         if len(args.split()) == 1:
@@ -393,23 +395,23 @@ action is one of the following:
   file  show the location of the user configuration file
   edit  edit the user configuration file""")
 
-    # TODO show has been removed in cmd2 version 0.8.0
-    def do_show(self, arg, opts=None):
-        """
-        Show all settings or a specific setting.
+    show_parser = argparse.ArgumentParser(
+        prog='show',
+        description='Show all settings or a specific setting.',
+    )
+    show_parser.add_argument(
+        'setting',
+        nargs='?',
+        help='Name of the setting to show the value for. If omitted show the values of all settings.',
+    )
+    def do_show(self, cmdline):
+        """Show all settings or a specific setting."""
+        args = self.parse_args(self.show_parser, cmdline)
 
-        Overrides cmd2.Cmd.do_show()
-        """
-        if len(arg.split()) > 1:
-            self.help_show()
-            self.exit_code = self.exit_codes.error
-            return
-
-        param = arg.strip().lower()
         result = {}
         maxlen = 0
         for setting in self.settable:
-            if (not param) or (setting == param):
+            if (not args.setting) or (setting == args.setting):
                 val = str(getattr(self, setting))
                 result[setting] = '{}={}'.format(setting, self._pythonize(val))
                 maxlen = max(maxlen, len(result[setting]))
@@ -421,36 +423,32 @@ action is one of the following:
                                               self.settable[setting]))
             self.exit_code = self.exit_codes.success
         else:
-            self.perror("unknown setting: '{}'".format(param))
+            self.perror("unknown setting: '{}'".format(args.setting))
             self.exit_code = self.exit_codes.error
 
     def help_show(self):
         """Show help for the 'show' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: show [setting]
+        self.show_help_from(self.show_parser)
 
-Show one or more settings and their values.
-
-[setting]  Optional name of the setting to show the value for. If omitted
-           show the values of all settings.""")
-
+    settings_parser = argparse.ArgumentParser(
+        prog='settings',
+        description='Show all settings or a specific setting. Synonym for \'show\'.',
+    )
+    settings_parser.add_argument(
+        'setting',
+        nargs='?',
+        help='Name of the setting to show the value for. If omitted show the values of all settings.',
+    ) 
     def do_settings(self, cmdline):
         """Synonym for 'show' command."""
         self.do_show(cmdline)
 
     def help_settings(self):
         """Show help for the 'settings' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: settings [setting]
+        self.show_help_from(self.settings_parser)
 
-Show one or more settings and their values.
-
-[setting]  Optional name of the setting to show the value for. If omitted
-           show the values of all settings.""")
-
-    # TODO update to match changes in cmd2 version 0.8.0
     def do_set(self, arg):
-        """Show and change program settings."""
+        """Change program settings."""
         if arg:
             config = EvaluatingConfigParser()
             setting_string = "[settings]\n{}".format(arg)
@@ -475,7 +473,8 @@ Show one or more settings and their values.
                     self.perror("unknown setting: '{}'".format(param_name))
                     self.exit_code = self.exit_codes.error
         else:
-            self.do_show(arg, None)
+            self.perror('invalid syntax: try {setting}={value}')
+            self.exit_code = self.exit_codes.usage
 
     def help_set(self):
         """Show help for the 'set' command."""
@@ -890,7 +889,7 @@ Change a setting.
 
     restart_parser = _path_version_parser(
         'restart',
-        'Start and stop a tomcat application. Synonym for reload.',
+        'Start and stop a tomcat application. Synonym for \'reload\'.',
     )
 
     @requires_connection
@@ -902,7 +901,7 @@ Change a setting.
         """Show help for the 'restart' command."""
         self.show_help_from(self.restart_parser)
 
-
+    # TODO see if we can use _path_version_parser
     sessions_parser = argparse.ArgumentParser(
         prog='sessions',
         description='Show active sessions for a tomcat application.',
