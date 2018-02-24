@@ -23,14 +23,8 @@ Unreleased
 
 **Changed**
 
-- ``deploy()`` has been replaced by three new methods:
-   - ``deploy_localwar()``
-   - ``deploy_serverwar()``
-   - ``deploy_servercontext()``
-- Interactive deploy command syntax has changed:
-   - Can now deploy context xml files
-   - Specify version with ``-v`` or ``--version`` flag instead of optional
-     positional parameter
+- ``deploy()`` has been replaced by three new methods: ``deploy_localwar()``,
+  ``deploy_serverwar()``, and ``deploy_servercontext()``.
 - Commands which use an optional version parameter now use a ``-v`` option
   to specify the version
 - Most commands now have ``-h``/``--help`` options
