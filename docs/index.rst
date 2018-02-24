@@ -60,3 +60,4 @@ And for the ultimate in flexibility, you can use the python package directly:
    package
    api/index.rst
    contributing
+   changelog
