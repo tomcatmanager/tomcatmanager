@@ -172,7 +172,7 @@ tests and for the main module::
    $ pylint --rcfile=tomcatmanager/pylintrc tomcatmanager
 
 You are welcome to use the pylint comment directives to disable certain
-messages in the code, but pull requests containing this directives will be
+messages in the code, but pull requests containing these directives will be
 carefully scrutinized.
 
 
@@ -204,28 +204,31 @@ Make a Release
 To make a release and deploy it to `PyPI
 <https://pypi.python.org/pypi>`_, do the following:
 
-1. Merge everything to be included in the release into the develop branch.
+1. Merge everything to be included in the release into the **develop** branch.
 
-2. Test
+2. Run ``tox`` to make sure the tests pass in all the supported python versions.
 
-3. Review and update CHANGELOG.rst
+3. Review and update ``CHANGELOG.rst``.
 
-4. Merge the develop branch into the master branch.
+4. Push the **develop** branch to github.
 
-5. Tag the master branch with the version number
+5. Create a pull request on github to merge the **develop** branch into **master**. Wait
+   for the checks to pass.
 
-6. Push the master branch and the tag
+6. Merge the **develop** branch into the **master** branch and close the pull request.
 
-7. Clean the build::
+7. Tag the **master** branch with the new version number, and push the tag.
+
+8. Clean the build::
 
     $ python setup.py clean --dist --eggs --pycache
     $ (cd docs && make clean)
    
-8. Build the source distribution::
+9. Build the source distribution::
 
     $ python3 setup.py sdist
 
-9. Build the wheel::
+10. Build the wheel::
 
     $ python3 setup.py bdist_wheel
 
@@ -233,4 +236,7 @@ To make a release and deploy it to `PyPI
 
     $ twine upload dist/*
 
-12. Check docs on http://tomcatmanager.readthedocs.io/en/stable/
+12. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
+    Make sure they look good.
+
+13. Switch back to the **develop** branch. Add an **Unreleased** section to the top of ``CHANGELOG.rst``. Push the change to github.
