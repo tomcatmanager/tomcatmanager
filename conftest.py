@@ -21,8 +21,10 @@ def pytest_addoption(parser):
         help='user: use to authenticate')
     parser.addoption('--password', action='store', default=None,
         help='password: use to authenticate')
-    parser.addoption('--serverwar', action='store', default=None,
-        help='serverwar: path to deployable war file on the tomcat server')
+    parser.addoption('--warfile', action='store', default=None,
+        help='warfile: path to deployable war file on the tomcat server')
+    parser.addoption('--contextfile', action='store', default=None,
+        help='contextfile: path to context.xml file on the tomcat server')
 
 ###
 #
@@ -39,7 +41,8 @@ def tomcat_manager_server(request):
         tms.url = url
         tms.user = request.config.getoption('--user')
         tms.password = request.config.getoption('--password')
-        tms.serverwar = request.config.getoption('--serverwar')
+        tms.warfile = request.config.getoption('--warfile')
+        tms.contextfile = request.config.getoption('--contextfile')
         return tms
     else:
         # go start up a fake server
@@ -48,11 +51,11 @@ def tomcat_manager_server(request):
 @pytest.fixture(scope='module')
 def tomcat(tomcat_manager_server):
     tomcat = tm.TomcatManager()
-    r = tomcat.connect(
-            tomcat_manager_server.url,
-            tomcat_manager_server.user,
-            tomcat_manager_server.password
-        )
+    tomcat.connect(
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password
+    )
     return tomcat
 
 @pytest.fixture(scope='module')

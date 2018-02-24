@@ -22,12 +22,12 @@ This project uses tox for testing, and you will need several versions of
 python, with a virtualenv for each one::
 
     $ cd tomcatmanager
-    $ pyenv install 3.6.2
-    $ pyenv virtualenv -p python3.6 3.6.2 tomcatmanager-3.6
-    $ pyenv install 3.5.3
-    $ pyenv virtualenv -p python3.5 3.5.3 tomcatmanager-3.5
-    $ pyenv install 3.4.6
-    $ pyenv virtualenv -p python3.4 3.4.6 tomcatmanager-3.4
+    $ pyenv install 3.6.4
+    $ pyenv virtualenv -p python3.6 3.6.4 tomcatmanager-3.6
+    $ pyenv install 3.5.4
+    $ pyenv virtualenv -p python3.5 3.5.4 tomcatmanager-3.5
+    $ pyenv install 3.4.7
+    $ pyenv virtualenv -p python3.4 3.4.7 tomcatmanager-3.4
 
 Now set pyenv to make all three of those available at the same time::
 
@@ -37,14 +37,15 @@ You now have isolated virtualenvs just for tomcatmanager for each of the
 three python versions. This table shows commands on the left, and which
 virtualenv it will utilize.
 
-=======    ======  ================
+=========  ======  =================
 Command    python  virtualenv
-=======    ======  =================
-python     3.6.2   tomcatmanager-3.6
-python3    3.6.2   tomcatmanager-3.6
-python3.6  3.6.2   tomcatmanager-3.6
-python3.5  3.5.3   tomcatmanager-3.5
-python3.4  3.4.6   tomcatmanager-3.4
+=========  ======  =================
+python     3.6.4   tomcatmanager-3.6
+python3    3.6.4   tomcatmanager-3.6
+python3.6  3.6.4   tomcatmanager-3.6
+python3.5  3.5.4   tomcatmanager-3.5
+python3.4  3.4.7   tomcatmanager-3.4
+=========  ======  =================
 
 Same pattern for ``pip`` and other stuff installed with python.
 
@@ -121,29 +122,58 @@ You can run all the tests against a real Tomcat Server that you have running
 by utilizing the following command line options::
 
    $ pytest --url=http://localhost:8080/manager --user=ace \
-   --password=newenglandclamchowder --serverwar=/tmp/sample.war
+   --password=newenglandclamchowder --warfile=/tmp/sample.war \
+   --contextfile=/tmp/context.xml
 
 Running the test suite will deploy and undeploy an app dozens of times, and
 will definitely trigger garbage collection, so you might not want to run it
-against a production server. When an app is deployed, it will be at the path
-returned by the ``safe_path`` fixture in ``conftest.py``. You can modify that
-fixture if for some reason you need to deploy at a different path.
+against a production server. When an app is deployed, it will be at the
+path returned by the ``safe_path`` fixture in ``conftest.py``. You can
+modify that fixture if for some reason you need to deploy at a different
+path.
 
-The ``url``, ``user``, and ``password`` options describe the location anc
-credentials for the Tomcat server you wish to use. The ``serverwar`` parameter
-is the full path to a war file on the server. There is a simple war file in
-``tests/war/sample.war`` which you can copy to the server. If you don't copy
-the war file, or if you don't specify the ``serverwar`` parameter, or the path
-you provide doesn't point to a valid war file, several of the tests will fail.
+The ``url``, ``user``, and ``password`` options describe the location and
+credentials for the Tomcat server you wish to use.
+
+The ``warfile`` parameter is the full path to a war file on the server.
+There is a simple war file in ``tests/war/sample.war`` which you can copy
+to the server if you don't have a war file you want to use. If you don't
+copy the war file, or if you don't specify the ``warfile`` parameter, or
+the path you provide doesn't point to a valid war file, several of the
+tests will fail.
+
+The ``contextfile`` parameter is the full path to a context XML file, which
+gives you an alternative way to specify additional deployment information
+to the Tomcat Server. There is a simple context file in
+``tests/war/context.xml`` which you can copy to the server if you don't
+have a context file you want to use. If you don't copy the context file, or
+if you don't specify the ``contextfile`` parameter, or the path you provide
+doesn't point to a valid context file, several of the tests will fail. The
+path in your context file will be ignored, but you must specify a
+docBase attribute which points to a real war file.
 
 .. note::
 
    If you test against a real Tomcat Server, you should not use the
-   ``pytest-xdist`` plugin to parallelize testing across multiple CPUs or many
-   platforms. Many of the tests depend on deploying and undeploying an app at a
-   specific path, and that path is shared across the entire test suite. It
-   wouldn't help much anyway because the testing would be constrained by the
-   speed of the Tomcat Server.
+   ``pytest-xdist`` plugin to parallelize testing across multiple CPUs or
+   many platforms. Many of the tests depend on deploying and undeploying an
+   app at a specific path, and that path is shared across the entire test
+   suite. It wouldn't help much anyway because the testing is constrained
+   by the speed of the Tomcat Server.
+
+
+Code Quality
+------------
+
+Use ``pylint`` to check code quality. There is a pylint config file for the
+tests and for the main module::
+
+   $ pylint --rcfile=tests/pylintrc tests
+   $ pylint --rcfile=tomcatmanager/pylintrc tomcatmanager
+
+You are welcome to use the pylint comment directives to disable certain
+messages in the code, but pull requests containing this directives will be
+carefully scrutinized.
 
 
 Documentation
@@ -164,8 +194,8 @@ Type::
    $ cd docs
    $ make livehtml
 
-Then point your browser at `<http://localhost:8000>`_ to see the documentation
-automatically rebuilt as you save your changes.
+Then point your browser at `<http://localhost:8000>`_ to see the
+documentation automatically rebuilt as you save your changes.
 
 
 Make a Release

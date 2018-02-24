@@ -32,7 +32,6 @@ import getpass
 import xml.dom.minidom
 import ast
 import configparser
-import shlex
 from http.client import responses
 import argparse
 
@@ -53,7 +52,17 @@ def requires_connection(func):
             # print the message
             self.exit_code = self.exit_codes.error
             self.perror('not connected')
+    _requires_connection.__doc__ = func.__doc__
     return _requires_connection
+
+def _path_version_parser(cmdname, helpmsg):
+    """Construct an argparser using the given parameters"""
+    parser = argparse.ArgumentParser(prog=cmdname, description=helpmsg)
+    parser.add_argument('-v', '--version',
+                        help='Optional version string of the application to {cmdname}. If the application was deployed with a version string, it must be specified in order to {cmdname} the application.'.format(cmdname=cmdname))
+    parser.add_argument('path',
+                        help='The path part of the URL where the application is deployed.')
+    return parser
 
 # pylint: disable=too-many-public-methods
 class InteractiveTomcatManager(cmd2.Cmd):
@@ -233,19 +242,22 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.perror(str(err))
         return r
 
-    def base_path_version(self, args, func, help_func):
-        """do any command that takes a path and an optional version"""
-        args = args.split()
-        version = None
-        if len(args) in [1, 2]:
-            path = args[0]
-            if len(args) == 2:
-                version = args[1]
-            self.exit_code = self.exit_codes.success
-            return self.docmd(func, path, version)
-        else:
-            help_func()
-            self.exit_code = self.exit_codes.usage
+    def show_help_from(self, argparser):
+        """Set exit code and output help from an argparser."""
+        self.exit_code = self.exit_codes.success
+        self.poutput(argparser.format_help())
+
+    def parse_args(self, parser, cmdline):
+        """Use argparse to parse input string"""
+        # set exit codes so if we raise exceptions, we have the right value
+        self.exit_code = self.exit_codes.error
+        lexed_cmdline = cmd2.parse_quoted_string(cmdline)
+        # no parse error, assume we get a usage error
+        self.exit_code = self.exit_codes.usage
+        args = parser.parse_args(lexed_cmdline)
+        # no usage error, assume success
+        self.exit_code = self.exit_codes.success
+        return args
 
     def _which_server(self):
         """
@@ -260,77 +272,140 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 out += ' as {}'.format(self.tomcat.user)
         return out
 
+    @cmd2.with_argument_list
+    def do_help(self, arglist):
+        """Show available commands, or help on a specific command."""
+        if arglist:
+            # they want help on a specific command, use cmd2 for that
+            super().do_help(arglist)
+        else:
+            # show a custom list of commands, organized by category
+            help_ = []
+            help_.append('tomcat-manager is a command line tool for managing a Tomcat server')
+
+            help_ = self._help_add_header(help_, 'Connecting to a Tomcat server')
+            help_.append('connect   {}'.format(self.do_connect.__doc__))
+            help_.append('which     {}'.format(self.do_which.__doc__))
+
+            help_ = self._help_add_header(help_, 'Managing applications')
+            help_.append('list            {}'.format(self.do_list.__doc__))
+            help_.append('deploy local    {}'.format(self.deploy_local.__doc__))
+            help_.append('deploy server   {}'.format(self.deploy_server.__doc__))
+            help_.append('deploy context  {}'.format(self.deploy_context.__doc__))
+            help_.append('redeploy        Undeploy an existing app and deploy a new one in its place.')
+            help_.append('undeploy        {}'.format(self.do_undeploy.__doc__))
+            help_.append('start           {}'.format(self.do_start.__doc__))
+            help_.append('stop            {}'.format(self.do_stop.__doc__))
+            help_.append('restart         {}'.format(self.do_restart.__doc__))
+            help_.append('  reload        Synonym for \'restart\'.')
+            help_.append('sessions        {}'.format(self.do_sessions.__doc__))
+            help_.append('expire          {}'.format(self.do_expire.__doc__))
+
+            help_ = self._help_add_header(help_, 'Server information')
+            help_.append('findleakers          {}'.format(self.do_findleakers.__doc__))
+            help_.append('resources            {}'.format(self.do_resources.__doc__))
+            help_.append('serverinfo           {}'.format(self.do_serverinfo.__doc__))
+            help_.append('sslconnectorciphers  {}'.format(self.do_sslconnectorciphers.__doc__))
+            help_.append('status               {}'.format(self.do_status.__doc__))
+            help_.append('threaddump           {}'.format(self.do_threaddump.__doc__))
+            help_.append('vminfo               {}'.format(self.do_vminfo.__doc__))
+
+            help_ = self._help_add_header(help_, 'Settings, configuration, and tools')
+            help_.append('config       {}'.format(self.do_config.__doc__))
+            help_.append('edit         Edit a file in the preferred text editor.')
+            help_.append('exit_code    {}'.format(self.do_exit_code.__doc__))
+            help_.append('history      View, run, edit, and save previously entered commands.')
+            help_.append('py           Execute python commands.')
+            help_.append('pyscript     Run a file containing a python script.')
+            help_.append('set          {}'.format(self.do_set.__doc__))
+            help_.append('show         {}'.format(self.do_show.__doc__))
+            help_.append('  settings   Synonym for \'show\'.')
+            help_.append('shell        Execute a command in the operating system shell.')
+            help_.append('shortcuts    Show shortcuts for other commands.')
+
+            help_ = self._help_add_header(help_, 'Other')
+            help_.append('exit     Exit this program.')
+            help_.append('  quit   Synonym for \'exit\'.')
+            help_.append('help     {}'.format(self.do_help.__doc__))
+            help_.append('version  Show the version number of this program.')
+            help_.append('license  Show the MIT license.')
+
+            for line in help_:
+                self.poutput(line)
+
+    def _help_add_header(self, help_, header):
+        help_.append('')
+        help_.append(header)
+        help_.append('=' * 60)
+        return help_
+
     ###
     #
     # user accessable commands for configuration and settings
     #
     ###
-    def do_config(self, args):
-        """Show the location of the user configuration file."""
-        if len(args.split()) == 1:
-            action = args.split()[0]
-            if action == 'file':
-                self.poutput(self.config_file)
-                self.exit_code = self.exit_codes.success
-            elif action == 'edit':
-                self.config_edit()
-            else:
-                self.help_config()
+    config_parser = argparse.ArgumentParser(
+        prog='config',
+        description='Edit or show the location of the user configuration file.',
+    )
+    config_parser.add_argument(
+        'action',
+        choices=['edit', 'file'],
+        help='\'file\' shows the name of the configuration file. \'edit\' edits the configuration file in your preferred editor.',
+    )
+
+    def do_config(self, cmdline):
+        """Edit or show the location of the user configuration file."""
+        args = self.parse_args(self.config_parser, cmdline)
+
+        if args.action == 'file':
+            self.poutput(self.config_file)
+            self.exit_code = self.exit_codes.success
+        elif args.action == 'edit':
+            if not self.editor:
+                self.perror("no editor: use 'set editor={path}' to specify one")
                 self.exit_code = self.exit_codes.error
+                return
+
+            # ensure the configuration directory exists
+            configdir = os.path.dirname(self.config_file)
+            if not os.path.exists(configdir):
+                os.makedirs(configdir)
+
+            # go edit the file
+            cmd = '"{}" "{}"'.format(self.editor, self.config_file)
+            self.pfeedback("executing {}".format(cmd))
+            os.system(cmd)
+
+            # read it back in and apply it
+            self.pfeedback("reloading configuration")
+            self.load_config()
+            self.exit_code = self.exit_codes.success
         else:
             self.help_config()
             self.exit_code = self.exit_codes.error
 
-    def config_edit(self):
-        """Edit the user configuration file."""
-        if not self.editor:
-            self.perror("no editor: use 'set editor={path}' to specify one")
-            self.exit_code = self.exit_codes.error
-            return
-
-        # ensure the configuration directory exists
-        configdir = os.path.dirname(self.config_file)
-        if not os.path.exists(configdir):
-            os.makedirs(configdir)
-
-        # go edit the file
-        cmd = '"{}" "{}"'.format(self.editor, self.config_file)
-        self.pfeedback("executing {}".format(cmd))
-        os.system(cmd)
-
-        # read it back in and apply it
-        self.pfeedback("reloading configuration")
-        self.load_config()
-        self.exit_code = self.exit_codes.success
-
     def help_config(self):
         """Show help for the 'config' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: config {action}
+        self.show_help_from(self.config_parser)
 
-Manage the user configuration file.
+    show_parser = argparse.ArgumentParser(
+        prog='show',
+        description='Show all settings or a specific setting.',
+    )
+    show_parser.add_argument(
+        'setting',
+        nargs='?',
+        help='Name of the setting to show the value for. If omitted show the values of all settings.',
+    )
+    def do_show(self, cmdline):
+        """Show all settings or a specific setting."""
+        args = self.parse_args(self.show_parser, cmdline)
 
-action is one of the following:
-
-  file  show the location of the user configuration file
-  edit  edit the user configuration file""")
-
-    def do_show(self, arg, opts=None):
-        """
-        Show all settings or a specific setting.
-
-        Overrides cmd2.Cmd.do_show()
-        """
-        if len(arg.split()) > 1:
-            self.help_show()
-            self.exit_code = self.exit_codes.error
-            return
-
-        param = arg.strip().lower()
         result = {}
         maxlen = 0
         for setting in self.settable:
-            if (not param) or (setting == param):
+            if (not args.setting) or (setting == args.setting):
                 val = str(getattr(self, setting))
                 result[setting] = '{}={}'.format(setting, self._pythonize(val))
                 maxlen = max(maxlen, len(result[setting]))
@@ -338,42 +413,37 @@ action is one of the following:
         maxlen += 1
         if result:
             for setting in sorted(result):
-                self.poutput('{} # {}'.format(result[setting].ljust(maxlen), self.settable[setting]))
+                self.poutput('{} # {}'.format(result[setting].ljust(maxlen),
+                                              self.settable[setting]))
             self.exit_code = self.exit_codes.success
         else:
-            self.perror("unknown setting: '{}'".format(param))
+            self.perror("unknown setting: '{}'".format(args.setting))
             self.exit_code = self.exit_codes.error
 
     def help_show(self):
         """Show help for the 'show' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: show [setting]
+        self.show_help_from(self.show_parser)
 
-Show one or more settings and their values.
+    settings_parser = argparse.ArgumentParser(
+        prog='settings',
+        description='Show all settings or a specific setting. Synonym for \'show\'.',
+    )
+    settings_parser.add_argument(
+        'setting',
+        nargs='?',
+        help='Name of the setting to show the value for. If omitted show the values of all settings.',
+    )
 
-[setting]  Optional name of the setting to show the value for. If omitted
-           show the values of all settings.""")
-
-    def do_settings(self, args):
+    def do_settings(self, cmdline):
         """Synonym for 'show' command."""
-        self.do_show(args)
+        self.do_show(cmdline)
 
     def help_settings(self):
         """Show help for the 'settings' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: settings [setting]
-
-Show one or more settings and their values.
-
-[setting]  Optional name of the setting to show the value for. If omitted
-           show the values of all settings.""")
+        self.show_help_from(self.settings_parser)
 
     def do_set(self, arg):
-        """
-        Change a setting.
-
-        Overrides cmd2.Cmd.do_set()
-        """
+        """Change program settings."""
         if arg:
             config = EvaluatingConfigParser()
             setting_string = "[settings]\n{}".format(arg)
@@ -398,7 +468,8 @@ Show one or more settings and their values.
                     self.perror("unknown setting: '{}'".format(param_name))
                     self.exit_code = self.exit_codes.error
         else:
-            self.do_show(arg, None)
+            self.perror('invalid syntax: try {setting}={value}')
+            self.exit_code = self.exit_codes.usage
 
     def help_set(self):
         """Show help for the 'set' command."""
@@ -531,36 +602,56 @@ Change a setting.
     # Connecting to Tomcat
     #
     ###
-    def do_connect(self, args):
+    connect_parser = argparse.ArgumentParser(
+        prog='connect',
+        description='connect to a tomcat manager instance',
+        usage='%(prog)s [-h] config_name\n       %(prog)s [-h] url [user] [password]',
+        epilog="If you specify a user and no password, you will be prompted for the password. If you don't specify a user or password, attempt to connect with no authentication.",
+    )
+    connect_parser.add_argument(
+        'config_name',
+        nargs='?',
+        help='a section from the config file which contains at least a url',
+    )
+    connect_parser.add_argument(
+        'url',
+        nargs='?',
+        help='the url where the tomcat manager web app is located',
+    )
+    connect_parser.add_argument(
+        'user',
+        nargs='?',
+        help='optional user to use for authentication',
+    )
+    connect_parser.add_argument(
+        'password',
+        nargs='?',
+        help='optional password to use for authentication',
+    )
+
+    def do_connect(self, cmdline):
         """Connect to a tomcat manager instance."""
         url = None
         user = None
         password = None
-        args_list = args.split()
-
-        if len(args_list) == 1:
-            # check the configuration file for values
-            server = args_list[0]
-            if self.config.has_section(server):
-                if self.config.has_option(server, 'url'):
-                    url = self.config[server]['url']
-                if self.config.has_option(server, 'user'):
-                    user = self.config[server]['user']
-                if self.config.has_option(server, 'password'):
-                    password = self.config[server]['password']
-            else:
-                url = args_list[0]
-        elif len(args_list) == 2:
-            url = args_list[0]
-            user = args_list[1]
-        elif len(args_list) == 3:
-            url = args_list[0]
-            user = args_list[1]
-            password = args_list[2]
+        args = self.parse_args(self.connect_parser, cmdline)
+        server = args.config_name
+        if self.config.has_section(server):
+            if self.config.has_option(server, 'url'):
+                url = self.config[server]['url']
+            if self.config.has_option(server, 'user'):
+                user = self.config[server]['user']
+            if self.config.has_option(server, 'password'):
+                password = self.config[server]['password']
         else:
-            self.help_connect()
-            self.exit_code = self.exit_codes.usage
-            return
+            # this is an ugly hack required to get argparse to show the help properly
+            # the argparser has both a config_name and a url positional argument
+            # if you only give config_name, and there isn't a section for it in
+            # the configuration file, then it must be a url, so we have to
+            # 'shift' the positional arguments to the left
+            url = args.config_name
+            user = args.url
+            password = args.user
 
         # prompt for password if necessary
         if url and user and not password:
@@ -591,7 +682,8 @@ Change a setting.
                         # we connected, but the url was bad. No tomcat there
                         self.perror('tomcat manager not found at {}'.format(url))
                     else:
-                        self.perror('http error: {} {}'.format(r.response.status_code, responses[r.response.status_code]))
+                        self.perror('http error: {} {}'.format(r.response.status_code,
+                                                               responses[r.response.status_code]))
                     self.exit_code = self.exit_codes.error
         except requests.exceptions.ConnectionError:
             if self.debug:
@@ -607,290 +699,292 @@ Change a setting.
             self.exit_code = self.exit_codes.error
 
     def help_connect(self):
-        """Show help for the 'connect' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: connect url [user] [password]
-       connect config_name
+        """Show help for the connect command."""
+        self.show_help_from(self.connect_parser)
 
-Connect to a tomcat manager instance.
 
-config_name  A section from the config file. This must contain url, user,
-             and password values.
-
-url          The url where the Tomcat Manager web app is located.
-user         Optional user to use for authentication.
-password     Optional password to use for authentication.
-
-If you specify a user and no password, you will be prompted for the
-password. If you don't specify a userid or password, attempt to connect
-with no authentication.""")
+    which_parser = argparse.ArgumentParser(
+        prog='which',
+        description='show the url of the tomcat server you are connected to',
+    )
 
     @requires_connection
-    def do_which(self, args):
+    def do_which(self, cmdline):
         """Show the url of the tomcat server you are connected to."""
-        if args:
-            self.help_which()
-            self.exit_code = self.exit_codes.usage
-        else:
-            self.poutput(self._which_server())
+        self.parse_args(self.which_parser, cmdline)
+        self.poutput(self._which_server())
 
     def help_which(self):
         """Show help for the 'which' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: which
+        self.show_help_from(self.which_parser)
 
-Show the url of the tomcat server you are connected to.""")
 
     ###
     #
     # commands for managing applications
     #
     ###
-    def deploy_base(self, args, show_help, update):
-        """Common method for deploy() and redeploy()."""
-        server = 'server'
-        local = 'local'
-        args = args.split()
-        if len(args) in [3, 4]:
-            src = args[0]
-            warfile = args[1]
-            path = args[2]
-            version = None
-            if len(args) == 4:
-                version = args[3]
+    def deploy_local(self, args, update=False):
+        """Deploy a local war file to the tomcat server."""
+        warfile = os.path.expanduser(args.warfile)
+        with open(warfile, 'rb') as fileobj:
+            self.exit_code = self.exit_codes.success
+            self.docmd(self.tomcat.deploy_localwar, args.path, fileobj,
+                       version=args.version, update=update)
 
-            if server.startswith(src):
-                src = server
-            if local.startswith(src):
-                src = local
+    def deploy_server(self, args, update=False):
+        """Deploy a war file to the tomcat server."""
+        self.exit_code = self.exit_codes.success
+        self.docmd(self.tomcat.deploy_serverwar, args.path, args.warfile,
+                   version=args.version, update=update)
 
-            if src == server:
-                self.exit_code = self.exit_codes.success
-                self.docmd(self.tomcat.deploy, path, serverwar=warfile,
-                           update=update, version=version)
-            elif src == local:
-                warfile = os.path.expanduser(warfile)
-                with open(warfile, 'rb') as fileobj:
-                    self.exit_code = self.exit_codes.success
-                    self.docmd(self.tomcat.deploy, path, localwar=fileobj,
-                               update=update, version=version)
-            else:
-                show_help()
-                self.exit_code = self.exit_codes.usage
-        else:
-            show_help()
-            self.exit_code = self.exit_codes.usage
+    def deploy_context(self, args, update=False):
+        """Deploy a context xml file to the tomcat server."""
+        self.exit_code = self.exit_codes.success
+        self.docmd(self.tomcat.deploy_servercontext, args.path, args.contextfile,
+                   warfile=args.warfile, version=args.version, update=update)
 
-    def deploy_base_help(self):
-        """Common help string for the deploy() and redeploy()."""
-        return """
-  server|local  'server' to deploy a war file already on the server
-                'local' to transmit a locally available warfile to the server
-  warfile       Path to the war file to deploy.
-
-                For 'server', don't include the 'file:' at the beginning,
-                and use java style paths (i.e. '/' as path seperator).
-
-                For 'local', give a path according to your local operating
-                system conventions.
-
-  path          The path part of the URL where the application will be deployed.
-  version       The version string to associate with this deployment."""
+    deploy_parser = argparse.ArgumentParser(
+        prog='deploy',
+        description='Install a war file containing a tomcat application in the tomcat server',
+    )
+    deploy_subparsers = deploy_parser.add_subparsers(title='methods', dest='method')
+    # local subparser
+    deploy_local_parser = deploy_subparsers.add_parser(
+        'local',
+        description='transmit a locally available warfile to the server',
+        help='transmit a locally available warfile to the server',
+    )
+    deploy_local_parser.add_argument(
+        '-v', '--version',
+        help='version string to associate with this deployment'
+    )
+    deploy_local_parser.add_argument('warfile')
+    deploy_local_parser.add_argument('path')
+    deploy_local_parser.set_defaults(func=deploy_local)
+    # server subparser
+    deploy_server_parser = deploy_subparsers.add_parser(
+        'server',
+        description='deploy a warfile already on the server',
+        help='deploy a warfile already on the server'
+    )
+    deploy_server_parser.add_argument(
+        '-v', '--version',
+        help='version string to associate with this deployment'
+    )
+    deploy_server_parser.add_argument('warfile')
+    deploy_server_parser.add_argument('path')
+    deploy_server_parser.set_defaults(func=deploy_server)
+    # context subparser
+    deploy_context_parser = deploy_subparsers.add_parser(
+        'context',
+        description='deploy a contextfile already on the server',
+        help='deploy a contextfile already on the server',
+    )
+    deploy_context_parser.add_argument(
+        '-v', '--version',
+        help='version string to associate with this deployment',
+    )
+    deploy_context_parser.add_argument('contextfile')
+    deploy_context_parser.add_argument('warfile', nargs='?')
+    deploy_context_parser.add_argument('path')
+    deploy_context_parser.set_defaults(func=deploy_context)
 
     @requires_connection
-    def do_deploy(self, args):
-        """Install a war file containing a tomcat application in the tomcat server."""
-        self.deploy_base(args, self.help_deploy, False)
+    def do_deploy(self, cmdline):
+        """Deploy an application to the tomcat server."""
+        args = self.parse_args(self.deploy_parser, cmdline)
+        try:
+            args.func(self, args, update=False)
+        except AttributeError:
+            self.help_deploy()
+            self.exit_code = self.exit_codes.error
 
     def help_deploy(self):
-        """Show help for the 'deploy' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: deploy server|local {warfile} {path} [version]
-
-Install a war file containing a tomcat application in the tomcat server.""")
-        self.poutput(self.deploy_base_help())
+        """Show help for the deploy command."""
+        self.show_help_from(self.deploy_parser)
 
     @requires_connection
-    def do_redeploy(self, args):
-        """Deploy an application to the Tomcat server at an existing path."""
-        self.deploy_base(args, self.help_redeploy, True)
+    def do_redeploy(self, cmdline):
+        """Redeploy an application to the tomcat server."""
+        args = self.parse_args(self.deploy_parser, cmdline)
+        try:
+            args.func(self, args, update=True)
+        except AttributeError:
+            self.help_deploy()
+            self.exit_code = self.exit_codes.error
 
     def help_redeploy(self):
-        """Show help for the 'redeploy' command"""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: redeploy server|local {warfile} {path} [version]
+        """Show help for the redeploy command."""
+        self.show_help_from(self.deploy_parser)
 
-Remove the application currently installed at a given path and install a
-new war file there.""")
-        self.poutput(self.deploy_base_help())
+
+    undeploy_parser = _path_version_parser(
+        'undeploy',
+        'Remove an application at a given path from the tomcat server.'
+    )
 
     @requires_connection
-    def do_undeploy(self, args):
-        """Remove an application from the tomcat server."""
-        args = args.split()
-        version = None
-        if len(args) in [1, 2]:
-            path = args[0]
-            if len(args) == 2:
-                version = args[1]
-            self.exit_code = self.exit_codes.success
-            self.docmd(self.tomcat.undeploy, path, version)
-        else:
-            self.help_undeploy()
-            self.exit_code = self.exit_codes.usage
+    def do_undeploy(self, cmdline):
+        """Remove an application at a given path from the tomcat server."""
+        args = self.parse_args(self.undeploy_parser, cmdline)
+        self.docmd(self.tomcat.undeploy, args.path, args.version)
 
     def help_undeploy(self):
-        """Show help for the 'undeploy' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: undeploy {path} [version]
+        """Help for the 'undeploy' command."""
+        self.show_help_from(self.undeploy_parser)
 
-Remove an application from the tomcat server.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to undeploy. If the
-           application was deployed with a version string, it must be
-           specified in order to undeploy the application.""")
+    start_parser = _path_version_parser(
+        'start',
+        "Start a tomcat application that has been deployed but isn't running."
+    )
 
     @requires_connection
-    def do_start(self, args):
-        """Start a tomcat application that has been deployed but isn't running."""
-        self.base_path_version(args, self.tomcat.start, self.help_start)
+    def do_start(self, cmdline):
+        """Start a deployed tomcat application that isn't running."""
+        args = self.parse_args(self.start_parser, cmdline)
+        self.docmd(self.tomcat.start, args.path, args.version)
 
     def help_start(self):
         """Help for the 'start' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: start {path} [version]
+        self.show_help_from(self.start_parser)
 
-Start a tomcat application that has been deployed but isn't running.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to start. If the
-           application was deployed with a version string, it must be
-           specified in order to start the application.""")
+    stop_parser = _path_version_parser(
+        'stop',
+        'Stop a running tomcat application and leave it deployed on the server.'
+    )
 
     @requires_connection
-    def do_stop(self, args):
+    def do_stop(self, cmdline):
         """Stop a tomcat application and leave it deployed on the server."""
-        self.base_path_version(args, self.tomcat.stop, self.help_stop)
+        args = self.parse_args(self.stop_parser, cmdline)
+        self.docmd(self.tomcat.stop, args.path, args.version)
 
     def help_stop(self):
-        """Show help for the 'stop' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: stop {path} [version]
+        """Help for the 'stop' command."""
+        self.show_help_from(self.stop_parser)
 
-Stop a tomcat application and leave it deployed on the server.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to stop. If the
-           application was deployed with a version string, it must be
-           specified in order to stop the application.""")
+    reload_parser = _path_version_parser(
+        'reload',
+        'Start and stop a tomcat application.',
+    )
 
     @requires_connection
-    def do_reload(self, args):
+    def do_reload(self, cmdline):
         """Start and stop a tomcat application."""
-        self.base_path_version(args, self.tomcat.reload, self.help_reload)
+        args = self.parse_args(self.reload_parser, cmdline)
+        self.docmd(self.tomcat.reload, args.path, args.version)
 
     def help_reload(self):
-        """Show help for the 'reload' application."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: reload {path} [version]
+        """Help for the 'reload' application."""
+        self.show_help_from(self.reload_parser)
 
-Start and stop a tomcat application.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to reload. If the
-           application was deployed with a version string, it must be
-           specified in order to reload the application.""")
+    restart_parser = _path_version_parser(
+        'restart',
+        'Start and stop a tomcat application. Synonym for \'reload\'.',
+    )
 
     @requires_connection
-    def do_restart(self, args):
+    def do_restart(self, cmdline):
         """Start and stop a tomcat application. Synonym for reload."""
-        self.do_reload(args)
+        self.do_reload(cmdline)
 
     def help_restart(self):
         """Show help for the 'restart' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: restart {path} [version]
+        self.show_help_from(self.restart_parser)
 
-Start and stop a tomcat application. Synonym for reload.
-
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application to reload. If the
-           application was deployed with a version string, it must be
-           specified in order to reload the application.""")
+    sessions_parser = argparse.ArgumentParser(
+        prog='sessions',
+        description='Show active sessions for a tomcat application.',
+    )
+    sessions_parser.add_argument(
+        'path',
+        help='The path part of the URL where the application is deployed.',
+    )
+    sessions_parser.add_argument(
+        '-v', '--version',
+        help='Optional version string of the application from which to show sessions. If the application was deployed with a version string, it must be specified in order to show sessions.',
+    )
 
     @requires_connection
-    def do_sessions(self, args):
+    def do_sessions(self, cmdline):
         """Show active sessions for a tomcat application."""
-        args = args.split()
-        version = None
-        if len(args) in [1, 2]:
-            path = args[0]
-            if len(args) == 2:
-                version = args[1]
-            self.exit_code = self.exit_codes.success
-            r = self.docmd(self.tomcat.sessions, path, version)
-            if r.ok:
-                self.poutput(r.sessions)
-        else:
-            self.help_sessions()
-            self.exit_code = self.exit_codes.usage
+        args = self.parse_args(self.sessions_parser, cmdline)
+        r = self.docmd(self.tomcat.sessions, args.path, args.version)
+        if r.ok:
+            self.poutput(r.sessions)
 
     def help_sessions(self):
-        """Show help for the 'sessions' command."""
-        self.poutput("""Usage: sessions {path} [version]
+        """Help for the 'sessions' command."""
+        self.show_help_from(self.sessions_parser)
 
-Show active sessions for a tomcat application.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application from which to show
-           sessions. If the application was deployed with a version
-           string, it must be specified in order to show sessions.""")
+    expire_parser = argparse.ArgumentParser(
+        prog='sessions',
+        description='Show active sessions for a tomcat application.',
+    )
+    expire_parser.add_argument(
+        '-v', '--version',
+        help='Optional version string of the application from which to expire sessions. If the application was deployed with a version string, it must be specified in order to expire sessions.',
+    )
+    expire_parser.add_argument(
+        'path',
+        help='The path part of the URL where the application is deployed.',
+    )
+    expire_parser.add_argument(
+        'idle',
+        help='Expire sessions idle for more than this number of minutes. Use 0 to expire all sessions.',
+    )
 
     @requires_connection
-    def do_expire(self, args):
+    def do_expire(self, cmdline):
         """Expire idle sessions."""
-        args = args.split()
-        version = None
-        if len(args) in [2, 3]:
-            path = args[0]
-            if len(args) == 2:
-                idle = args[1]
-            else:
-                version = args[1]
-                idle = args[2]
-            self.exit_code = self.exit_codes.success
-            r = self.docmd(self.tomcat.expire, path, version, idle)
-            if r.ok:
-                self.poutput(r.sessions)
-        else:
-            self.help_expire()
-            self.exit_code = self.exit_codes.usage
+        args = self.parse_args(self.expire_parser, cmdline)
+        r = self.docmd(self.tomcat.expire, args.path, args.version, args.idle)
+        if r.ok:
+            self.poutput(r.sessions)
 
     def help_expire(self):
-        """Show help for the 'expire' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: expire {path} [version] {idle}
+        """Help for the 'expire' command."""
+        self.show_help_from(self.expire_parser)
 
-Expire idle sessions.
 
-  path     The path part of the URL where the application is deployed.
-  version  Optional version string of the application from which to
-           expire sessions. If the application was deployed with a version
-           string, it must be specified in order to expire sessions.
-  idle     Expire sessions idle for more than this number of minutes. Use
-           0 to expire all sessions.""")
+    list_parser = argparse.ArgumentParser(
+        prog='list',
+        description='Show all installed applications',
+        add_help=False,
+    )
+    list_parser.add_argument(
+        '-r', '--raw',
+        action='store_true',
+        help='show apps without formatting',
+    )
+    list_parser.add_argument(
+        '-s', '--state',
+        choices=['running', 'stopped'],
+        help='only show apps in a given state',
+    )
+    list_parser.add_argument(
+        '-b', '--by',
+        choices=['state', 'path'],
+        default='state',
+        help='sort by state (default), or sort by path',
+    )
 
     @requires_connection
-    def do_list(self, argv):
+    def do_list(self, cmdline):
         """Show all installed applications."""
-        args = self._list_parse_args(argv)
+        args = self.parse_args(self.list_parser, cmdline)
+
         response = self.docmd(self.tomcat.list)
         if not response.ok:
             return
 
         apps = self._list_process_apps(response.apps, args)
-
         self.exit_code = self.exit_codes.success
         if args.raw:
             for app in apps:
@@ -901,34 +995,13 @@ Expire idle sessions.
             self.poutput(fmt.format('Path', 'State', 'Sessions', 'Directory'))
             self.poutput(fmt.format(dashes, dashes, dashes, dashes))
             for app in apps:
-                self.poutput(fmt.format(app.path, app.state, str(app.sessions), app.directory_and_version))
+                self.poutput(
+                    fmt.format(app.path, app.state, str(app.sessions), app.directory_and_version)
+                )
 
     def help_list(self):
         """Show help for the 'list' command."""
-        self.exit_code = self.exit_codes.success
-        args = self._list_parse_args('-h')
-
-    def _list_parse_args(self, argv):
-        """Use argparse to parse list command arguments"""
-        parser = argparse.ArgumentParser(
-            prog='list',
-            description='Show all installed applications',
-        )
-        raw_help = 'show apps without formatting'
-        parser.add_argument('-r', '--raw', action='store_true', help=raw_help)
-        state_help = 'only show apps in a given state'
-        parser.add_argument('-s', '--state', choices=['running', 'stopped'], help=state_help)
-        by_help = 'sort by state (default), or sort by path'
-        parser.add_argument('-b', '--by', choices=['state', 'path'], default='state', help=by_help)
-        # set exit codes so if we raise exceptions, we have the right value
-        self.exit_code = self.exit_codes.error
-        argv = shlex.split(argv)
-        # no parse error, assume we get a usage error
-        self.exit_code = self.exit_codes.usage
-        args = parser.parse_args(argv)
-        # no usage error, assume success
-        self.exit_code = self.exit_codes.success
-        return args
+        self.show_help_from(self.list_parser)
 
     def _list_process_apps(self, apps, args):
         """
@@ -957,158 +1030,148 @@ Expire idle sessions.
     # information from the server.
     #
     ###
+    serverinfo_parser = argparse.ArgumentParser(
+        prog='serverinfo',
+        description='show information about the tomcat server',
+    )
     @requires_connection
-    def do_serverinfo(self, args):
-        """Show information about the Tomcat server."""
-        if args:
-            self.help_serverinfo()
-            self.exit_code = self.exit_codes.usage
-        else:
-            r = self.docmd(self.tomcat.server_info)
-            self.poutput(r.result)
+    def do_serverinfo(self, cmdline):
+        """Show information about the tomcat server."""
+        self.parse_args(self.serverinfo_parser, cmdline)
+        r = self.docmd(self.tomcat.server_info)
+        self.poutput(r.result)
 
     def help_serverinfo(self):
-        """Show help for the 'serverinfo' class."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: serverinfo
+        """Show help for the 'serverinfo' command."""
+        self.show_help_from(self.serverinfo_parser)
 
-Show information about the Tomcat server.""")
 
+    status_parser = argparse.ArgumentParser(
+        prog='status',
+        description='show server status information in xml format',
+    )
     @requires_connection
-    def do_status(self, args):
+    def do_status(self, cmdline):
         """Show server status information in xml format."""
-        if args:
-            self.help_status()
-            self.exit_code = self.exit_codes.usage
-        else:
-            r = self.docmd(self.tomcat.status_xml)
-            root = xml.dom.minidom.parseString(r.status_xml)
-            self.poutput(root.toprettyxml(indent='   '))
+        self.parse_args(self.status_parser, cmdline)
+        r = self.docmd(self.tomcat.status_xml)
+        root = xml.dom.minidom.parseString(r.status_xml)
+        self.poutput(root.toprettyxml(indent='   '))
 
     def help_status(self):
         """Show help for the 'status' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: status
+        self.show_help_from(self.status_parser)
 
-Show server status information in xml format.""")
 
+    vminfo_parser = argparse.ArgumentParser(
+        prog='vminfo',
+        description='show diagnostic information about the jvm',
+    )
     @requires_connection
-    def do_vminfo(self, args):
+    def do_vminfo(self, cmdline):
         """Show diagnostic information about the jvm."""
-        if args:
-            self.help_vminfo()
-            self.exit_code = self.exit_codes.usage
-        else:
-            response = self.docmd(self.tomcat.vm_info)
-            self.poutput(response.vm_info)
+        self.parse_args(self.vminfo_parser, cmdline)
+        r = self.docmd(self.tomcat.vm_info)
+        self.poutput(r.vm_info)
 
     def help_vminfo(self):
         """Show help for the 'vminfo' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: vminfo
+        self.show_help_from(self.vminfo_parser)
 
-Show diagnostic information about the jvm.""")
 
+    sslconnectorciphers_parser = argparse.ArgumentParser(
+        prog='sslconnectorciphers',
+        description='show SSL/TLS ciphers configured for each connector',
+    )
     @requires_connection
-    def do_sslconnectorciphers(self, args):
+    def do_sslconnectorciphers(self, cmdline):
         """Show SSL/TLS ciphers configured for each connector."""
-        if args:
-            self.help_sslconnectorciphers()
-            self.exit_code = self.exit_codes.usage
-        else:
-            response = self.docmd(self.tomcat.ssl_connector_ciphers)
-            self.poutput(response.ssl_connector_ciphers)
+        self.parse_args(self.sslconnectorciphers_parser, cmdline)
+        r = self.docmd(self.tomcat.ssl_connector_ciphers)
+        self.poutput(r.ssl_connector_ciphers)
 
     def help_sslconnectorciphers(self):
         """Show help for the 'sslconnectorciphers' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: sslconnectorciphers
+        self.show_help_from(self.sslconnectorciphers_parser)
 
-Show SSL/TLS ciphers configured for each connector.""")
 
+    threaddump_parser = argparse.ArgumentParser(
+        prog='threaddump',
+        description='show a jvm thread dump',
+    )
     @requires_connection
-    def do_threaddump(self, args):
+    def do_threaddump(self, cmdline):
         """Show a jvm thread dump."""
-        if args:
-            self.help_threaddump()
-            self.exit_code = self.exit_codes.usage
-        else:
-            response = self.docmd(self.tomcat.thread_dump)
-            self.poutput(response.thread_dump)
+        self.parse_args(self.threaddump_parser, cmdline)
+        r = self.docmd(self.tomcat.thread_dump)
+        self.poutput(r.thread_dump)
 
     def help_threaddump(self):
         """Show help for the 'threaddump' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: threaddump
+        self.show_help_from(self.threaddump_parser)
 
-Show a jvm thread dump.""")
 
+    resources_parser = argparse.ArgumentParser(
+        prog='resources',
+        description='show global JNDI resources configured in tomcat',
+    )
+    resources_parser.add_argument(
+        'class_name',
+        nargs='?',
+        help='Optional fully qualified java class name of the resource type to show.',
+    )
     @requires_connection
-    def do_resources(self, args):
+    def do_resources(self, cmdline):
         """Show global JNDI resources configured in Tomcat."""
-        if len(args.split()) in [0, 1]:
-            try:
-                # this nifty line barfs if there are other than 1 argument
-                type_, = args.split()
-            except ValueError:
-                type_ = None
-            r = self.docmd(self.tomcat.resources, type_)
+        args = self.parse_args(self.resources_parser, cmdline)
+        r = self.docmd(self.tomcat.resources, args.class_name)
+        if r.resources:
             for resource, classname in iter(sorted(r.resources.items())):
                 self.poutput('{}: {}'.format(resource, classname))
         else:
-            self.help_resources()
-            self.exit_code = self.exit_codes.usage
+            self.exit_code = self.exit_codes.error
 
     def help_resources(self):
         """Show help for the 'resources' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: resources [class_name]
+        self.show_help_from(self.resources_parser)
 
-Show global JNDI resources configured in Tomcat.
 
-class_name  Optional fully qualified java class name of the resource type
-            to show.""")
-
+    findleakers_parser = argparse.ArgumentParser(
+        prog='findleakers',
+        description='show tomcat applications that leak memory',
+        epilog='WARNING: this triggers a full garbage collection on the server. Use with extreme caution on production systems.'
+    )
     @requires_connection
-    def do_findleakers(self, args):
+    def do_findleakers(self, cmdline):
         """Show tomcat applications that leak memory."""
-        if args:
-            self.help_findleakers()
-            self.exit_code = self.exit_codes.usage
-        else:
-            response = self.docmd(self.tomcat.find_leakers)
-            for leaker in response.leakers:
-                self.poutput(leaker)
+        self.parse_args(self.findleakers_parser, cmdline)
+        r = self.docmd(self.tomcat.find_leakers)
+        for leaker in r.leakers:
+            self.poutput(leaker)
 
     def help_findleakers(self):
         """Show help for the 'findleakers' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: findleakers
-
-Show tomcat applications that leak memory.
-
-WARNING: this triggers a full garbage collection on the server. Use with
-extreme caution on production systems.""")
+        self.show_help_from(self.findleakers_parser)
 
     ###
     #
     # miscellaneous user accessible commands
     #
     ###
-    def do_exit(self, args):
+    def do_exit(self, cmdline):
         """Exit the interactive command prompt."""
         self.exit_code = self.exit_codes.success
         return self._STOP_AND_EXIT
 
-    def do_quit(self, arg):
+    def do_quit(self, cmdline):
         """Synonym for the 'exit' command."""
-        return self.do_exit(arg)
+        return self.do_exit(cmdline)
 
-    def do_eof(self, arg):
+    def do_eof(self, cmdline):
         """Exit on the end-of-file character."""
-        return self.do_exit(arg)
+        return self.do_exit(cmdline)
 
-    def do_version(self, args):
+    def do_version(self, cmdline):
         """Show version information."""
         self.exit_code = self.exit_codes.success
         self.poutput(tm.VERSION_STRING)
@@ -1120,8 +1183,8 @@ extreme caution on production systems.""")
 
 Show version information.""")
 
-    def do_exit_code(self, args):
-        """Show the value of the exit_code variable."""
+    def do_exit_code(self, cmdline):
+        """Show a number indicating the status of the previous command."""
         # don't set the exit code here, just show it
         self.poutput(self.exit_code)
 
@@ -1130,9 +1193,15 @@ Show version information.""")
         self.exit_code = self.exit_codes.success
         self.poutput("""Usage: exit_code
 
-Show the value of the exit_code variable, similar to $? in ksh/bash.""")
+Show the value of the exit_code variable, similar to $? in ksh/bash.
 
-    def do_license(self, args):
+The codes have the following meanings:
+
+""")
+        for number, name in self.EXIT_CODES.items():
+            self.poutput('    {:3}  {}'.format(number, name.replace('_', ' ')))
+
+    def do_license(self, cmdline):
         """Show license information."""
         self.exit_code = self.exit_codes.success
         self.poutput("""

@@ -3,8 +3,32 @@
 Release History
 ===============
 
-develop
+0.12.0 (2018-02-23)
 -------
+
+**New**
+
+- You can now deploy applications via a context xml file. A new
+  interactive command ``deploy context`` and a new method
+  ``deploy_servercontext()`` provide this capability.
+
+**Improved**
+
+- Better help messages in the interactive ``tomcat-manager`` tool
+
+**Changed**
+
+- deploy() has been replaced by three new methods:
+   - deploy_localwar()
+   - deploy_serverwar()
+   - deploy_servercontext()
+- Interactive deploy command syntax has changed:
+   - Can now deploy context xml files
+   - Specify version with --version flag instead of optional positional
+     parameter
+- Commands which use an optional version parameter now use a '-v' option
+  to specify the version
+- Most commands now have -h/--help options
 
 
 0.11.0 (2017-09-06)
