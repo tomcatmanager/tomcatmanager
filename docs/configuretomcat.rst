@@ -23,9 +23,9 @@ throughout the tomcatmanager documentation:
 
 .. code-block:: xml
 
-   <tomcat-users>
-     ...
-     <role rolename="manager-script"/>
-     <user username="ace" password="newenglandclamchowder" roles="manager-script"/>
-     ...
-   </tomcat-users>
+  <tomcat-users>
+    ...
+    <role rolename="manager-script"/>
+    <user username="ace" password="newenglandclamchowder" roles="manager-script"/>
+    ...
+  </tomcat-users>

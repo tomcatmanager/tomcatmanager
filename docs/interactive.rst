@@ -225,13 +225,13 @@ Let's revisit our `shiny` app. This time we will deploy with a version string:
 
 .. code-block:: none
 
-   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny -v v2.0.5
-   tomcat-manager>list
-   Path                     Status  Sessions Directory
-   ------------------------ ------- -------- ------------------------------------
-   /                        running        0 ROOT
-   /manager                 running        0 manager
-   /shiny                   running        0 shiny##v2.0.5
+  tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny -v v2.0.5
+  tomcat-manager>list
+  Path                     Status  Sessions Directory
+  ------------------------ ------- -------- ------------------------------------
+  /                        running        0 ROOT
+  /manager                 running        0 manager
+  /shiny                   running        0 shiny##v2.0.5
 
 Later today, I make a bug fix to 'shiny', and build version 2.0.6 of the
 app. Parallel deployment allows me to deploy two versions of that app at the
@@ -240,26 +240,26 @@ sessions expire in version 2.0.5.
 
 .. code-block:: none
 
-   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.6.war /shiny -v v2.0.6
-   tomcat-manager>list
-   Path                     Status  Sessions Directory
-   ------------------------ ------- -------- ------------------------------------
-   /                        running        0 ROOT
-   /manager                 running        0 manager
-   /shiny                   running       12 shiny##v2.0.5
-   /shiny                   running        0 shiny##v2.0.6
+  tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.6.war /shiny -v v2.0.6
+  tomcat-manager>list
+  Path                     Status  Sessions Directory
+  ------------------------ ------- -------- ------------------------------------
+  /                        running        0 ROOT
+  /manager                 running        0 manager
+  /shiny                   running       12 shiny##v2.0.5
+  /shiny                   running        0 shiny##v2.0.6
 
 Once all the sessions have been migrated to version 2.0.6, I can undeploy version 2.0.5:
 
 .. code-block:: none
 
-   tomcat-manager>undeploy /shiny --version v2.0.5
-   tomcat-manager>list
-   Path                     Status  Sessions Directory
-   ------------------------ ------- -------- ------------------------------------
-   /                        running        0 ROOT
-   /manager                 running        0 manager
-   /shiny.                  running        9 shiny##v2.0.6
+  tomcat-manager>undeploy /shiny --version v2.0.5
+  tomcat-manager>list
+  Path                     Status  Sessions Directory
+  ------------------------ ------- -------- ------------------------------------
+  /                        running        0 ROOT
+  /manager                 running        0 manager
+  /shiny.                  running        9 shiny##v2.0.6
    
 The following commands support the ``-v`` or ``--version`` option, which makes parallel deployment possible:
 
@@ -292,19 +292,19 @@ You can view the list of previously issued commands:
 
 .. code-block:: none
 
-   tomcat-manager> history
+  tomcat-manager> history
 
 And run a previous command by string search:
 
 .. code-block:: none
 
-   tomcat-manager> history -r undeploy
+  tomcat-manager> history -r undeploy
 
 Or by number:
 
 .. code-block:: none
 
-   tomcat-manager> history -r 10
+  tomcat-manager> history -r 10
 
 The ``history`` command has many other options, including the ability to save
 commands to a file and load commands from a file. Use ``help history`` to get
@@ -321,26 +321,26 @@ a list of settings which control the behavior of ``tomcat-manager``:
 
 .. code-block:: none
 
-   tomcat-manager> show
-   autorun_on_edit=False       # Automatically run files after editing
-   colors=True                 # Colorized output (*nix only)
-   debug=False                 # Show stack trace for exceptions
-   echo=False                  # For piped input, echo command to output
-   editor=/usr/local/bin/zile  # Program used to edit files
-   locals_in_py=True           # Allow access to your application in py via self
-   prompt='tomcat-manager> '   # The prompt issued to solicit input
-   quiet=False                 # Don't print nonessential feedback
-   status_prefix=--            # String to prepend to all status output
-   status_to_stdout=False      # Status information to stdout instead of stderr
-   timeout=10                  # Seconds to wait for HTTP connections
-   timing=False                # Report execution times
+  tomcat-manager> show
+  autorun_on_edit=False       # Automatically run files after editing
+  colors=True                 # Colorized output (*nix only)
+  debug=False                 # Show stack trace for exceptions
+  echo=False                  # For piped input, echo command to output
+  editor=/usr/local/bin/zile  # Program used to edit files
+  locals_in_py=True           # Allow access to your application in py via self
+  prompt='tomcat-manager> '   # The prompt issued to solicit input
+  quiet=False                 # Don't print nonessential feedback
+  status_prefix=--            # String to prepend to all status output
+  status_to_stdout=False      # Status information to stdout instead of stderr
+  timeout=10                  # Seconds to wait for HTTP connections
+  timing=False                # Report execution times
 
 You can change any of these settings using the ``set`` command:
 
 .. code-block:: none
 
-   tomcat-manager> set prompt='tm> '
-   tm>
+  tomcat-manager> set prompt='tm> '
+  tm>
 
 Quotes around values are not required unless they contain spaces or other
 quotes.
@@ -362,8 +362,8 @@ system. To see the location of the file:
 
 .. code-block:: none
 
-   tomcat-manager> config file
-   /Users/kotfu/Library/Application Support/tomcat-manager/tomcat-manager.ini
+  tomcat-manager> config file
+  /Users/kotfu/Library/Application Support/tomcat-manager/tomcat-manager.ini
 
 You can edit the file from within ``tomcat-manager`` too. Well, it really just
 launches the editor of your choice, you know, the one specified in the ``editor``
@@ -371,7 +371,7 @@ setting. Do that by typing:
 
 .. code-block:: none
 
-   tomcat-manager> config edit
+  tomcat-manager> config edit
 
 This file uses the INI file format. If you create a section called
 ``settings``, you can set the values of any of the available settings. My
@@ -379,10 +379,10 @@ config file contains:
 
 .. code-block:: ini
 
-   [settings]
-   prompt='tm> '
-   debug=True
-   editor=/usr/local/bin/zile
+  [settings]
+  prompt='tm> '
+  debug=True
+  editor=/usr/local/bin/zile
 
 
 .. _server_shortcuts:
@@ -396,17 +396,17 @@ for ``url``, ``user``, and ``password``. Here's a simple example:
 
 .. code-block:: ini
 
-   [localhost]
-   url=http://localhost:8080/manager
-   user=ace
-   password=newenglandclamchowder
+  [localhost]
+  url=http://localhost:8080/manager
+  user=ace
+  password=newenglandclamchowder
 
 With this defined in your configuration file, you can now connect using the
 name of the shortcut:
 
 .. code-block:: none
 
-   tomcat-manager> connect localhost
+  tomcat-manager> connect localhost
 
 If you define a ``user``, but omit ``password``, you will be prompted for it
 when you use the shortcut in the ``connect`` command.
@@ -432,7 +432,7 @@ Or the particularly useful:
 
 .. code-block:: none
 
-   tomcat-manager> threaddump | less
+  tomcat-manager> threaddump | less
 
 
 Clipboard Integration
@@ -448,7 +448,7 @@ You can also append output to the clipboard using a similar method:
 
 .. code-block:: none
 
-   tomcat-manager> serverinfo >>
+  tomcat-manager> serverinfo >>
 
 
 Run shell commands
@@ -470,7 +470,7 @@ You can launch a python interpreter:
 
 .. code-block:: none
 
-   tomcat-manager> py
+  tomcat-manager> py
 	Python 3.6.1 (default, Apr  4 2017, 09:40:51)
 	[GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)] on darwin
 	Type "help", "copyright", "credits" or "license" for more information.
@@ -482,11 +482,11 @@ You can launch a python interpreter:
       Non-python commands can be issued with ``cmd("your command")``.
       Run python code from external script files with ``run("script.py")``
    
-   >>> self.tomcat
-   <tomcatmanager.tomcat_manager.TomcatManager object at 0x10f353550>
-   >>> self.tomcat.is_connected
-   True
-   >>> exit()
+  >>> self.tomcat
+  <tomcatmanager.tomcat_manager.TomcatManager object at 0x10f353550>
+  >>> self.tomcat.is_connected
+  True
+  >>> exit()
 
 As you can see, if you have connected to a Tomcat server, then you will have a ``self.tomcat``
 object available. See :doc:`package` for more information about what you can do with this object.
