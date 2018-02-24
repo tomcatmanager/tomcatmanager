@@ -196,6 +196,15 @@ def test_load_config(mocker):
     itm = itm_with_config(mocker, configstring)
     assert itm.prompt == prompt
 
+def test_settings_noargs(capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks('settings')
+    out, err = capsys.readouterr()
+    # not going to parse all the lines, but there
+    # should be one per setting
+    assert len(out.splitlines()) == len(itm.settable)
+    assert itm.exit_code == itm.exit_codes.success
+
 def test_set_string():
     itm = tm.InteractiveTomcatManager()
     prompt = str(uuid.uuid1())
@@ -204,14 +213,6 @@ def test_set_string():
     assert itm.prompt == prompt
     assert itm.exit_code == itm.exit_codes.success
 
-def test_set_noargs(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks('set')
-    out, err = capsys.readouterr()
-    # not going to parse all the lines, but there
-    # should be one per setting
-    assert len(out.splitlines()) == len(itm.settable)
-    assert itm.exit_code == itm.exit_codes.success
 
 def test_set_integer_valid():
     itm = tm.InteractiveTomcatManager()
