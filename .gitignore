@@ -5,6 +5,7 @@
 *~
 .tm_properties
 .idea
+.vscode
 
 # compiled python
 *.py[cod]
