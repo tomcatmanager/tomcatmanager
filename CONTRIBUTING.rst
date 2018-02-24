@@ -131,7 +131,7 @@ path returned by the ``safe_path`` fixture in ``conftest.py``. You can
 modify that fixture if for some reason you need to deploy at a different
 path.
 
-The ``url``, ``user``, and ``password`` options describe the location anc
+The ``url``, ``user``, and ``password`` options describe the location and
 credentials for the Tomcat server you wish to use.
 
 The ``warfile`` parameter is the full path to a war file on the server.
@@ -147,7 +147,9 @@ to the Tomcat Server. There is a simple context file in
 ``tests/war/context.xml`` which you can copy to the server if you don't
 have a context file you want to use. If you don't copy the context file, or
 if you don't specify the ``contextfile`` parameter, or the path you provide
-doesn't point to a valid context file, several of the tests will fail
+doesn't point to a valid context file, several of the tests will fail. The
+path in your context file will be ignored, but you must specify a
+docBase attribute which points to a real war file.
 
 .. note::
 
