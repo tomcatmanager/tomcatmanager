@@ -3,7 +3,7 @@
 Release History
 ===============
 
-develop
+0.12.0 (2018-02-23)
 -------
 
 **New**
@@ -26,6 +26,8 @@ develop
    - Can now deploy context xml files
    - Specify version with --version flag instead of optional positional
      parameter
+- Commands which use an optional version parameter now use a '-v' option
+  to specify the version
 - Most commands now have -h/--help options
 
 

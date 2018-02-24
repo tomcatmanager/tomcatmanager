@@ -30,31 +30,80 @@ The interactive shell has a built-in list of all available commands:
 .. code-block:: none
 
    tomcat-manager> help
+   tomcat-manager is a command line tool for managing a Tomcat server
+   
+   Connecting to a Tomcat server
+   ============================================================
+   connect   Connect to a tomcat manager instance.
+   which     Show the url of the tomcat server you are connected to.
+   
+   Managing applications
+   ============================================================
+   list            Show all installed applications.
+   deploy local    Deploy a local war file to the tomcat server.
+   deploy server   Deploy a war file to the tomcat server.
+   deploy context  Deploy a context xml file to the tomcat server.
+   redeploy        Undeploy an existing app and deploy a new one in its place.
+   undeploy        Remove an application at a given path from the tomcat server.
+   start           Start a deployed tomcat application that isn't running.
+   stop            Stop a tomcat application and leave it deployed on the server.
+   restart         Start and stop a tomcat application. Synonym for reload.
+     reload        Synonym for 'restart'.
+   sessions        Show active sessions for a tomcat application.
+   expire          Expire idle sessions.
+   
+   Server information
+   ============================================================
+   findleakers          Show tomcat applications that leak memory.
+   resources            Show global JNDI resources configured in Tomcat.
+   serverinfo           Show information about the tomcat server.
+   sslconnectorciphers  Show SSL/TLS ciphers configured for each connector.
+   status               Show server status information in xml format.
+   threaddump           Show a jvm thread dump.
+   vminfo               Show diagnostic information about the jvm.
+   
+   Settings, configuration, and tools
+   ============================================================
+   config       Edit or show the location of the user configuration file.
+   edit         Edit a file in the preferred text editor.
+   exit_code    Show a number indicating the status of the previous command.
+   history      View, run, edit, and save previously entered commands.
+   py           Execute python commands.
+   pyscript     Run a file containing a python script.
+   set          Change program settings.
+   show         Show all settings or a specific setting.
+     settings   Synonym for 'show'.
+   shell        Execute a command in the operating system shell.
+   shortcuts    Show shortcuts for other commands.
+   
+   Other
+   ============================================================
+   exit     Exit this program.
+     quit   Synonym for 'exit'.
+   help     Show available commands, or help on a specific command.
+   version  Show the version number of this program.
+   license  Show the MIT license.
 
-   Documented commands (type help <topic>):
-   ========================================
-   _relative_load  expire       pyscript   serverinfo           start
-   cmdenvironment  findleakers  quit       sessions             status
-   config          help         redeploy   set                  stop
-   connect         history      reload     settings             threaddump
-   deploy          license      resources  shell                undeploy
-   edit            list         restart    shortcuts            version
-   exit            load         run        show                 vminfo
-   exit_code       py           save       sslconnectorciphers  which
 
 As well as help for each command:
 
 .. code-block:: none
 
    tomcat-manager> help stop
-   Usage: stop {path} [version]
+   usage: stop [-h] [-v VERSION] path
+   
+   Stop a running tomcat application and leave it deployed on the server.
+   
+   positional arguments:
+     path                  The path part of the URL where the application is
+                           deployed.
 
-   Stop a tomcat application and leave it deployed on the server.
-
-     path     The path part of the URL where the application is deployed.
-     version  Optional version string of the application to stop. If the
-              application was deployed with a version string, it must be
-              specified in order to stop the application.
+   optional arguments:
+     -h, --help            show this help message and exit
+     -v VERSION, --version VERSION
+                           Optional version string of the application to stop. If
+                           the application was deployed with a version string, it
+                           must be specified in order to stop the application.
 
 This document does not include detailed explanations of every command. It does
 show how to connect to a Tomcat server and deploy a war file, since
@@ -176,7 +225,7 @@ Let's revisit our `shiny` app. This time we will deploy with a version string:
 
 .. code-block:: none
 
-   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny v2.0.5
+   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny -v v2.0.5
    tomcat-manager>list
    Path                     Status  Sessions Directory
    ------------------------ ------- -------- ------------------------------------
@@ -191,7 +240,7 @@ sessions expire in version 2.0.5.
 
 .. code-block:: none
 
-   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.6.war /shiny v2.0.6
+   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.6.war /shiny -v v2.0.6
    tomcat-manager>list
    Path                     Status  Sessions Directory
    ------------------------ ------- -------- ------------------------------------
@@ -204,7 +253,7 @@ Once all the sessions have been migrated to version 2.0.6, I can undeploy versio
 
 .. code-block:: none
 
-   tomcat-manager>undeploy /shiny v2.0.5
+   tomcat-manager>undeploy /shiny --version v2.0.5
    tomcat-manager>list
    Path                     Status  Sessions Directory
    ------------------------ ------- -------- ------------------------------------
@@ -212,7 +261,7 @@ Once all the sessions have been migrated to version 2.0.6, I can undeploy versio
    /manager                 running        0 manager
    /shiny.                  running        9 shiny##v2.0.6
    
-The following commands support the optional version string, which makes parallel deployment possible:
+The following commands support the ``-v`` or ``--version`` option, which makes parallel deployment possible:
 
 - deploy
 - undeploy
@@ -249,15 +298,16 @@ And run a previous command by string search:
 
 .. code-block:: none
 
-   tomcat-manager> run rel
+   tomcat-manager> history -r undeploy
 
 Or by number:
 
 .. code-block:: none
 
-   tomcat-manager> run 5
+   tomcat-manager> history -r 10
 
-Both ``history`` and ``run`` have more options: use the ``help`` command to get
+The ``history`` command has many other options, including the ability to save
+commands to a file and load commands from a file. Use ``help history`` to get
 the details.
 
 
@@ -358,15 +408,8 @@ name of the shortcut:
 
    tomcat-manager> connect localhost
 
-If you define a ``user``, but omit ``password``, you will be prompted for it.
-
-
-Save and load command history
------------------------------
-
-You can save a sequence of commands to a text file using the ``save`` command. Using
-the ``load`` command you can replay those commands. Type ``help save``, and ``help load`` for
-details.
+If you define a ``user``, but omit ``password``, you will be prompted for it
+when you use the shortcut in the ``connect`` command.
 
 
 Shell-style Output Redirection
