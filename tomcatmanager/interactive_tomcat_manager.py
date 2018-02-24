@@ -333,67 +333,61 @@ class InteractiveTomcatManager(cmd2.Cmd):
             for line in help_:
                 self.poutput(line)
 
-    def _help_add_header(self, help, header):
-        help.append('')
-        help.append(header)
-        help.append('=' * 60)
-        return help
+    def _help_add_header(self, help_, header):
+        help_.append('')
+        help_.append(header)
+        help_.append('=' * 60)
+        return help_
 
     ###
     #
     # user accessable commands for configuration and settings
     #
     ###
-    # TODO add argparser
-    def do_config(self, args):
+    config_parser = argparse.ArgumentParser(
+        prog='config',
+        description='Edit or show the location of the user configuration file.',
+    )
+    config_parser.add_argument(
+        'action',
+        choices=['edit', 'file'],
+        help='\'file\' shows the name of the configuration file. \'edit\' edits the configuration file in your preferred editor.',
+    )
+
+    def do_config(self, cmdline):
         """Edit or show the location of the user configuration file."""
-        if len(args.split()) == 1:
-            action = args.split()[0]
-            if action == 'file':
-                self.poutput(self.config_file)
-                self.exit_code = self.exit_codes.success
-            elif action == 'edit':
-                self.config_edit()
-            else:
-                self.help_config()
+        args = self.parse_args(self.config_parser, cmdline)
+
+        if args.action == 'file':
+            self.poutput(self.config_file)
+            self.exit_code = self.exit_codes.success
+        elif args.action == 'edit':
+            if not self.editor:
+                self.perror("no editor: use 'set editor={path}' to specify one")
                 self.exit_code = self.exit_codes.error
+                return
+
+            # ensure the configuration directory exists
+            configdir = os.path.dirname(self.config_file)
+            if not os.path.exists(configdir):
+                os.makedirs(configdir)
+
+            # go edit the file
+            cmd = '"{}" "{}"'.format(self.editor, self.config_file)
+            self.pfeedback("executing {}".format(cmd))
+            os.system(cmd)
+
+            # read it back in and apply it
+            self.pfeedback("reloading configuration")
+            self.load_config()
+            self.exit_code = self.exit_codes.success
         else:
             self.help_config()
             self.exit_code = self.exit_codes.error
 
-    def config_edit(self):
-        """Edit the user configuration file."""
-        if not self.editor:
-            self.perror("no editor: use 'set editor={path}' to specify one")
-            self.exit_code = self.exit_codes.error
-            return
-
-        # ensure the configuration directory exists
-        configdir = os.path.dirname(self.config_file)
-        if not os.path.exists(configdir):
-            os.makedirs(configdir)
-
-        # go edit the file
-        cmd = '"{}" "{}"'.format(self.editor, self.config_file)
-        self.pfeedback("executing {}".format(cmd))
-        os.system(cmd)
-
-        # read it back in and apply it
-        self.pfeedback("reloading configuration")
-        self.load_config()
-        self.exit_code = self.exit_codes.success
-
     def help_config(self):
         """Show help for the 'config' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: config {action}
-
-Manage the user configuration file.
-
-action is one of the following:
-
-  file  show the location of the user configuration file
-  edit  edit the user configuration file""")
+        self.show_help_from(self.config_parser)
 
     show_parser = argparse.ArgumentParser(
         prog='show',
@@ -438,7 +432,8 @@ action is one of the following:
         'setting',
         nargs='?',
         help='Name of the setting to show the value for. If omitted show the values of all settings.',
-    ) 
+    )
+
     def do_settings(self, cmdline):
         """Synonym for 'show' command."""
         self.do_show(cmdline)
@@ -712,6 +707,7 @@ Change a setting.
         prog='which',
         description='show the url of the tomcat server you are connected to',
     )
+
     @requires_connection
     def do_which(self, cmdline):
         """Show the url of the tomcat server you are connected to."""
@@ -901,7 +897,6 @@ Change a setting.
         """Show help for the 'restart' command."""
         self.show_help_from(self.restart_parser)
 
-    # TODO see if we can use _path_version_parser
     sessions_parser = argparse.ArgumentParser(
         prog='sessions',
         description='Show active sessions for a tomcat application.',
