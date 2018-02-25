@@ -247,13 +247,13 @@ def test_config_invalid_action(itm_nc, capsys):
     assert itm_nc.exit_code == itm_nc.exit_codes.usage
     assert not out
     assert err.startswith('usage: ')
-    
+
 def test_config_file(mocker, capsys):
     fname = '/tmp/someconfig.ini'
     itm = tm.InteractiveTomcatManager()
 
     config_file = mocker.patch('tomcatmanager.InteractiveTomcatManager.config_file',
-                                new_callable=mock.PropertyMock)
+                               new_callable=mock.PropertyMock)
     config_file.return_value = fname
 
     itm.onecmd('config file')
@@ -323,7 +323,7 @@ def test_set_noargs(capsys):
     assert not out
     assert err == 'invalid syntax: try {setting}={value}\n'
     assert itm.exit_code == itm.exit_codes.usage
-    
+
 def test_set_string():
     itm = tm.InteractiveTomcatManager()
     prompt = str(uuid.uuid1())

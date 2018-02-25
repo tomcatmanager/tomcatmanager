@@ -78,7 +78,7 @@ def test_main_version(capsys):
 
 def test_main_version_with_others(tomcat_manager_server, capsys):
     cmdline = '-v -q -u {user} -p {password} {url} list'.format(**tomcat_manager_server)
-    argv = cmdline.split(' ')    
+    argv = cmdline.split(' ')
     with pytest.raises(SystemExit) as exit_e:
         main(argv)
     out, err = capsys.readouterr()
