@@ -267,6 +267,27 @@ def test_load_config(mocker):
     itm = itm_with_config(mocker, configstring)
     assert itm.prompt == prompt
 
+def test_load_config_bogus_setting(mocker):
+    configstring = '[settings]\nbogus=True\n'
+    # this shouldn't throw any exceptions
+    itm_with_config(mocker, configstring)
+
+def test_load_config_not_boolean(itm_nc, mocker):
+    configstring = '[settings]\necho="not a boolean"\n'
+    # this shouldn't throw any exceptions
+    itm = itm_with_config(mocker, configstring)
+    # make sure the echo setting is the same
+    # as when we don't load a config file
+    assert itm_nc.echo == itm.echo
+
+def test_load_config_not_integer(itm_nc, mocker):
+    configstring = '[settings]\ntimeout=noganinteger\n'
+    # this shouldn't throw any exceptions
+    itm = itm_with_config(mocker, configstring)
+    # make sure the timeout setting is the same
+    # as when we don't load a config file
+    assert itm_nc.timeout == itm.timeout
+
 SHOW_SETTINGS = ['settings', 'show']
 @pytest.mark.parametrize('command', SHOW_SETTINGS)
 def test_show_noargs(command, capsys):
