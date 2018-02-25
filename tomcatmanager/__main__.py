@@ -78,13 +78,14 @@ def _build_parser():
 def main(argv=None):
     """Entry point for 'tomcat-manager' command line program."""
     parser = _build_parser()
-
     args = parser.parse_args(argv)
     if args.debug:
+        print("--argv=" + str(argv), file=sys.stderr)
         print("--args=" + str(args), file=sys.stderr)
 
-    # if we have command line switches, set those values
     itm = tm.InteractiveTomcatManager()
+
+    # if we have command line switches, set those values
     # these override any user settings loaded from a config file
     if args.echo:
         itm.echo = True
@@ -101,12 +102,12 @@ def main(argv=None):
         server_info['user'] = (args.user or '')
         if args.user:
             server_info['password'] = (args.password or '')
-        itm.onecmd('connect {url} {user} {password}'.format_map(server_info))
+        itm.onecmd_plus_hooks('connect {url} {user} {password}'.format_map(server_info))
 
         if args.command:
             if itm.exit_code == itm.exit_codes.success:
                 # we connected successfully, go run the command
-                itm.onecmd('{} {}'.format(args.command, ' '.join(args.command_args)))
+                itm.onecmd_plus_hooks('{} {}'.format(args.command, ' '.join(args.command_args)))
         else:
             # we have no command, but we got a url, regardless of
             # whether the connect command worked or didn't, let's drop
