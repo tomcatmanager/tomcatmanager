@@ -64,6 +64,55 @@ def _path_version_parser(cmdname, helpmsg):
                         help='The path part of the URL where the application is deployed.')
     return parser
 
+def _deploy_parser(name, desc, localfunc, serverfunc, contextfunc):
+    """Construct a argument parser for the deploy or redeploy commands."""
+    deploy_parser = argparse.ArgumentParser(
+        prog=name,
+        description=desc,
+    )
+    deploy_subparsers = deploy_parser.add_subparsers(title='methods', dest='method')
+    # local subparser
+    deploy_local_parser = deploy_subparsers.add_parser(
+        'local',
+        description='transmit a locally available warfile to the server',
+        help='transmit a locally available warfile to the server',
+    )
+    deploy_local_parser.add_argument(
+        '-v', '--version',
+        help='version string to associate with this deployment'
+    )
+    deploy_local_parser.add_argument('warfile')
+    deploy_local_parser.add_argument('path')
+    deploy_local_parser.set_defaults(func=localfunc)
+    # server subparser
+    deploy_server_parser = deploy_subparsers.add_parser(
+        'server',
+        description='deploy a warfile already on the server',
+        help='deploy a warfile already on the server'
+    )
+    deploy_server_parser.add_argument(
+        '-v', '--version',
+        help='version string to associate with this deployment'
+    )
+    deploy_server_parser.add_argument('warfile')
+    deploy_server_parser.add_argument('path')
+    deploy_server_parser.set_defaults(func=serverfunc)
+    # context subparser
+    deploy_context_parser = deploy_subparsers.add_parser(
+        'context',
+        description='deploy a contextfile already on the server',
+        help='deploy a contextfile already on the server',
+    )
+    deploy_context_parser.add_argument(
+        '-v', '--version',
+        help='version string to associate with this deployment',
+    )
+    deploy_context_parser.add_argument('contextfile')
+    deploy_context_parser.add_argument('warfile', nargs='?')
+    deploy_context_parser.add_argument('path')
+    deploy_context_parser.set_defaults(func=contextfunc)
+    return deploy_parser
+
 # pylint: disable=too-many-public-methods
 class InteractiveTomcatManager(cmd2.Cmd):
     """An interactive command line tool for the Tomcat Manager web application.
@@ -288,18 +337,16 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help_.append('which     {}'.format(self.do_which.__doc__))
 
             help_ = self._help_add_header(help_, 'Managing applications')
-            help_.append('list            {}'.format(self.do_list.__doc__))
-            help_.append('deploy local    {}'.format(self.deploy_local.__doc__))
-            help_.append('deploy server   {}'.format(self.deploy_server.__doc__))
-            help_.append('deploy context  {}'.format(self.deploy_context.__doc__))
-            help_.append('redeploy        Undeploy an existing app and deploy a new one in its place.')
-            help_.append('undeploy        {}'.format(self.do_undeploy.__doc__))
-            help_.append('start           {}'.format(self.do_start.__doc__))
-            help_.append('stop            {}'.format(self.do_stop.__doc__))
-            help_.append('restart         {}'.format(self.do_restart.__doc__))
-            help_.append('  reload        Synonym for \'restart\'.')
-            help_.append('sessions        {}'.format(self.do_sessions.__doc__))
-            help_.append('expire          {}'.format(self.do_expire.__doc__))
+            help_.append('list      {}'.format(self.do_list.__doc__))
+            help_.append('deploy    {}'.format(self.do_deploy.__doc__))
+            help_.append('redeploy  {}'.format(self.do_redeploy.__doc__))
+            help_.append('undeploy  {}'.format(self.do_undeploy.__doc__))
+            help_.append('start     {}'.format(self.do_start.__doc__))
+            help_.append('stop      {}'.format(self.do_stop.__doc__))
+            help_.append('restart   {}'.format(self.do_restart.__doc__))
+            help_.append('  reload  Synonym for \'restart\'.')
+            help_.append('sessions  {}'.format(self.do_sessions.__doc__))
+            help_.append('expire    {}'.format(self.do_expire.__doc__))
 
             help_ = self._help_add_header(help_, 'Server information')
             help_.append('findleakers          {}'.format(self.do_findleakers.__doc__))
@@ -327,11 +374,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help_.append('exit     Exit this program.')
             help_.append('  quit   Synonym for \'exit\'.')
             help_.append('help     {}'.format(self.do_help.__doc__))
-            help_.append('version  Show the version number of this program.')
-            help_.append('license  Show the MIT license.')
+            help_.append('version  {}'.format(self.do_version.__doc__))
+            help_.append('license  {}'.format(self.do_license.__doc__))
 
             for line in help_:
                 self.poutput(line)
+            self.exit_code = self.exit_codes.success
 
     def _help_add_header(self, help_, header):
         help_.append('')
@@ -474,13 +522,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def help_set(self):
         """Show help for the 'set' command."""
         self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: set {setting}={value}
+        self.poutput("""usage: set {setting}={value}
 
-Change a setting.
+change the value of one of this program's settings
 
-  setting  Any one of the valid settings. Use 'show' to see a list of valid
-           settings.
-  value    The value for the setting.
+  setting  Name of the setting to modify. Use the 'show' command to see a
+           list of valid settings.
+  value    the value for the setting
 """)
 
     ###
@@ -744,51 +792,13 @@ Change a setting.
         self.docmd(self.tomcat.deploy_servercontext, args.path, args.contextfile,
                    warfile=args.warfile, version=args.version, update=update)
 
-    deploy_parser = argparse.ArgumentParser(
-        prog='deploy',
-        description='Install a war file containing a tomcat application in the tomcat server',
-    )
-    deploy_subparsers = deploy_parser.add_subparsers(title='methods', dest='method')
-    # local subparser
-    deploy_local_parser = deploy_subparsers.add_parser(
-        'local',
-        description='transmit a locally available warfile to the server',
-        help='transmit a locally available warfile to the server',
-    )
-    deploy_local_parser.add_argument(
-        '-v', '--version',
-        help='version string to associate with this deployment'
-    )
-    deploy_local_parser.add_argument('warfile')
-    deploy_local_parser.add_argument('path')
-    deploy_local_parser.set_defaults(func=deploy_local)
-    # server subparser
-    deploy_server_parser = deploy_subparsers.add_parser(
-        'server',
-        description='deploy a warfile already on the server',
-        help='deploy a warfile already on the server'
-    )
-    deploy_server_parser.add_argument(
-        '-v', '--version',
-        help='version string to associate with this deployment'
-    )
-    deploy_server_parser.add_argument('warfile')
-    deploy_server_parser.add_argument('path')
-    deploy_server_parser.set_defaults(func=deploy_server)
-    # context subparser
-    deploy_context_parser = deploy_subparsers.add_parser(
-        'context',
-        description='deploy a contextfile already on the server',
-        help='deploy a contextfile already on the server',
-    )
-    deploy_context_parser.add_argument(
-        '-v', '--version',
-        help='version string to associate with this deployment',
-    )
-    deploy_context_parser.add_argument('contextfile')
-    deploy_context_parser.add_argument('warfile', nargs='?')
-    deploy_context_parser.add_argument('path')
-    deploy_context_parser.set_defaults(func=deploy_context)
+    deploy_parser = _deploy_parser(
+        'deploy',
+        'deploy an application to the tomcat server',
+        deploy_local,
+        deploy_server,
+        deploy_context,
+        )
 
     @requires_connection
     def do_deploy(self, cmdline):
@@ -804,10 +814,18 @@ Change a setting.
         """Show help for the deploy command."""
         self.show_help_from(self.deploy_parser)
 
+    redeploy_parser = _deploy_parser(
+        'redeploy',
+        'deploy an application to the tomcat server, undeploying any application at the given path',
+        deploy_local,
+        deploy_server,
+        deploy_context,
+        )
+
     @requires_connection
     def do_redeploy(self, cmdline):
         """Redeploy an application to the tomcat server."""
-        args = self.parse_args(self.deploy_parser, cmdline)
+        args = self.parse_args(self.redeploy_parser, cmdline)
         try:
             args.func(self, args, update=True)
         except AttributeError:
@@ -816,7 +834,7 @@ Change a setting.
 
     def help_redeploy(self):
         """Show help for the redeploy command."""
-        self.show_help_from(self.deploy_parser)
+        self.show_help_from(self.redeploy_parser)
 
 
     undeploy_parser = _path_version_parser(
@@ -826,7 +844,7 @@ Change a setting.
 
     @requires_connection
     def do_undeploy(self, cmdline):
-        """Remove an application at a given path from the tomcat server."""
+        """Remove an application from the tomcat server."""
         args = self.parse_args(self.undeploy_parser, cmdline)
         self.docmd(self.tomcat.undeploy, args.path, args.version)
 
@@ -869,7 +887,7 @@ Change a setting.
 
     reload_parser = _path_version_parser(
         'reload',
-        'Start and stop a tomcat application.',
+        'Start and stop a tomcat application. Synonym for \'restart\'.',
     )
 
     @requires_connection
@@ -879,23 +897,25 @@ Change a setting.
         self.docmd(self.tomcat.reload, args.path, args.version)
 
     def help_reload(self):
-        """Help for the 'reload' application."""
+        """Help for the 'reload' command."""
         self.show_help_from(self.reload_parser)
 
 
     restart_parser = _path_version_parser(
         'restart',
-        'Start and stop a tomcat application. Synonym for \'reload\'.',
+        'Start and stop a tomcat application.',
     )
 
     @requires_connection
     def do_restart(self, cmdline):
-        """Start and stop a tomcat application. Synonym for reload."""
-        self.do_reload(cmdline)
+        """Start and stop a tomcat application."""
+        args = self.parse_args(self.reload_parser, cmdline)
+        self.docmd(self.tomcat.reload, args.path, args.version)
 
     def help_restart(self):
         """Show help for the 'restart' command."""
         self.show_help_from(self.restart_parser)
+
 
     sessions_parser = argparse.ArgumentParser(
         prog='sessions',
@@ -1171,39 +1191,54 @@ Change a setting.
         """Exit on the end-of-file character."""
         return self.do_exit(cmdline)
 
+    version_parser = argparse.ArgumentParser(
+        prog='version',
+        description='show the version number of this program',
+    )
     def do_version(self, cmdline):
-        """Show version information."""
-        self.exit_code = self.exit_codes.success
+        """Show the version number of this program."""
+        self.parse_args(self.version_parser, cmdline)
         self.poutput(tm.VERSION_STRING)
 
     def help_version(self):
         """Show help for the 'version' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: version
+        self.show_help_from(self.version_parser)
 
-Show version information.""")
 
+    exit_code_epilog = []
+    exit_code_epilog.append('The codes have the following meanings:')
+    for number, name in EXIT_CODES.items():
+        exit_code_epilog.append('    {:3}  {}'.format(number, name.replace('_', ' ')))
+    
+    exit_code_parser = argparse.ArgumentParser(
+        prog='exit_code',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description='show a number indicating the status of the previous command',
+        epilog='\n'.join(exit_code_epilog)
+    )
+    
     def do_exit_code(self, cmdline):
         """Show a number indicating the status of the previous command."""
+        # we don't use exit_code_parser here because we don't want to generate
+        # spurrious exit codes, i.e. if they have incorrect usage on the
+        # exit_code command
+
         # don't set the exit code here, just show it
         self.poutput(self.exit_code)
 
     def help_exit_code(self):
         """Show help for the 'exit_code' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: exit_code
+        self.show_help_from(self.exit_code_parser)        
 
-Show the value of the exit_code variable, similar to $? in ksh/bash.
 
-The codes have the following meanings:
-
-""")
-        for number, name in self.EXIT_CODES.items():
-            self.poutput('    {:3}  {}'.format(number, name.replace('_', ' ')))
+    license_parser = argparse.ArgumentParser(
+        prog='license',
+        description='show the software license for this program',
+    )
 
     def do_license(self, cmdline):
-        """Show license information."""
-        self.exit_code = self.exit_codes.success
+        """Show the software license for this program."""
+        self.parse_args(self.license_parser, cmdline)
         self.poutput("""
 Copyright 2007 Jared Crapo
 
@@ -1228,10 +1263,7 @@ THE SOFTWARE.
 
     def help_license(self):
         """Show help for the 'license' command."""
-        self.exit_code = self.exit_codes.success
-        self.poutput("""Usage: license
-
-Show license information.""")
+        self.show_help_from(self.license_parser)
 
 
 # pylint: disable=too-many-ancestors

@@ -445,3 +445,63 @@ def test_findleakers(tomcat_manager_server):
     itm.exit_code = itm.exit_codes.error
     itm.onecmd_plus_hooks('findleakers')
     assert itm.exit_code == itm.exit_codes.success
+
+###
+#
+# test all the help commands
+#
+###
+ARGPARSE_HELP = [
+    'config',
+    'show',
+    'connect',
+    'which',
+    'deploy',
+    'redeploy',
+    'undeploy',
+    'start',
+    'stop',
+    'reload',
+    'restart',
+    'sessions',
+    'expire',
+    'list',
+    'serverinfo',
+    'status',
+    'vminfo',
+    'sslconnectorciphers',
+    'threaddump',
+    'resources',
+    'findleakers',
+    'version',
+    'exit_code',
+    'license',
+]
+@pytest.mark.parametrize('command', ARGPARSE_HELP)
+def test_help_argparsed(command, capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = 'help {}'.format(command)
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    parser_func = getattr(itm, '{}_parser'.format(command))
+    assert out == parser_func.format_help()
+    assert itm.exit_code == itm.exit_codes.success
+
+def test_help_set(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = 'help set'
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert 'change the value of one of this program\'s settings' in out
+    assert itm.exit_code == itm.exit_codes.success
+
+def test_help(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = 'help'
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert 'Connecting to a Tomcat server' in out
+    assert 'Managing applications' in out
+    assert 'Server information' in out
+    assert 'Settings, configuration, and tools' in out
+    assert itm.exit_code == itm.exit_codes.success
