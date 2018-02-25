@@ -26,6 +26,33 @@ def pytest_addoption(parser):
     parser.addoption('--contextfile', action='store', default=None,
         help='contextfile: path to context.xml file on the tomcat server')
 
+
+# use a fixture to return a class with a bunch
+# of assertion helper methods
+@pytest.fixture(scope='module')
+def assert_tomcatresponse():
+    """
+    Assertions for every command that should complete successfully.
+    """
+    class AssertResponse():
+        def success(self, r):
+            """Assertions on TomcatResponse for calls that should be successful."""
+            assert r.status_code == tm.status_codes.ok, 'message from server: "{}"'.format(r.status_message)
+            assert r.status_message != None
+            assert r.status_message
+            r.raise_for_status()
+        def failure(self, r):
+            """Assertions on TomcatResponse for calls that should fail."""
+            assert r.status_code == tm.status_codes.fail
+            with pytest.raises(tm.TomcatError):
+                r.raise_for_status()
+        def info(self, r):
+            """Assertions on TomcatResponse for info-type commands that should be successful."""
+            self.success(r)
+            assert r.result != None
+            assert r.result        
+    return AssertResponse()
+
 ###
 #
 # fixtures for testing TomcatManager()
