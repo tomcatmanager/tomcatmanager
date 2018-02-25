@@ -409,7 +409,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if args.action == 'file':
             self.poutput(self.config_file)
             self.exit_code = self.exit_codes.success
-        elif args.action == 'edit':
+        else:
             if not self.editor:
                 self.perror("no editor: use 'set editor={path}' to specify one")
                 self.exit_code = self.exit_codes.error
@@ -429,9 +429,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.pfeedback("reloading configuration")
             self.load_config()
             self.exit_code = self.exit_codes.success
-        else:
-            self.help_config()
-            self.exit_code = self.exit_codes.error
 
     def help_config(self):
         """Show help for the 'config' command."""
@@ -461,8 +458,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         maxlen += 1
         if result:
             for setting in sorted(result):
-                self.poutput('{} # {}'.format(result[setting].ljust(maxlen),
-                                              self.settable[setting]))
+                self.poutput('{}  # {}'.format(result[setting].ljust(maxlen),
+                                               self.settable[setting]))
             self.exit_code = self.exit_codes.success
         else:
             self.perror("unknown setting: '{}'".format(args.setting))
@@ -595,13 +592,13 @@ change the value of one of this program's settings
             if current_val != val:
                 try:
                     onchange_hook = getattr(self, '_onchange_{}'.format(param_name))
-                    onchange_hook(old=current_val, new=val)
+                    onchange_hook(current_val, val)
                 except AttributeError:
                     pass
         else:
             raise ValueError
 
-    def _onchange_timeout(self, old, new):
+    def _onchange_timeout(self, _, new):
         """Pass the new timeout through to the TomcatManager object."""
         self.tomcat.timeout = new
 
@@ -1209,14 +1206,14 @@ change the value of one of this program's settings
     exit_code_epilog.append('The codes have the following meanings:')
     for number, name in EXIT_CODES.items():
         exit_code_epilog.append('    {:3}  {}'.format(number, name.replace('_', ' ')))
-    
+
     exit_code_parser = argparse.ArgumentParser(
         prog='exit_code',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description='show a number indicating the status of the previous command',
         epilog='\n'.join(exit_code_epilog)
     )
-    
+
     def do_exit_code(self, cmdline):
         """Show a number indicating the status of the previous command."""
         # we don't use exit_code_parser here because we don't want to generate
@@ -1228,7 +1225,7 @@ change the value of one of this program's settings
 
     def help_exit_code(self):
         """Show help for the 'exit_code' command."""
-        self.show_help_from(self.exit_code_parser)        
+        self.show_help_from(self.exit_code_parser)
 
 
     license_parser = argparse.ArgumentParser(

@@ -24,8 +24,8 @@
 
 import io
 
-import requests
 import pytest
+import requests
 
 import tomcatmanager as tm
 
@@ -113,3 +113,25 @@ class TestManager(TestManagerBase):
         assert r.result == ''
         assert r.status_message == ''
         r.raise_for_status()
+
+    def test_connect_connection_error(self, tomcat_manager_server, mocker):
+        get_mock = mocker.patch('requests.get')
+        get_mock.side_effect = requests.exceptions.ConnectionError()
+        tomcat = tm.TomcatManager()
+        with pytest.raises(requests.exceptions.ConnectionError):
+            r = tomcat.connect(
+                tomcat_manager_server.url,
+                tomcat_manager_server.user,
+                tomcat_manager_server.password
+            )
+
+    def test_connect_timeout(self, tomcat_manager_server, mocker):
+        get_mock = mocker.patch('requests.get')
+        get_mock.side_effect = requests.exceptions.Timeout()
+        tomcat = tm.TomcatManager()
+        with pytest.raises(requests.exceptions.Timeout):
+            r = tomcat.connect(
+                tomcat_manager_server.url,
+                tomcat_manager_server.user,
+                tomcat_manager_server.password
+            )
