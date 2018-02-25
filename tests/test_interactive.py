@@ -22,10 +22,10 @@
 # THE SOFTWARE.
 #
 
-import uuid
-import unittest.mock as mock
-import tempfile
 import os
+import tempfile
+import unittest.mock as mock
+import uuid
 
 import pytest
 import requests

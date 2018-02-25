@@ -25,20 +25,20 @@
 Classes and functions for the 'tomcat-manager' command line program.
 """
 
-import sys
-import os
-import traceback
-import getpass
-import xml.dom.minidom
+import argparse
 import ast
 import configparser
+import getpass
+import os
+import sys
+import traceback
+import xml.dom.minidom
 from http.client import responses
-import argparse
 
-from attrdict import AttrDict
+import appdirs
 import cmd2
 import requests
-import appdirs
+from attrdict import AttrDict
 
 import tomcatmanager as tm
 
