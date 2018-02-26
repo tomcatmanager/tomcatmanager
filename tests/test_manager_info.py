@@ -83,7 +83,9 @@ def test_resources_named_class_not_registered(tomcat, assert_tomcatresponse):
 
 def test_find_leakers(tomcat, assert_tomcatresponse):
     r = tomcat.find_leakers()
-    assert_tomcatresponse.info(r)
+    # don't use assert_tomcatresponse.info() because it asserts
+    # that result is not empty. There might not be any leakers.
+    assert_tomcatresponse.success(r)
     assert isinstance(r.leakers, list)
 
 def test_parse_leakers(tomcat):

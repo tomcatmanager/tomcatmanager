@@ -941,8 +941,8 @@ change the value of one of this program's settings
 
 
     expire_parser = argparse.ArgumentParser(
-        prog='sessions',
-        description='Show active sessions for a tomcat application.',
+        prog='expire',
+        description='expire idle sessions',
     )
     expire_parser.add_argument(
         '-v', '--version',

@@ -35,8 +35,63 @@ def get_itm(tms):
     """
     itm = tm.InteractiveTomcatManager()
     args = 'connect {url} {user} {password}'.format(**tms)
-    itm.onecmd_plus_hooks(args)
+    itm.onecmd(args)
     return itm
+
+VERSION_STRINGS = ['', '-v 42']
+
+###
+#
+# deploy localwar
+#
+###
+
+
+###
+#
+# start, stop, restart, reload, sessions, expire
+#
+###
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_stop_start(tomcat_manager_server, localwar_file, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd('deploy local {} {} {}'.format(version, localwar_file, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd('stop {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd('start {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+COMMANDS = ['restart', 'reload', 'sessions']
+@pytest.mark.parametrize('command', COMMANDS)
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_commands(tomcat_manager_server, localwar_file, safe_path, command, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd('deploy local {} {} {}'.format(version, localwar_file, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd('{} {} {}'.format(command, version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_expire(tomcat_manager_server, localwar_file, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd('deploy local {} {} {}'.format(version, localwar_file, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd('expire {} {} 30'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
 
 
 ###
@@ -151,3 +206,25 @@ def test_list_state_running(tomcat_manager_server, mock_apps, capsys):
     interactive_tomcat.onecmd_plus_hooks('list --raw -s running')
     out, _ = capsys.readouterr()
     assert out == expected
+
+USAGE_ERRORS = [
+    'start',
+    'stop',
+    'restart',
+    'reload',
+    'sessions',
+    'expire',
+    'expire path',
+]
+@pytest.mark.parametrize('cmdline', USAGE_ERRORS)
+def test_usage_errors(cmdline, tomcat_manager_server, capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.quiet = True
+    args = 'connect {url} {user} {password}'.format(**tomcat_manager_server)
+    itm.onecmd(args)
+    with pytest.raises(SystemExit):
+        itm.onecmd(cmdline)
+    out, err = capsys.readouterr()
+    assert not out
+    assert err.startswith('usage: ')
+    assert itm.exit_code == itm.exit_codes.usage
