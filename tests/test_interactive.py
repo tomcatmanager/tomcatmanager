@@ -228,21 +228,20 @@ def test_pythonize(param, value):
 def test_config_edit(itm_nc, mocker):
     itm_nc.editor = 'fooedit'
     mock_os_system = mocker.patch('os.system')
-    itm_nc.onecmd('config edit')
+    itm_nc.onecmd_plus_hooks('config edit')
     assert mock_os_system.call_count == 1
     assert itm_nc.exit_code == itm_nc.exit_codes.success
 
 def test_config_edit_no_editor(itm_nc, capsys):
     itm_nc.editor = None
-    itm_nc.onecmd('config edit')
+    itm_nc.onecmd_plus_hooks('config edit')
     out, err = capsys.readouterr()
     assert itm_nc.exit_code == itm_nc.exit_codes.error
     assert not out
     assert err.startswith('no editor: ')
 
 def test_config_invalid_action(itm_nc, capsys):
-    with pytest.raises(SystemExit):
-        itm_nc.onecmd('config bogus')
+    itm_nc.onecmd_plus_hooks('config bogus')
     out, err = capsys.readouterr()
     assert itm_nc.exit_code == itm_nc.exit_codes.usage
     assert not out
@@ -256,7 +255,7 @@ def test_config_file(mocker, capsys):
                                new_callable=mock.PropertyMock)
     config_file.return_value = fname
 
-    itm.onecmd('config file')
+    itm.onecmd_plus_hooks('config file')
     out, _ = capsys.readouterr()
     assert out == '{}\n'.format(fname)
     assert itm.exit_code == itm.exit_codes.success
@@ -292,7 +291,7 @@ SHOW_SETTINGS = ['settings', 'show']
 @pytest.mark.parametrize('command', SHOW_SETTINGS)
 def test_show_noargs(command, capsys):
     itm = tm.InteractiveTomcatManager()
-    itm.onecmd(command)
+    itm.onecmd_plus_hooks(command)
     out, _ = capsys.readouterr()
     # not going to parse all the lines, but there
     # should be one per setting
@@ -302,7 +301,7 @@ def test_show_noargs(command, capsys):
 @pytest.mark.parametrize('command', SHOW_SETTINGS)
 def test_show_valid_setting(command, capsys):
     itm = tm.InteractiveTomcatManager()
-    itm.onecmd('{} prompt'.format(command))
+    itm.onecmd_plus_hooks('{} prompt'.format(command))
     out, _ = capsys.readouterr()
     assert out.startswith("prompt='{}' ".format(itm.prompt))
     assert itm.exit_code == itm.exit_codes.success
@@ -310,7 +309,7 @@ def test_show_valid_setting(command, capsys):
 @pytest.mark.parametrize('command', SHOW_SETTINGS)
 def test_show_invalid_setting(command, capsys):
     itm = tm.InteractiveTomcatManager()
-    itm.onecmd('{} bogus'.format(command))
+    itm.onecmd_plus_hooks('{} bogus'.format(command))
     out, err = capsys.readouterr()
     assert not out
     assert err == "unknown setting: 'bogus'\n"
@@ -318,7 +317,7 @@ def test_show_invalid_setting(command, capsys):
 
 def test_set_noargs(capsys):
     itm = tm.InteractiveTomcatManager()
-    itm.onecmd('set')
+    itm.onecmd_plus_hooks('set')
     out, err = capsys.readouterr()
     assert not out
     assert err == 'invalid syntax: try {setting}={value}\n'
@@ -327,7 +326,7 @@ def test_set_noargs(capsys):
 def test_set_string():
     itm = tm.InteractiveTomcatManager()
     prompt = str(uuid.uuid1())
-    itm.onecmd('set prompt={}'.format(prompt))
+    itm.onecmd_plus_hooks('set prompt={}'.format(prompt))
     assert itm.prompt == prompt
     assert itm.exit_code == itm.exit_codes.success
 
@@ -374,7 +373,7 @@ def test_onchange_timout(mocker):
     # set this to a value that we know will cause it to change when we execute
     # the command
     itm.timeout = 5
-    itm.onecmd('set timeout={}'.format(timeout))
+    itm.onecmd_plus_hooks('set timeout={}'.format(timeout))
     assert itm.exit_code == itm.exit_codes.success
     assert hook.call_count == 1
     assert itm.tomcat.timeout == timeout
@@ -480,7 +479,7 @@ def test_connect_with_connection_error(tomcat_manager_server, capsys, mocker):
     connect_mock.side_effect = requests.exceptions.ConnectionError()
     itm = tm.InteractiveTomcatManager()
     cmdline = 'connect {url} {user} {password}'.format(**tomcat_manager_server)
-    itm.onecmd(cmdline)
+    itm.onecmd_plus_hooks(cmdline)
     out, err = capsys.readouterr()
     assert not out
     assert connect_mock.call_count == 1
@@ -492,7 +491,7 @@ def test_connect_with_timeout(tomcat_manager_server, capsys, mocker):
     connect_mock.side_effect = requests.exceptions.Timeout()
     itm = tm.InteractiveTomcatManager()
     cmdline = 'connect {url} {user} {password}'.format(**tomcat_manager_server)
-    itm.onecmd(cmdline)
+    itm.onecmd_plus_hooks(cmdline)
     out, err = capsys.readouterr()
     assert not out
     assert connect_mock.call_count == 1
@@ -530,7 +529,7 @@ REQUIRES_CONNECTION = [
 @pytest.mark.parametrize('command', REQUIRES_CONNECTION)
 def test_requires_connection(command, capsys):
     itm = tm.InteractiveTomcatManager()
-    itm.onecmd(command)
+    itm.onecmd_plus_hooks(command)
     out, err = capsys.readouterr()
     assert itm.exit_code == itm.exit_codes.error
     assert not out
@@ -615,7 +614,7 @@ def test_resources_class_name(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
     itm.exit_code = itm.exit_codes.success
     # this class has to be hand coded in the mock server
-    itm.onecmd('resources com.example.Nothing')
+    itm.onecmd_plus_hooks('resources com.example.Nothing')
     out, _ = capsys.readouterr()
     assert itm.exit_code == itm.exit_codes.error
     assert not out
@@ -634,7 +633,7 @@ def test_findleakers(tomcat_manager_server):
 def test_default(capsys):
     cmdline = 'notacommand'
     itm = tm.InteractiveTomcatManager()
-    itm.onecmd(cmdline)
+    itm.onecmd_plus_hooks(cmdline)
     out, err = capsys.readouterr()
     assert itm.exit_code == itm.exit_codes.command_not_found
     assert not out
