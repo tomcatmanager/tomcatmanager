@@ -29,7 +29,7 @@ def pytest_addoption(parser):
 
 # use a fixture to return a class with a bunch
 # of assertion helper methods
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def assert_tomcatresponse():
     """
     Assertions for every command that should complete successfully.
@@ -58,7 +58,7 @@ def assert_tomcatresponse():
 # fixtures for testing TomcatManager()
 #
 ###
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def tomcat_manager_server(request):
     """start a local http server which provides a similar interface to a real Tomcat Manager app"""
     url = request.config.getoption('--url')
@@ -75,7 +75,7 @@ def tomcat_manager_server(request):
         # go start up a fake server
         return start_mock_server80()
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def tomcat(tomcat_manager_server):
     tomcat = tm.TomcatManager()
     tomcat.connect(
@@ -85,17 +85,17 @@ def tomcat(tomcat_manager_server):
     )
     return tomcat
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def localwar_file():
     """return the path to a valid war file"""
     return os.path.dirname(__file__) + '/tests/war/sample.war'
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def safe_path():
     """a safe path we can deploy apps to"""
     return '/tomcat-manager-test-app'
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def server_info():
     return """Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
 OS Name: Linux
