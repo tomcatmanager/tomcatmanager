@@ -540,7 +540,7 @@ class TomcatManager:
 
         """
         r = self._get('serverinfo')
-        r.server_info = ServerInfo(r.result)
+        r.server_info = ServerInfo(result=r.result)
         return r
 
     def status_xml(self):

@@ -392,7 +392,7 @@ class ServerInfo(dict):
         'Oracle Corporation'
     """
 
-    def __init__(self, result=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Initialize from the plain text response from a Tomcat server.
 
@@ -406,6 +406,7 @@ class ServerInfo(dict):
         self._os_architecture = None
         self._jvm_version = None
         self._jvm_vendor = None
+        result = kwargs.pop('result', None)
         self._parse(result)
 
     def _parse(self, result):

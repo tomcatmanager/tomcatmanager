@@ -244,7 +244,7 @@ def test_sort_by_pvs():
 #
 ###
 def test_dict(server_info):
-    sinfo = tm.models.ServerInfo(server_info)
+    sinfo = tm.models.ServerInfo(result=server_info)
     assert sinfo['Tomcat Version'] == 'Apache Tomcat/8.0.32 (Ubuntu)'
     assert sinfo['OS Name'] == 'Linux'
     assert sinfo['OS Version'] == '4.4.0-89-generic'
@@ -253,7 +253,7 @@ def test_dict(server_info):
     assert sinfo['JVM Vendor'] == 'Oracle Corporation'
 
 def test_properties(server_info):
-    sinfo = tm.models.ServerInfo(server_info)
+    sinfo = tm.models.ServerInfo(result=server_info)
     assert sinfo.tomcat_version == 'Apache Tomcat/8.0.32 (Ubuntu)'
     assert sinfo.os_name == 'Linux'
     assert sinfo.os_version == '4.4.0-89-generic'
@@ -263,5 +263,5 @@ def test_properties(server_info):
 
 def test_parse_extra(server_info):
     lines = server_info + "New Key: New Value\n"
-    sinfo = tm.models.ServerInfo(lines)
+    sinfo = tm.models.ServerInfo(result=lines)
     assert sinfo['New Key'] == 'New Value'

@@ -6,6 +6,10 @@ Changelog
 Unreleased
 ----------
 
+**Changed**
+
+- ServerInfo.__init__() now doesn't accept the result as a positional
+  argument: it must be a keyword argument.
 
 
 0.12.0 (2018-02-23)
