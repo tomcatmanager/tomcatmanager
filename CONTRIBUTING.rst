@@ -89,9 +89,12 @@ Testing
 -------
 
 To ensure the tests can run without an external dependencies,
-``tests/mock_server80.py`` contains a HTTP server which emulates
-the behavior of Tomcat Manager 8.0. There is a test fixture to start
-this server, and all the tests run against this fixture.
+``tests/mock_server80.py`` contains a HTTP server which emulates the behavior
+of Tomcat Manager 8.0. There is a test fixture to start this server, and all
+the tests run against this fixture. I created this fixture to speed up testing
+time. The test suite runs almost 100x faster against the mock server (using
+xdist to spread the work across 8 cores), than against a real tomcat server
+(where you can't use xdist).
 
 You can run the tests against all the supported versions of python using tox::
 
@@ -100,12 +103,19 @@ You can run the tests against all the supported versions of python using tox::
 tox expects that when it runs ``python3.4`` it will actually get a python from
 the 3.4.x series. That's why we set up the various python environments earlier.
 
-If you just want to run the tests in your current python environment, use pytest::
+If you just want to run the tests in your current python environment, use
+pytest::
 
 	$ pytest
 
 This runs all the test in ``tests/`` and also runs doctests in
 ``tomcatmanager/`` and ``docs/``.
+
+You can speed up the test suite by using ``pytest-xdist`` to parallelize the
+tests across the number of cores you have::
+
+    $ pip install pytest-xdist
+    $ pytest -n8
 
 In many of the doctests you'll see something like:
 
@@ -118,48 +128,54 @@ which has several benefits:
   to a tomcat server and handling exceptions
 - allows doctests to execute against a mock tomcat server
 
-You can run all the tests against a real Tomcat Server that you have running
-by utilizing the following command line options::
+You can run all the tests against a real Tomcat Server by utilizing the
+following command line options::
 
    $ pytest --url=http://localhost:8080/manager --user=ace \
    --password=newenglandclamchowder --warfile=/tmp/sample.war \
    --contextfile=/tmp/context.xml
 
-Running the test suite will deploy and undeploy an app dozens of times, and
+Running the test suite will deploy and undeploy an app hundreds of times, and
 will definitely trigger garbage collection, so you might not want to run it
-against a production server. When an app is deployed, it will be at the
-path returned by the ``safe_path`` fixture in ``conftest.py``. You can
-modify that fixture if for some reason you need to deploy at a different
-path.
-
-The ``url``, ``user``, and ``password`` options describe the location and
-credentials for the Tomcat server you wish to use.
-
-The ``warfile`` parameter is the full path to a war file on the server.
-There is a simple war file in ``tests/war/sample.war`` which you can copy
-to the server if you don't have a war file you want to use. If you don't
-copy the war file, or if you don't specify the ``warfile`` parameter, or
-the path you provide doesn't point to a valid war file, several of the
-tests will fail.
-
-The ``contextfile`` parameter is the full path to a context XML file, which
-gives you an alternative way to specify additional deployment information
-to the Tomcat Server. There is a simple context file in
-``tests/war/context.xml`` which you can copy to the server if you don't
-have a context file you want to use. If you don't copy the context file, or
-if you don't specify the ``contextfile`` parameter, or the path you provide
-doesn't point to a valid context file, several of the tests will fail. The
-path in your context file will be ignored, but you must specify a
-docBase attribute which points to a real war file.
+against a production server. When I run the test suite against a stock Tomcat
+on a Linode with 2 cores and 4GB of memory it takes approximately 30 minutes
+to complete.
 
 .. note::
 
-   If you test against a real Tomcat Server, you should not use the
+   If you test against a real Tomcat server, you should not use the
    ``pytest-xdist`` plugin to parallelize testing across multiple CPUs or
    many platforms. Many of the tests depend on deploying and undeploying an
    app at a specific path, and that path is shared across the entire test
    suite. It wouldn't help much anyway because the testing is constrained
-   by the speed of the Tomcat Server.
+   by the speed of the Tomcat server.
+
+If you kill the test suite in the middle of a run, you may leave the test
+application deployed in your tomcat server. If this happens, you must undeploy
+it before rerunning the test suite or you will get lots of errors.
+
+When the test suite deploys applications, it will be at the path returned by
+the ``safe_path`` fixture in ``conftest.py``. You can modify that fixture if
+for some reason you need to deploy at a different path.
+
+The ``url``, ``user``, and ``password`` options describe the location and
+credentials for the Tomcat server you wish to use.
+
+The ``warfile`` parameter is the full path to a war file on the server. There
+is a simple war file in ``tests/war/sample.war`` which you can copy to the
+server if you don't have a war file you want to use. If you don't copy the war
+file, or if you don't specify the ``warfile`` parameter, or the path you
+provide doesn't point to a valid war file, several of the tests will fail.
+
+The ``contextfile`` parameter is the full path to a context XML file, which
+gives you an alternative way to specify additional deployment information to
+the Tomcat Server. There is a simple context file in ``tests/war/context.xml``
+which you can copy to the server if you don't have a context file you want to
+use. If you don't copy the context file, or if you don't specify the
+``contextfile`` parameter, or the path you provide doesn't point to a valid
+context file, several of the tests will fail. The path in your context file
+will be ignored, but you must specify a docBase attribute which points to a
+real war file.
 
 
 Code Quality
@@ -212,10 +228,11 @@ To make a release and deploy it to `PyPI
 
 4. Push the **develop** branch to github.
 
-5. Create a pull request on github to merge the **develop** branch into **master**. Wait
-   for the checks to pass.
+5. Create a pull request on github to merge the **develop** branch into
+   **master**. Wait for the checks to pass.
 
-6. Merge the **develop** branch into the **master** branch and close the pull request.
+6. Merge the **develop** branch into the **master** branch and close the pull
+   request.
 
 7. Tag the **master** branch with the new version number, and push the tag.
 
@@ -239,4 +256,5 @@ To make a release and deploy it to `PyPI
 12. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
     Make sure they look good.
 
-13. Switch back to the **develop** branch. Add an **Unreleased** section to the top of ``CHANGELOG.rst``. Push the change to github.
+13. Switch back to the **develop** branch. Add an **Unreleased** section to
+    the top of ``CHANGELOG.rst``. Push the change to github.
