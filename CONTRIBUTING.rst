@@ -92,9 +92,7 @@ To ensure the tests can run without an external dependencies,
 ``tests/mock_server80.py`` contains a HTTP server which emulates the behavior
 of Tomcat Manager 8.0. There is a test fixture to start this server, and all
 the tests run against this fixture. I created this fixture to speed up testing
-time. The test suite runs almost 100x faster against the mock server (using
-xdist to spread the work across 8 cores), than against a real tomcat server
-(where you can't use xdist).
+time. It doesn't do everything a real Tomcat server does, but it's close enough for the tests to run, and it allows you to parallelize the test suite using ``python-xdist``.
 
 You can run the tests against all the supported versions of python using tox::
 
