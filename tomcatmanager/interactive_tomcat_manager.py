@@ -826,7 +826,7 @@ change the value of one of this program's settings
         try:
             args.func(self, args, update=True)
         except AttributeError:
-            self.help_deploy()
+            self.help_redeploy()
             self.exit_code = self.exit_codes.error
 
     def help_redeploy(self):

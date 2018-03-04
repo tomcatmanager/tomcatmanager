@@ -630,6 +630,32 @@ def test_findleakers(tomcat_manager_server):
 # miscellaneous commands
 #
 ###
+def test_exit():
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks('exit')
+    assert itm.exit_code == itm.exit_codes.success
+
+def test_quit():
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks('quit')
+    assert itm.exit_code == itm.exit_codes.success
+
+def test_exit_code(capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks('version')
+    out, _ = capsys.readouterr()
+    itm.onecmd_plus_hooks('exit_code')
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.exit_codes.success
+    assert out == '{}\n'.format(itm.exit_codes.success)
+
+def test_version(capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks('version')
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.exit_codes.success
+    assert tm.__version__ in out
+
 def test_default(capsys):
     cmdline = 'notacommand'
     itm = tm.InteractiveTomcatManager()
@@ -641,8 +667,7 @@ def test_default(capsys):
 
 def test_license(capsys):
     itm = tm.InteractiveTomcatManager()
-    cmdline = 'license'
-    itm.onecmd_plus_hooks(cmdline)
+    itm.onecmd_plus_hooks('license')
     out, _ = capsys.readouterr()
     expected = """
 Copyright 2007 Jared Crapo
