@@ -76,6 +76,17 @@ def test_main_version(capsys):
     assert out[0] == tm.VERSION_STRING
     assert not err
 
+def test_main_debug(tomcat_manager_server, capsys):
+    cmdline = '-d -u {user} -p {password} {url} list'.format(**tomcat_manager_server)
+    argv = cmdline.split(' ')
+    exit_code = main(argv)
+    out, err = capsys.readouterr()
+    out = out.splitlines()
+    assert exit_code == 0
+    assert err
+    assert 'Path' in out[0]
+    assert 'Sessions' in out[0]
+
 def test_main_version_with_others(tomcat_manager_server, capsys):
     cmdline = '-v -q -u {user} -p {password} {url} list'.format(**tomcat_manager_server)
     argv = cmdline.split(' ')
