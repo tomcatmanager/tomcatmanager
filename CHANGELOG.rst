@@ -2,13 +2,25 @@
 
 Changelog
 =========
+All notable changes to `tomcatmanager <https://github.com/tomcatmanager/tomcatmanager>`_ will be documented in this file.
 
-Unreleased
-----------
+The format is based on `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_
+and this project adheres to `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
-**Changed**
 
-- ServerInfo.__init__() now doesn't accept the result as a positional
+In Development
+--------------
+
+Added
+^^^^^
+
+- In the interactive `tomcat-manager` tool, the history of previously executed
+  commands is now persistent across invocations of the program.
+
+Changed
+^^^^^^^
+
+- `ServerInfo.__init__()` no longer accepts the result as a positional
   argument: it must be a keyword argument.
 
 

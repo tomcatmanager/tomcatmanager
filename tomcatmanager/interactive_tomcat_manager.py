@@ -180,13 +180,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.prompt = '{}> '.format(self.app_name)
         cmd2.Cmd.shortcuts.update({'$?': 'exit_code'})
 
-        cmd2.Cmd.__init__(self)
-
-        # initialize configuration
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
+
+        cmd2.Cmd.__init__(self, persistent_history_file=self.history_file)
+
         self.load_config()
 
-        # prepare our own stuff
         self.tomcat = tm.TomcatManager()
         self.tomcat.timeout = self.timeout
         self.exit_code = None
@@ -539,10 +538,23 @@ change the value of one of this program's settings
         The location of the user configuration file.
 
         :return: The full path to the user configuration file, or None
-                 if self.app_name has not been defined.
+                 if self.appdirs has not been defined.
         """
-        filename = self.app_name + '.ini'
-        return os.path.join(self.appdirs.user_config_dir, filename)
+        if self.appdirs:
+            filename = self.app_name + '.ini'
+            return os.path.join(self.appdirs.user_config_dir, filename)
+
+    @property
+    def history_file(self):
+        """
+        The location of the command history file.
+
+        :return: The full path to the file where command history will be
+                saved and loaded, or None if self.appdirs has not been
+                defined.
+        """
+        if self.appdirs:
+            return os.path.join(self.appdirs.user_config_dir, 'history.txt')
 
     def load_config(self):
         """Open and parse the user config file and set self.config."""
@@ -1175,7 +1187,7 @@ change the value of one of this program's settings
     # miscellaneous user accessible commands
     #
     ###
-    def do_exit(self, cmdline):
+    def do_exit(self, _):
         """Exit the interactive command prompt."""
         self.exit_code = self.exit_codes.success
         return self._STOP_AND_EXIT
@@ -1214,7 +1226,7 @@ change the value of one of this program's settings
         epilog='\n'.join(exit_code_epilog)
     )
 
-    def do_exit_code(self, cmdline):
+    def do_exit_code(self, _):
         """Show a number indicating the status of the previous command."""
         # we don't use exit_code_parser here because we don't want to generate
         # spurrious exit codes, i.e. if they have incorrect usage on the

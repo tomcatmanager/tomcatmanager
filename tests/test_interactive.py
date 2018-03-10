@@ -225,6 +225,26 @@ def test_pythonize(param, value):
     itm = tm.InteractiveTomcatManager()
     assert itm._pythonize(param) == value
 
+def test_appdirs():
+    itm = tm.InteractiveTomcatManager()
+    assert itm.appdirs
+
+def test_config_file_property():
+    itm = tm.InteractiveTomcatManager()
+    # don't care where it is, just care that there is one
+    assert itm.config_file
+    # if appdirs doesn't exist, config_file shouldn't either
+    itm.appdirs = None
+    assert not itm.config_file
+
+def test_history_file_property():
+    itm = tm.InteractiveTomcatManager()
+    # don't care where it is, just care that there is one
+    assert itm.history_file
+    # if appdirs doesn't exist, config_file shouldn't either
+    itm.appdirs = None
+    assert not itm.history_file
+
 def test_config_edit(itm_nc, mocker):
     itm_nc.editor = 'fooedit'
     mock_os_system = mocker.patch('os.system')
@@ -247,7 +267,7 @@ def test_config_invalid_action(itm_nc, capsys):
     assert not out
     assert err.startswith('usage: ')
 
-def test_config_file(mocker, capsys):
+def test_config_file_command(mocker, capsys):
     fname = '/tmp/someconfig.ini'
     itm = tm.InteractiveTomcatManager()
 
