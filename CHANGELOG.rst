@@ -14,13 +14,13 @@ In Development
 Added
 ^^^^^
 
-- In the interactive `tomcat-manager` tool, the history of previously executed
-  commands is now persistent across invocations of the program.
+- In the interactive ``tomcat-manager`` tool, the history of previously
+  executed commands is now persistent across invocations of the program.
 
 Changed
 ^^^^^^^
 
-- `ServerInfo.__init__()` no longer accepts the result as a positional
+- ``ServerInfo.__init__()`` no longer accepts the result as a positional
   argument: it must be a keyword argument.
 
 
