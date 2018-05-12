@@ -28,6 +28,8 @@ tomcatmanager.models
 This module contains the data objects created by and used by tomcatmanager.
 """
 
+from typing import TypeVar
+
 from attrdict import AttrDict
 import requests
 
@@ -148,7 +150,7 @@ class TomcatManagerResponse:
         return self._status_code
 
     @status_code.setter
-    def status_code(self, value):
+    def status_code(self, value: str):
         self._status_code = value
 
     @property
@@ -159,7 +161,7 @@ class TomcatManagerResponse:
         return self._status_message
 
     @status_message.setter
-    def status_message(self, value):
+    def status_message(self, value: str):
         self._status_message = value
 
     @property
@@ -171,11 +173,11 @@ class TomcatManagerResponse:
         return self._result
 
     @result.setter
-    def result(self, value):
+    def result(self, value: str):
         self._result = value
 
     @property
-    def response(self):
+    def response(self) -> requests.models.Response:
         """
         The server's response to an HTTP request.
 
@@ -190,7 +192,7 @@ class TomcatManagerResponse:
         return self._response
 
     @response.setter
-    def response(self, response):
+    def response(self, response: requests.models.Response):
         self._response = response
         # parse the text to get the status code and results
         if response.text:
@@ -220,6 +222,7 @@ application_states = AttrDict()
 for _state in APPLICATION_STATES:
     application_states[_state] = _state
 
+TA = TypeVar('TA', bound='TomcatApplication')
 class TomcatApplication():
     """
     Discrete data about an application running inside a Tomcat Server.
@@ -227,7 +230,7 @@ class TomcatApplication():
     A list of these objects is returned by :meth:`tomcatmanager.TomcatManager.list`.
     """
     @classmethod
-    def sort_by_state_by_path_by_version(cls, app):
+    def sort_by_state_by_path_by_version(cls, app: TA):
         """
         Function to create a key usable by `sort` to sort by state, by path, by version.
         """
@@ -238,7 +241,7 @@ class TomcatApplication():
             )
 
     @classmethod
-    def sort_by_path_by_version_by_state(cls, app):
+    def sort_by_path_by_version_by_state(cls, app: TA):
         """
         Function to create a key usable by `sort` to sort by path, by version, by state
         """
@@ -256,6 +259,7 @@ class TomcatApplication():
         self._version = None
 
     def __str__(self):
+        """Format this application as it comes from the tomcat server."""
         fmt = "{}:{}:{}:{}"
         sessions = ''
         if self.sessions is not None:
@@ -267,7 +271,7 @@ class TomcatApplication():
             self.directory_and_version or ''
             )
 
-    def __lt__(self, other):
+    def __lt__(self, other: TA):
         """
         Compare one object to another. Useful for sorting lists of apps.
 
@@ -278,7 +282,7 @@ class TomcatApplication():
         other_key = self.sort_by_state_by_path_by_version(other)
         return self_key < other_key
 
-    def parse(self, line):
+    def parse(self, line: str):
         """
         Parse a line from the server into this object.
 
@@ -409,7 +413,7 @@ class ServerInfo(dict):
         result = kwargs.pop('result', None)
         self._parse(result)
 
-    def _parse(self, result):
+    def _parse(self, result: str):
         """Parse up a list of lines from the server."""
         if result:
             for line in result.splitlines():
