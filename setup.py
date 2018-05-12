@@ -46,9 +46,11 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3 :: Only'
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
 
     keywords='java tomcat command line',
@@ -64,7 +66,8 @@ setup(
     # dependencies for development and testing
     # $ pip3 install -e .[dev]
     extras_require={
-        'dev': ['pytest', 'pytest-mock', 'tox', 'codecov', 'pytest-cov',
+        'dev': ['pytest', 'pytest-mock', 'tox',
+                'codecov', 'pytest-cov', 'pylint', 'rope',
                 'setuptools_scm', 'setupext_janitor',
                 'sphinx', 'sphinx-autobuild', 'wheel', 'twine']
     },
