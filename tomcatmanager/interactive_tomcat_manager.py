@@ -267,11 +267,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Do nothing on an empty line"""
         pass
 
-    def default(self, statement):
+    def default(self, statement: cmd2.Statement):
         """what to do if we don't recognize the command the user entered"""
         self.exit_code = self.exit_codes.command_not_found
-        command = statement.parsed['command']
-        self.perror('unknown command: {}'.format(command))
+        self.perror('unknown command: {}'.format(statement.command))
 
     ###
     #
