@@ -58,7 +58,11 @@ setup(
     packages=find_packages(),
 
     python_requires='>=3.4',
-    install_requires=['cmd2>=0.8.1', 'requests', 'appdirs', 'attrdict'],
+    install_requires=[
+        'cmd2>=0.8.1', 'requests', 'appdirs', 'attrdict',
+        # typing was added to the standard library in 3.5
+        'typing;python_version<"3.5"',
+        ],
 
     setup_requires=['setuptools_scm', 'setupext_janitor'],
     cmdclass=cmd_classes,
@@ -69,7 +73,7 @@ setup(
         'dev': ['pytest', 'pytest-mock', 'tox',
                 'codecov', 'pytest-cov', 'pylint', 'rope',
                 'setuptools_scm', 'setupext_janitor',
-                'sphinx', 'sphinx-autobuild', 'wheel', 'twine']
+                'sphinx', 'sphinx-autobuild', 'wheel', 'twine'],
     },
 
     # define the scripts that should be created on installation
