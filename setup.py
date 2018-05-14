@@ -74,7 +74,7 @@ setup(
     extras_require={
         'dev': ['pytest', 'pytest-mock', 'tox',
                 'codecov', 'pytest-cov', 'pylint', 'rope',
-                'setuptools_scm', 'setupext_janitor',
+                'setuptools_scm', 'setupext_janitor', 'invoke',
                 'sphinx', 'sphinx-autobuild', 'wheel', 'twine'],
     },
 
