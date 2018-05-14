@@ -18,8 +18,10 @@ the test suite against multiple python versions. I recommend using `pyenv
 <https://github.com/pyenv/pyenv-virtualenv>`_ plugin to manage these
 various versions.
 
-This project uses tox for testing, and you will need several versions of
-python, with a virtualenv for each one::
+This distribution includes a shell script `build-pyenvs.sh` which will
+automate the creation of these environments. If you are on Windows (the
+script won't work on Windows) or prefer to create these virtual envs by
+hand, do the following::
 
     $ cd tomcatmanager
     $ pyenv install 3.6.5
@@ -28,16 +30,15 @@ python, with a virtualenv for each one::
     $ pyenv virtualenv -p python3.5 3.5.5 tomcatmanager-3.5
     $ pyenv install 3.4.8
     $ pyenv virtualenv -p python3.4 3.4.8 tomcatmanager-3.4
-    $ pyenv install 3.7.0b2
-    $ pyenv virtualenv -p python3.7 3.7.0b2 tomcatmanager-3.7
 
 Now set pyenv to make all three of those available at the same time::
 
     $ pyenv local tomcatmanager-3.6 tomcatmanager-3.5 tomcatmanager-3.4 tomcatmanager-3.7
 
-You now have isolated virtualenvs just for tomcatmanager for each of the
-three python versions. This table shows commands on the left, and which
-virtualenv it will utilize.
+Whether you ran the script, or did it by hand, you now have isolated
+virtualenvs just for tomcatmanager for each of the three python
+versions. This table shows commands on the left, and which virtualenv
+it will utilize.
 
 =========  =======  =================
 Command    python   virtualenv
