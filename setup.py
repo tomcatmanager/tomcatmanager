@@ -61,7 +61,9 @@ setup(
     install_requires=[
         'cmd2>=0.8.1', 'requests', 'appdirs', 'attrdict',
         # typing was added to the standard library in 3.5
-        'typing;python_version<"3.5"',
+        # we need the additional module if the python version
+        # is 3.4.x
+        'typing ; python_version < "3.5"',
         ],
 
     setup_requires=['setuptools_scm', 'setupext_janitor'],
