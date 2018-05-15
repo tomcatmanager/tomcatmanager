@@ -220,19 +220,20 @@ def test_list_process_apps_empty():
     assert isinstance(apps, list)
     assert apps == []
 
-LIST_ARGV_BAD = [
-    '-raw',
-    '--raw -b tate',
-    '--by=version',
-    '-s loading',
-    '-sl',
-    '-bs',
+LIST_CMDLINE_BAD = [
+    'list -raw',
+    'list --raw -b tate',
+    'list --by=version',
+    'list -s loading',
+    'list -sl',
+    'list -bs',
 ]
-@pytest.mark.parametrize('argv', LIST_ARGV_BAD)
-def test_list_parse_args_failure(argv):
+@pytest.mark.parametrize('cmdline', LIST_CMDLINE_BAD)
+def test_list_parse_args_failure(cmdline):
     itm = tm.InteractiveTomcatManager()
+    statement = itm.statement_parser.parse(cmdline)
     with pytest.raises(SystemExit):
-        itm.parse_args(itm.list_parser, argv)
+        itm.parse_args(itm.list_parser, statement.argv)
     assert itm.exit_code == itm.exit_codes.usage
 
 @pytest.mark.parametrize('raw', ['', '-r', '--raw'])
@@ -246,8 +247,9 @@ def test_list_parse_args_failure(argv):
 )
 def test_list_parse_args(raw, state, sort):
     itm = tm.InteractiveTomcatManager()
-    argv = '{} {} {}'.format(raw, state, sort)
-    itm.parse_args(itm.list_parser, argv)
+    cmdline = 'list {} {} {}'.format(raw, state, sort)
+    statement = itm.statement_parser.parse(cmdline)
+    itm.parse_args(itm.list_parser, statement.argv)
     assert itm.exit_code == itm.exit_codes.success
 
 def test_list_sort_by_state(tomcat_manager_server, mock_apps, capsys):
