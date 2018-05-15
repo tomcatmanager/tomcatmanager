@@ -25,6 +25,14 @@ Changed
 - ``ServerInfo.__init__()`` no longer accepts the result as a positional
   argument: it must be a keyword argument.
 
+Fixed
+^^^^^
+
+- Test suite now runs several orders of magnitude faster. This was caused by
+  upstream `cmd2 <https://github.com/python-cmd2/cmd2>`_ using
+  `pyparsing <https://sourceforge.net/projects/pyparsing/>`_. ``cmd2``
+  versions >= 0.9.0 now use ``shlex`` to parse commands.
+
 
 0.12.0 (2018-02-23)
 -------------------
