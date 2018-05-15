@@ -179,6 +179,12 @@ def build_distribute(context):
     context.run('twine upload dist/*')
 namespace.add_task(build_distribute, 'distribute')
 
+@invoke.task(pre=[dist_clean, build_clean, build_sdist, build_wheel])
+def build_distribute_test(context):
+    "Build and upload a distribution to https://test.pypi.org"
+    context.run('twine upload --repository-url https://test.pypi.org/legacy/ dist/*')
+namespace.add_task(build_distribute_test, 'distribute-test')
+
 #
 # make a dummy clean task which runs all the tasks in the clean namespace
 clean_tasks = list(namespace_clean.tasks.values())
