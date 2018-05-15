@@ -9,7 +9,7 @@ Clone the repo from github::
 		$ git clone git@github.com:tomcatmanager/tomcatmanager.git
 
 
-Create python environments
+Create Python Environments
 --------------------------
 
 tomcatamanger uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run
@@ -18,10 +18,11 @@ the test suite against multiple python versions. I recommend using `pyenv
 <https://github.com/pyenv/pyenv-virtualenv>`_ plugin to manage these
 various versions.
 
-This distribution includes a shell script `build-pyenvs.sh` which will
-automate the creation of these environments. If you are on Windows (the
-script won't work on Windows) or prefer to create these virtual envs by
-hand, do the following::
+This distribution includes a shell script ``build-pyenvs.sh`` which
+automates the creation of these environments.
+
+If you are on Windows (the script won't work on Windows) or prefer to
+create these virtual envs by hand, do the following::
 
     $ cd tomcatmanager
     $ pyenv install 3.6.5
@@ -37,24 +38,26 @@ Now set pyenv to make all three of those available at the same time::
 
 Whether you ran the script, or did it by hand, you now have isolated
 virtualenvs just for tomcatmanager for each of the three python
-versions. This table shows commands on the left, and which virtualenv
-it will utilize.
+versions. This table shows various python commands, the version of
+python which will be executed, and the virtualenv it will utilize.
 
-=========  =======  =================
-Command    python   virtualenv
-=========  =======  =================
-python     3.6.5    tomcatmanager-3.6
-python3    3.6.5    tomcatmanager-3.6
-python3.6  3.6.5    tomcatmanager-3.6
-python3.5  3.5.6    tomcatmanager-3.5
-python3.4  3.4.8    tomcatmanager-3.4
-python3.7  3.7.0b2  tomcatmanager-3.7
-=========  =======  =================
+=============  =======  =================
+Command        python   virtualenv
+=============  =======  =================
+``python``     3.6.5    tomcatmanager-3.6
+``python3``    3.6.5    tomcatmanager-3.6
+``python3.6``  3.6.5    tomcatmanager-3.6
+``python3.5``  3.5.6    tomcatmanager-3.5
+``python3.4``  3.4.8    tomcatmanager-3.4
+``pip``        3.6.5    tomcatmanager-3.6
+``pip3``       3.6.5    tomcatmanager-3.6
+``pip3.6``     3.6.5    tomcatmanager-3.6
+``pip3.5``     3.5.6    tomcatmanager-3.5
+``pip3.4``     3.4.8    tomcatmanager-3.4
+=============  =======  =================
 
-Same pattern for ``pip`` and other stuff installed with python.
 
-
-Install dependencies
+Install Dependencies
 --------------------
 
 Now install all the development dependencies::
@@ -73,7 +76,7 @@ select it, and install again::
    $ pip install -e .[dev]
 
 
-Branches, tags, and versions
+Branches, Tags, and Versions
 ----------------------------
 
 This project uses a simplified version of the `git flow branching

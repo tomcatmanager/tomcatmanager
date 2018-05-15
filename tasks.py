@@ -8,7 +8,8 @@ import invoke
 
 #
 # TODO
-# - move docs/build to build/docs?
+# - figure out how to pass additional command line arguments to the
+#   executed shell command, so you can do '$ invoke pytest --lf'
 
 # shared function
 def rmrf(dirs, verbose=True):
@@ -18,7 +19,7 @@ def rmrf(dirs, verbose=True):
     for dir_ in dirs:
         if verbose:
             print("Removing {}".format(dir_))
-        # shutil.rmtree(dir_, ignore_errors=True)
+        shutil.rmtree(dir_, ignore_errors=True)
 
 
 # create namespaces
@@ -75,7 +76,7 @@ namespace_clean.add_task(codecov_clean, 'coverage')
 DOCS_SRCDIR='docs'
 DOCS_BUILDDIR=os.path.join('docs','build')
 
-@invoke.task(default=True)
+@invoke.task()
 def docs_build(c, builder='html'):
     "Build documentation using sphinx"
     cmdline = 'python -msphinx -M {} {} {}'.format(builder, DOCS_SRCDIR, DOCS_BUILDDIR)
@@ -91,12 +92,13 @@ namespace_clean.add_task(docs_clean, name='docs')
 @invoke.task
 def docs_livehtml(c):
     "Launch webserver on http://localhost:8000 with rendered documentation"
-    watch = '-z tomcatmanager -z tests'
+    watch = '-z tomcatmanager -z tests -z .'
     builder = 'html'
     outputdir = os.path.join(DOCS_BUILDDIR, builder)
     cmdline = 'sphinx-autobuild -b {} {} {} {}'.format(builder, DOCS_SRCDIR, outputdir, watch)
     c.run(cmdline, pty=True)
 namespace.add_task(docs_livehtml, name='livehtml')
+
 
 #####
 #
@@ -105,7 +107,6 @@ namespace.add_task(docs_livehtml, name='livehtml')
 #####
 BUILDDIR='build'
 DISTDIR='dist'
-
 
 @invoke.task
 def build_clean(c):
