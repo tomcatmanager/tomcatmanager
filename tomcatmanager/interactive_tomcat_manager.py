@@ -37,9 +37,9 @@ from http.client import responses
 from typing import Callable, Any, List
 
 import appdirs
-import cmd2
-import requests
 from attrdict import AttrDict
+import requests
+import cmd2
 
 import tomcatmanager as tm
 
@@ -56,18 +56,29 @@ def requires_connection(func: Callable) -> Callable:
     _requires_connection.__doc__ = func.__doc__
     return _requires_connection
 
-def _path_version_parser(cmdname: str, helpmsg: str) -> argparse.ArgumentParser:
+def _path_version_parser(cmdname: str,
+                         helpmsg: str
+                        ) -> argparse.ArgumentParser:
     """Construct an argparser using the given parameters"""
     parser = argparse.ArgumentParser(prog=cmdname, description=helpmsg)
-    parser.add_argument('-v', '--version',
-                        help='Optional version string of the application to {cmdname}. If the application was deployed with a version string, it must be specified in order to {cmdname} the application.'.format(cmdname=cmdname))
-    parser.add_argument('path',
-                        help='The path part of the URL where the application is deployed.')
+    parser.add_argument(
+        '-v',
+        '--version',
+        help="""Optional version string of the application to
+             {cmdname}. If the application was deployed with
+             a version string, it must be specified in order to
+             {cmdname} the application.""".format(cmdname=cmdname)
+    )
+    path_help = 'The path part of the URL where the application is deployed.'
+    parser.add_argument('path', help=path_help)
     return parser
 
-def _deploy_parser(name: str, desc: str,
-                   localfunc: Callable, serverfunc: Callable,
-                   contextfunc: Callable) -> argparse.ArgumentParser:
+def _deploy_parser(name: str,
+                   desc: str,
+                   localfunc: Callable,
+                   serverfunc: Callable,
+                   contextfunc: Callable
+                  ) -> argparse.ArgumentParser:
     """Construct a argument parser for the deploy or redeploy commands."""
     deploy_parser = argparse.ArgumentParser(
         prog=name,
@@ -120,8 +131,8 @@ def _deploy_parser(name: str, desc: str,
 class InteractiveTomcatManager(cmd2.Cmd):
     """An interactive command line tool for the Tomcat Manager web application.
 
-    each command sets the value of the instance variable exit_code, which follows
-    bash behavior for exit codes (available via $?)
+    each command sets the value of the instance variable exit_code,
+    which mirrors bash standard values for exit codes (available via $?)
     """
 
     EXIT_CODES = {
@@ -381,7 +392,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.poutput(line)
             self.exit_code = self.exit_codes.success
 
-    def _help_add_header(self, help_: List, header: str) -> List:
+    @staticmethod
+    def _help_add_header(help_: List, header: str) -> List:
         help_.append('')
         help_.append(header)
         help_.append('=' * 60)
@@ -399,7 +411,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
     config_parser.add_argument(
         'action',
         choices=['edit', 'file'],
-        help='\'file\' shows the name of the configuration file. \'edit\' edits the configuration file in your preferred editor.',
+        help="""'file' shows the name of the configuration
+             file. 'edit' edits the configuration file
+             in your preferred editor."""
     )
 
     def do_config(self, cmdline: cmd2.Statement):
@@ -441,7 +455,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
     show_parser.add_argument(
         'setting',
         nargs='?',
-        help='Name of the setting to show the value for. If omitted show the values of all settings.',
+        help="""Name of the setting to show the value for.
+             If omitted show the values of all settings."""
     )
     def do_show(self, cmdline: cmd2.Statement):
         """Show all settings or a specific setting."""
@@ -476,7 +491,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
     settings_parser.add_argument(
         'setting',
         nargs='?',
-        help='Name of the setting to show the value for. If omitted show the values of all settings.',
+        help="""Name of the setting to show the value for.
+             If omitted show the values of all settings."""
     )
 
     def do_settings(self, cmdline: cmd2.Statement):
@@ -487,11 +503,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Show help for the 'settings' command."""
         self.show_help_from(self.settings_parser)
 
-    def do_set(self, arg: str):
+    def do_set(self, args: cmd2.Statement):
         """Change program settings."""
-        if arg:
+        if args:
             config = EvaluatingConfigParser()
-            setting_string = "[settings]\n{}".format(arg)
+            setting_string = "[settings]\n{}".format(args)
             try:
                 config.read_string(setting_string)
             except configparser.ParsingError:
@@ -666,7 +682,9 @@ change the value of one of this program's settings
         prog='connect',
         description='connect to a tomcat manager instance',
         usage='%(prog)s [-h] config_name\n       %(prog)s [-h] url [user] [password]',
-        epilog="If you specify a user and no password, you will be prompted for the password. If you don't specify a user or password, attempt to connect with no authentication.",
+        epilog=""""If you specify a user and no password, you will be prompted for the
+               password. If you don't specify a user or password, attempt to connect with
+               no authentication.""",
     )
     connect_parser.add_argument(
         'config_name',
@@ -704,11 +722,11 @@ change the value of one of this program's settings
             if self.config.has_option(server, 'password'):
                 password = self.config[server]['password']
         else:
-            # this is an ugly hack required to get argparse to show the help properly
-            # the argparser has both a config_name and a url positional argument
-            # if you only give config_name, and there isn't a section for it in
+            # This is an ugly hack required to get argparse to show the help properly.
+            # the argparser has both a config_name and a url positional argument.
+            # If you only give config_name, and there isn't a section for it in
             # the configuration file, then it must be a url, so we have to
-            # 'shift' the positional arguments to the left
+            # 'shift' the positional arguments to the left.
             url = args.config_name
             user = args.url
             password = args.user
@@ -727,7 +745,7 @@ change the value of one of this program's settings
                     # raise the exception and print the output
                     try:
                         r.raise_for_status()
-                    except Exception:
+                    except (requests.HTTPError, tm.TomcatError):
                         self.perror(None)
                         self.exit_code = self.exit_codes.error
                 else:
@@ -939,7 +957,9 @@ change the value of one of this program's settings
     )
     sessions_parser.add_argument(
         '-v', '--version',
-        help='Optional version string of the application from which to show sessions. If the application was deployed with a version string, it must be specified in order to show sessions.',
+        help="""Optional version string of the application from which to show sessions.
+             If the application was deployed with a version string, it must be specified
+             in order to show sessions.""",
     )
 
     @requires_connection
@@ -961,7 +981,9 @@ change the value of one of this program's settings
     )
     expire_parser.add_argument(
         '-v', '--version',
-        help='Optional version string of the application from which to expire sessions. If the application was deployed with a version string, it must be specified in order to expire sessions.',
+        help="""Optional version string of the application from which to expire sessions.
+             If the application was deployed with a version string, it must be specified
+             in order to expire sessions.""",
     )
     expire_parser.add_argument(
         'path',
@@ -969,7 +991,8 @@ change the value of one of this program's settings
     )
     expire_parser.add_argument(
         'idle',
-        help='Expire sessions idle for more than this number of minutes. Use 0 to expire all sessions.',
+        help="""Expire sessions idle for more than this number of minutes. Use
+             0 to expire all sessions.""",
     )
 
     @requires_connection
@@ -1035,7 +1058,8 @@ change the value of one of this program's settings
         """Show help for the 'list' command."""
         self.show_help_from(self.list_parser)
 
-    def _list_process_apps(self, apps: List, args: argparse.Namespace):
+    @staticmethod
+    def _list_process_apps(apps: List, args: argparse.Namespace):
         """
         Select and sort a list of `TomcatApplication` objects based on arguments
 
@@ -1171,7 +1195,8 @@ change the value of one of this program's settings
     findleakers_parser = argparse.ArgumentParser(
         prog='findleakers',
         description='show tomcat applications that leak memory',
-        epilog='WARNING: this triggers a full garbage collection on the server. Use with extreme caution on production systems.'
+        epilog="""WARNING: this triggers a full garbage collection on the server.
+               Use with extreme caution on production systems."""
     )
     @requires_connection
     def do_findleakers(self, cmdline: cmd2.Statement):

@@ -223,6 +223,10 @@ You are welcome to use the pylint comment directives to disable certain
 messages in the code, but pull requests containing these directives will be
 carefully scrutinized.
 
+As allowed by
+`PEP 8 <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_
+this project allows a nominal line length of 100 characters.
+
 
 Documentation
 -------------
