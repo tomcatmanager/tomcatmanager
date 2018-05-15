@@ -89,11 +89,11 @@ DOCS_SRCDIR = 'docs'
 DOCS_BUILDDIR = os.path.join('docs', 'build')
 
 @invoke.task()
-def docs_build(context, builder='html'):
+def docs(context, builder='html'):
     "Build documentation using sphinx"
     cmdline = 'python -msphinx -M {} {} {}'.format(builder, DOCS_SRCDIR, DOCS_BUILDDIR)
     context.run(cmdline)
-namespace.add_task(docs_build, name='docs')
+namespace.add_task(docs)
 
 @invoke.task
 def docs_clean(context):
@@ -103,14 +103,14 @@ def docs_clean(context):
 namespace_clean.add_task(docs_clean, name='docs')
 
 @invoke.task
-def docs_livehtml(context):
+def livehtml(context):
     "Launch webserver on http://localhost:8000 with rendered documentation"
     watch = '-z tomcatmanager -z tests -z .'
     builder = 'html'
     outputdir = os.path.join(DOCS_BUILDDIR, builder)
     cmdline = 'sphinx-autobuild -b {} {} {} {}'.format(builder, DOCS_SRCDIR, outputdir, watch)
     context.run(cmdline, pty=True)
-namespace.add_task(docs_livehtml, name='livehtml')
+namespace.add_task(livehtml)
 
 
 #####
@@ -162,28 +162,28 @@ def pycache_clean(context):
 namespace_clean.add_task(pycache_clean, 'pycache')
 
 @invoke.task
-def build_sdist(context):
+def sdist(context):
     "Create a source distribution"
     context.run('python setup.py sdist')
-namespace.add_task(build_sdist, 'sdist')
+namespace.add_task(sdist)
 
 @invoke.task
-def build_wheel(context):
+def wheel(context):
     "Build a wheel distribution"
     context.run('python setup.py bdist_wheel')
-namespace.add_task(build_wheel, 'wheel')
+namespace.add_task(wheel)
 
-@invoke.task(pre=[dist_clean, build_clean, build_sdist, build_wheel])
-def build_distribute(context):
+@invoke.task(pre=[dist_clean, build_clean, sdist, wheel])
+def pypi(context):
     "Build and upload a distribution to pypi"
     context.run('twine upload dist/*')
-namespace.add_task(build_distribute, 'distribute')
+namespace.add_task(pypi)
 
-@invoke.task(pre=[dist_clean, build_clean, build_sdist, build_wheel])
-def build_distribute_test(context):
+@invoke.task(pre=[dist_clean, build_clean, sdist, wheel])
+def pypi_test(context):
     "Build and upload a distribution to https://test.pypi.org"
     context.run('twine upload --repository-url https://test.pypi.org/legacy/ dist/*')
-namespace.add_task(build_distribute_test, 'distribute-test')
+namespace.add_task(pypi_test)
 
 #
 # make a dummy clean task which runs all the tasks in the clean namespace
