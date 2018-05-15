@@ -86,7 +86,34 @@ the version number of that release.
 The develop branch is where all the action occurs. Feature branches are
 welcome. When it's time for a release, we merge develop into master.
 
-This project uses `semantic versioning <http://semver.org/>`_.
+This project uses `semantic versioning <https://semver.org/>`_.
+
+
+Invoking Common Development Tasks
+---------------------------------
+
+This project uses many other python modules for various development tasks,
+including testing, rendering documentation, and building and distributing
+releases. These modules can be configured many different ways, which can
+make it difficult to learn the specific incantations required for each
+project you are familiar with.
+
+This project uses `invoke <http://www.pyinvoke.org>`_ to provide a clean,
+high level interface for these development tasks. To see the full list of
+functions available::
+
+   $ invoke -l
+
+You can run multiple tasks in a single invocation, for example::
+
+   $ invoke clean docs sdist wheel
+
+That one command will remove all superflous cache, testing, and build
+files, render the documentation, and build a source distribution and a
+wheel distribution.
+
+You probably won't need to read further in this document unless you
+want more information about the specific tools used.
 
 
 Testing
@@ -238,25 +265,12 @@ To make a release and deploy it to `PyPI
 
 7. Tag the **master** branch with the new version number, and push the tag.
 
-8. Clean the build::
+8. Build source distribution, wheel distribution, and upload them to pypi::
 
-    $ python setup.py clean --dist --eggs --pycache
-    $ (cd docs && make clean)
-   
-9. Build the source distribution::
+    $ invoke distribute
 
-    $ python3 setup.py sdist
+9. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
+   Make sure they look good.
 
-10. Build the wheel::
-
-    $ python3 setup.py bdist_wheel
-
-11. Upload packages to PyPI::
-
-    $ twine upload dist/*
-
-12. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
-    Make sure they look good.
-
-13. Switch back to the **develop** branch. Add an **Unreleased** section to
+10. Switch back to the **develop** branch. Add an **Unreleased** section to
     the top of ``CHANGELOG.rst``. Push the change to github.
