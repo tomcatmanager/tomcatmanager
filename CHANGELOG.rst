@@ -5,7 +5,7 @@ Changelog
 All notable changes to `tomcatmanager <https://github.com/tomcatmanager/tomcatmanager>`_ will be documented in this file.
 
 The format is based on `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_
-and this project adheres to `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
+and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
 
 In Development
@@ -16,6 +16,8 @@ Added
 
 - In the interactive ``tomcat-manager`` tool, the history of previously
   executed commands is now persistent across invocations of the program.
+- Added common developer tasks to ``tasks.py``. To run these tasks, use the
+  ``invoke`` command provided by `pyinvoke <http://www.pyinvoke.org/>`_.
 
 Changed
 ^^^^^^^
