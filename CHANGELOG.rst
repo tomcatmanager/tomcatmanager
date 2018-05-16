@@ -20,6 +20,7 @@ Added
   executed commands is now persistent across invocations of the program.
 - Added common developer tasks to ``tasks.py``. To run these tasks, use the
   ``invoke`` command provided by `pyinvoke <http://www.pyinvoke.org/>`_.
+- Type hinting added for enhanced developer productivity in most IDE's
 
 Changed
 ^^^^^^^
