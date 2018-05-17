@@ -16,6 +16,8 @@ Added
 
 - In the interactive ``tomcat-manager`` tool, the history of previously
   executed commands is now persistent across invocations of the program.
+- Tomcat 9.0.x officially supported. No material changes were required to
+  gain this support, just validation via the test suite.
 
 Changed
 ^^^^^^^
