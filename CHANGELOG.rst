@@ -20,6 +20,8 @@ Added
   executed commands is now persistent across invocations of the program.
 - Added common developer tasks to ``tasks.py``. To run these tasks, use the
   ``invoke`` command provided by `pyinvoke <http://www.pyinvoke.org/>`_.
+- Tomcat 9.0.x officially supported. No material changes were required to
+  gain this support, just validation via the test suite.
 - Type hinting added for enhanced developer productivity in most IDE's
 
 Changed
