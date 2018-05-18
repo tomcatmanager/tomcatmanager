@@ -31,6 +31,8 @@ create these virtual envs by hand, do the following::
     $ pyenv virtualenv -p python3.5 3.5.5 tomcatmanager-3.5
     $ pyenv install 3.4.8
     $ pyenv virtualenv -p python3.4 3.4.8 tomcatmanager-3.4
+    $ pyenv install 3.7.0
+    $ pyenv virtualenv -p python3.7 3.7.0b3 tomcatmanager-3.7
 
 Now set pyenv to make all three of those available at the same time::
 
@@ -41,20 +43,22 @@ virtualenvs just for tomcatmanager for each of the three python
 versions. This table shows various python commands, the version of
 python which will be executed, and the virtualenv it will utilize.
 
-=============  =======  =================
+=============  ======  =================
 Command        python   virtualenv
-=============  =======  =================
-``python``     3.6.5    tomcatmanager-3.6
-``python3``    3.6.5    tomcatmanager-3.6
-``python3.6``  3.6.5    tomcatmanager-3.6
-``python3.5``  3.5.6    tomcatmanager-3.5
-``python3.4``  3.4.8    tomcatmanager-3.4
-``pip``        3.6.5    tomcatmanager-3.6
-``pip3``       3.6.5    tomcatmanager-3.6
-``pip3.6``     3.6.5    tomcatmanager-3.6
-``pip3.5``     3.5.6    tomcatmanager-3.5
-``pip3.4``     3.4.8    tomcatmanager-3.4
-=============  =======  =================
+=============  ======  =================
+``python``     3.6.5   tomcatmanager-3.6
+``python3``    3.6.5   tomcatmanager-3.6
+``python3.6``  3.6.5   tomcatmanager-3.6
+``python3.5``  3.5.6   tomcatmanager-3.5
+``python3.4``  3.4.8   tomcatmanager-3.4
+``python3.7``  3.7.0   tomcatmanager-3.7
+``pip``        3.6.5   tomcatmanager-3.6
+``pip3``       3.6.5   tomcatmanager-3.6
+``pip3.6``     3.6.5   tomcatmanager-3.6
+``pip3.5``     3.5.6   tomcatmanager-3.5
+``pip3.4``     3.4.8   tomcatmanager-3.4
+``pip3.7``     3.7.0   tomcatmanager-3.7
+=============  ======  =================
 
 
 Install Dependencies
