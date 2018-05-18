@@ -22,7 +22,10 @@
 # THE SOFTWARE.
 #
 """
-Interact with the Tomcat Manager web application.
+tomcatmanager
+-------------
+
+A python wrapper for interacting with the Tomcat Manager web application.
 """
 
 import collections
@@ -214,7 +217,12 @@ class TomcatManager:
     # managing applications
     #
     ###
-    def deploy_localwar(self, path: str, warfile: str, version: str = None, update: bool = False) -> TomcatManagerResponse:
+    def deploy_localwar(self,
+                        path: str,
+                        warfile: str,
+                        version: str = None,
+                        update: bool = False
+                       ) -> TomcatManagerResponse:
         """
         Deploy a warfile on the local file system to the Tomcat server.
 
@@ -269,7 +277,12 @@ class TomcatManager:
                     )
         return r
 
-    def deploy_serverwar(self, path: str, warfile: str, version: str = None, update: bool = False) -> TomcatManagerResponse:
+    def deploy_serverwar(self,
+                         path: str,
+                         warfile: str,
+                         version: str = None,
+                         update: bool = False
+                        ) -> TomcatManagerResponse:
         """
         Deploy a warfile on the local file system to the Tomcat server.
 
@@ -303,7 +316,13 @@ class TomcatManager:
         return r
 
     # pylint: disable=too-many-arguments
-    def deploy_servercontext(self, path: str, contextfile: str, warfile: str = None, version: str = None, update: bool = False) -> TomcatManagerResponse:
+    def deploy_servercontext(self,
+                             path: str,
+                             contextfile: str,
+                             warfile: str = None,
+                             version: str = None,
+                             update: bool = False
+                            ) -> TomcatManagerResponse:
         """
         Deploy a Tomcat application defined by a context file.
 

@@ -9,7 +9,7 @@ Clone the repo from github::
 		$ git clone git@github.com:tomcatmanager/tomcatmanager.git
 
 
-Create python environments
+Create Python Environments
 --------------------------
 
 tomcatamanger uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run
@@ -18,8 +18,11 @@ the test suite against multiple python versions. I recommend using `pyenv
 <https://github.com/pyenv/pyenv-virtualenv>`_ plugin to manage these
 various versions.
 
-This project uses tox for testing, and you will need several versions of
-python, with a virtualenv for each one::
+This distribution includes a shell script ``build-pyenvs.sh`` which
+automates the creation of these environments.
+
+If you are on Windows (the script won't work on Windows) or prefer to
+create these virtual envs by hand, do the following::
 
     $ cd tomcatmanager
     $ pyenv install 3.6.5
@@ -28,32 +31,33 @@ python, with a virtualenv for each one::
     $ pyenv virtualenv -p python3.5 3.5.5 tomcatmanager-3.5
     $ pyenv install 3.4.8
     $ pyenv virtualenv -p python3.4 3.4.8 tomcatmanager-3.4
-    $ pyenv install 3.7.0b2
-    $ pyenv virtualenv -p python3.7 3.7.0b2 tomcatmanager-3.7
 
 Now set pyenv to make all three of those available at the same time::
 
     $ pyenv local tomcatmanager-3.6 tomcatmanager-3.5 tomcatmanager-3.4 tomcatmanager-3.7
 
-You now have isolated virtualenvs just for tomcatmanager for each of the
-three python versions. This table shows commands on the left, and which
-virtualenv it will utilize.
+Whether you ran the script, or did it by hand, you now have isolated
+virtualenvs just for tomcatmanager for each of the three python
+versions. This table shows various python commands, the version of
+python which will be executed, and the virtualenv it will utilize.
 
-=========  =======  =================
-Command    python   virtualenv
-=========  =======  =================
-python     3.6.5    tomcatmanager-3.6
-python3    3.6.5    tomcatmanager-3.6
-python3.6  3.6.5    tomcatmanager-3.6
-python3.5  3.5.6    tomcatmanager-3.5
-python3.4  3.4.8    tomcatmanager-3.4
-python3.7  3.7.0b2  tomcatmanager-3.7
-=========  =======  =================
+=============  =======  =================
+Command        python   virtualenv
+=============  =======  =================
+``python``     3.6.5    tomcatmanager-3.6
+``python3``    3.6.5    tomcatmanager-3.6
+``python3.6``  3.6.5    tomcatmanager-3.6
+``python3.5``  3.5.6    tomcatmanager-3.5
+``python3.4``  3.4.8    tomcatmanager-3.4
+``pip``        3.6.5    tomcatmanager-3.6
+``pip3``       3.6.5    tomcatmanager-3.6
+``pip3.6``     3.6.5    tomcatmanager-3.6
+``pip3.5``     3.5.6    tomcatmanager-3.5
+``pip3.4``     3.4.8    tomcatmanager-3.4
+=============  =======  =================
 
-Same pattern for ``pip`` and other stuff installed with python.
 
-
-Install dependencies
+Install Dependencies
 --------------------
 
 Now install all the development dependencies::
@@ -72,7 +76,7 @@ select it, and install again::
    $ pip install -e .[dev]
 
 
-Branches, tags, and versions
+Branches, Tags, and Versions
 ----------------------------
 
 This project uses a simplified version of the `git flow branching
@@ -85,7 +89,34 @@ the version number of that release.
 The develop branch is where all the action occurs. Feature branches are
 welcome. When it's time for a release, we merge develop into master.
 
-This project uses `semantic versioning <http://semver.org/>`_.
+This project uses `semantic versioning <https://semver.org/>`_.
+
+
+Invoking Common Development Tasks
+---------------------------------
+
+This project uses many other python modules for various development tasks,
+including testing, rendering documentation, and building and distributing
+releases. These modules can be configured many different ways, which can
+make it difficult to learn the specific incantations required for each
+project you are familiar with.
+
+This project uses `invoke <http://www.pyinvoke.org>`_ to provide a clean,
+high level interface for these development tasks. To see the full list of
+functions available::
+
+   $ invoke -l
+
+You can run multiple tasks in a single invocation, for example::
+
+   $ invoke clean docs sdist wheel
+
+That one command will remove all superflous cache, testing, and build
+files, render the documentation, and build a source distribution and a
+wheel distribution.
+
+You probably won't need to read further in this document unless you
+want more information about the specific tools used.
 
 
 Testing
@@ -192,6 +223,10 @@ You are welcome to use the pylint comment directives to disable certain
 messages in the code, but pull requests containing these directives will be
 carefully scrutinized.
 
+As allowed by
+`PEP 8 <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_
+this project uses a nominal line length of 100 characters.
+
 
 Documentation
 -------------
@@ -237,25 +272,12 @@ To make a release and deploy it to `PyPI
 
 7. Tag the **master** branch with the new version number, and push the tag.
 
-8. Clean the build::
+8. Build source distribution, wheel distribution, and upload them to pypi::
 
-    $ python setup.py clean --dist --eggs --pycache
-    $ (cd docs && make clean)
-   
-9. Build the source distribution::
+    $ invoke distribute
 
-    $ python3 setup.py sdist
+9. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
+   Make sure they look good.
 
-10. Build the wheel::
-
-    $ python3 setup.py bdist_wheel
-
-11. Upload packages to PyPI::
-
-    $ twine upload dist/*
-
-12. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
-    Make sure they look good.
-
-13. Switch back to the **develop** branch. Add an **Unreleased** section to
+10. Switch back to the **develop** branch. Add an **Unreleased** section to
     the top of ``CHANGELOG.rst``. Push the change to github.
