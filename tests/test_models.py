@@ -37,7 +37,7 @@ def test_ok(tomcat):
     r = tomcat.list()
     assert r.ok
 
-@pytest.fixture()
+@pytest.fixture
 def mock_text(mocker):
     return mocker.patch('requests.models.Response.text', create=True,
                         new_callable=mock.PropertyMock)
@@ -82,6 +82,20 @@ def test_http_response_fail(tomcat, mock_text):
 # test TomcatApplication
 #
 ###
+@pytest.fixture
+def apps():
+    return """/:running:0:ROOT
+/contacts:running:8:contacts##4.10
+/shiny:stopped:17:shiny##v2.0.6
+/contacts:running:5:contacts
+/shiny:stopped:0:shiny##v2.0.5
+/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
+/contacts:running:3:contacts##4.12
+/shiny:running:12:shiny##v2.0.8
+/manager:running:0:/usr/share/tomcat8-admin/manager
+/shiny:running:15:shiny##v2.0.7
+"""
+
 def test_parse_root():
     line = '/:running:0:ROOT'
     ta = tm.models.TomcatApplication()
@@ -151,20 +165,11 @@ def parse_apps(lines):
         apps.append(app)
     return apps
 
-def test_lt():
-    raw_apps = """/:running:0:ROOT
-/contacts:running:3:running##4.1
-/shiny:stopped:17:shiny##v2.0.6
-/contacts:running:8:running
-/shiny:stopped:0:shiny##v2.0.5
-/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
-/shiny:running:12:shiny##v2.0.8
-/manager:running:0:/usr/share/tomcat8-admin/manager
-/shiny:running:15:shiny##v2.0.7
-"""
+def test_lt(apps):
     sorted_apps = """/:running:0:ROOT
-/contacts:running:8:running
-/contacts:running:3:running##4.1
+/contacts:running:5:contacts
+/contacts:running:8:contacts##4.10
+/contacts:running:3:contacts##4.12
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:running:15:shiny##v2.0.7
 /shiny:running:12:shiny##v2.0.8
@@ -172,27 +177,18 @@ def test_lt():
 /shiny:stopped:0:shiny##v2.0.5
 /shiny:stopped:17:shiny##v2.0.6
 """
-    apps = parse_apps(raw_apps)
+    apps = parse_apps(apps)
     apps.sort()
     result = ''
     strapps = map(str, apps)
     result = '\n'.join(strapps) + '\n'
     assert result == sorted_apps
 
-def test_sort_by_spv():
-    raw_apps = """/:running:0:ROOT
-/contacts:running:3:running##4.1
-/shiny:stopped:17:shiny##v2.0.6
-/contacts:running:8:running
-/shiny:stopped:0:shiny##v2.0.5
-/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
-/shiny:running:12:shiny##v2.0.8
-/manager:running:0:/usr/share/tomcat8-admin/manager
-/shiny:running:15:shiny##v2.0.7
-"""
+def test_sort_by_spv(apps):
     sorted_apps = """/:running:0:ROOT
-/contacts:running:8:running
-/contacts:running:3:running##4.1
+/contacts:running:5:contacts
+/contacts:running:8:contacts##4.10
+/contacts:running:3:contacts##4.12
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:running:15:shiny##v2.0.7
 /shiny:running:12:shiny##v2.0.8
@@ -200,29 +196,18 @@ def test_sort_by_spv():
 /shiny:stopped:0:shiny##v2.0.5
 /shiny:stopped:17:shiny##v2.0.6
 """
-    apps = parse_apps(raw_apps)
+    apps = parse_apps(apps)
     apps.sort(key=tm.models.TomcatApplication.sort_by_state_by_path_by_version)
     result = ''
     strapps = map(str, apps)
     result = '\n'.join(strapps) + '\n'
     assert result == sorted_apps
 
-def test_sort_by_pvs():
-    raw_apps = """/:running:0:ROOT
-/contacts:running:3:running##4.12
-/shiny:stopped:17:shiny##v2.0.6
-/contacts:running:5:running
-/contacts:running:8:running##4.10
-/shiny:stopped:0:shiny##v2.0.5
-/host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
-/shiny:running:12:shiny##v2.0.8
-/manager:running:0:/usr/share/tomcat8-admin/manager
-/shiny:running:15:shiny##v2.0.7
-"""
+def test_sort_by_pvs(apps):
     sorted_apps = """/:running:0:ROOT
-/contacts:running:8:running##4.10
-/contacts:running:3:running##4.12
-/contacts:running:5:running
+/contacts:running:8:contacts##4.10
+/contacts:running:3:contacts##4.12
+/contacts:running:5:contacts
 /host-manager:stopped:0:/usr/share/tomcat8-admin/host-manager
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:stopped:0:shiny##v2.0.5
@@ -230,7 +215,7 @@ def test_sort_by_pvs():
 /shiny:running:15:shiny##v2.0.7
 /shiny:running:12:shiny##v2.0.8
 """
-    apps = parse_apps(raw_apps)
+    apps = parse_apps(apps)
     apps.sort(key=tm.models.TomcatApplication.sort_by_path_by_version_by_state)
     result = ''
     strapps = map(str, apps)

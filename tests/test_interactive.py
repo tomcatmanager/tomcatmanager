@@ -75,7 +75,7 @@ def assert_connected_to(itm, url, capsys):
     assert itm.exit_code == itm.exit_codes.success
     assert url in out
 
-@pytest.fixture()
+@pytest.fixture
 def itm_nc(mocker):
     """Don't allow it to load a config file"""
     mocker.patch('tomcatmanager.InteractiveTomcatManager.load_config')
