@@ -6,7 +6,7 @@ Get Source Code
 
 Clone the repo from github::
 
-		$ git clone git@github.com:tomcatmanager/tomcatmanager.git
+	$ git clone git@github.com:tomcatmanager/tomcatmanager.git
 
 
 Create Python Environments
