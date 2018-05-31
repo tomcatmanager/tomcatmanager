@@ -39,7 +39,7 @@ namespace.add_task(pytest)
 def pytest_clean(context):
     "Remove pytest cache directories"
     #pylint: disable=unused-argument
-    dirs = ['.pytest-cache', '.cache']
+    dirs = ['.pytest_cache', '.cache']
     rmrf(dirs)
 namespace_clean.add_task(pytest_clean, 'pytest')
 
