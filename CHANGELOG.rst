@@ -23,6 +23,7 @@ Added
 - Tomcat 9.0.x officially supported. No material changes were required to
   gain this support, just validation via the test suite.
 - Type hinting added for enhanced developer productivity in most IDE's
+- Full support for Python 3.7
 
 Changed
 ^^^^^^^
