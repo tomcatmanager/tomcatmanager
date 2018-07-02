@@ -28,7 +28,7 @@ declare -a pythons=("3.6" "3.5" "3.4" "3.7")
 # function to find the latest patch of a minor version of python
 function find_latest_version {
     pyenv install -l | \
-    sed -En -e "s/^ *//g" -e "/(dev|b|rc)/n" -e "/^$1/p" | \
+    sed -En -e "s/^ *//g" -e "/(dev|b|rc)/d" -e "/^$1/p" | \
     tail -1
 }
 
