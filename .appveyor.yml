@@ -16,6 +16,7 @@ environment:
       TOXENV: "py36"
 
 install:
+  - "%PYTHON%\\python.exe -m pip install --upgrade pip setuptools wheel"
   - "%PYTHON%\\python.exe -m pip install tox"
 
 build: off
@@ -26,6 +27,6 @@ test_script:
 notifications:
   - provider: Email
     to:
-      - jared@kotfu.net
+      - kotfu@kotfu.net
     subject: 'tomcatmanager appveyor build {{status}}'
     on_build_status_changed: true

@@ -22,11 +22,15 @@
 # THE SOFTWARE.
 #
 """
-Interact with the Tomcat Manager web application.
+tomcatmanager
+-------------
+
+A python wrapper for interacting with the Tomcat Manager web application.
 """
 
 import collections
 import re
+from typing import List, Any
 
 import requests
 
@@ -66,7 +70,7 @@ class TomcatManager:
     """
 
     @classmethod
-    def _is_stream(cls, obj):
+    def _is_stream(cls, obj) -> bool:
         """return True if passed a stream type object"""
         return all([
             hasattr(obj, '__iter__'),
@@ -83,11 +87,14 @@ class TomcatManager:
 
         self.timeout = 15
 
-    def _get(self, cmd, payload=None):
+    def _get(self, cmd: str, payload: dict = None) -> TomcatManagerResponse:
         """
         Make an HTTP get request to the tomcat manager web app.
 
-        :return: `TomcatManagerResponse` object
+        :param cmd:     name of the command from the tomcat server url
+                        i.e. 'http://localhost:8080/manager/text/{cmd}
+        :param payload: dict of params for `requests.get()`
+        :return:        `TomcatManagerResponse` object
         """
         base = self.url or ''
         # if we have no url, don't add other stuff to it because it makes
@@ -110,7 +117,7 @@ class TomcatManager:
     # convenience and utility methods
     #
     ###
-    def connect(self, url, user=None, password=None):
+    def connect(self, url: str, user: str = None, password: str = None) -> TomcatManagerResponse:
         """
         Connect to a Tomcat Manager server.
 
@@ -192,7 +199,7 @@ class TomcatManager:
         return r
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """
         Does the url point to an actual tomcat server and are the credentials valid?
 
@@ -210,7 +217,12 @@ class TomcatManager:
     # managing applications
     #
     ###
-    def deploy_localwar(self, path, warfile, version=None, update=False):
+    def deploy_localwar(self,
+                        path: str,
+                        warfile: str,
+                        version: str = None,
+                        update: bool = False
+                       ) -> TomcatManagerResponse:
         """
         Deploy a warfile on the local file system to the Tomcat server.
 
@@ -265,7 +277,12 @@ class TomcatManager:
                     )
         return r
 
-    def deploy_serverwar(self, path, warfile, version=None, update=False):
+    def deploy_serverwar(self,
+                         path: str,
+                         warfile: str,
+                         version: str = None,
+                         update: bool = False
+                        ) -> TomcatManagerResponse:
         """
         Deploy a warfile on the local file system to the Tomcat server.
 
@@ -299,7 +316,13 @@ class TomcatManager:
         return r
 
     # pylint: disable=too-many-arguments
-    def deploy_servercontext(self, path, contextfile, warfile=None, version=None, update=False):
+    def deploy_servercontext(self,
+                             path: str,
+                             contextfile: str,
+                             warfile: str = None,
+                             version: str = None,
+                             update: bool = False
+                            ) -> TomcatManagerResponse:
         """
         Deploy a Tomcat application defined by a context file.
 
@@ -337,7 +360,7 @@ class TomcatManager:
         r = self._get('deploy', params)
         return r
 
-    def undeploy(self, path, version=None):
+    def undeploy(self, path: str, version: str = None) -> TomcatManagerResponse:
         """Undeploy the application at a given path.
 
         :param path:         The path of the application to undeploy
@@ -358,7 +381,7 @@ class TomcatManager:
             params['version'] = version
         return self._get('undeploy', params)
 
-    def start(self, path, version=None):
+    def start(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Start the application at a given path.
 
@@ -379,7 +402,7 @@ class TomcatManager:
             params['version'] = version
         return self._get('start', params)
 
-    def stop(self, path, version=None):
+    def stop(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Stop the application at a given path.
 
@@ -400,7 +423,7 @@ class TomcatManager:
             params['version'] = version
         return self._get('stop', params)
 
-    def reload(self, path, version=None):
+    def reload(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Reload (stop and start) the application at a given path.
 
@@ -421,7 +444,7 @@ class TomcatManager:
             params['version'] = version
         return self._get('reload', params)
 
-    def sessions(self, path, version=None):
+    def sessions(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Get the age of the sessions in an application.
 
@@ -454,7 +477,7 @@ class TomcatManager:
             r.sessions = r.result
         return r
 
-    def expire(self, path, version=None, idle=None):
+    def expire(self, path: str, version: str = None, idle: Any = None) -> TomcatManagerResponse:
         """
         Expire sessions idle for longer than idle minutes.
 
@@ -489,7 +512,7 @@ class TomcatManager:
             r.sessions = r.result
         return r
 
-    def list(self):
+    def list(self) -> TomcatManagerResponse:
         """
         Get a list of all applications currently installed.
 
@@ -519,7 +542,7 @@ class TomcatManager:
     # These commands return info about the server
     #
     ###
-    def server_info(self):
+    def server_info(self) -> TomcatManagerResponse:
         """
         Get information about the Tomcat server.
 
@@ -540,10 +563,10 @@ class TomcatManager:
 
         """
         r = self._get('serverinfo')
-        r.server_info = ServerInfo(r.result)
+        r.server_info = ServerInfo(result=r.result)
         return r
 
-    def status_xml(self):
+    def status_xml(self) -> TomcatManagerResponse:
         """
         Get server status information in XML format.
 
@@ -587,7 +610,7 @@ class TomcatManager:
             r.status_message = status_codes.fail
         return r
 
-    def vm_info(self):
+    def vm_info(self) -> TomcatManagerResponse:
         """
         Get diagnostic information about the JVM.
 
@@ -598,7 +621,7 @@ class TomcatManager:
         r.vm_info = r.result
         return r
 
-    def ssl_connector_ciphers(self):
+    def ssl_connector_ciphers(self) -> TomcatManagerResponse:
         """
         Get SSL/TLS ciphers configured for each connector.
 
@@ -609,7 +632,7 @@ class TomcatManager:
         r.ssl_connector_ciphers = r.result
         return r
 
-    def thread_dump(self):
+    def thread_dump(self) -> TomcatManagerResponse:
         """
         Get a jvm thread dump.
 
@@ -620,7 +643,7 @@ class TomcatManager:
         r.thread_dump = r.result
         return r
 
-    def resources(self, type_=None):
+    def resources(self, type_: str = None) -> TomcatManagerResponse:
         """
         Get the global JNDI resources available for use in resource links for context config files
 
@@ -657,7 +680,7 @@ class TomcatManager:
         return r
 
 
-    def find_leakers(self):
+    def find_leakers(self) -> TomcatManagerResponse:
         """
         Get apps that leak memory.
 
@@ -695,7 +718,7 @@ class TomcatManager:
         return r
 
     @staticmethod
-    def _parse_leakers(text):
+    def _parse_leakers(text: str) -> List:
         """
         Parse a list of leaking apps from the text returned by tomcat.
 

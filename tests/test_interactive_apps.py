@@ -38,6 +38,200 @@ def get_itm(tms):
     itm.onecmd_plus_hooks(args)
     return itm
 
+VERSION_STRINGS = ['', '-v 42']
+
+###
+#
+# deploy, redeploy
+#
+###
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_deploy_local(tomcat_manager_server, localwar_file, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks('deploy local {} {} {}'.format(version, localwar_file, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_redeploy_local(tomcat_manager_server, localwar_file, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks('deploy local {} {} {}'.format(version, localwar_file, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('redeploy local {} {} {}'.format(version, localwar_file, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_deploy_server(tomcat_manager_server, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks(
+        'deploy server {} {} {}'.format(
+            version,
+            tomcat_manager_server.warfile,
+            safe_path
+        )
+    )
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_redeploy_server(tomcat_manager_server, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks(
+        'deploy server {} {} {}'.format(
+            version,
+            tomcat_manager_server.warfile,
+            safe_path
+        )
+    )
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks(
+        'redeploy server {} {} {}'.format(
+            version,
+            tomcat_manager_server.warfile,
+            safe_path
+        )
+    )
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks(
+        'undeploy {} {}'.format(
+            version,
+            safe_path
+        )
+    )
+    assert itm.exit_code == itm.exit_codes.success
+
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_deploy_context(tomcat_manager_server, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks(
+        'deploy context {} {} {}'.format(
+            version,
+            tomcat_manager_server.contextfile,
+            safe_path
+        )
+    )
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_redeploy_context(tomcat_manager_server, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks(
+        'deploy context {} {} {}'.format(
+            version,
+            tomcat_manager_server.contextfile,
+            safe_path
+        )
+    )
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks(
+        'redeploy context {} {} {}'.format(
+            version,
+            tomcat_manager_server.contextfile,
+            safe_path
+        )
+    )
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_deploy_context_warfile(tomcat_manager_server, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks('deploy context {} {} {} {}'.format(
+        version,
+        tomcat_manager_server.contextfile,
+        tomcat_manager_server.warfile,
+        safe_path
+    ))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_redeploy_context_warfile(tomcat_manager_server, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks('deploy context {} {} {} {}'.format(
+        version,
+        tomcat_manager_server.contextfile,
+        tomcat_manager_server.warfile,
+        safe_path
+    ))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('redeploy context {} {} {} {}'.format(
+        version,
+        tomcat_manager_server.contextfile,
+        tomcat_manager_server.warfile,
+        safe_path
+    ))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+
+###
+#
+# start, stop, restart, reload, sessions, expire
+#
+###
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_stop_start(tomcat_manager_server, localwar_file, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks('deploy local {} {} {}'.format(version, localwar_file, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('stop {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('start {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+COMMANDS = ['restart', 'reload', 'sessions']
+@pytest.mark.parametrize('command', COMMANDS)
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_commands(tomcat_manager_server, localwar_file, safe_path, command, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks('deploy local {} {} {}'.format(version, localwar_file, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('{} {} {}'.format(command, version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+@pytest.mark.parametrize('version', VERSION_STRINGS)
+def test_expire(tomcat_manager_server, localwar_file, safe_path, version):
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks('deploy local {} {} {}'.format(version, localwar_file, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('expire {} {} 30'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
+    itm.onecmd_plus_hooks('undeploy {} {}'.format(version, safe_path))
+    assert itm.exit_code == itm.exit_codes.success
+
 
 ###
 #
@@ -67,19 +261,20 @@ def test_list_process_apps_empty():
     assert isinstance(apps, list)
     assert apps == []
 
-LIST_ARGV_BAD = [
-    '-raw',
-    '--raw -b tate',
-    '--by=version',
-    '-s loading',
-    '-sl',
-    '-bs',
+LIST_CMDLINE_BAD = [
+    'list -raw',
+    'list --raw -b tate',
+    'list --by=version',
+    'list -s loading',
+    'list -sl',
+    'list -bs',
 ]
-@pytest.mark.parametrize('argv', LIST_ARGV_BAD)
-def test_list_parse_args_failure(argv):
+@pytest.mark.parametrize('cmdline', LIST_CMDLINE_BAD)
+def test_list_parse_args_failure(cmdline):
     itm = tm.InteractiveTomcatManager()
+    statement = itm.statement_parser.parse(cmdline)
     with pytest.raises(SystemExit):
-        itm.parse_args(itm.list_parser, argv)
+        itm.parse_args(itm.list_parser, statement.argv)
     assert itm.exit_code == itm.exit_codes.usage
 
 @pytest.mark.parametrize('raw', ['', '-r', '--raw'])
@@ -93,8 +288,9 @@ def test_list_parse_args_failure(argv):
 )
 def test_list_parse_args(raw, state, sort):
     itm = tm.InteractiveTomcatManager()
-    argv = '{} {} {}'.format(raw, state, sort)
-    itm.parse_args(itm.list_parser, argv)
+    cmdline = 'list {} {} {}'.format(raw, state, sort)
+    statement = itm.statement_parser.parse(cmdline)
+    itm.parse_args(itm.list_parser, statement.argv)
     assert itm.exit_code == itm.exit_codes.success
 
 def test_list_sort_by_state(tomcat_manager_server, mock_apps, capsys):
@@ -151,3 +347,34 @@ def test_list_state_running(tomcat_manager_server, mock_apps, capsys):
     interactive_tomcat.onecmd_plus_hooks('list --raw -s running')
     out, _ = capsys.readouterr()
     assert out == expected
+
+USAGE_ERRORS = [
+    'start',
+    'stop',
+    'restart',
+    'reload',
+    'sessions',
+    'expire',
+    'expire /path',
+    'deploy local',
+    'redeploy local',
+    'deploy local /tmp/warfile.war',
+    'redeploy local /tmp/warfile.war',
+    'deploy server',
+    'redeploy server',
+    'deploy server /tmp/warfile.war',
+    'redeploy server /tmp/warfile.war',
+    'deploy context /tmp/context.xml',
+    'redeploy context /tmp/context.xml',
+]
+@pytest.mark.parametrize('cmdline', USAGE_ERRORS)
+def test_usage_errors(cmdline, tomcat_manager_server, capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.quiet = True
+    connect = 'connect {url} {user} {password}'.format(**tomcat_manager_server)
+    itm.onecmd_plus_hooks(connect)
+    itm.onecmd_plus_hooks(cmdline)
+    out, err = capsys.readouterr()
+    assert not out
+    assert err.startswith('usage: ')
+    assert itm.exit_code == itm.exit_codes.usage

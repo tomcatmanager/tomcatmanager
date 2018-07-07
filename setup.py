@@ -8,16 +8,6 @@ from os import path
 
 from setuptools import setup, find_packages
 
-try:
-    from setupext import janitor
-    clean_command = janitor.CleanCommand
-except ImportError:
-    clean_command = None
-
-cmd_classes = {}
-if clean_command:
-    cmd_classes['clean'] = clean_command
-
 #
 # get the long description from the README file
 here = path.abspath(path.dirname(__file__))
@@ -46,9 +36,11 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3 :: Only'
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
 
     keywords='java tomcat command line',
@@ -56,17 +48,23 @@ setup(
     packages=find_packages(),
 
     python_requires='>=3.4',
-    install_requires=['cmd2>=0.8.0', 'requests', 'appdirs', 'attrdict'],
+    install_requires=[
+        'cmd2>=0.9.2', 'requests', 'appdirs', 'attrdict',
+        # typing was added to the standard library in 3.5
+        # we need the additional module if the python version
+        # is 3.4.x
+        'typing ; python_version < "3.5"',
+        ],
 
     setup_requires=['setuptools_scm', 'setupext_janitor'],
-    cmdclass=cmd_classes,
 
     # dependencies for development and testing
     # $ pip3 install -e .[dev]
     extras_require={
-        'dev': ['pytest', 'pytest-mock', 'tox', 'codecov', 'pytest-cov',
-                'setuptools_scm', 'setupext_janitor',
-                'sphinx', 'sphinx-autobuild', 'wheel', 'twine']
+        'dev': ['pytest', 'pytest-mock', 'tox',
+                'codecov', 'pytest-cov', 'pylint', 'rope',
+                'setuptools_scm', 'invoke',
+                'sphinx', 'sphinx-autobuild', 'wheel', 'twine'],
     },
 
     # define the scripts that should be created on installation

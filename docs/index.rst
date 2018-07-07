@@ -10,7 +10,7 @@ What Can It Do?
 This package installs a command line utility called ``tomcat-manager``. It's
 easily scriptable using your favorite shell:
 
-.. code-block:: none
+.. code-block:: bash
 
    $ tomcat-manager --user=ace --password=newenglandclamchowder \
    http://localhost:8080/manager deploy local sample.war /sampleapp
@@ -19,7 +19,7 @@ easily scriptable using your favorite shell:
 
 There is also an interactive mode:
 
-.. code-block:: none
+.. code-block:: bash
 
    $ tomcat-manager
    tomcat-manager>connect http://localhost:8080/manager ace newenglandclamchowder
@@ -49,6 +49,20 @@ And for the ultimate in flexibility, you can use the python package directly:
    >>> r.status_message
    'No context exists named /someapp'
 
+System Requirements
+-------------------
+
+You'll need Python 3.4 or higher on macOS, Windows, or Linux.
+
+The following Tomcat versions are supported:
+
+- 7.0.x
+- 8.0.x
+- 8.5.x
+- 9.0.x
+
+Table of Contents
+-----------------
 
 .. toctree::
    :maxdepth: 2
@@ -60,3 +74,4 @@ And for the ultimate in flexibility, you can use the python package directly:
    package
    api/index.rst
    contributing
+   changelog

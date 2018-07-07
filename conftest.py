@@ -26,12 +26,39 @@ def pytest_addoption(parser):
     parser.addoption('--contextfile', action='store', default=None,
         help='contextfile: path to context.xml file on the tomcat server')
 
+
+# use a fixture to return a class with a bunch
+# of assertion helper methods
+@pytest.fixture
+def assert_tomcatresponse():
+    """
+    Assertions for every command that should complete successfully.
+    """
+    class AssertResponse():
+        def success(self, r):
+            """Assertions on TomcatResponse for calls that should be successful."""
+            assert r.status_code == tm.status_codes.ok, 'message from server: "{}"'.format(r.status_message)
+            assert r.status_message != None
+            assert r.status_message
+            r.raise_for_status()
+        def failure(self, r):
+            """Assertions on TomcatResponse for calls that should fail."""
+            assert r.status_code == tm.status_codes.fail
+            with pytest.raises(tm.TomcatError):
+                r.raise_for_status()
+        def info(self, r):
+            """Assertions on TomcatResponse for info-type commands that should be successful."""
+            self.success(r)
+            assert r.result != None
+            assert r.result        
+    return AssertResponse()
+
 ###
 #
 # fixtures for testing TomcatManager()
 #
 ###
-@pytest.fixture(scope='module')
+@pytest.fixture
 def tomcat_manager_server(request):
     """start a local http server which provides a similar interface to a real Tomcat Manager app"""
     url = request.config.getoption('--url')
@@ -48,7 +75,7 @@ def tomcat_manager_server(request):
         # go start up a fake server
         return start_mock_server80()
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def tomcat(tomcat_manager_server):
     tomcat = tm.TomcatManager()
     tomcat.connect(
@@ -58,17 +85,17 @@ def tomcat(tomcat_manager_server):
     )
     return tomcat
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def localwar_file():
     """return the path to a valid war file"""
     return os.path.dirname(__file__) + '/tests/war/sample.war'
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def safe_path():
     """a safe path we can deploy apps to"""
     return '/tomcat-manager-test-app'
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def server_info():
     return """Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
 OS Name: Linux
@@ -77,4 +104,3 @@ OS Architecture: amd64
 JVM Version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
 JVM Vendor: Oracle Corporation
 """
-

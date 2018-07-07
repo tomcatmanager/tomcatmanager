@@ -1,11 +1,14 @@
 # pyenv et all
 .python-version
 
-# editor stuff
+# editor/ide stuff
 *~
 .tm_properties
 .idea
 .vscode
+.mr.developer.cfg
+.project
+.pydevproject
 
 # compiled python
 *.py[cod]
@@ -33,15 +36,11 @@ lib64
 pip-log.txt
 
 # Unit test / coverage reports
-.coverage
+.coverage*
 .tox
 nosetests.xml
 .cache
+.pytest_cache
 
 # Translations
 *.mo
-
-# Mr Developer
-.mr.developer.cfg
-.project
-.pydevproject
