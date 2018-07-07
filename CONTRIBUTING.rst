@@ -278,12 +278,16 @@ To make a release and deploy it to `PyPI
 
 8. Tag the **master** branch with the new version number, and push the tag.
 
-9. Build source distribution, wheel distribution, and upload them to pypi::
+9. Build source distribution, wheel distribution, and upload them to pypi staging::
 
-    $ invoke distribute
+    $ invoke pypi-test
 
-10. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
+10. Build source distribution, wheel distribution, and upload them to pypi::
+
+    $ invoke pypi
+
+11. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
    Make sure they look good.
 
-11. Switch back to the **develop** branch. Add an **Unreleased** section to
+12. Switch back to the **develop** branch. Add an **Unreleased** section to
     the top of ``CHANGELOG.rst``. Push the change to github.
