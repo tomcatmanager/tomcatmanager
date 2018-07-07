@@ -266,22 +266,24 @@ To make a release and deploy it to `PyPI
 
 3. Review and update ``CHANGELOG.rst``.
 
-4. Push the **develop** branch to github.
+4. Update the milestone corresponding to the release at `https://github.com/tomcatmanager/tomcatmanager/milestones <https://github.com/tomcatmanager/tomcatmanager/milestones>`_
 
-5. Create a pull request on github to merge the **develop** branch into
+5. Push the **develop** branch to github.
+
+6. Create a pull request on github to merge the **develop** branch into
    **master**. Wait for the checks to pass.
 
-6. Merge the **develop** branch into the **master** branch and close the pull
+7. Merge the **develop** branch into the **master** branch and close the pull
    request.
 
-7. Tag the **master** branch with the new version number, and push the tag.
+8. Tag the **master** branch with the new version number, and push the tag.
 
-8. Build source distribution, wheel distribution, and upload them to pypi::
+9. Build source distribution, wheel distribution, and upload them to pypi::
 
     $ invoke distribute
 
-9. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
+10. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
    Make sure they look good.
 
-10. Switch back to the **develop** branch. Add an **Unreleased** section to
+11. Switch back to the **develop** branch. Add an **Unreleased** section to
     the top of ``CHANGELOG.rst``. Push the change to github.
