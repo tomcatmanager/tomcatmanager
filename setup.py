@@ -45,7 +45,8 @@ setup(
 
     keywords='java tomcat command line',
 
-    packages=find_packages(),
+    packages=find_packages(where="src"),
+    package_dir={'':'src'},
 
     python_requires='>=3.4',
     install_requires=[

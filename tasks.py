@@ -64,7 +64,7 @@ namespace_clean.add_task(tox_clean, 'tox')
 @invoke.task
 def pylint(context):
     "Check code quality using pylint"
-    context.run('pylint --rcfile=tomcatmanager/pylintrc tomcatmanager')
+    context.run('pylint --rcfile=src/tomcatmanager/pylintrc src/tomcatmanager')
 namespace.add_task(pylint)
 
 @invoke.task
