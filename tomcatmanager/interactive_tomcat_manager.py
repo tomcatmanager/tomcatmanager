@@ -192,11 +192,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.settable.update({'status_prefix': 'String to prepend to all status output'})
         self.settable.update({'debug': 'Show stack trace for exceptions'})
         self.prompt = '{}> '.format(self.app_name)
-        cmd2.Cmd.shortcuts.update({'$?': 'exit_code'})
+        self.shortcuts.update({'$?': 'exit_code'})
 
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
 
-        cmd2.Cmd.__init__(self, persistent_history_file=self.history_file)
+        super().__init__(persistent_history_file=self.history_file)
 
         self.load_config()
 
