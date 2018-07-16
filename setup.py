@@ -56,7 +56,7 @@ setup(
         'typing ; python_version < "3.5"',
         ],
 
-    setup_requires=['setuptools_scm', 'setupext_janitor'],
+    setup_requires=['setuptools_scm'],
 
     # dependencies for development and testing
     # $ pip3 install -e .[dev]
