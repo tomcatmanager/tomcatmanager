@@ -13,6 +13,11 @@ and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`
 In Development
 --------------
 
+Changed
+^^^^^^^
+- ``invoke clean.pycache`` is now ``invoke clean.bytecode``
+- Run tests using python 3.7 on Appveyor and Travis
+- Source code has been moved inside of ``src`` directory
 
 0.13.0 (2018-07-06)
 -------------------
