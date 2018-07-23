@@ -38,10 +38,10 @@ Now set pyenv to make all three of those available at the same time::
 
     $ pyenv local tomcatmanager-3.7 tomcatmanager-3.6 tomcatmanager-3.5 tomcatmanager-3.4
 
-Whether you ran the script, or did it by hand, you now have isolated
-virtualenvs just for tomcatmanager for each of the three python
-versions. This table shows various python commands, the version of
-python which will be executed, and the virtualenv it will utilize.
+Whether you ran the script, or did it by hand, you now have isolated virtualenvs
+for each of the minor python versions. This table shows various python commands,
+the version of python which will be executed, and the virtualenv it will
+utilize.
 
 =============  ======  =================
 Command        python   virtualenv
