@@ -50,7 +50,7 @@ setup(
 
     python_requires='>=3.4',
     install_requires=[
-        'cmd2>=0.9.2', 'requests', 'appdirs', 'attrdict',
+        'cmd2=0.9.4', 'requests', 'appdirs', 'attrdict',
         # typing was added to the standard library in 3.5
         # we need the additional module if the python version
         # is 3.4.x
