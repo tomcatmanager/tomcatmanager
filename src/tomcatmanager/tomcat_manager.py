@@ -117,7 +117,7 @@ class TomcatManager:
     # convenience and utility methods
     #
     ###
-    def connect(self, url: str, user: str = None, password: str = None) -> TomcatManagerResponse:
+    def connect(self, url: str, user: str = '', password: str = '') -> TomcatManagerResponse:
         """
         Connect to a Tomcat Manager server.
 
