@@ -19,6 +19,12 @@ Added
 - Already have a setting to control network timeouts. Added a command line option
   '--timeout' to do the same, making it easier for modify for command-line only use.
 
+Removed
+^^^^^^^
+
+- Drop support for Python 3.4, which reached end-of-life on Mar 18, 2019.
+
+
 0.14.0 (2019-05-16)
 -------------------
 

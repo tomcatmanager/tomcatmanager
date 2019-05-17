@@ -31,12 +31,10 @@ If you prefer to create these virtual envs by hand, do the following::
     $ pyenv virtualenv -p python3.6 3.6.8 tomcatmanager-3.6
     $ pyenv install 3.5.7
     $ pyenv virtualenv -p python3.5 3.5.7 tomcatmanager-3.5
-    $ pyenv install 3.4.10
-    $ pyenv virtualenv -p python3.4 3.4.10 tomcatmanager-3.4
 
 Now set pyenv to make all three of those available at the same time::
 
-    $ pyenv local tomcatmanager-3.7 tomcatmanager-3.6 tomcatmanager-3.5 tomcatmanager-3.4
+    $ pyenv local tomcatmanager-3.7 tomcatmanager-3.6 tomcatmanager-3.5
 
 Whether you ran the script, or did it by hand, you now have isolated virtualenvs
 for each of the minor python versions. This table shows various python commands,
@@ -51,13 +49,11 @@ Command        python   virtualenv
 ``python3.7``  3.7.3   tomcatmanager-3.7
 ``python3.6``  3.6.8   tomcatmanager-3.6
 ``python3.5``  3.5.7   tomcatmanager-3.5
-``python3.4``  3.4.10  tomcatmanager-3.4
 ``pip``        3.7.3   tomcatmanager-3.7
 ``pip3``       3.7.3   tomcatmanager-3.7
 ``pip3.7``     3.7.3   tomcatmanager-3.7
 ``pip3.6``     3.6.8   tomcatmanager-3.6
 ``pip3.5``     3.5.7   tomcatmanager-3.5
-``pip3.4``     3.4.10  tomcatmanager-3.4
 =============  ======  =================
 
 
