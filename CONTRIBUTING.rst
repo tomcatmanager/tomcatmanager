@@ -25,39 +25,39 @@ automates the creation of these environments.
 If you prefer to create these virtual envs by hand, do the following::
 
     $ cd tomcatmanager
-    $ pyenv install 3.7.0
-    $ pyenv virtualenv -p python3.7 3.7.0 tomcatmanager-3.7
-    $ pyenv install 3.6.5
-    $ pyenv virtualenv -p python3.6 3.6.5 tomcatmanager-3.6
-    $ pyenv install 3.5.5
-    $ pyenv virtualenv -p python3.5 3.5.5 tomcatmanager-3.5
-    $ pyenv install 3.4.8
-    $ pyenv virtualenv -p python3.4 3.4.8 tomcatmanager-3.4
+    $ pyenv install 3.7.3
+    $ pyenv virtualenv -p python3.7 3.7.3 tomcatmanager-3.7
+    $ pyenv install 3.6.8
+    $ pyenv virtualenv -p python3.6 3.6.8 tomcatmanager-3.6
+    $ pyenv install 3.5.7
+    $ pyenv virtualenv -p python3.5 3.5.7 tomcatmanager-3.5
+    $ pyenv install 3.4.10
+    $ pyenv virtualenv -p python3.4 3.4.10 tomcatmanager-3.4
 
 Now set pyenv to make all three of those available at the same time::
 
     $ pyenv local tomcatmanager-3.7 tomcatmanager-3.6 tomcatmanager-3.5 tomcatmanager-3.4
 
-Whether you ran the script, or did it by hand, you now have isolated
-virtualenvs just for tomcatmanager for each of the three python
-versions. This table shows various python commands, the version of
-python which will be executed, and the virtualenv it will utilize.
+Whether you ran the script, or did it by hand, you now have isolated virtualenvs
+for each of the minor python versions. This table shows various python commands,
+the version of python which will be executed, and the virtualenv it will
+utilize.
 
 =============  ======  =================
 Command        python   virtualenv
 =============  ======  =================
-``python``     3.7.0   tomcatmanager-3.6
-``python3``    3.7.0   tomcatmanager-3.6
-``python3.7``  3.7.0   tomcatmanager-3.7
-``python3.6``  3.6.5   tomcatmanager-3.6
-``python3.5``  3.5.5   tomcatmanager-3.5
-``python3.4``  3.4.8   tomcatmanager-3.4
-``pip``        3.7.0   tomcatmanager-3.6
-``pip3``       3.7.0   tomcatmanager-3.6
-``pip3.7``     3.7.0   tomcatmanager-3.7
-``pip3.6``     3.6.5   tomcatmanager-3.6
-``pip3.5``     3.5.5   tomcatmanager-3.5
-``pip3.4``     3.4.8   tomcatmanager-3.4
+``python``     3.7.3   tomcatmanager-3.7
+``python3``    3.7.3   tomcatmanager-3.7
+``python3.7``  3.7.3   tomcatmanager-3.7
+``python3.6``  3.6.8   tomcatmanager-3.6
+``python3.5``  3.5.7   tomcatmanager-3.5
+``python3.4``  3.4.10  tomcatmanager-3.4
+``pip``        3.7.3   tomcatmanager-3.7
+``pip3``       3.7.3   tomcatmanager-3.7
+``pip3.7``     3.7.3   tomcatmanager-3.7
+``pip3.6``     3.6.8   tomcatmanager-3.6
+``pip3.5``     3.5.7   tomcatmanager-3.5
+``pip3.4``     3.4.10  tomcatmanager-3.4
 =============  ======  =================
 
 
@@ -278,12 +278,16 @@ To make a release and deploy it to `PyPI
 
 8. Tag the **master** branch with the new version number, and push the tag.
 
-9. Build source distribution, wheel distribution, and upload them to pypi::
+9. Build source distribution, wheel distribution, and upload them to pypi staging::
 
-    $ invoke distribute
+    $ invoke pypi-test
 
-10. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
+10. Build source distribution, wheel distribution, and upload them to pypi::
+
+    $ invoke pypi
+
+11. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
    Make sure they look good.
 
-11. Switch back to the **develop** branch. Add an **Unreleased** section to
+12. Switch back to the **develop** branch. Add an **Unreleased** section to
     the top of ``CHANGELOG.rst``. Push the change to github.

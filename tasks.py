@@ -64,7 +64,7 @@ namespace_clean.add_task(tox_clean, 'tox')
 @invoke.task
 def pylint(context):
     "Check code quality using pylint"
-    context.run('pylint --rcfile=tomcatmanager/pylintrc tomcatmanager')
+    context.run('pylint --rcfile=src/tomcatmanager/pylintrc src/tomcatmanager')
 namespace.add_task(pylint)
 
 @invoke.task
@@ -144,16 +144,19 @@ def eggs_clean(context):
 namespace_clean.add_task(eggs_clean, 'eggs')
 
 @invoke.task
-def pycache_clean(context):
-    "Remove __pycache__ directories"
+def bytecode_clean(context):
+    "Remove __pycache__ directories and *.pyc files"
     #pylint: disable=unused-argument
     dirs = set()
-    for root, dirnames, _ in os.walk(os.curdir):
+    for root, dirnames, files in os.walk(os.curdir):
         if '__pycache__' in dirnames:
             dirs.add(os.path.join(root, '__pycache__'))
-    print("Removing __pycache__ directories")
+        for file in files:
+            if file.endswith(".pyc"):
+                dirs.add(os.path.join(root,file))
+    print("Removing __pycache__ directories and .pyc files")
     rmrf(dirs, verbose=False)
-namespace_clean.add_task(pycache_clean, 'pycache')
+namespace_clean.add_task(bytecode_clean, 'bytecode')
 
 #
 # make a dummy clean task which runs all the tasks in the clean namespace

@@ -45,18 +45,19 @@ setup(
 
     keywords='java tomcat command line',
 
-    packages=find_packages(),
+    packages=find_packages(where="src"),
+    package_dir={'':'src'},
 
     python_requires='>=3.4',
     install_requires=[
-        'cmd2>=0.9.2', 'requests', 'appdirs', 'attrdict',
+        'cmd2==0.9.4', 'requests', 'appdirs', 'attrdict',
         # typing was added to the standard library in 3.5
         # we need the additional module if the python version
         # is 3.4.x
         'typing ; python_version < "3.5"',
         ],
 
-    setup_requires=['setuptools_scm', 'setupext_janitor'],
+    setup_requires=['setuptools_scm'],
 
     # dependencies for development and testing
     # $ pip3 install -e .[dev]

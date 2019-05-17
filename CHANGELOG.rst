@@ -10,6 +10,16 @@ The format is based on `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_
 and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
 
+0.14.0 (2019-05-16)
+-------------------
+
+Changed
+^^^^^^^
+- ``invoke clean.pycache`` is now ``invoke clean.bytecode``
+- Run tests using python 3.7 on Appveyor and Travis
+- Source code has been moved inside of ``src`` directory
+- Pin cmd2 to version 0.9.4; newer versions break us badly
+
 0.13.0 (2018-07-06)
 -------------------
 
