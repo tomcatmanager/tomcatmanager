@@ -13,6 +13,11 @@ and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`
 Unreleased
 ----------
 
+Added
+^^^^^
+
+- Already have a setting to control network timeouts. Added a command line option
+  '--timeout' to do the same, making it easier for modify for command-line only use.
 
 0.14.0 (2019-05-16)
 -------------------
@@ -48,7 +53,7 @@ Changed
 Fixed
 ^^^^^
 
-- Test suite now runs several orders of magnitude faster. The 
+- Test suite now runs several orders of magnitude faster. The
   upstream `cmd2 <https://github.com/python-cmd2/cmd2>`_ used
   `pyparsing <https://sourceforge.net/projects/pyparsing/>`_ which
   was very slow. ``cmd2`` versions >= 0.9.0 use ``shlex`` to parse
