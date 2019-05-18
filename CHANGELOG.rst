@@ -36,6 +36,7 @@ Changed
 - Source code has been moved inside of ``src`` directory
 - Pin cmd2 to version 0.9.4; newer versions break us badly
 
+
 0.13.0 (2018-07-06)
 -------------------
 
