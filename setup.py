@@ -37,7 +37,6 @@ setup(
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -48,13 +47,9 @@ setup(
     packages=find_packages(where="src"),
     package_dir={'':'src'},
 
-    python_requires='>=3.4',
+    python_requires='>=3.5',
     install_requires=[
         'cmd2>=0.9.12', 'requests', 'appdirs', 'attrdict',
-        # typing was added to the standard library in 3.5
-        # we need the additional module if the python version
-        # is 3.4.x
-        'typing ; python_version < "3.5"',
         ],
 
     setup_requires=['setuptools_scm'],
