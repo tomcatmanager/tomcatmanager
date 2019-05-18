@@ -18,6 +18,7 @@ Added
 
 - Already have a setting to control network timeouts. Added a command line option
   '--timeout' to do the same, making it easier for modify for command-line only use.
+- Adjustments for upstream changes in cmd2. We now require cmd2 0.9.12 or higher
 
 Removed
 ^^^^^^^

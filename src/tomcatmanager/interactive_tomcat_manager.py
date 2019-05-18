@@ -174,6 +174,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 
     def __init__(self):
+        self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
+        shortcuts = {'?': 'help', '!': 'shell', '$?': 'exit_code'}
+        
+        super().__init__(persistent_history_file=self.history_file, shortcuts=shortcuts)
+
         # settings for cmd2.Cmd
         self.allow_cli_args = False
 
@@ -192,11 +197,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.settable.update({'status_prefix': 'String to prepend to all status output'})
         self.settable.update({'debug': 'Show stack trace for exceptions'})
         self.prompt = '{}> '.format(self.app_name)
-        self.shortcuts.update({'$?': 'exit_code'})
-
-        self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
-
-        super().__init__(persistent_history_file=self.history_file)
 
         self.load_config()
 
@@ -332,12 +332,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 out += ' as {}'.format(self.tomcat.user)
         return out
 
-    @cmd2.with_argument_list
-    def do_help(self, arglist: List):
+    def do_help(self, args: str):
         """Show available commands, or help on a specific command."""
-        if arglist:
+        if args:
             # they want help on a specific command, use cmd2 for that
-            super().do_help(arglist)
+            super().do_help(args)
         else:
             # show a custom list of commands, organized by category
             help_ = []
