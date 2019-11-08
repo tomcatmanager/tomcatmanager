@@ -25,10 +25,10 @@ automates the creation of these environments.
 If you prefer to create these virtual envs by hand, do the following::
 
     $ cd tomcatmanager
-    $ pyenv install 3.7.3
-    $ pyenv virtualenv -p python3.7 3.7.3 tomcatmanager-3.7
-    $ pyenv install 3.6.8
-    $ pyenv virtualenv -p python3.6 3.6.8 tomcatmanager-3.6
+    $ pyenv install 3.7.4
+    $ pyenv virtualenv -p python3.7 3.7.4 tomcatmanager-3.7
+    $ pyenv install 3.6.9
+    $ pyenv virtualenv -p python3.6 3.6.9 tomcatmanager-3.6
     $ pyenv install 3.5.7
     $ pyenv virtualenv -p python3.5 3.5.7 tomcatmanager-3.5
 
@@ -44,15 +44,15 @@ utilize.
 =============  ======  =================
 Command        python   virtualenv
 =============  ======  =================
-``python``     3.7.3   tomcatmanager-3.7
-``python3``    3.7.3   tomcatmanager-3.7
-``python3.7``  3.7.3   tomcatmanager-3.7
-``python3.6``  3.6.8   tomcatmanager-3.6
+``python``     3.7.4   tomcatmanager-3.7
+``python3``    3.7.4   tomcatmanager-3.7
+``python3.7``  3.7.4   tomcatmanager-3.7
+``python3.6``  3.6.9   tomcatmanager-3.6
 ``python3.5``  3.5.7   tomcatmanager-3.5
-``pip``        3.7.3   tomcatmanager-3.7
-``pip3``       3.7.3   tomcatmanager-3.7
-``pip3.7``     3.7.3   tomcatmanager-3.7
-``pip3.6``     3.6.8   tomcatmanager-3.6
+``pip``        3.7.4   tomcatmanager-3.7
+``pip3``       3.7.4   tomcatmanager-3.7
+``pip3.7``     3.7.4   tomcatmanager-3.7
+``pip3.6``     3.6.9   tomcatmanager-3.6
 ``pip3.5``     3.5.7   tomcatmanager-3.5
 =============  ======  =================
 
@@ -68,11 +68,11 @@ This installs the tomcatmanager package "in-place", so the package points
 to the source code instead of copying files to the python
 ``site-packages`` folder.
 
-All the dependencies now have been installed in the ``tomcatmanager-3.6``
+All the dependencies now have been installed in the ``tomcatmanager-3.7``
 virtualenv. If you want to work in other virtualenvs, you'll need to manually
 select it, and install again::
 
-   $ pyenv shell tomcatmanager-3.4
+   $ pyenv shell tomcatmanager-3.5
    $ pip install -e .[dev]
 
 
