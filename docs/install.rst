@@ -3,7 +3,7 @@ Installation
 
 You need Python 3.5 or higher. Install using ``pip``::
 
-   pip install tomcatmanager
+  pip install tomcatmanager
 
 Works on Windows, macOS, and Linux.
 

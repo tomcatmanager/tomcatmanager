@@ -8,7 +8,7 @@ Say you want to find out how many active sessions there are in the oldest
 version of our `shiny` app (told you it would feel kind of hollow). You could
 use interactive mode:
 
-.. code-block:: none
+.. code-block:: text
 
   $ tomcat-manager
   tomcat-manager>connect https://www.example.com/manager ace newenglandclamchowder
@@ -82,7 +82,7 @@ Server Shortcuts
 You can use :ref:`server_shortcuts` from the command line with or without
 commands:
 
-.. code-block:: none
+.. code-block:: text
 
   $ tomcat-manager localhost
   --connected to http://localhost:8080/manager as ace
@@ -94,7 +94,7 @@ commands:
 
 Or:
 
-.. code-block:: none
+.. code-block:: text
 
   $ tomcat-manager localhost list
   --connected to http://localhost:8080/manager as ace
@@ -132,16 +132,16 @@ Piped Input
 
 ``tomcat-manager`` will process lines from standard input as though they were
 entered at the interactive prompt. There is no mechanism to check for errors
-this way, the commands are blindly run until the pipe is closed. The shell
-exit code of ``tomcat-manager`` will be the exit code of the last command run.
+this way, the commands are blindly run until the pipe is closed. The shell exit
+code of ``tomcat-manager`` will be the exit code of the last command run.
 
 If you want to see what the exit codes are, you can either use ``$?`` in your
 shell, or you can use the interactive command ``exit_code`` (``$?`` works too)
 to see the result.
 
-If you want more sophisticated error checking, then you should probably write
-a shell script and invoke ``tomcat-manager`` seperately for each command you
-want to execute. That will allow you to use the shell script for checking exit
+If you want more sophisticated error checking, then you should probably write a
+shell script and invoke ``tomcat-manager`` seperately for each command you want
+to execute. That will allow you to use the shell script for checking exit
 codes, logic branching, looping, etc.
 
 
@@ -159,10 +159,10 @@ them into a single stream:
   $ tomcat-manager localhost list > myapps.txt 2>&1
 
 In addition to redirecting with the shell, there are several command line
-switches that change what's included in the output. These options correspond
-to :ref:`settings` you can change in :doc:`Interactive Use <interactive>`. All
-of the settings default to ``False``, but be aware that you may have altered
-them your :ref:`configuration_file`, which is read on startup.
+switches that change what's included in the output. These options correspond to
+:ref:`settings` you can change in :doc:`Interactive Use <interactive>`. All of
+the settings default to ``False``, but be aware that you may have altered them
+your :ref:`configuration_file`, which is read on startup.
 
 ==========================  ======================  ======================================
 Option                      Setting                 Description
@@ -181,16 +181,16 @@ suppressed. If ``quiet=False`` then status information is sent to ``stderr``.
 If ``status_to_stdout=True`` then status information is sent to ``stdout``, as
 long as ``quiet=False``.
 
-Here's a couple of examples to demonstrate, using a :ref:`server shortcut <server_shortcuts>` of
-``localhost``, which we assume gets you authenticated to a Tomcat Server web
-application:
+Here's a couple of examples to demonstrate, using a :ref:`server shortcut
+<server_shortcuts>` of ``localhost``, which we assume gets you authenticated to
+a Tomcat Server web application:
 
 These two commands yield the same output, but by different mechanisms: the
 first one uses the shell to redirect status messages to the bitbucket, the
 second one uses the ``--quiet`` switch to instruct ``tomcat-manager`` to
 suppress status messages.
 
-.. code-block:: none
+.. code-block:: text
 
   $ tomcat-manager localhost list 2>/dev/null
   Path                     Status  Sessions Directory
@@ -207,7 +207,7 @@ If you pipe commands into ``tomcat-manager`` instead of providing them as
 arguments, the ``--echo`` command line switch can be included which will print
 the prompt and command to the output:
 
-.. code-block:: none
+.. code-block:: text
 
   $ echo list | tomcat-manager --echo localhost
   --connected to https://home.kotfu.net/manager as ace
@@ -217,13 +217,13 @@ the prompt and command to the output:
   /                        running        0 ROOT
   /manager                 running        0 manager
 
-For most common errors, like failed authorization, connection timeouts, and
-DNS lookup failures, ``tomcat-manager`` catches the exceptions raised by those
+For most common errors, like failed authorization, connection timeouts, and DNS
+lookup failures, ``tomcat-manager`` catches the exceptions raised by those
 errors, and outputs a terse message describing the problem. For example, if my
-Tomcat container is not currently running, or if the HTTP request fails for
-any other reason, you will see something like this:
+Tomcat container is not currently running, or if the HTTP request fails for any
+other reason, you will see something like this:
 
-.. code-block:: none
+.. code-block:: text
 
   $ tm vm list
   connection error
@@ -232,7 +232,7 @@ If you want all the gory detail, give the ``--debug`` command line switch or
 set ``debug=True``. Then you'll see something like this (stack trace truncated
 with '...'):
 
-.. code-block:: none
+.. code-block:: text
 
   $ tm --debug vm list
   Traceback (most recent call last):

@@ -5,8 +5,8 @@ Use from Python
 Connect to the server
 ---------------------
 
-Before you can do anything useful, you need to create a `TomcatManager`
-object and connect to a server.
+Before you can do anything useful, you need to create a `TomcatManager` object
+and connect to a server.
 
 .. automethod:: tomcatmanager.TomcatManager.connect
 
@@ -34,7 +34,8 @@ There are three methods you can use to deploy applications to a Tomcat server.
 .. automethod:: tomcatmanager.TomcatManager.deploy_servercontext
 
 
-You can also undeploy applications. This removes the WAR file from the Tomcat server.
+You can also undeploy applications. This removes the WAR file from the Tomcat
+server.
 
 .. automethod:: tomcatmanager.TomcatManager.undeploy
 
@@ -61,9 +62,9 @@ Parallel Deployment
 Tomcat supports a `parallel deployment feature
 <https://tomcat.apache.org/tomcat-8.5-doc/config/context.html#Parallel_deplo
 yment>`_ which allows multiple versions of the same WAR to be deployed
-simultaneously at the same URL. To utilize this feature, you need to deploy
-an application with a version string. The combination of path and version
-string uniquely identify the application::
+simultaneously at the same URL. To utilize this feature, you need to deploy an
+application with a version string. The combination of path and version string
+uniquely identify the application::
 
    >>> tomcat = getfixture('tomcat')
    >>> safe_path = '/tomcat-manager-test-app'
@@ -74,12 +75,12 @@ string uniquely identify the application::
    True
    >>> with open(localwar_file, 'rb') as localwar_fileobj:
    ...     r = tomcat.deploy_localwar(safe_path, localwar_fileobj, version='43')
-   >>> r.ok 
+   >>> r.ok
    True
 
 We now have two instances of the same application, deployed at the same
-location, but with different version strings. To do anything to either of
-those applications, you must supply both the path and the version string::
+location, but with different version strings. To do anything to either of those
+applications, you must supply both the path and the version string::
 
    >>> r = tomcat.stop(path=safe_path, version='42')
    >>> r.ok
@@ -91,8 +92,8 @@ those applications, you must supply both the path and the version string::
    >>> r.ok
    True
 
-The following methods include an optional version parameter to support
-parallel deployments:
+The following methods include an optional version parameter to support parallel
+deployments:
 
 - :meth:`.deploy`
 - :meth:`.undeploy`
@@ -106,9 +107,9 @@ parallel deployments:
 Information about Tomcat
 ------------------------
 
-There are a number of methods which just return information about the
-Tomcat server. With the exception of `find_leakers()` (which triggers
-garbage collection), these methods don't effect any change on the server.
+There are a number of methods which just return information about the Tomcat
+server. With the exception of `find_leakers()` (which triggers garbage
+collection), these methods don't effect any change on the server.
 
 .. automethod:: tomcatmanager.TomcatManager.server_info
 
