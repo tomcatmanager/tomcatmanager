@@ -34,6 +34,7 @@ If you prefer to create these virtual envs by hand, do the following::
   $ pyenv install 3.5.8
   $ pyenv virtualenv -p python3.5 3.5.8 tomcatmanager-3.5
 
+
 Now set pyenv to make all four of those available at the same time::
 
   $ pyenv local tomcatmanager-3.8 tomcatmanager-3.7 tomcatmanager-3.6 tomcatmanager-3.5
@@ -46,8 +47,8 @@ utilize.
 =============  ======  =================
 Command        python   virtualenv
 =============  ======  =================
-``python``     3.7.3   tomcatmanager-3.8
-``python3``    3.7.3   tomcatmanager-3.8
+``python``     3.8.0   tomcatmanager-3.8
+``python3``    3.8.0   tomcatmanager-3.8
 ``python3.8``  3.8.0   tomcatmanager-3.8
 ``python3.7``  3.7.5   tomcatmanager-3.7
 ``python3.6``  3.6.9   tomcatmanager-3.6
