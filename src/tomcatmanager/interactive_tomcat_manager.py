@@ -176,7 +176,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def __init__(self):
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
         shortcuts = {'?': 'help', '!': 'shell', '$?': 'exit_code'}
-        
+
         super().__init__(persistent_history_file=self.history_file, shortcuts=shortcuts)
 
         # settings for cmd2.Cmd
@@ -249,15 +249,16 @@ class InteractiveTomcatManager(cmd2.Cmd):
         If debug=True, you will get a full stack trace, otherwise just the
         exception.
         """
-        if errmsg:
-            sys.stderr.write('{}\n'.format(errmsg))
+        if msg:
+            sys.stderr.write('{}{}'.format(msg, end))
         else:
             _type, _exception, _traceback = sys.exc_info()
             if _exception:
-                if self.debug:
-                    output = ''.join(traceback.format_exception(_type, _exception, _traceback))
-                else:
-                    output = ''.join(traceback.format_exception_only(_type, _exception))
+                #if self.debug:
+                #    output = ''.join(traceback.format_exception(_type, _exception, _traceback))
+                #else:
+                #    output = ''.join(traceback.format_exception_only(_type, _exception))
+                output = ''.join(traceback.format_exception_only(_type, _exception))
                 sys.stderr.write(output)
 
     def pfeedback(self, msg: Any, *, end: str = '\n') -> None:
@@ -269,15 +270,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
         will be sent to sys.stderr.
         """
         if not self.quiet:
-            fmt = '{}{}\n'
+            fmt = '{}{}{}'
             if self.feedback_to_output:
-                self.poutput(fmt.format(self.status_prefix, msg))
+                self.poutput(fmt.format(self.status_prefix, msg, end))
             else:
-                sys.stderr.write(fmt.format(self.status_prefix, msg))
+                sys.stderr.write(fmt.format(self.status_prefix, msg, end))
 
     def emptyline(self):
         """Do nothing on an empty line"""
-        pass
 
     def default(self, statement: cmd2.Statement):
         """what to do if we don't recognize the command the user entered"""
@@ -1218,7 +1218,7 @@ change the value of one of this program's settings
     def do_exit(self, _):
         """Exit the interactive command prompt."""
         self.exit_code = self.exit_codes.success
-        return self._STOP_AND_EXIT
+        return True
 
     def do_quit(self, cmdline: cmd2.Statement):
         """Synonym for the 'exit' command."""
