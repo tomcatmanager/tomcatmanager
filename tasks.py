@@ -89,6 +89,12 @@ def docs(context, builder='html'):
     context.run(cmdline)
 namespace.add_task(docs)
 
+@invoke.task()
+def doc8(context):
+    "Check documentation with doc8"
+    context.run('doc8 {} --ignore-path {}'.format(DOCS_SRCDIR, DOCS_BUILDDIR))
+namespace.add_task(doc8)
+
 @invoke.task
 def docs_clean(context):
     "Remove rendered documentation"
