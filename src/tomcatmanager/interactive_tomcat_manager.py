@@ -209,7 +209,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # Override cmd2.Cmd methods.
     #
     ###
-    def poutput(self, msg: Any, end='\n'):
+    def poutput(self, msg: Any, *, end: str = '\n') -> None:
         """
         Convenient shortcut for self.stdout.write();
         by default adds newline to end if not already present.
@@ -235,7 +235,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 # finished.
                 pass
 
-    def perror(self, errmsg: str, exception_type=None, traceback_war=True):
+    @staticmethod
+    def perror(msg: Any, *, end: str = '\n', apply_style: bool = True) -> None:
         """
         Print an error message or an exception.
 
@@ -259,7 +260,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     output = ''.join(traceback.format_exception_only(_type, _exception))
                 sys.stderr.write(output)
 
-    def pfeedback(self, msg: str):
+    def pfeedback(self, msg: Any, *, end: str = '\n') -> None:
         """
         Print nonessential feedback.
 
