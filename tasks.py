@@ -81,11 +81,12 @@ namespace.add_task(pylint_tests)
 #####
 DOCS_SRCDIR = 'docs'
 DOCS_BUILDDIR = os.path.join('docs', 'build')
+SPHINX_OPTS = '-nvWT'   # Be nitpicky, verbose, and treat warnings as errors
 
 @invoke.task()
 def docs(context, builder='html'):
     "Build documentation using sphinx"
-    cmdline = 'python -msphinx -M {} {} {}'.format(builder, DOCS_SRCDIR, DOCS_BUILDDIR)
+    cmdline = 'python -msphinx -M {} {} {} {}'.format(builder, DOCS_SRCDIR, DOCS_BUILDDIR, SPHINX_OPTS)
     context.run(cmdline)
 namespace.add_task(docs)
 

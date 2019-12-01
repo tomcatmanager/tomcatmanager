@@ -1,6 +1,7 @@
 InteractiveTomcatManager
 ========================
+:noindex:
 
-.. autoclass:: tomcatmanager.InteractiveTomcatManager
+.. autoclass:: tomcatmanager.interactive_tomcat_manager.InteractiveTomcatManager
     :members:
-    :show-inheritance:
+    :undoc-members:

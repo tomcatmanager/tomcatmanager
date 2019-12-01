@@ -219,6 +219,7 @@ APPLICATION_STATES = [
     'stopped',
 ]
 application_states = AttrDict()
+"""docstring for application_states"""
 for _state in APPLICATION_STATES:
     application_states[_state] = _state
 
@@ -232,7 +233,7 @@ class TomcatApplication():
     @classmethod
     def sort_by_state_by_path_by_version(cls, app: TA):
         """
-        Function to create a key usable by `sort` to sort by state, by path, by version.
+        Function to create a key usable by ``sort`` to sort by state, by path, by version.
         """
         return '{}:{}:{}'.format(
             app.state or '',
@@ -243,7 +244,7 @@ class TomcatApplication():
     @classmethod
     def sort_by_path_by_version_by_state(cls, app: TA):
         """
-        Function to create a key usable by `sort` to sort by path, by version, by state
+        Function to create a key usable by ``sort`` to sort by path, by version, by state
         """
         return '{}:{}:{}'.format(
             app.path or '',
@@ -325,7 +326,7 @@ class TomcatApplication():
         """
         The current state of the application.
 
-        `tomcatmanager.application_states` is a dictionary of all the valid
+        ``tomcatmanager.application_states`` is a dictionary of all the valid
         values for this property. In addition to being a dictionary, it also has
         attributes for each possible state::
 

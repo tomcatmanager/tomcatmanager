@@ -1,7 +1,7 @@
 TomcatManager
 =============
+:noindex:
 
-.. autoclass:: tomcatmanager.tomcat_manager.TomcatManager
+.. autoclass:: tomcatmanager.TomcatManager
     :members:
     :undoc-members:
-    :show-inheritance:
