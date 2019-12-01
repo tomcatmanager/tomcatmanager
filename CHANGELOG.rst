@@ -18,7 +18,10 @@ Added
 
 - Already have a setting to control network timeouts. Added a command line option
   '--timeout' to do the same, making it easier for modify for command-line only use.
-- Adjustments for upstream changes in cmd2. We now require cmd2 0.9.12 or higher
+- Adjustments for upstream changes in cmd2. No longer pinned to cmd2=0.9.4, but require
+  cmd2>=0.9.14.
+- Add support for Python 3.8.
+- Add documentation style checking using ``doc8``.
 
 Removed
 ^^^^^^^

@@ -50,7 +50,7 @@ setup(
 
     python_requires='>=3.5',
     install_requires=[
-        'cmd2>=0.9.13', 'requests', 'appdirs', 'attrdict',
+        'cmd2>=0.9.14', 'requests', 'appdirs', 'attrdict',
         ],
 
     setup_requires=['setuptools_scm'],
