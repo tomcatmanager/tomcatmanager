@@ -40,7 +40,6 @@ class TomcatError(Exception):
     """
     Raised when the Tomcat Server responds with an error.
     """
-    pass
 
 ###
 #
@@ -54,10 +53,8 @@ STATUS_CODES = {
     # if we can't find tomcat, we invent a NOTFOUND value
     'NOTFOUND': 'notfound',
 }
-"""STATUS_CODES doc string"""
 # pylint: disable=invalid-name
 status_codes = AttrDict()
-"""status_codes doc string"""
 for _code, _title in STATUS_CODES.items():
     status_codes[_title] = _code
 
