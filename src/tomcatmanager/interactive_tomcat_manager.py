@@ -177,12 +177,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
         shortcuts = {'?': 'help', '!': 'shell', '$?': 'exit_code'}
 
-        super().__init__(persistent_history_file=self.history_file, shortcuts=shortcuts)
+        super().__init__(
+            persistent_history_file=self.history_file,
+            persistent_history_length=1000,
+            shortcuts=shortcuts,
+            allow_cli_args=False,
+        )
 
-        # settings for cmd2.Cmd
-        self.allow_cli_args = False
-
-        self.abbrev = False
         self.echo = False
         unused = ['abbrev', 'continuation_prompt', 'feedback_to_output']
         for setting in unused:
