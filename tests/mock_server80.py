@@ -946,12 +946,8 @@ Default maximum session inactive interval 30 minutes
 
         path = self.ensure_path('Invalid parameters supplied for command [/deploy]')
         if path:
-            war = None
-            if 'war' in query_string:
-                war = query_string['war']
-            context = None
-            if 'config' in query_string:
-                context = query_string['config']
+            war = query_string.get('war', None)
+            context = query_string.get('config', None)
 
             if context:
                 self.send_text('OK - Deployed application at context path {}'.format(path))
