@@ -59,9 +59,9 @@ setup(
     # $ pip install -e .[dev]
     extras_require={
         'dev': ['pytest', 'pytest-mock', 'tox',
-                'codecov', 'pytest-cov', 'pylint', 'rope', 'doc8',
-                'setuptools_scm', 'invoke',
-                'sphinx', 'sphinx-autobuild', 'wheel', 'twine'],
+                'codecov', 'pytest-cov', 'pylint',
+                'setuptools_scm', 'wheel', 'twine', 'rope', 'invoke',
+                'sphinx', 'sphinx-autobuild', 'sphinx_rtd_theme', 'doc8',],
     },
 
     # define the scripts that should be created on installation

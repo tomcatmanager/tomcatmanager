@@ -13,6 +13,11 @@ and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`
 Unreleased
 ----------
 
+Changed
+^^^^^^^
+
+- Switch documentation theme from 'alabaster' to 'sphinx_rtd_theme'
+
 Added
 ^^^^^
 
