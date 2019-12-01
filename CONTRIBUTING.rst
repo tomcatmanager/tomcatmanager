@@ -173,8 +173,14 @@ If you wish, you can run the test suite against a real Tomcat Server instead of
 against the mock server included in this distribution. Running the test suite
 will deploy and undeploy an app hundreds of times, and will definitely trigger
 garbage collection, so you might not want to run it against a production
-server. When I run the test suite against a stock Tomcat on a Linode with 2
-cores and 4GB of memory it takes approximately 30 minutes to complete.
+server.
+
+It's also slow (which is why the tests normally run against a mock server).
+When I run the test suite against a stock Tomcat on a Linode with 2 cores and
+4GB of memory it takes approximately 3 minutes to complete. I don't think
+throwing more CPU at this would make it any faster: during the run of the test
+suite the Tomcat Server never consumes more than a few percent of the CPU
+capacity.
 
 You must prepare some files on the server in order for the test suite to run
 successfully. Some of the tests instruct the Tomcat Server to deploy an
@@ -206,7 +212,9 @@ You will also need:
 - a user with the ``manager-script`` role
 - the password for the aforementioned user
 
-With all these prerequisites ready, you can add them to ``pytest`` as shown::
+With all these prerequisites ready, you can feed them to ``pytest`` as shown:
+
+.. code-block:: shell
 
   $ pytest --url=http://localhost:8080/manager --user=ace \
   --password=newenglandclamchowder --warfile=/tmp/sample.war \
@@ -214,12 +222,12 @@ With all these prerequisites ready, you can add them to ``pytest`` as shown::
 
 .. warning::
 
-   If you test against a real Tomcat server, you should not use the
-   ``pytest-xdist`` plugin to parallelize testing across multiple CPUs or
-   many platforms. Many of the tests depend on deploying and undeploying an
-   app at a specific path, and that path is shared across the entire test
-   suite. It wouldn't help much anyway because the testing is constrained
-   by the speed of the Tomcat server.
+  If you test against a real Tomcat server, you should not use the
+  ``pytest-xdist`` plugin to parallelize testing across multiple CPUs or
+  many platforms. Many of the tests depend on deploying and undeploying an
+  app at a specific path, and that path is shared across the entire test
+  suite. It wouldn't help much anyway because the testing is constrained
+  by the speed of the Tomcat server.
 
 If you kill the test suite in the middle of a run, you may leave the test
 application deployed in your tomcat server. If this happens, you must undeploy
@@ -268,6 +276,16 @@ Type::
 
 Then point your browser at `<http://localhost:8000>`_ to see the
 documentation automatically rebuilt as you save your changes.
+
+.. note::
+
+  The ``sphinx-autobuild`` module has some limitations. Much of the
+  documentation produced in this project is contained in the source code, and
+  is incorporated via the Sphinx ``autodoc`` module. In order for ``autodoc``
+  to work, it must import the source code, and it's not very good about
+  noticing and reloading source code modules as they change. If you change
+  the source code and want to make sure you are seeing the current changes
+  in your browser, best to kill the webserver and start it back up again.
 
 Use ``doc8`` to check documentation quality::
 
