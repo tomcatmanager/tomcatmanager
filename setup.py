@@ -56,7 +56,7 @@ setup(
     setup_requires=['setuptools_scm'],
 
     # dependencies for development and testing
-    # $ pip3 install -e .[dev]
+    # $ pip install -e .[dev]
     extras_require={
         'dev': ['pytest', 'pytest-mock', 'tox',
                 'codecov', 'pytest-cov', 'pylint', 'rope', 'doc8',
