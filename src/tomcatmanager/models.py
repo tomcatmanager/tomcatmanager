@@ -392,10 +392,10 @@ class ServerInfo(dict):
 
         >>> tomcat = getfixture('tomcat')
         >>> r = tomcat.server_info()
-        >>> r.server_info['OS Architecture']
-        'amd64'
-        >>> r.server_info.jvm_vendor
-        'Oracle Corporation'
+        >>> r.server_info['OS Architecture'] # doctest: +ELLIPSIS
+        '...'
+        >>> r.server_info.jvm_vendor # doctest: +ELLIPSIS
+        '...'
     """
 
     def __init__(self, *args, **kwargs):
