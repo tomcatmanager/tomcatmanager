@@ -59,6 +59,7 @@ for _code, _title in STATUS_CODES.items():
     status_codes[_title] = _code
 
 
+# pylint: disable=too-many-instance-attributes
 class TomcatManagerResponse:
     """
     Returned as the response for :class:`.TomcatManager` commands.
@@ -99,7 +100,7 @@ class TomcatManagerResponse:
         - The first line of the response from the Tomcat Server must begin with ``OK``.
         """
         return all([
-            self.response != None,
+            self.response is not None,
             self.response.status_code == requests.codes.ok,
             self.status_code == tm.status_codes.ok,
             ])

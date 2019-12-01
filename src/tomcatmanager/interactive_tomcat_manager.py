@@ -24,6 +24,7 @@
 """
 Classes and functions for the 'tomcat-manager' command line program.
 """
+# pylint: disable=too-many-lines
 
 import argparse
 import ast
@@ -236,8 +237,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 # finished.
                 pass
 
-    @staticmethod
-    def perror(msg: Any, *, end: str = '\n', apply_style: bool = True) -> None:
+    def perror(self, msg: Any, *, end: str = '\n', apply_style: bool = True) -> None:
         """
         Print an error message or an exception.
 
@@ -638,13 +638,13 @@ change the value of one of this program's settings
         """Return a boolean value translating from other types if necessary."""
         if isinstance(value, bool) is True:
             return value
-        else:
-            if str(value).lower() not in self.BOOLEAN_VALUES:
-                if value is None or value == '':
-                    raise ValueError('invalid syntax: must be true-ish or false-ish')
-                else:
-                    raise ValueError("invalid syntax: not a boolean: '{}'".format(value))
-            return self.BOOLEAN_VALUES[value.lower()]
+
+        if str(value).lower() not in self.BOOLEAN_VALUES:
+            if value is None or value == '':
+                raise ValueError('invalid syntax: must be true-ish or false-ish')
+            # we can't figure out what it is
+            raise ValueError("invalid syntax: not a boolean: '{}'".format(value))
+        return self.BOOLEAN_VALUES[value.lower()]
 
     @staticmethod
     def _pythonize(value: str):
