@@ -179,7 +179,7 @@ in ``/tmp/fancyapp.war``. To deploy this WAR file to
    tomcat-manager> deploy server /tmp/myfancyapp.war /fancy
 
 Now let's say I just compiled a WAR file on my laptop for an app called
-`shiny`. It's saved at ``~/src/shiny/dist/shinyv2.0.5.war``. I'd like to deploy
+``shiny``. It's saved at ``~/src/shiny/dist/shinyv2.0.5.war``. I'd like to deploy
 it to ``https://www.example.com/shiny``:
 
 .. code-block:: text
@@ -221,7 +221,8 @@ simultaneously at the same URL. To utilize this feature, you need to deploy
 an application with a version string. The combination of path and version
 string uniquely identify the application.
 
-Let's revisit our `shiny` app. This time we will deploy with a version string:
+Let's revisit our ``shiny`` app. This time we will deploy with a version
+string:
 
 .. code-block:: text
 

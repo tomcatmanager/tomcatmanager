@@ -30,8 +30,8 @@ connects to a Tomcat Manager web application, allows you to run various
 commands, and returns the responses to you as an instance of
 :class:`.TomcatManagerResponse`.
 
-The command line program ``tomcat-manager`` is run by an instance of
-:class:`.InteractiveTomcatManager`.
+The interactive command line program ``tomcat-manager`` provided by this
+package is an instance of :class:`.InteractiveTomcatManager`.
 """
 
 from pkg_resources import get_distribution, DistributionNotFound

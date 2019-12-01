@@ -1,6 +1,5 @@
 TomcatApplication
 =================
-:noindex:
 
 .. autoclass:: tomcatmanager.models.TomcatApplication
     :members:

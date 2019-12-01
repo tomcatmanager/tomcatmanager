@@ -15,3 +15,4 @@ Here's the classes defined by this package:
    TomcatApplication
    ServerInfo
    InteractiveTomcatManager
+   TomcatError

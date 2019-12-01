@@ -138,20 +138,27 @@ class TomcatManager:
         - allow you to inspect the response so you can see why you can't
           connect
 
-        Usage:
+        Usage::
 
-        >>> import tomcatmanager as tm url = 'http://localhost:8080/manager'
-        >>> user = 'ace' password = 'newenglandclamchowder'
-        >>>
-        >>> tomcat = tm.TomcatManager() try: ...     r = tomcat.connect(url,
-        >>> user, password) ...     if r.ok: ...         print('connected') ...
-        >>> else: ...         print('not connected') ... except Exception as
-        >>> err: ...     # handle exception ...     print('not connected') not
-        >>> connected
+            >>> import tomcatmanager as tm
+            >>> url = 'http://localhost:8080/manager'
+            >>> user = 'ace'
+            >>> password = 'newenglandclamchowder'
+            >>> tomcat = tm.TomcatManager()
+            >>> try:
+            ...     r = tomcat.connect(url, user, password)
+            ...     if r.ok:
+            ...         print('connected')
+            ...     else:
+            ...         print('not connected')
+            ... except Exception as err:
+            ...    # handle exception
+            ....   print('not connected')
+            not connected
 
-        The only way to validate whether we are connected is to actually get a
-        url. Internally this method tries to retrieve
-        ``/manager/text/serverinfo``.
+        The only way to validate whether we are connected is to make an HTTP
+        request to the server and see if it returns successfully. Internally
+        this method tries to retrieve ``/manager/text/serverinfo``.
 
         Requesting url's via http can raise all kinds of exceptions. For
         example, if you give a URL where no web server is listening, you'll get
@@ -163,7 +170,7 @@ class TomcatManager:
         url. If that occurs, the new url, not the one you passed, will be
         stored in the url attribute.
 
-        You can also use ``.TomcatManager.is_connected`` to check if you
+        You can also use :meth:`.TomcatManager.is_connected` to check if you
         are connected.
 
         If you want to raise more exceptions see

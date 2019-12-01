@@ -12,12 +12,12 @@ Clone the repo from github::
 Create Python Environments
 --------------------------
 
-tomcatamanger uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run
-the test suite against multiple python versions. I recommend using `pyenv
+tomcatamanger uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run the
+test suite against multiple python versions. I recommend using `pyenv
 <https://github.com/pyenv/pyenv>`_ with the `pyenv-virtualenv
-<https://github.com/pyenv/pyenv-virtualenv>`_ plugin to manage these
-various versions. If you are a Windows user, `pyenv` won't work for you,
-you'll probably have to use `conda <https://conda.io/>`_.
+<https://github.com/pyenv/pyenv-virtualenv>`_ plugin to manage these various
+versions. If you are a Windows user, ``pyenv`` won't work for you, you'll
+probably have to use `conda <https://conda.io/>`_.
 
 This distribution includes a shell script ``build-pyenvs.sh`` which
 automates the creation of these environments.

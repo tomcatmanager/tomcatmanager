@@ -124,22 +124,22 @@ Added
 - documentation for interactive mode
 - documentation for use from the shell command line
 - read settings from a config file
-- add `config` command which allows user to edit config file
+- add ``config`` command which allows user to edit config file
 - server shortcuts: save url, user, and password in config file
-- `which` command to show which tomcat server you are connected to
-- `timeout` setting for HTTP timeouts
-- `restart` command as synonym for `reload`
+- ``which`` command to show which tomcat server you are connected to
+- ``timeout`` setting for HTTP timeouts
+- ``restart`` command as synonym for ``reload``
 - Add tox for testing against multiple versions of python
 
 Changed
 ^^^^^^^
 
-- `status` command now pretty prints the xml response
-- `TomcatManager.__init__` no long accepts paramemeters: use `connect`
-  instead
-- `TomcatManager` methods which act on apps (`deploy`, `sessions`,
-   `stop`, etc.) now throw exceptions if no path is specified. Previously
-   they returned a response with `r.ok == False`
+- ``status`` command now pretty prints the xml response
+- ``TomcatManager.__init__`` no long accepts paramemeters: use
+  ``connect`` instead
+- ``TomcatManager`` methods which act on apps (``deploy``, ``sessions``,
+   ``stop``, etc.) now throw exceptions if no path is specified. Previously
+   they returned a response with ``r.ok == False``
 
 
 0.9.2 (2017-08-16)
@@ -155,7 +155,7 @@ Added
 Changed
 ^^^^^^^
 
-- version numbers now provided by `setuptools_scm`
+- version numbers now provided by ``setuptools_scm``
 
 
 0.9.1 (2017-08-10)
@@ -175,12 +175,12 @@ Added
 
 - Converted from a single script to an installable python package
 - Remove documentation for tomcat 6, which is no longer supported
-- Add `expire` command
-- Add `vminro` command
-- Add `sslconnectorciphers` command
-- Add `threaddump` command
-- Add `findleaks` command
-- Add `status` command
+- Add ``expire`` command
+- Add ``vminro`` command
+- Add ``sslconnectorciphers`` command
+- Add ``threaddump`` command
+- Add ``findleaks`` command
+- Add ``status`` command
 - Unit tests using pytest
 - Support Tomcat parallel deployment
 - Real documentation using Sphinx
@@ -190,8 +190,8 @@ Changed
 ^^^^^^^
 
 - Switch from getopt to argparse
-- Use `cmd2`, if available, instead of `cmd`
-- Switch from `urllib` to `requests`
+- Use ``cmd2``, if available, instead of ``cmd``
+- Switch from ``urllib`` to ``requests``
 
 Removed
 ^^^^^^^

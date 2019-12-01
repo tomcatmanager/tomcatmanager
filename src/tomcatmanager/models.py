@@ -54,15 +54,17 @@ STATUS_CODES = {
     # if we can't find tomcat, we invent a NOTFOUND value
     'NOTFOUND': 'notfound',
 }
+"""STATUS_CODES doc string"""
 # pylint: disable=invalid-name
 status_codes = AttrDict()
+"""status_codes doc string"""
 for _code, _title in STATUS_CODES.items():
     status_codes[_title] = _code
 
 
 class TomcatManagerResponse:
     """
-    Returned as the response for :class:`TomcatManager` commands.
+    Returned as the response for :class:`.TomcatManager` commands.
 
     After running a command, it's a good idea to check and make sure that
     the command completed succesfully before relying on the results::
@@ -109,11 +111,10 @@ class TomcatManagerResponse:
         """
         Raise exceptions for server errors.
 
-        First call `requests.Response.raise_for_status()` which
-        raises exceptions if a 4xx or 5xx response is received from the
-        server.
+        First this method calls ``requests.Response.raise_for_status()`` which
+        raises exceptions if a 4xx or 5xx response is received from the server.
 
-        If that doesn't raise anything, then raise a `TomcatError`
+        If that doesn't raise anything, then it raises a :class:`.TomcatError`
         if there is not an ``OK`` response from the first line of text back
         from the Tomcat Manager web app.
         """
@@ -126,10 +127,10 @@ class TomcatManagerResponse:
         """
         Status of the Tomcat Manager command from the first line of text.
 
-        The preferred way to check for success is to use the `ok()` method,
-        because it checks for http errors as well as tomcat errors.
-        However, if you want specific access to the status of the tomcat
-        command, use this method.
+        The preferred way to check for success is to use the
+        :meth:`~.TomcatManagerResponse.ok` method, because it checks for http
+        errors as well as tomcat errors. However, if you want specific access
+        to the status of the tomcat command, use this method.
 
         There are three status codes:
 
@@ -137,9 +138,9 @@ class TomcatManagerResponse:
         - ``FAIL``
         - ``NOTFOUND``
 
-        `tomcatmanager.status_codes` is a dictionary which makes it easy to
-        check `status_code` against known values. It also has attributes with
-        friendly names, as shown here::
+        ``tomcatmanager.status_codes`` is a dictionary which makes it
+        easy to check this code against known values. It also has attributes
+        with friendly names, as shown here::
 
             >>> import tomcatmanager as tm
             >>> tomcat = getfixture('tomcat')
@@ -181,13 +182,13 @@ class TomcatManagerResponse:
         """
         The server's response to an HTTP request.
 
-        `TomcatManager` uses the excellent Requests package for HTTP
-        communication. This property returns the `requests.models.Response`
+        :class:`.TomcatManager` uses the excellent Requests package for HTTP
+        communication. This property returns the ``requests.models.Response``
         object which contains the server's response to the HTTP request.
 
-        Of particular use is `requests.models.Response.text` which
-        contains the content of the response in unicode. If you want raw access to
-        the content returned by the Tomcat Server, this is where you can get it.
+        Of particular use is ``requests.models.Response.text`` which contains
+        the content of the response in unicode. If you want raw access to the
+        content returned by the Tomcat Server, this is where you can get it.
         """
         return self._response
 
@@ -228,7 +229,7 @@ class TomcatApplication():
     """
     Discrete data about an application running inside a Tomcat Server.
 
-    A list of these objects is returned by :meth:`tomcatmanager.TomcatManager.list`.
+    A list of these objects is returned by :meth:`.TomcatManager.list`.
     """
     @classmethod
     def sort_by_state_by_path_by_version(cls, app: TA):

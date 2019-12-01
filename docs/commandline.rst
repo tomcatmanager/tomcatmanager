@@ -5,7 +5,7 @@ You've already read about :doc:`Interactive Use <interactive>` right? If not,
 this part will feel kind of hollow.
 
 Say you want to find out how many active sessions there are in the oldest
-version of our `shiny` app (told you it would feel kind of hollow). You could
+version of our ``shiny`` app (told you it would feel kind of hollow). You could
 use interactive mode:
 
 .. code-block:: text
