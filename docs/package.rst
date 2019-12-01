@@ -80,15 +80,15 @@ application with a version string. The combination of path and version string
 uniquely identify the application::
 
    >>> tomcat = getfixture('tomcat')
-   >>> safe_path = '/tomcat-manager-test-app'
+   >>> safe_path = getfixture('safe_path')
    >>> localwar_file = getfixture('localwar_file')
    >>> with open(localwar_file, 'rb') as localwar_fileobj:
    ...     r = tomcat.deploy_localwar(safe_path, localwar_fileobj, version='42')
-   >>> r.ok
+   ...     r.ok
    True
    >>> with open(localwar_file, 'rb') as localwar_fileobj:
    ...     r = tomcat.deploy_localwar(safe_path, localwar_fileobj, version='43')
-   >>> r.ok
+   ...     r.ok
    True
 
 We now have two instances of the same application, deployed at the same
