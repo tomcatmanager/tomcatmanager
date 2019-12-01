@@ -153,7 +153,7 @@ class TomcatManager:
             ...         print('not connected')
             ... except Exception as err:
             ...    # handle exception
-            ....   print('not connected')
+            ...    print('not connected')
             not connected
 
         The only way to validate whether we are connected is to make an HTTP

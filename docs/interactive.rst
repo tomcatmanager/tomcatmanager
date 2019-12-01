@@ -179,8 +179,8 @@ in ``/tmp/fancyapp.war``. To deploy this WAR file to
    tomcat-manager> deploy server /tmp/myfancyapp.war /fancy
 
 Now let's say I just compiled a WAR file on my laptop for an app called
-``shiny``. It's saved at ``~/src/shiny/dist/shinyv2.0.5.war``. I'd like to deploy
-it to ``https://www.example.com/shiny``:
+``shiny``. It's saved at ``~/src/shiny/dist/shinyv2.0.5.war``. I'd like to
+deploy it to ``https://www.example.com/shiny``:
 
 .. code-block:: text
 
