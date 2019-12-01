@@ -50,7 +50,6 @@ class TomcatManager:
     >>> url = 'http://localhost:8080/manager'
     >>> user = 'ace'
     >>> password = 'newenglandclamchowder'
-    >>>
     >>> tomcat = tm.TomcatManager()
     >>> try:
     ...     r = tomcat.connect(url, user, password)
