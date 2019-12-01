@@ -165,20 +165,54 @@ which has several benefits:
   to a tomcat server and handling exceptions
 - allows doctests to execute against a mock tomcat server
 
-You can run all the tests against a real Tomcat Server by utilizing the
-following command line options::
+
+Testing Against A Real Server
+-----------------------------
+
+If you wish, you can run the test suite against a real Tomcat Server instead of
+against the mock server included in this distribution. Running the test suite
+will deploy and undeploy an app hundreds of times, and will definitely trigger
+garbage collection, so you might not want to run it against a production
+server. When I run the test suite against a stock Tomcat on a Linode with 2
+cores and 4GB of memory it takes approximately 30 minutes to complete.
+
+You must prepare some files on the server in order for the test suite to run
+successfully. Some of the tests instruct the Tomcat Server to deploy an
+application from a warfile stored on the server. I suggest you use the minimal
+application included in this distribution at
+``tomcatmanager/tests/war/sample.war``, but you can use any valid war file. Put
+this file in some directory on the server; I typically put it in
+``/tmp/sample.war``.
+
+You must also construct a minimal context file on the server. You can see an
+example of such a context file in ``tomcatmanager/tests/war/context.xml``:
+
+.. code-block:: xml
+
+  <?xml version="1.0" encoding="UTF-8"?>
+  <!-- Context configuration file for my web application -->
+  <Context path='/ignored' docBase='/tmp/sample.war'>
+  </Context>
+
+The ``docBase`` attribute must point to a valid war file or the tests will
+fail. It can be the same minimal war file you already put on the server. The
+``path`` attribute is ignored for context files that are not visible to Tomcat
+when it starts up, so it doesn't matter what you have there. I typically put
+this context file at ``/tmp/context.xml``.
+
+You will also need:
+
+- the url where the manager app of your Tomcat Server is available
+- a user with the ``manager-script`` role
+- the password for the aforementioned user
+
+With all these prerequisites ready, you can add them to ``pytest`` as shown::
 
   $ pytest --url=http://localhost:8080/manager --user=ace \
   --password=newenglandclamchowder --warfile=/tmp/sample.war \
   --contextfile=/tmp/context.xml
 
-Running the test suite will deploy and undeploy an app hundreds of times, and
-will definitely trigger garbage collection, so you might not want to run it
-against a production server. When I run the test suite against a stock Tomcat
-on a Linode with 2 cores and 4GB of memory it takes approximately 30 minutes
-to complete.
-
-.. note::
+.. warning::
 
    If you test against a real Tomcat server, you should not use the
    ``pytest-xdist`` plugin to parallelize testing across multiple CPUs or
@@ -194,25 +228,6 @@ it before rerunning the test suite or you will get lots of errors.
 When the test suite deploys applications, it will be at the path returned by
 the ``safe_path`` fixture in ``conftest.py``. You can modify that fixture if
 for some reason you need to deploy at a different path.
-
-The ``url``, ``user``, and ``password`` options describe the location and
-credentials for the Tomcat server you wish to use.
-
-The ``warfile`` parameter is the full path to a war file on the server. There
-is a simple war file in ``tests/war/sample.war`` which you can copy to the
-server if you don't have a war file you want to use. If you don't copy the war
-file, or if you don't specify the ``warfile`` parameter, or the path you
-provide doesn't point to a valid war file, several of the tests will fail.
-
-The ``contextfile`` parameter is the full path to a context XML file, which
-gives you an alternative way to specify additional deployment information to
-the Tomcat Server. There is a simple context file in ``tests/war/context.xml``
-which you can copy to the server if you don't have a context file you want to
-use. If you don't copy the context file, or if you don't specify the
-``contextfile`` parameter, or the path you provide doesn't point to a valid
-context file, several of the tests will fail. The path in your context file
-will be ignored, but you must specify a docBase attribute which points to a
-real war file.
 
 
 Code Quality
@@ -253,6 +268,10 @@ Type::
 
 Then point your browser at `<http://localhost:8000>`_ to see the
 documentation automatically rebuilt as you save your changes.
+
+Use ``doc8`` to check documentation quality::
+
+  $ invoke doc8
 
 
 Make a Release
