@@ -266,7 +266,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         Print nonessential feedback.
 
-        Set quiet=True to supress all feedback. If feedback_to_output=True,
+        Set quiet=True to suppress all feedback. If feedback_to_output=True,
         then feedback will be included in the output stream. Otherwise, it
         will be sent to sys.stderr.
         """
