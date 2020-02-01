@@ -211,7 +211,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # Override cmd2.Cmd methods.
     #
     ###
-    def poutput(self, msg: Any, *, end: str = '\n') -> None:
+    def poutput(self, msg: Any = '', *, end: str = '\n') -> None:
         """
         Convenient shortcut for self.stdout.write();
         by default adds newline to end if not already present.
@@ -237,7 +237,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 # finished.
                 pass
 
-    def perror(self, msg: Any, *, end: str = '\n', apply_style: bool = True) -> None:
+    def perror(self, msg: Any = '', *, end: str = '\n') -> None:
         """
         Print an error message or an exception.
 
