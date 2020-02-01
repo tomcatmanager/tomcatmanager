@@ -50,7 +50,6 @@ class TomcatManager:
     >>> url = 'http://localhost:8080/manager'
     >>> user = 'ace'
     >>> password = 'newenglandclamchowder'
-    >>>
     >>> tomcat = tm.TomcatManager()
     >>> try:
     ...     r = tomcat.connect(url, user, password)
@@ -122,57 +121,59 @@ class TomcatManager:
         Connect to a Tomcat Manager server.
 
         :param url:      url where the Tomcat Manager web application is
-                         deployed
-        :param user:     (optional) user to authenticate with
-        :param password: (optional) password to authenticate with
-        :return:         `TomcatManagerResponse` object
+                         deployed :param user:     (optional) user to
+                         authenticate with :param password: (optional) password
+                         to authenticate with :return:
+                         :meth:`~tomcatmanager.models.TomcatManagerResponse`
+                         object
 
         You don't have to connect before using any other commands. If you
-        initialized the object with credentials you can call any other
-        method. The purpose of `connect()` is to:
+        initialized the object with credentials you can call any other method.
+        This method:
 
         - give you a way to change the credentials on an existing object
-        - provide a convenient mechanism to validate you can actually
-          connect to the server
-        - allow you to inspect the response so you can see why you can't connect
+        - provide a convenient mechanism to validate you can actually connect
+          to the server
+        - allow you to inspect the response so you can see why you can't
+          connect
 
-        Usage:
+        Usage::
 
-        >>> import tomcatmanager as tm
-        >>> url = 'http://localhost:8080/manager'
-        >>> user = 'ace'
-        >>> password = 'newenglandclamchowder'
-        >>>
-        >>> tomcat = tm.TomcatManager()
-        >>> try:
-        ...     r = tomcat.connect(url, user, password)
-        ...     if r.ok:
-        ...         print('connected')
-        ...     else:
-        ...         print('not connected')
-        ... except Exception as err:
-        ...     # handle exception
-        ...     print('not connected')
-        not connected
+            >>> import tomcatmanager as tm
+            >>> url = 'http://localhost:8080/manager'
+            >>> user = 'ace'
+            >>> password = 'newenglandclamchowder'
+            >>> tomcat = tm.TomcatManager()
+            >>> try:
+            ...     r = tomcat.connect(url, user, password)
+            ...     if r.ok:
+            ...         print('connected')
+            ...     else:
+            ...         print('not connected')
+            ... except Exception as err:
+            ...    # handle exception
+            ...    print('not connected')
+            not connected
 
-        The only way to validate whether we are connected is to actually
-        get a url. Internally this method tries to retrieve
-        ``/manager/text/serverinfo``.
+        The only way to validate whether we are connected is to make an HTTP
+        request to the server and see if it returns successfully. Internally
+        this method tries to retrieve ``/manager/text/serverinfo``.
 
         Requesting url's via http can raise all kinds of exceptions. For
-        example, if you give a URL where no web server is listening, you'll
-        get a `requests.connections.ConnectionError`. However, this
-        method won't raise exceptions for everything. If the credentials
-        are incorrect, you won't get an exception unless you ask for it.
+        example, if you give a URL where no web server is listening, you'll get
+        a ``requests.connections.ConnectionError``. However, this method won't
+        raise exceptions for everything. If the credentials are incorrect, you
+        won't get an exception unless you ask for it.
 
         Requesting url's via http can also result in redirection to another
         url. If that occurs, the new url, not the one you passed, will be
         stored in the url attribute.
 
-        You can also use `is_connected()` to check if you are connected.
+        You can also use :meth:`.TomcatManager.is_connected` to check if you
+        are connected.
 
         If you want to raise more exceptions see
-        `TomcatManagerResponse.raise_for_status()`.
+        :meth:`.TomcatManagerResponse.raise_for_status`.
 
         """
         self.url = url
@@ -237,7 +238,7 @@ class TomcatManager:
                              version string to associate with this deployment
         :param update:       (optional) Whether to undeploy the existing path
                              first (default False)
-        :return:             `TomcatManagerResponse` object
+        :return:             :class:`.TomcatManagerResponse` object
         :raises ValueError:  if no path is specified;
                              if no warfile is specified
         """
@@ -295,7 +296,7 @@ class TomcatManager:
                              version string to associate with this deployment
         :param update:       (optional) Whether to undeploy the existing path
                              first (default False)
-        :return:             `TomcatManagerResponse` object
+        :return:             :class:`.TomcatManagerResponse` object
         :raises ValueError:  if no path is given;
                              if no warfile is given
         """
@@ -338,7 +339,7 @@ class TomcatManager:
                              version string to associate with this deployment
         :param update:       (optional) Whether to undeploy the existing path
                              first (default False)
-        :return:             `TomcatManagerResponse` object
+        :return:             :class:`.TomcatManagerResponse` object
         :raises ValueError:  if no path is given;
                              if no contextfile is given
         """
@@ -366,7 +367,7 @@ class TomcatManager:
         :param path:         The path of the application to undeploy
         :param version:      (optional) The version string of the app to
                              undeploy
-        :return:             `TomcatManagerResponse` object
+        :return:             :class:`.TomcatManagerResponse` object
         :raises ValueError:  if no path is specified
 
         If the application was deployed with a version string, it must be
@@ -387,7 +388,7 @@ class TomcatManager:
 
         :param path:         The path of the application to start
         :param version:      (optional) The version string of the app to start
-        :return:             `TomcatManagerResponse` object
+        :return:             :class:`.TomcatManagerResponse` object
         :raises ValueError:  if no path is specified
 
         If the application was deployed with a version string, it must be
@@ -408,7 +409,7 @@ class TomcatManager:
 
         :param path:         The path of the application to stop
         :param version:      (optional) The version string of the app to stop
-        :return:             `TomcatManagerResponse` object
+        :return:             :class:`.TomcatManagerResponse` object
         :raises ValueError:  if no path is specified
 
         If the application was deployed with a version string, it must be
@@ -429,7 +430,7 @@ class TomcatManager:
 
         :param path:         The path of the application to reload
         :param version:      (optional) The version string of the app to reload
-        :return:             `TomcatManagerResponse` object
+        :return:             :class:`.TomcatManagerResponse` object
         :raises ValueError:  if no path is specified
 
         If the application was deployed with a version string, it must be
@@ -452,9 +453,9 @@ class TomcatManager:
                              information about
         :param version:      (optional) The version string of the app to get
                              session information about
-        :return:             `TomcatManagerResponse` object with the session
-                             summary in both the ``result`` attribute and the
-                             ``sessions`` attribute
+        :return:             :class:`.TomcatManagerResponse` object with the
+                             session summary in both the ``result`` attribute
+                             and the ``sessions`` attribute
         :raises ValueError:  if no path is specified
 
         Usage::
@@ -486,9 +487,9 @@ class TomcatManager:
         :param idle:         sessions idle for more than this number of
                              minutes will be expired. Use idle=0 to expire
                              all sessions.
-        :return:             `TomcatManagerResponse` with the session
-                             summary in the ``result`` attribute and in
-                             the ``sessions`` attribute
+        :return:             :class:`.TomcatManagerResponse` object with the
+                             session summary in both the ``result`` attribute
+                             and the ``sessions`` attribute
         :raises ValueError:  if no path is specified
 
         Usage::
@@ -516,9 +517,9 @@ class TomcatManager:
         """
         Get a list of all applications currently installed.
 
-        :return: `TomcatManagerResponse` object with an additional
+        :return: :class:`.TomcatManagerResponse` object with an additional
                  ``apps`` attribute which contains a list of
-                 `TomcatApplication` objects
+                 :class:`.TomcatApplication` objects
 
         Usage::
 
@@ -546,11 +547,11 @@ class TomcatManager:
         """
         Get information about the Tomcat server.
 
-        :return: `TomcatManagerResponse` object with an additional
+        :return: :class:`.TomcatManagerResponse` object with an additional
                  ``server_info`` attribute
 
-        The ``server_info`` attribute contains a `ServerInfo` object, which is
-        a dictionary with some added properties for well-known values
+        The ``server_info`` attribute contains a :class:`.ServerInfo` object,
+        which is a dictionary with some added properties for well-known values
         returned from the Tomcat server.
 
         Usage::
@@ -570,7 +571,7 @@ class TomcatManager:
         """
         Get server status information in XML format.
 
-        :return: `TomcatManagerResponse` object with an additional
+        :return: :class:`.TomcatManagerResponse` object with an additional
                  ``status_xml`` attribute
 
         Usage::
@@ -614,7 +615,7 @@ class TomcatManager:
         """
         Get diagnostic information about the JVM.
 
-        :return: `TomcatManagerResponse` object with an additional
+        :return: :class:`.TomcatManagerResponse` object with an additional
                  ``vm_info`` attribute
         """
         r = self._get('vminfo')
@@ -625,7 +626,7 @@ class TomcatManager:
         """
         Get SSL/TLS ciphers configured for each connector.
 
-        :return: `TomcatManagerResponse` object with an additional
+        :return: :class:`.TomcatManagerResponse` object with an additional
                  ``ssl_connector_ciphers`` attribute
         """
         r = self._get('sslConnectorCiphers')
@@ -636,7 +637,7 @@ class TomcatManager:
         """
         Get a jvm thread dump.
 
-        :return: `TomcatManagerResponse` object with an additional
+        :return: :class:`.TomcatManagerResponse` object with an additional
                  ``thread_dump`` attribute
         """
         r = self._get('threaddump')
@@ -651,7 +652,7 @@ class TomcatManager:
                       resource type you are interested in. For example,
                       pass ``javax.sql.DataSource`` to acquire the names
                       of all available JDBC data sources.
-        :return:      `TomcatManagerResponse` object with an additional
+        :return:      :class:`.TomcatManagerResponse` object with an additional
                       ``resources`` attribute.
 
 
@@ -684,7 +685,7 @@ class TomcatManager:
         """
         Get apps that leak memory.
 
-        :return: `TomcatManagerResponse` object with an additional
+        :return: :class:`.TomcatManagerResponse` object with an additional
                  ``leakers`` attribute
 
         The ``leakers`` attribute contains a list of paths of applications
@@ -695,7 +696,7 @@ class TomcatManager:
 
         Explicity triggering a full garbage collection from code is documented to be
         unreliable. Furthermore, depending on the jvm, there are options to disable
-        explicit GC triggering, like ```-XX:+DisableExplicitGC```. If you want to make
+        explicit GC triggering, like ``-XX:+DisableExplicitGC``. If you want to make
         sure this command triggered a full GC, you will have to verify using something
         like GC logging or JConsole.
 

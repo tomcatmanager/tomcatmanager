@@ -10,6 +10,30 @@ The format is based on `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_
 and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
 
+1.0.0 (2020-02-01)
+------------------
+
+Changed
+^^^^^^^
+
+- Switch documentation theme from 'alabaster' to 'sphinx_rtd_theme'
+
+Added
+^^^^^
+
+- Already have a setting to control network timeouts. Added a command line option
+  '--timeout' to do the same, making it easier for modify for command-line only use.
+- Adjustments for upstream changes in cmd2. No longer pinned to cmd2=0.9.4, but require
+  cmd2>=0.9.14.
+- Add support for Python 3.8.
+- Add documentation style checking using ``doc8``.
+
+Removed
+^^^^^^^
+
+- Drop support for Python 3.4, which reached end-of-life on Mar 18, 2019.
+
+
 0.14.0 (2019-05-16)
 -------------------
 
@@ -19,6 +43,7 @@ Changed
 - Run tests using python 3.7 on Appveyor and Travis
 - Source code has been moved inside of ``src`` directory
 - Pin cmd2 to version 0.9.4; newer versions break us badly
+
 
 0.13.0 (2018-07-06)
 -------------------
@@ -44,7 +69,7 @@ Changed
 Fixed
 ^^^^^
 
-- Test suite now runs several orders of magnitude faster. The 
+- Test suite now runs several orders of magnitude faster. The
   upstream `cmd2 <https://github.com/python-cmd2/cmd2>`_ used
   `pyparsing <https://sourceforge.net/projects/pyparsing/>`_ which
   was very slow. ``cmd2`` versions >= 0.9.0 use ``shlex`` to parse
@@ -107,22 +132,22 @@ Added
 - documentation for interactive mode
 - documentation for use from the shell command line
 - read settings from a config file
-- add `config` command which allows user to edit config file
+- add ``config`` command which allows user to edit config file
 - server shortcuts: save url, user, and password in config file
-- `which` command to show which tomcat server you are connected to
-- `timeout` setting for HTTP timeouts
-- `restart` command as synonym for `reload`
+- ``which`` command to show which tomcat server you are connected to
+- ``timeout`` setting for HTTP timeouts
+- ``restart`` command as synonym for ``reload``
 - Add tox for testing against multiple versions of python
 
 Changed
 ^^^^^^^
 
-- `status` command now pretty prints the xml response
-- `TomcatManager.__init__` no long accepts paramemeters: use `connect`
-  instead
-- `TomcatManager` methods which act on apps (`deploy`, `sessions`,
-   `stop`, etc.) now throw exceptions if no path is specified. Previously
-   they returned a response with `r.ok == False`
+- ``status`` command now pretty prints the xml response
+- ``TomcatManager.__init__`` no long accepts paramemeters: use
+  ``connect`` instead
+- ``TomcatManager`` methods which act on apps (``deploy``, ``sessions``,
+   ``stop``, etc.) now throw exceptions if no path is specified. Previously
+   they returned a response with ``r.ok == False``
 
 
 0.9.2 (2017-08-16)
@@ -138,7 +163,7 @@ Added
 Changed
 ^^^^^^^
 
-- version numbers now provided by `setuptools_scm`
+- version numbers now provided by ``setuptools_scm``
 
 
 0.9.1 (2017-08-10)
@@ -158,12 +183,12 @@ Added
 
 - Converted from a single script to an installable python package
 - Remove documentation for tomcat 6, which is no longer supported
-- Add `expire` command
-- Add `vminro` command
-- Add `sslconnectorciphers` command
-- Add `threaddump` command
-- Add `findleaks` command
-- Add `status` command
+- Add ``expire`` command
+- Add ``vminro`` command
+- Add ``sslconnectorciphers`` command
+- Add ``threaddump`` command
+- Add ``findleaks`` command
+- Add ``status`` command
 - Unit tests using pytest
 - Support Tomcat parallel deployment
 - Real documentation using Sphinx
@@ -173,8 +198,8 @@ Changed
 ^^^^^^^
 
 - Switch from getopt to argparse
-- Use `cmd2`, if available, instead of `cmd`
-- Switch from `urllib` to `requests`
+- Use ``cmd2``, if available, instead of ``cmd``
+- Switch from ``urllib`` to ``requests``
 
 Removed
 ^^^^^^^

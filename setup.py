@@ -27,7 +27,7 @@ setup(
     license='MIT',
 
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Operating System :: OS Independent',
         'Topic :: System :: Systems Administration',
@@ -37,10 +37,10 @@ setup(
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
 
     keywords='java tomcat command line',
@@ -48,24 +48,20 @@ setup(
     packages=find_packages(where="src"),
     package_dir={'':'src'},
 
-    python_requires='>=3.4',
+    python_requires='>=3.5',
     install_requires=[
-        'cmd2==0.9.4', 'requests', 'appdirs', 'attrdict',
-        # typing was added to the standard library in 3.5
-        # we need the additional module if the python version
-        # is 3.4.x
-        'typing ; python_version < "3.5"',
+        'cmd2>=0.9.14', 'requests', 'appdirs', 'attrdict',
         ],
 
     setup_requires=['setuptools_scm'],
 
     # dependencies for development and testing
-    # $ pip3 install -e .[dev]
+    # $ pip install -e .[dev]
     extras_require={
         'dev': ['pytest', 'pytest-mock', 'tox',
-                'codecov', 'pytest-cov', 'pylint', 'rope',
-                'setuptools_scm', 'invoke',
-                'sphinx', 'sphinx-autobuild', 'wheel', 'twine'],
+                'codecov', 'pytest-cov', 'pylint',
+                'setuptools_scm', 'wheel', 'twine', 'rope', 'invoke',
+                'sphinx', 'sphinx-autobuild', 'sphinx_rtd_theme', 'doc8',],
     },
 
     # define the scripts that should be created on installation

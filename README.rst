@@ -84,7 +84,7 @@ And for the ultimate in flexibility, you can use the python package directly:
 Installation
 ------------
 
-You'll need Python >= 3.4. Install using pip:
+You'll need Python >= 3.5. Install using pip:
 
 .. code-block:: bash
 

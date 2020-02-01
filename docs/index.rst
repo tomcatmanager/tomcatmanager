@@ -52,7 +52,7 @@ And for the ultimate in flexibility, you can use the python package directly:
 System Requirements
 -------------------
 
-You'll need Python 3.4 or higher on macOS, Windows, or Linux.
+You'll need Python 3.5 or higher on macOS, Windows, or Linux.
 
 The following Tomcat versions are supported:
 

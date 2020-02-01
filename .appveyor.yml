@@ -8,14 +8,14 @@ branches:
 
 environment:
   matrix:
-    - PYTHON: "C:\\Python34-x64"
-      TOXENV: "py34"
     - PYTHON: "C:\\Python35-x64"
       TOXENV: "py35"
     - PYTHON: "C:\\Python36-x64"
       TOXENV: "py36"
     - PYTHON: "C:\\Python37-x64"
       TOXENV: "py37"
+    - PYTHON: "C:\\Python38-x64"
+      TOXENV: "py38"
 
 install:
   - "%PYTHON%\\python.exe -m pip install --upgrade pip setuptools wheel"

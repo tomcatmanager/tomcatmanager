@@ -29,6 +29,16 @@ import sys
 
 import tomcatmanager as tm
 
+def _positive_integer(value):
+    msg = "'{}' is not an integer greater than or equal to 0".format(value)
+    try:
+        ivalue = int(value)
+        if ivalue < 0:
+            raise argparse.ArgumentTypeError(msg)
+    except ValueError:
+        raise argparse.ArgumentTypeError(msg)
+    return ivalue
+
 def _build_parser():
     """Build the argument parser"""
     parser = argparse.ArgumentParser(
@@ -39,6 +49,9 @@ def _build_parser():
 
     password_help = 'password to use for authentication with the tomcat manager web application'
     parser.add_argument('-p', '--password', help=password_help)
+
+    timeout_help = 'timeout (in seconds) for network requests'
+    parser.add_argument('-t', '--timeout', type=_positive_integer, help=timeout_help)
 
     echo_help = 'echo the command into the output'
     parser.add_argument('-e', '--echo', action='store_true', help=echo_help)
@@ -95,6 +108,8 @@ def main(argv=None):
         itm.status_to_stdout = True
     if args.debug:
         itm.debug = True
+    if args.timeout:
+        itm.timeout = args.timeout
 
     if args.manager_url:
         # try and connect

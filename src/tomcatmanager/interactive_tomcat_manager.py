@@ -24,6 +24,7 @@
 """
 Classes and functions for the 'tomcat-manager' command line program.
 """
+# pylint: disable=too-many-lines
 
 import argparse
 import ast
@@ -174,10 +175,16 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
 
     def __init__(self):
-        # settings for cmd2.Cmd
-        self.allow_cli_args = False
+        self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
+        shortcuts = {'?': 'help', '!': 'shell', '$?': 'exit_code'}
 
-        self.abbrev = False
+        super().__init__(
+            persistent_history_file=self.history_file,
+            persistent_history_length=1000,
+            shortcuts=shortcuts,
+            allow_cli_args=False,
+        )
+
         self.echo = False
         unused = ['abbrev', 'continuation_prompt', 'feedback_to_output']
         for setting in unused:
@@ -192,11 +199,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.settable.update({'status_prefix': 'String to prepend to all status output'})
         self.settable.update({'debug': 'Show stack trace for exceptions'})
         self.prompt = '{}> '.format(self.app_name)
-        self.shortcuts.update({'$?': 'exit_code'})
-
-        self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
-
-        super().__init__(persistent_history_file=self.history_file)
 
         self.load_config()
 
@@ -209,7 +211,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # Override cmd2.Cmd methods.
     #
     ###
-    def poutput(self, msg: Any, end='\n'):
+    def poutput(self, msg: Any = '', *, end: str = '\n') -> None:
         """
         Convenient shortcut for self.stdout.write();
         by default adds newline to end if not already present.
@@ -235,7 +237,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 # finished.
                 pass
 
-    def perror(self, errmsg: str, exception_type=None, traceback_war=True):
+    def perror(self, msg: Any = '', *, end: str = '\n') -> None:
         """
         Print an error message or an exception.
 
@@ -248,18 +250,19 @@ class InteractiveTomcatManager(cmd2.Cmd):
         If debug=True, you will get a full stack trace, otherwise just the
         exception.
         """
-        if errmsg:
-            sys.stderr.write('{}\n'.format(errmsg))
+        if msg:
+            sys.stderr.write('{}{}'.format(msg, end))
         else:
             _type, _exception, _traceback = sys.exc_info()
             if _exception:
-                if self.debug:
-                    output = ''.join(traceback.format_exception(_type, _exception, _traceback))
-                else:
-                    output = ''.join(traceback.format_exception_only(_type, _exception))
+                #if self.debug:
+                #    output = ''.join(traceback.format_exception(_type, _exception, _traceback))
+                #else:
+                #    output = ''.join(traceback.format_exception_only(_type, _exception))
+                output = ''.join(traceback.format_exception_only(_type, _exception))
                 sys.stderr.write(output)
 
-    def pfeedback(self, msg: str):
+    def pfeedback(self, msg: Any, *, end: str = '\n') -> None:
         """
         Print nonessential feedback.
 
@@ -268,15 +271,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
         will be sent to sys.stderr.
         """
         if not self.quiet:
-            fmt = '{}{}\n'
+            fmt = '{}{}{}'
             if self.feedback_to_output:
-                self.poutput(fmt.format(self.status_prefix, msg))
+                self.poutput(fmt.format(self.status_prefix, msg, end))
             else:
-                sys.stderr.write(fmt.format(self.status_prefix, msg))
+                sys.stderr.write(fmt.format(self.status_prefix, msg, end))
 
     def emptyline(self):
         """Do nothing on an empty line"""
-        pass
 
     def default(self, statement: cmd2.Statement):
         """what to do if we don't recognize the command the user entered"""
@@ -332,12 +334,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 out += ' as {}'.format(self.tomcat.user)
         return out
 
-    @cmd2.with_argument_list
-    def do_help(self, arglist: List):
+    def do_help(self, args: str):
         """Show available commands, or help on a specific command."""
-        if arglist:
+        if args:
             # they want help on a specific command, use cmd2 for that
-            super().do_help(arglist)
+            super().do_help(args)
         else:
             # show a custom list of commands, organized by category
             help_ = []
@@ -637,13 +638,13 @@ change the value of one of this program's settings
         """Return a boolean value translating from other types if necessary."""
         if isinstance(value, bool) is True:
             return value
-        else:
-            if str(value).lower() not in self.BOOLEAN_VALUES:
-                if value is None or value == '':
-                    raise ValueError('invalid syntax: must be true-ish or false-ish')
-                else:
-                    raise ValueError("invalid syntax: not a boolean: '{}'".format(value))
-            return self.BOOLEAN_VALUES[value.lower()]
+
+        if str(value).lower() not in self.BOOLEAN_VALUES:
+            if value is None or value == '':
+                raise ValueError('invalid syntax: must be true-ish or false-ish')
+            # we can't figure out what it is
+            raise ValueError("invalid syntax: not a boolean: '{}'".format(value))
+        return self.BOOLEAN_VALUES[value.lower()]
 
     @staticmethod
     def _pythonize(value: str):
@@ -1218,7 +1219,7 @@ change the value of one of this program's settings
     def do_exit(self, _):
         """Exit the interactive command prompt."""
         self.exit_code = self.exit_codes.success
-        return self._STOP_AND_EXIT
+        return True
 
     def do_quit(self, cmdline: cmd2.Statement):
         """Synonym for the 'exit' command."""
