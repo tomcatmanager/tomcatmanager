@@ -7,7 +7,7 @@ on:
       - develop
 
 jobs:
-  build:
+  test:
 
     strategy:
       matrix:
@@ -29,3 +29,9 @@ jobs:
     - name: Test with tox
       run: |
         tox -e py
+    - name: Uploade coverage to codecov.io
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.8'
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: .coverage
