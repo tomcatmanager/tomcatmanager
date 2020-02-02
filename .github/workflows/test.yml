@@ -1,9 +1,10 @@
 name: Test
 
-on: pull-request
-  branches:
-    - master
-    - develop
+on:
+  pull-request:
+    branches:
+      - master
+      - develop
 
 jobs:
   build:
