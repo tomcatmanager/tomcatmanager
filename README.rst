@@ -137,4 +137,4 @@ The ``tomcat-manager`` command line tool supports the following commands:
 Documentation
 -------------
 
-Complete documentation is available at `<http://tomcatmanager.readthedocs.io/en/master/>`_
+Complete documentation is available at `<http://tomcatmanager.readthedocs.io/en/latest/>`_

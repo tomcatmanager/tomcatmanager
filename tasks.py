@@ -37,7 +37,7 @@ namespace.add_collection(namespace_clean, 'clean')
 @invoke.task
 def pytest(context):
     "Run tests and code coverage using pytest"
-    context.run("pytest --cov=tomcatmanager")
+    context.run("pytest --cov=tomcatmanager", pty=True)
 namespace.add_task(pytest)
 
 @invoke.task

@@ -198,6 +198,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.settable.update({'timeout': 'Seconds to wait for HTTP connections'})
         self.settable.update({'status_prefix': 'String to prepend to all status output'})
         self.settable.update({'debug': 'Show stack trace for exceptions'})
+        self.settable.update({'prompt': 'The prompt displayed before accepting user input'})
         self.prompt = '{}> '.format(self.app_name)
 
         self.load_config()
