@@ -240,7 +240,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 # finished.
                 pass
 
-    def perror(self, msg: Any = '', *, end: str = '\n') -> None:
+    def perror(self, msg: Any = '', *, end: str = '\n', apply_style=False) -> None:
         """
         Print an error message or an exception.
 
@@ -619,25 +619,7 @@ change the value of one of this program's settings
                 raise ValueError
 
             current_value = getattr(self, param_name)
-            # type_ = type(current_value)
-            # if type_ == bool:
-            #     val = self.convert_to_boolean(value)
-            # elif type_ == int:
-            #     try:
-            #         val = int(value)
-            #     except ValueError:
-            #         # make a nicer error message
-            #         raise ValueError("invalid integer: '{}'".format(value))
-            # setattr(self, param_name, settable.val_type(value))
-
-#            try:
             setattr(self, param_name, settable.val_type(value))
-#            except ValueError as e:
-#                err_msg = "Error setting {}: {}".format(args.param, e)
-#                self.perror(err_msg)
-#                return
-
-            #setattr(self, param_name, val)
             if current_value != value and settable.onchange_cb:
                 settable.onchange_cb(param_name, current_value, value)
         else:
