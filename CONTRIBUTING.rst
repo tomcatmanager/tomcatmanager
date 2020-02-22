@@ -324,7 +324,7 @@ To make a release and deploy it to `PyPI
 
       $ invoke pypi
 
-11. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
+11. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/latest/.
     Make sure they look good. Add a "Version" in readthedocs which points to the tag
     you just created. Prune old versions as necessary.
 
