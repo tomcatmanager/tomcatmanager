@@ -13,6 +13,11 @@ and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`
 Unreleased
 ----------
 
+Changed
+^^^^^^^
+
+- cmd2=0.10 changed the way settings work. We now require that version or higher.
+
 
 1.0.0 (2020-02-01)
 ------------------
