@@ -183,22 +183,25 @@ class InteractiveTomcatManager(cmd2.Cmd):
             persistent_history_length=1000,
             shortcuts=shortcuts,
             allow_cli_args=False,
+            terminators=[],
         )
 
         self.echo = False
-        unused = ['abbrev', 'continuation_prompt', 'feedback_to_output']
-        for setting in unused:
+        to_remove = ['abbrev', 'continuation_prompt', 'debug',
+                     'echo', 'editor', 'feedback_to_output', 'prompt']
+        for setting in to_remove:
             try:
-                self.settable.pop(setting)
+                self.remove_settable(setting)
             except KeyError:
                 pass
-        self.settable.update({'echo': 'For piped input, echo command to output'})
-        self.settable.update({'status_to_stdout': 'Status information to stdout instead of stderr'})
-        self.settable.update({'editor': 'Program used to edit files'})
-        self.settable.update({'timeout': 'Seconds to wait for HTTP connections'})
-        self.settable.update({'status_prefix': 'String to prepend to all status output'})
-        self.settable.update({'debug': 'Show stack trace for exceptions'})
+        self.add_settable(cmd2.Settable('echo', bool, 'For piped input, echo command to output'))
+        self.add_settable(cmd2.Settable('status_to_stdout', bool, 'Status information to stdout instead of stderr'))
+        self.add_settable(cmd2.Settable('status_prefix', str, 'String to prepend to all status output'))
+        self.add_settable(cmd2.Settable('editor', str, 'Program used to edit files'))
+        self.add_settable(cmd2.Settable('timeout', int, 'Seconds to wait for HTTP connections', onchange_cb=self._onchange_timeout))
+        self.add_settable(cmd2.Settable('prompt', str, 'The prompt displayed before accepting user input'))
         self.prompt = '{}> '.format(self.app_name)
+        self.add_settable(cmd2.Settable('debug', str, 'Show stack trace for exceptions'))
 
         self.load_config()
 
@@ -237,7 +240,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 # finished.
                 pass
 
-    def perror(self, msg: Any = '', *, end: str = '\n') -> None:
+    def perror(self, msg: Any = '', *, end: str = '\n', apply_style=False) -> None:
         """
         Print an error message or an exception.
 
@@ -266,7 +269,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         Print nonessential feedback.
 
-        Set quiet=True to supress all feedback. If feedback_to_output=True,
+        Set quiet=True to suppress all feedback. If feedback_to_output=True,
         then feedback will be included in the output stream. Otherwise, it
         will be sent to sys.stderr.
         """
@@ -465,7 +468,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         result = {}
         maxlen = 0
-        for setting in self.settable:
+        for setting in self.settables:
             if (not args.setting) or (setting == args.setting):
                 val = str(getattr(self, setting))
                 result[setting] = '{}={}'.format(setting, self._pythonize(val))
@@ -475,7 +478,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if result:
             for setting in sorted(result):
                 self.poutput('{}  # {}'.format(result[setting].ljust(maxlen),
-                                               self.settable[setting]))
+                                               self.settables[setting].description))
             self.exit_code = self.exit_codes.success
         else:
             self.perror("unknown setting: '{}'".format(args.setting))
@@ -516,7 +519,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.exit_code = self.exit_codes.error
                 return
             for param_name in config['settings']:
-                if param_name in self.settable:
+                if param_name in self.settables:
                     try:
                         self._change_setting(param_name, config['settings'][param_name])
                         self.exit_code = self.exit_codes.success
@@ -596,7 +599,7 @@ change the value of one of this program's settings
             pass
         self.config = config
 
-    def _change_setting(self, param_name: str, val: Any):
+    def _change_setting(self, param_name: str, value: Any):
         """
         Apply a change to a setting, calling a hook if it is defined.
 
@@ -609,28 +612,20 @@ change the value of one of this program's settings
 
         Call _onchange_{param_name}(old, new) after the setting changes value.
         """
-        if param_name in self.settable:
-            current_val = getattr(self, param_name)
-            type_ = type(current_val)
-            if type_ == bool:
-                val = self.convert_to_boolean(val)
-            elif type_ == int:
-                try:
-                    val = int(val)
-                except ValueError:
-                    # make a nicer error message
-                    raise ValueError("invalid integer: '{}'".format(val))
-            setattr(self, param_name, val)
-            if current_val != val:
-                try:
-                    onchange_hook = getattr(self, '_onchange_{}'.format(param_name))
-                    onchange_hook(current_val, val)
-                except AttributeError:
-                    pass
+        if param_name in self.settables:
+            try:
+                settable = self.settables[param_name]
+            except KeyError:
+                raise ValueError
+
+            current_value = getattr(self, param_name)
+            setattr(self, param_name, settable.val_type(value))
+            if current_value != value and settable.onchange_cb:
+                settable.onchange_cb(param_name, current_value, value)
         else:
             raise ValueError
 
-    def _onchange_timeout(self, _, new):
+    def _onchange_timeout(self, _, __, new):
         """Pass the new timeout through to the TomcatManager object."""
         self.tomcat.timeout = new
 

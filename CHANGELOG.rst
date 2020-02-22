@@ -10,6 +10,15 @@ The format is based on `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_
 and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
 
+1.0.1 (2020-02-21)
+------------------
+
+Changed
+^^^^^^^
+
+- cmd2=0.10 changed the way settings work. We now require that version or higher.
+
+
 1.0.0 (2020-02-01)
 ------------------
 

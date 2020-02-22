@@ -315,7 +315,7 @@ def test_show_noargs(command, capsys):
     out, _ = capsys.readouterr()
     # not going to parse all the lines, but there
     # should be one per setting
-    assert len(out.splitlines()) == len(itm.settable)
+    assert len(out.splitlines()) == len(itm.settables)
     assert itm.exit_code == itm.exit_codes.success
 
 @pytest.mark.parametrize('command', SHOW_SETTINGS)
@@ -380,7 +380,7 @@ def test_set_boolean_invalid():
 
 def test_set_with_invalid_param():
     itm = tm.InteractiveTomcatManager()
-    # this uuid won't be in itm.settable
+    # this uuid won't be in itm.settables
     invalid_setting = str(uuid.uuid1())
     with pytest.raises(ValueError):
         # pylint: disable=protected-access
