@@ -386,16 +386,16 @@ def test_set_with_invalid_param():
         # pylint: disable=protected-access
         itm._change_setting(invalid_setting, 'someval')
 
-def test_onchange_timout(mocker):
+def test_timeout_property():
     timeout = 10
-    hook = mocker.patch('tomcatmanager.InteractiveTomcatManager._onchange_timeout')
     itm = tm.InteractiveTomcatManager()
     # set this to a value that we know will cause it to change when we execute
     # the command
     itm.timeout = 5
+    assert itm.tomcat.timeout == 5
     itm.onecmd_plus_hooks('set timeout={}'.format(timeout))
     assert itm.exit_code == itm.exit_codes.success
-    assert hook.call_count == 1
+    assert itm.timeout == timeout
     assert itm.tomcat.timeout == timeout
 
 SETTINGS_SUCCESSFUL = [
