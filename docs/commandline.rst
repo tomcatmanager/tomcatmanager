@@ -8,7 +8,7 @@ Say you want to find out how many active sessions there are in the oldest
 version of our ``shiny`` app (told you it would feel kind of hollow). You could
 use interactive mode:
 
-.. code-block:: text
+.. code-block:: none
 
   $ tomcat-manager
   tomcat-manager>connect https://www.example.com/manager ace newenglandclamchowder
@@ -82,7 +82,7 @@ Server Shortcuts
 You can use :ref:`server_shortcuts` from the command line with or without
 commands:
 
-.. code-block:: text
+.. code-block:: none
 
   $ tomcat-manager localhost
   --connected to http://localhost:8080/manager as ace
@@ -94,7 +94,7 @@ commands:
 
 Or:
 
-.. code-block:: text
+.. code-block:: none
 
   $ tomcat-manager localhost list
   --connected to http://localhost:8080/manager as ace
@@ -190,7 +190,7 @@ first one uses the shell to redirect status messages to the bitbucket, the
 second one uses the ``--quiet`` switch to instruct ``tomcat-manager`` to
 suppress status messages.
 
-.. code-block:: text
+.. code-block:: none
 
   $ tomcat-manager localhost list 2>/dev/null
   Path                     Status  Sessions Directory
@@ -207,7 +207,7 @@ If you pipe commands into ``tomcat-manager`` instead of providing them as
 arguments, the ``--echo`` command line switch can be included which will print
 the prompt and command to the output:
 
-.. code-block:: text
+.. code-block:: none
 
   $ echo list | tomcat-manager --echo localhost
   --connected to https://home.kotfu.net/manager as ace
@@ -223,16 +223,16 @@ errors, and outputs a terse message describing the problem. For example, if my
 Tomcat container is not currently running, or if the HTTP request fails for any
 other reason, you will see something like this:
 
-.. code-block:: text
+.. code-block:: none
 
-  $ tm vm list
+  $ tomcat-manager vm list
   connection error
 
 If you want all the gory detail, give the ``--debug`` command line switch or
 set ``debug=True``. Then you'll see something like this (stack trace truncated
 with '...'):
 
-.. code-block:: text
+.. code-block:: none
 
   $ tm --debug vm list
   Traceback (most recent call last):

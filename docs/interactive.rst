@@ -5,7 +5,7 @@ After installation, you will have a new tool called ``tomcat-manager``. Run
 this with no command line arguments to invoke an interactive, line-oriented
 command interpreter:
 
-.. code-block:: text
+.. code-block:: none
 
    $ tomcat-manager
    tomcat-manager> connect http://localhost:8080/manager admin newenglandclamchowder
@@ -27,7 +27,7 @@ Built In Help
 
 The interactive shell has a built-in list of all available commands:
 
-.. code-block:: text
+.. code-block:: none
 
    tomcat-manager> help
    tomcat-manager is a command line tool for managing a Tomcat server
@@ -87,7 +87,7 @@ The interactive shell has a built-in list of all available commands:
 
 As well as help for each command:
 
-.. code-block:: text
+.. code-block:: none
 
    tomcat-manager> help stop
    usage: stop [-h] [-v VERSION] path
@@ -119,28 +119,28 @@ Before you can do anything to a Tomcat server, you need to enter the connection
 information, including the url and the authentication credentials. You can pass
 the connection information on the command line:
 
-.. code-block:: text
+.. code-block:: none
 
    $ tomcat-manager --user=ace http://localhost:8080/manager
    Password: {you type your password here}
 
 Or:
 
-.. code-block:: text
+.. code-block:: none
 
    $ tomcat-manager --user=ace --password=newenglandclamchowder \
    http://localhost:8080/manager
 
 You can also enter this information into the interactive prompt:
 
-.. code-block:: text
+.. code-block:: none
 
    $ tomcat-manager
    tomcat-manager> connect http://localhost:8080/manager ace newenglandclamchowder
 
 Or:
 
-.. code-block:: text
+.. code-block:: none
 
    $ tomcat-manager
    tomcat-manager> connect http://localhost:8080/manager ace
@@ -174,7 +174,7 @@ For our first example, let's assume we have a WAR file already on our server,
 in ``/tmp/fancyapp.war``. To deploy this WAR file to
 ``https://www.example.com/fancy``:
 
-.. code-block:: text
+.. code-block:: none
 
    tomcat-manager> deploy server /tmp/myfancyapp.war /fancy
 
@@ -182,7 +182,7 @@ Now let's say I just compiled a WAR file on my laptop for an app called
 ``shiny``. It's saved at ``~/src/shiny/dist/shinyv2.0.5.war``. I'd like to
 deploy it to ``https://www.example.com/shiny``:
 
-.. code-block:: text
+.. code-block:: none
 
    tomcat-manager> deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny
 
@@ -192,7 +192,7 @@ information. You can do so by using a `context file
 <https://tomcat.apache.org/tomcat-8.5-doc/config/context.html>`_. The context
 file must reside on the same server where Tomcat is running.
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> deploy context /tmp/context.xml /sample
 
@@ -224,7 +224,7 @@ string uniquely identify the application.
 Let's revisit our ``shiny`` app. This time we will deploy with a version
 string:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny -v v2.0.5
   tomcat-manager>list
@@ -239,7 +239,7 @@ Parallel deployment allows me to deploy two versions of that app at the same
 path, and Tomcat will migrate users to the new version over time as their
 sessions expire in version 2.0.5.
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.6.war /shiny -v v2.0.6
   tomcat-manager>list
@@ -253,7 +253,7 @@ sessions expire in version 2.0.5.
 Once all the sessions have been migrated to version 2.0.6, I can undeploy
 version 2.0.5:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager>undeploy /shiny --version v2.0.5
   tomcat-manager>list
@@ -293,19 +293,19 @@ and down arrow keys. and search the history of your commands with
 
 You can view the list of previously issued commands:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> history
 
 And run a previous command by string search:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> history -r undeploy
 
 Or by number:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> history -r 10
 
@@ -322,7 +322,7 @@ Settings
 The ``show`` or ``settings`` (they do exactly the same thing) commands display
 a list of settings which control the behavior of ``tomcat-manager``:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> show
   autorun_on_edit=False       # Automatically run files after editing
@@ -340,7 +340,7 @@ a list of settings which control the behavior of ``tomcat-manager``:
 
 You can change any of these settings using the ``set`` command:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> set prompt='tm> '
   tm>
@@ -363,7 +363,7 @@ you to:
 The location of the configuration file is different depending on your operating
 system. To see the location of the file:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> config file
   /Users/kotfu/Library/Application Support/tomcat-manager/tomcat-manager.ini
@@ -372,7 +372,7 @@ You can edit the file from within ``tomcat-manager`` too. Well, it really just
 launches the editor of your choice, you know, the one specified in the
 ``editor`` setting. Do that by typing:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> config edit
 
@@ -407,7 +407,7 @@ servers. Define a section named the shortcut, and then include a property for
 With this defined in your configuration file, you can now connect using the
 name of the shortcut:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> connect localhost
 
@@ -420,20 +420,20 @@ Shell-style Output Redirection
 
 Save the output of the ``list`` command to a file:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> list > /tmp/tomcat-apps.txt
 
 Search the output of the ``vminfo`` command:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> vminfo | grep user.timezone
     user.timezone: US/Mountain
 
 Or the particularly useful:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> threaddump | less
 
@@ -443,13 +443,13 @@ Clipboard Integration
 
 You can copy output to the clipboard by redirecting but not giving a filename:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> list >
 
 You can also append output to the clipboard using a similar method:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> serverinfo >>
 
@@ -460,7 +460,7 @@ Run shell commands
 Use the ``shell`` or ``!`` commands to execute operating system commands (how
 meta):
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> !ls
 
@@ -472,7 +472,7 @@ Python Interpreter
 
 You can launch a python interpreter:
 
-.. code-block:: text
+.. code-block:: none
 
   tomcat-manager> py
   Python 3.6.1 (default, Apr  4 2017, 09:40:51)
