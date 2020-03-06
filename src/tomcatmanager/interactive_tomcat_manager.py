@@ -630,7 +630,7 @@ change the value of one of this program's settings
         some parameters only accept boolean values, if you pass something that can't
         be converted to a boolean, throw a ValueError
 
-        Call _onchange_{param_name}(old, new) after the setting changes value.
+        Calls the settable onchange callback if it exists.
         """
         if param_name in self.settables:
             try:
