@@ -192,6 +192,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
 
         self.echo = False
+        self.self_in_py = True
+
         to_remove = ['abbrev', 'continuation_prompt', 'debug',
                      'echo', 'editor', 'feedback_to_output', 'prompt']
         for setting in to_remove:
@@ -201,11 +203,17 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 pass
 
         self.add_settable(cmd2.Settable('echo', bool, 'For piped input, echo command to output'))
-        self.add_settable(cmd2.Settable('status_to_stdout', bool, 'Status information to stdout instead of stderr'))
-        self.add_settable(cmd2.Settable('status_prefix', str, 'String to prepend to all status output'))
+        self.add_settable(cmd2.Settable('status_to_stdout',
+                                        bool,
+                                        'Status information to stdout instead of stderr'))
+        self.add_settable(cmd2.Settable('status_prefix',
+                                        str,
+                                        'String to prepend to all status output'))
         self.add_settable(cmd2.Settable('editor', str, 'Program used to edit files'))
         self.add_settable(cmd2.Settable('timeout', int, 'Seconds to wait for HTTP connections'))
-        self.add_settable(cmd2.Settable('prompt', str, 'The prompt displayed before accepting user input'))
+        self.add_settable(cmd2.Settable('prompt',
+                                        str,
+                                        'The prompt displayed before accepting user input'))
         self.prompt = '{}> '.format(self.app_name)
         self.add_settable(cmd2.Settable('debug', str, 'Show stack trace for exceptions'))
 
