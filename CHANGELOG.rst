@@ -10,6 +10,20 @@ The format is based on `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_
 and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
 
+1.0.2 (2020-03-05)
+------------------
+
+Changed
+^^^^^^^
+
+- upstream cmd2 library released v1.0.0. Now require cmd2>=1,<2.
+
+Fixed
+^^^^^
+
+- timeout command line and setting was not being honored
+
+
 1.0.1 (2020-02-21)
 ------------------
 

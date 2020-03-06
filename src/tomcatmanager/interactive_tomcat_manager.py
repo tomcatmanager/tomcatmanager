@@ -159,10 +159,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
     app_author = 'tomcatmanager'
     config = None
 
-    # new settings must to be defined at the class, not the instance
-    timeout = 10
-    status_prefix = '--'
-
     @property
     def status_to_stdout(self) -> bool:
         """Proxy property for feedback_to_output."""
@@ -173,6 +169,15 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Proxy property for feedback_to_output."""
         self.feedback_to_output = value
 
+    @property
+    def timeout(self) -> int:
+        """Proxy property for timeout"""
+        return self.tomcat.timeout
+
+    @timeout.setter
+    def timeout(self, value: int):
+        """Proxy property for timeout"""
+        self.tomcat.timeout = value
 
     def __init__(self):
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
@@ -194,19 +199,26 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.remove_settable(setting)
             except KeyError:
                 pass
+
         self.add_settable(cmd2.Settable('echo', bool, 'For piped input, echo command to output'))
         self.add_settable(cmd2.Settable('status_to_stdout', bool, 'Status information to stdout instead of stderr'))
         self.add_settable(cmd2.Settable('status_prefix', str, 'String to prepend to all status output'))
         self.add_settable(cmd2.Settable('editor', str, 'Program used to edit files'))
-        self.add_settable(cmd2.Settable('timeout', int, 'Seconds to wait for HTTP connections', onchange_cb=self._onchange_timeout))
+        self.add_settable(cmd2.Settable('timeout', int, 'Seconds to wait for HTTP connections'))
         self.add_settable(cmd2.Settable('prompt', str, 'The prompt displayed before accepting user input'))
         self.prompt = '{}> '.format(self.app_name)
         self.add_settable(cmd2.Settable('debug', str, 'Show stack trace for exceptions'))
 
+        self.tomcat = tm.TomcatManager()
+
+        # set default values
+        self.timeout = 10
+        self.status_prefix = '--'
+
+        # load config file if it exists
         self.load_config()
 
-        self.tomcat = tm.TomcatManager()
-        self.tomcat.timeout = self.timeout
+        # initialize command exit code
         self.exit_code = None
 
     ###
@@ -618,16 +630,13 @@ change the value of one of this program's settings
             except KeyError:
                 raise ValueError
 
+            value = cmd2.utils.strip_quotes(value)
             current_value = getattr(self, param_name)
             setattr(self, param_name, settable.val_type(value))
             if current_value != value and settable.onchange_cb:
                 settable.onchange_cb(param_name, current_value, value)
         else:
             raise ValueError
-
-    def _onchange_timeout(self, _, __, new):
-        """Pass the new timeout through to the TomcatManager object."""
-        self.tomcat.timeout = new
 
     def convert_to_boolean(self, value: Any):
         """Return a boolean value translating from other types if necessary."""
