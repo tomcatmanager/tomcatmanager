@@ -53,7 +53,8 @@ There is also an interactive mode:
 .. code-block:: text
 
    $ tomcat-manager
-   tomcat-manager>connect http://localhost:8080/manager ace newenglandclamchowder
+   tomcat-manager>connect http://localhost:8080/manager ace
+   Password:
    --connected to http://localhost:8080/manager as ace
    tomcat-manager>list
    Path                     Status  Sessions Directory
