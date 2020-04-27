@@ -19,6 +19,9 @@ tomcatmanager
 .. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+      :target: https://github.com/psf/black
+      :alt: code style black
 .. image:: https://readthedocs.org/projects/tomcatmanager/badge/?version=latest
       :target: http://tomcatmanager.readthedocs.io/en/latest/?badge=latest
       :alt: Documentation Status

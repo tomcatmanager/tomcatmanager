@@ -35,17 +35,19 @@ import tomcatmanager as tm
 #
 ###
 def test_is_stream_fileobj(localwar_file):
-    with open(localwar_file, 'rb') as localwar_fileobj:
+    with open(localwar_file, "rb") as localwar_fileobj:
         assert tm.TomcatManager()._is_stream(localwar_fileobj)
 
+
 def test_is_stream_bytesio():
-    fileobj = io.BytesIO(b'the contents of my warfile')
+    fileobj = io.BytesIO(b"the contents of my warfile")
     assert tm.TomcatManager()._is_stream(fileobj)
+
 
 def test_is_stream_primitives():
     assert not tm.TomcatManager()._is_stream(None)
-    assert not tm.TomcatManager()._is_stream('some string')
-    assert not tm.TomcatManager()._is_stream(['some', 'list'])
+    assert not tm.TomcatManager()._is_stream("some string")
+    assert not tm.TomcatManager()._is_stream(["some", "list"])
 
 
 ###
@@ -56,7 +58,8 @@ def test_is_stream_primitives():
 def test_connect_no_url():
     tomcat = tm.TomcatManager()
     with pytest.raises(requests.exceptions.MissingSchema):
-        r = tomcat.connect('')
+        r = tomcat.connect("")
+
 
 def test_connect_noauth(tomcat_manager_server):
     tomcat = tm.TomcatManager()
@@ -66,38 +69,41 @@ def test_connect_noauth(tomcat_manager_server):
     with pytest.raises(requests.exceptions.HTTPError):
         r.raise_for_status()
 
+
 def test_connect_auth(tomcat_manager_server):
     tomcat = tm.TomcatManager()
     r = tomcat.connect(
         tomcat_manager_server.url,
         tomcat_manager_server.user,
-        tomcat_manager_server.password
+        tomcat_manager_server.password,
     )
     assert isinstance(r, tm.models.TomcatManagerResponse)
     assert r.status_code == tm.status_codes.ok
     assert tomcat.is_connected
-    assert r.result == ''
-    assert r.status_message == ''
+    assert r.result == ""
+    assert r.status_message == ""
     r.raise_for_status()
 
+
 def test_connect_connection_error(tomcat_manager_server, mocker):
-    get_mock = mocker.patch('requests.get')
+    get_mock = mocker.patch("requests.get")
     get_mock.side_effect = requests.exceptions.ConnectionError()
     tomcat = tm.TomcatManager()
     with pytest.raises(requests.exceptions.ConnectionError):
         r = tomcat.connect(
             tomcat_manager_server.url,
             tomcat_manager_server.user,
-            tomcat_manager_server.password
+            tomcat_manager_server.password,
         )
 
+
 def test_connect_timeout(tomcat_manager_server, mocker):
-    get_mock = mocker.patch('requests.get')
+    get_mock = mocker.patch("requests.get")
     get_mock.side_effect = requests.exceptions.Timeout()
     tomcat = tm.TomcatManager()
     with pytest.raises(requests.exceptions.Timeout):
         r = tomcat.connect(
             tomcat_manager_server.url,
             tomcat_manager_server.user,
-            tomcat_manager_server.password
+            tomcat_manager_server.password,
         )

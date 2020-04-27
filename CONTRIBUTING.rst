@@ -120,9 +120,6 @@ That one command will remove all superflous cache, testing, and build
 files, render the documentation, and build a source distribution and a
 wheel distribution.
 
-You probably won't need to read further in this document unless you
-want more information about the specific tools used.
-
 
 Testing
 -------
@@ -251,9 +248,25 @@ You are welcome to use the pylint comment directives to disable certain
 messages in the code, but pull requests containing these directives will be
 carefully scrutinized.
 
-As allowed by
-`PEP 8 <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_
-this project uses a nominal line length of 100 characters.
+
+Code Formatting
+---------------
+
+Use [black](https://black.readthedocs.io/en/stable/index.html) to format your
+code. We use the default configuration, including a line length of 88 characters.
+
+To format all the code in the project using ``black``, do:
+
+  $ invoke black
+
+You can check whether ``black`` would make any changes to the source code by:
+
+  $ invoke black-check
+
+Black integrates with many common editors and IDE's, that's the easiest way to
+ensure that your code is always formatted.
+
+Please format the code in your PR using ``black`` before submitting it.
 
 
 Documentation

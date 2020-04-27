@@ -19,4 +19,5 @@ function-rgx=(([a-z][a-z0-9_]{2,50})|(_[a-z0-9_]*))$
 # unused-variable -> sometimes we are expecting exceptions
 # redefined-outer-name -> pylint fixtures cause these
 # protected-access -> we want to test private methods
-disable=too-many-public-methods,missing-docstring,no-self-use,unused-variable,redefined-outer-name,protected-access
+# bad-continuation -> blacked code generates lots of these
+disable=too-many-public-methods,missing-docstring,no-self-use,unused-variable,redefined-outer-name,protected-access,bad-continuation

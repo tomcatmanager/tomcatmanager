@@ -9,4 +9,5 @@ good-names=ok,r
 
 [messages control]
 # no-member          requests uses LookupDict which makes all these errors
-disable=no-member
+# bad-continuation   so that blacked code doesn't generate warnings
+disable=no-member, bad-continuation

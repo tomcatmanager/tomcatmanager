@@ -37,40 +37,44 @@ from threading import Thread
 import requests
 from attrdict import AttrDict
 
-USER = 'admin'
-PASSWORD = 'admin'
+USER = "admin"
+PASSWORD = "admin"
 
 
 def requires_authorization(func):
     """Decorator for methods which require authorization."""
+
     def _requires_authorization(self, *args, **kwargs):
         if self.authorized():
             func(self, *args, **kwargs)
+
     return _requires_authorization
 
 
 class MockRequestHandler80(BaseHTTPRequestHandler):
     """Handle HTTP Requests like Tomcat Manager 8.0.x"""
 
-    AUTH_KEY = base64.b64encode('{}:{}'.format(USER, PASSWORD).encode('utf-8')).decode('utf-8')
-    TEXT_PATTERN = re.compile(r'^/manager/text/?$')
+    AUTH_KEY = base64.b64encode("{}:{}".format(USER, PASSWORD).encode("utf-8")).decode(
+        "utf-8"
+    )
+    TEXT_PATTERN = re.compile(r"^/manager/text/?$")
     # info commands
-    LIST_PATTERN = re.compile(r'^/manager/text/list($|\?.*$)')
-    SERVER_INFO_PATTERN = re.compile(r'^/manager/text/serverinfo($|\?.*$)')
-    STATUS_PATTERN = re.compile(r'^/manager/status(/|/all)?($|\?.*$)')
-    VM_INFO_PATTERN = re.compile(r'^/manager/text/vminfo($|\?.*$)')
-    SSL_PATTERN = re.compile(r'^/manager/text/sslConnectorCiphers($|\?.*$)')
-    THREAD_DUMP_PATTERN = re.compile(r'^/manager/text/threaddump($|\?.*$)')
-    RESOURCES_PATTERN = re.compile(r'^/manager/text/resources($|\?.*$)')
-    FIND_LEAKERS_PATTERN = re.compile(r'^/manager/text/findleaks($|\?.*$)')
-    SESSIONS_PATTERN = re.compile(r'^/manager/text/sessions($|\?.*$)')
+    LIST_PATTERN = re.compile(r"^/manager/text/list($|\?.*$)")
+    SERVER_INFO_PATTERN = re.compile(r"^/manager/text/serverinfo($|\?.*$)")
+    STATUS_PATTERN = re.compile(r"^/manager/status(/|/all)?($|\?.*$)")
+    VM_INFO_PATTERN = re.compile(r"^/manager/text/vminfo($|\?.*$)")
+    SSL_PATTERN = re.compile(r"^/manager/text/sslConnectorCiphers($|\?.*$)")
+    THREAD_DUMP_PATTERN = re.compile(r"^/manager/text/threaddump($|\?.*$)")
+    RESOURCES_PATTERN = re.compile(r"^/manager/text/resources($|\?.*$)")
+    FIND_LEAKERS_PATTERN = re.compile(r"^/manager/text/findleaks($|\?.*$)")
+    SESSIONS_PATTERN = re.compile(r"^/manager/text/sessions($|\?.*$)")
     # action commands
-    EXPIRE_PATTERN = re.compile(r'^/manager/text/expire($|\?.*$)')
-    START_PATTERN = re.compile(r'^/manager/text/start($|\?.*$)')
-    STOP_PATTERN = re.compile(r'^/manager/text/stop($|\?.*$)')
-    RELOAD_PATTERN = re.compile(r'^/manager/text/reload($|\?.*$)')
-    DEPLOY_PATTERN = re.compile(r'^/manager/text/deploy($|\?.*$)')
-    UNDEPLOY_PATTERN = re.compile(r'^/manager/text/undeploy($|\?.*$)')
+    EXPIRE_PATTERN = re.compile(r"^/manager/text/expire($|\?.*$)")
+    START_PATTERN = re.compile(r"^/manager/text/start($|\?.*$)")
+    STOP_PATTERN = re.compile(r"^/manager/text/stop($|\?.*$)")
+    RELOAD_PATTERN = re.compile(r"^/manager/text/reload($|\?.*$)")
+    DEPLOY_PATTERN = re.compile(r"^/manager/text/deploy($|\?.*$)")
+    UNDEPLOY_PATTERN = re.compile(r"^/manager/text/undeploy($|\?.*$)")
 
     def log_message(self, format_, *args):
         """no logging for our mockup"""
@@ -83,7 +87,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         """Handle all HTTP GET requests."""
         # handle request based on path
         if re.search(self.TEXT_PATTERN, self.path):
-            self.send_fail('Unknown command')
+            self.send_fail("Unknown command")
 
         # the info commands
         elif re.search(self.LIST_PATTERN, self.path):
@@ -105,7 +109,6 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         elif re.search(self.SESSIONS_PATTERN, self.path):
             self.get_sessions()
 
-
         # the action commands
         elif re.search(self.EXPIRE_PATTERN, self.path):
             self.get_expire()
@@ -122,7 +125,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 
         # fail if we don't recognize the path
         else:
-            self.send_fail('Unknown command')
+            self.send_fail("Unknown command")
 
     @requires_authorization
     def do_PUT(self):
@@ -130,7 +133,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         if re.search(self.DEPLOY_PATTERN, self.path):
             self.put_deploy()
         else:
-            self.send_fail('Unknown command')
+            self.send_fail("Unknown command")
 
     ###
     #
@@ -140,16 +143,16 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
     def authorized(self):
         """Check authorization and return True or False."""
         # first check authentication
-        if self.headers.get('Authorization') == 'Basic '+self.AUTH_KEY:
+        if self.headers.get("Authorization") == "Basic " + self.AUTH_KEY:
             return True
 
         # pylint: disable=no-member
         self.send_response(requests.codes.unauthorized)
-        self.send_header('WWW-Authenticate', 'Basic realm=\"tomcatmanager\"')
-        self.send_header('Content-type', 'text/html')
+        self.send_header("WWW-Authenticate", 'Basic realm="tomcatmanager"')
+        self.send_header("Content-type", "text/html")
         self.end_headers()
-        msg = 'not authorized'
-        self.wfile.write(msg.encode('utf-8'))
+        msg = "not authorized"
+        self.wfile.write(msg.encode("utf-8"))
         return False
 
     def ensure_path(self, failmsg):
@@ -164,25 +167,25 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         url = urlparse(self.path)
         query_string = parse_qs(url.query, keep_blank_values=True)
         path = None
-        if 'path' in query_string:
-            path = query_string['path']
-            if path == '':
-                path = '/'
+        if "path" in query_string:
+            path = query_string["path"]
+            if path == "":
+                path = "/"
         else:
             self.send_fail(failmsg)
         return path
 
     def send_fail(self, msg=None):
         """Send the Tomcat FAIL message."""
-        self.send_text('FAIL - {}'.format(msg))
+        self.send_text("FAIL - {}".format(msg))
 
     def send_text(self, content):
         """Send a status ok and content as text/html."""
         # pylint: disable=no-member
         self.send_response(requests.codes.ok)
-        self.send_header('Content-type', 'text/html')
+        self.send_header("Content-type", "text/html")
         self.end_headers()
-        self.wfile.write(content.encode('utf-8'))
+        self.wfile.write(content.encode("utf-8"))
 
     ###
     #
@@ -192,7 +195,8 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
     ###
     def get_list(self):
         """Send a list of applications."""
-        self.send_text("""OK - Listed applications for virtual host localhost
+        self.send_text(
+            """OK - Listed applications for virtual host localhost
 /:running:0:ROOT
 /contacts:running:3:running##4.1
 /shiny:stopped:17:shiny##v2.0.6
@@ -202,28 +206,34 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
 /shiny:running:12:shiny##v2.0.8
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:running:15:shiny##v2.0.7
-""")
+"""
+        )
 
     def get_server_info(self):
         """Send the server information."""
-        self.send_text("""OK - Server info
+        self.send_text(
+            """OK - Server info
 Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
 OS Name: Linux
 OS Version: 4.4.0-89-generic
 OS Architecture: amd64
 JVM Version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
-JVM Vendor: Oracle Corporation""")
+JVM Vendor: Oracle Corporation"""
+        )
 
     # pylint: disable=line-too-long
     def get_status(self):
         """Send the status XML."""
-        self.send_text("""<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xsl" href="/manager/xform.xsl" ?>
+        self.send_text(
+            """<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xsl" href="/manager/xform.xsl" ?>
 <status><jvm><memory free='22294576' total='36569088' max='129761280'/><memorypool name='CMS Old Gen' type='Heap memory' usageInit='22413312' usageCommitted='25165824' usageMax='89522176' usageUsed='13503656'/><memorypool name='Par Eden Space' type='Heap memory' usageInit='8912896' usageCommitted='10158080' usageMax='35782656' usageUsed='299600'/><memorypool name='Par Survivor Space' type='Heap memory' usageInit='1114112' usageCommitted='1245184' usageMax='4456448' usageUsed='473632'/><memorypool name='Code Cache' type='Non-heap memory' usageInit='2555904' usageCommitted='12713984' usageMax='251658240' usageUsed='12510656'/><memorypool name='Compressed Class Space' type='Non-heap memory' usageInit='0' usageCommitted='2621440' usageMax='1073741824' usageUsed='2400424'/><memorypool name='Metaspace' type='Non-heap memory' usageInit='0' usageCommitted='24903680' usageMax='-1' usageUsed='24230432'/></jvm><connector name='"http-nio-8080"'><threadInfo  maxThreads="200" currentThreadCount="10" currentThreadsBusy="1" /><requestInfo  maxTime="570" processingTime="2015" requestCount="868" errorCount="494" bytesReceived="0" bytesSent="1761440" /><workers><worker  stage="S" requestProcessingTime="1" requestBytesSent="0" requestBytesReceived="0" remoteAddr="192.168.13.22" virtualHost="192.168.13.66" method="GET" currentUri="/manager/status/all" currentQueryString="XML=true" protocol="HTTP/1.1" /><worker  stage="R" requestProcessingTime="0" requestBytesSent="0" requestBytesReceived="0" remoteAddr="&#63;" virtualHost="&#63;" method="&#63;" currentUri="&#63;" currentQueryString="&#63;" protocol="&#63;" /></workers></connector></status>
-        """)
+        """
+        )
 
     def get_vm_info(self):
         """Send the jvm info."""
-        self.send_text("""OK - VM info
+        self.send_text(
+            """OK - VM info
 2017-08-07 00:55:24.199
 Runtime information:
   vmName: OpenJDK 64-Bit Server VM
@@ -585,17 +595,21 @@ Logger information:
   org.apache.tomcat.util.digester.Digester.sax: level=, parent=org.apache.tomcat.util.digester.Digester
   org.apache.tomcat.websocket: level=, parent=org.apache.tomcat
   org.apache.tomcat.websocket.WsWebSocketContainer: level=, parent=org.apache.tomcat.websocket
-""")
+"""
+        )
 
     def get_ssl_connector_ciphers(self):
         """Send the SSL ciphers."""
-        self.send_text("""OK - Connector / SSL Cipher information
+        self.send_text(
+            """OK - Connector / SSL Cipher information
 Connector[HTTP/1.1-8080]
-  SSL is not enabled for this connector""")
+  SSL is not enabled for this connector"""
+        )
 
     def get_thread_dump(self):
         """Send a JVM thread dump"""
-        self.send_text("""OK - JVM thread dump
+        self.send_text(
+            """OK - JVM thread dump
 2017-08-07 11:00:20.517
 Full thread dump OpenJDK 64-Bit Server VM (25.131-b11 mixed mode):
 
@@ -858,45 +872,57 @@ Full thread dump OpenJDK 64-Bit Server VM (25.131-b11 mixed mode):
     at java.lang.reflect.Method.invoke(Method.java:498)
     at org.apache.catalina.startup.Bootstrap.start(Bootstrap.java:351)
     at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:485)
-""")
+"""
+        )
 
     def get_resources(self):
         """Send JNDI resource information."""
         url = urlparse(self.path)
         query_string = parse_qs(url.query)
         type_ = None
-        if 'type' in query_string:
-            type_ = query_string['type'][0]
+        if "type" in query_string:
+            type_ = query_string["type"][0]
 
-        if type_ == 'org.apache.catalina.users.MemoryUserDatabase':
-            self.send_text("""OK - Listed global resources of type org.apache.catalina.users.MemoryUserDatabase
-UserDatabase:org.apache.catalina.users.MemoryUserDatabase""")
-        elif type_ == 'com.example.Nothing':
-            self.send_text("""OK - Listed global resources of type com.example.Nothing
-FAIL - Encountered exception java.lang.ClassNotFoundException: com.example.Nothing""")
+        if type_ == "org.apache.catalina.users.MemoryUserDatabase":
+            self.send_text(
+                """OK - Listed global resources of type org.apache.catalina.users.MemoryUserDatabase
+UserDatabase:org.apache.catalina.users.MemoryUserDatabase"""
+            )
+        elif type_ == "com.example.Nothing":
+            self.send_text(
+                """OK - Listed global resources of type com.example.Nothing
+FAIL - Encountered exception java.lang.ClassNotFoundException: com.example.Nothing"""
+            )
         else:
-            self.send_text("""OK - Listed global resources of type org.apache.catalina.users.MemoryUserDatabase
-UserDatabase:org.apache.catalina.users.MemoryUserDatabase""")
+            self.send_text(
+                """OK - Listed global resources of type org.apache.catalina.users.MemoryUserDatabase
+UserDatabase:org.apache.catalina.users.MemoryUserDatabase"""
+            )
 
     def get_find_leakers(self):
         """Send a list of apps that a leaking memory."""
         url = urlparse(self.path)
         query_string = parse_qs(url.query)
-        status = ''
-        if 'statusLine' in query_string:
-            if query_string['statusLine'] == ['true']:
-                status = 'OK - Memory leaks found\n'
-        self.send_text(status + """/leaker1
+        status = ""
+        if "statusLine" in query_string:
+            if query_string["statusLine"] == ["true"]:
+                status = "OK - Memory leaks found\n"
+        self.send_text(
+            status
+            + """/leaker1
 /leaker2
-/leaker1""")
+/leaker1"""
+        )
 
     def get_sessions(self):
         """Send a session information about an app."""
-        path = self.ensure_path('Invalid context path null was specified')
+        path = self.ensure_path("Invalid context path null was specified")
         if path:
-            self.send_text("""OK - Session information for application at context path /manager
+            self.send_text(
+                """OK - Session information for application at context path /manager
 Default maximum session inactive interval 30 minutes
-<1 minutes: 1 sessions""")
+<1 minutes: 1 sessions"""
+            )
 
     ###
     #
@@ -906,62 +932,73 @@ Default maximum session inactive interval 30 minutes
     ###
     def get_expire(self):
         """Expire idle sessions in an application."""
-        path = self.ensure_path('Invalid context path null was specified')
+        path = self.ensure_path("Invalid context path null was specified")
         if path:
-            self.send_text("""OK - Session information for application at context path /manager
+            self.send_text(
+                """OK - Session information for application at context path /manager
 Default maximum session inactive interval 30 minutes
 <1 minutes: 1 sessions
->15 minutes: 0 sessions were expired""")
+>15 minutes: 0 sessions were expired"""
+            )
 
     def get_start(self):
         """Start an application."""
-        path = self.ensure_path('Invalid context path null was specified')
+        path = self.ensure_path("Invalid context path null was specified")
         if path:
-            self.send_text('OK - Started application at context path {}'.format(path))
+            self.send_text("OK - Started application at context path {}".format(path))
 
     def get_stop(self):
         """Stop an application."""
-        path = self.ensure_path('Invalid context path null was specified')
+        path = self.ensure_path("Invalid context path null was specified")
         if path:
-            self.send_text('OK - Stopped application at context path {}'.format(path))
+            self.send_text("OK - Stopped application at context path {}".format(path))
 
     def get_reload(self):
         """Stop and start an application."""
-        path = self.ensure_path('Invalid context path null was specified')
+        path = self.ensure_path("Invalid context path null was specified")
         if path:
-            self.send_text('OK - Reloaded application at context path {}'.format(path))
+            self.send_text("OK - Reloaded application at context path {}".format(path))
 
     def put_deploy(self):
         """Deploy a tomcat application from an incoming stream."""
-        path = self.ensure_path('Invalid parameters supplied for command [/deploy]')
+        path = self.ensure_path("Invalid parameters supplied for command [/deploy]")
         if path:
-            length = int(self.headers.get('Content-Length'))
+            length = int(self.headers.get("Content-Length"))
             self.rfile.read(length)
-            self.send_text('OK - Deployed application at context path {}'.format(path))
+            self.send_text("OK - Deployed application at context path {}".format(path))
 
     def get_deploy(self):
         """Deploy a tomcat application already in a war file on the server."""
         url = urlparse(self.path)
         query_string = parse_qs(url.query)
 
-        path = self.ensure_path('Invalid parameters supplied for command [/deploy]')
+        path = self.ensure_path("Invalid parameters supplied for command [/deploy]")
         if path:
-            war = query_string.get('war', None)
-            context = query_string.get('config', None)
+            war = query_string.get("war", None)
+            context = query_string.get("config", None)
 
             if context:
-                self.send_text('OK - Deployed application at context path {}'.format(path))
+                self.send_text(
+                    "OK - Deployed application at context path {}".format(path)
+                )
             else:
                 if war:
-                    self.send_text('OK - Deployed application at context path {}'.format(path))
+                    self.send_text(
+                        "OK - Deployed application at context path {}".format(path)
+                    )
                 else:
-                    self.send_text('FAIL - Invalid parameters supplied for command [/deploy]')
+                    self.send_text(
+                        "FAIL - Invalid parameters supplied for command [/deploy]"
+                    )
 
     def get_undeploy(self):
         """Remove an application from the server."""
-        path = self.ensure_path('Invalid context path null was specified')
+        path = self.ensure_path("Invalid context path null was specified")
         if path:
-            self.send_text('OK - Undeployed application at context path {}'.format(path))
+            self.send_text(
+                "OK - Undeployed application at context path {}".format(path)
+            )
+
 
 ###
 #
@@ -975,18 +1012,18 @@ def start_mock_server80():
     # pylint: disable=unused-variable
     # go find an unused port
     sock = socket.socket(socket.AF_INET, type=socket.SOCK_STREAM)
-    sock.bind(('localhost', 0))
+    sock.bind(("localhost", 0))
     address, port = sock.getsockname()
     sock.close()
 
     tms = AttrDict()
-    tms.url = 'http://localhost:{}/manager'.format(port)
+    tms.url = "http://localhost:{}/manager".format(port)
     tms.user = USER
     tms.password = PASSWORD
-    tms.warfile = '/path/to/server.war'
-    tms.contextfile = 'path/to/context.xml'
+    tms.warfile = "/path/to/server.war"
+    tms.contextfile = "path/to/context.xml"
 
-    mock_server = HTTPServer(('localhost', port), MockRequestHandler80)
+    mock_server = HTTPServer(("localhost", port), MockRequestHandler80)
     mock_server_thread = Thread(target=mock_server.serve_forever)
     mock_server_thread.setDaemon(True)
     mock_server_thread.start()

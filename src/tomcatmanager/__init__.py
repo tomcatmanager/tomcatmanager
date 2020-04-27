@@ -45,5 +45,5 @@ from .interactive_tomcat_manager import InteractiveTomcatManager
 try:
     __version__ = get_distribution(__name__).version
 except DistributionNotFound:
-    __version__ = 'unknown'
-VERSION_STRING = '{} (works with Tomcat >= 7.0 and <= 9.0)'.format(__version__)
+    __version__ = "unknown"
+VERSION_STRING = "{} (works with Tomcat >= 7.0 and <= 9.0)".format(__version__)

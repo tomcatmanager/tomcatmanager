@@ -26,7 +26,7 @@ import pytest
 
 import tomcatmanager as tm
 
-VERSION_VALUES = [None, '42']
+VERSION_VALUES = [None, "42"]
 
 ###
 #
@@ -37,31 +37,41 @@ def test_deploy_localwar_path_only(tomcat, safe_path):
     with pytest.raises(ValueError):
         r = tomcat.deploy_localwar(safe_path, None)
     with pytest.raises(ValueError):
-        r = tomcat.deploy_localwar(safe_path, '')
+        r = tomcat.deploy_localwar(safe_path, "")
+
 
 def test_deploy_localwar_warfile_only(tomcat, localwar_file):
     with pytest.raises(ValueError):
         r = tomcat.deploy_localwar(None, localwar_file)
     with pytest.raises(ValueError):
-        r = tomcat.deploy_localwar('', localwar_file)
+        r = tomcat.deploy_localwar("", localwar_file)
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
-def test_deploy_localwar(tomcat, localwar_file, safe_path, version, assert_tomcatresponse):
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
+def test_deploy_localwar(
+    tomcat, localwar_file, safe_path, version, assert_tomcatresponse
+):
     r = tomcat.deploy_localwar(safe_path, localwar_file, version=version)
     assert_tomcatresponse.success(r)
     assert_tomcatresponse.success(r)
     r = tomcat.undeploy(safe_path, version=version)
     assert_tomcatresponse.success(r)
 
-def test_deploy_localwar_fileobj(tomcat, localwar_file, safe_path, assert_tomcatresponse):
-    with open(localwar_file, 'rb') as localwar_fileobj:
+
+def test_deploy_localwar_fileobj(
+    tomcat, localwar_file, safe_path, assert_tomcatresponse
+):
+    with open(localwar_file, "rb") as localwar_fileobj:
         r = tomcat.deploy_localwar(safe_path, localwar_fileobj)
         assert_tomcatresponse.success(r)
     r = tomcat.undeploy(safe_path)
     assert_tomcatresponse.success(r)
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
-def test_deploy_localwar_update(tomcat, localwar_file, safe_path, version, assert_tomcatresponse):
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
+def test_deploy_localwar_update(
+    tomcat, localwar_file, safe_path, version, assert_tomcatresponse
+):
     r = tomcat.deploy_localwar(safe_path, localwar_file, version=version)
     assert_tomcatresponse.success(r)
     r = tomcat.deploy_localwar(safe_path, localwar_file, version=version, update=True)
@@ -79,46 +89,38 @@ def test_deploy_serverwar_path_only(tomcat, safe_path):
     with pytest.raises(ValueError):
         r = tomcat.deploy_serverwar(safe_path, None)
     with pytest.raises(ValueError):
-        r = tomcat.deploy_serverwar(safe_path, '')
+        r = tomcat.deploy_serverwar(safe_path, "")
+
 
 def test_deploy_serverwar_warfile_only(tomcat, tomcat_manager_server):
     with pytest.raises(ValueError):
         r = tomcat.deploy_serverwar(None, tomcat_manager_server.warfile)
     with pytest.raises(ValueError):
-        r = tomcat.deploy_serverwar('', tomcat_manager_server.warfile)
+        r = tomcat.deploy_serverwar("", tomcat_manager_server.warfile)
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
 def test_deploy_serverwar(
-        tomcat,
-        tomcat_manager_server,
-        safe_path,
-        version,
-        assert_tomcatresponse
+    tomcat, tomcat_manager_server, safe_path, version, assert_tomcatresponse
 ):
-    r = tomcat.deploy_serverwar(safe_path, tomcat_manager_server.warfile, version=version)
+    r = tomcat.deploy_serverwar(
+        safe_path, tomcat_manager_server.warfile, version=version
+    )
     assert_tomcatresponse.success(r)
     r = tomcat.undeploy(safe_path, version=version)
     assert_tomcatresponse.success(r)
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
 def test_deploy_serverwar_update(
-        tomcat,
-        tomcat_manager_server,
-        safe_path,
-        version,
-        assert_tomcatresponse
+    tomcat, tomcat_manager_server, safe_path, version, assert_tomcatresponse
 ):
     r = tomcat.deploy_serverwar(
-        safe_path,
-        tomcat_manager_server.warfile,
-        version=version
+        safe_path, tomcat_manager_server.warfile, version=version
     )
     assert_tomcatresponse.success(r)
     r = tomcat.deploy_serverwar(
-        safe_path,
-        tomcat_manager_server.warfile,
-        version=version,
-        update=True
+        safe_path, tomcat_manager_server.warfile, version=version, update=True
     )
     assert_tomcatresponse.success(r)
     r = tomcat.undeploy(safe_path, version=version)
@@ -134,68 +136,58 @@ def test_deploy_servercontext_path_only(tomcat, safe_path):
     with pytest.raises(ValueError):
         r = tomcat.deploy_servercontext(safe_path, None)
     with pytest.raises(ValueError):
-        r = tomcat.deploy_servercontext(safe_path, '')
+        r = tomcat.deploy_servercontext(safe_path, "")
+
 
 def test_deploy_servercontext_contextfile_only(tomcat, tomcat_manager_server):
     with pytest.raises(ValueError):
         r = tomcat.deploy_servercontext(None, tomcat_manager_server.contextfile)
     with pytest.raises(ValueError):
-        r = tomcat.deploy_servercontext('', tomcat_manager_server.contextfile)
+        r = tomcat.deploy_servercontext("", tomcat_manager_server.contextfile)
+
 
 def test_deploy_servercontext_contextfile_and_war_only(tomcat, tomcat_manager_server):
     with pytest.raises(ValueError):
         r = tomcat.deploy_servercontext(
             None,
             tomcat_manager_server.contextfile,
-            warfile=tomcat_manager_server.warfile
+            warfile=tomcat_manager_server.warfile,
         )
     with pytest.raises(ValueError):
-        r = tomcat.deploy_servercontext('', tomcat_manager_server.contextfile)
+        r = tomcat.deploy_servercontext("", tomcat_manager_server.contextfile)
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
 def test_deploy_servercontext(
-        tomcat,
-        tomcat_manager_server,
-        safe_path,
-        version,
-        assert_tomcatresponse
+    tomcat, tomcat_manager_server, safe_path, version, assert_tomcatresponse
 ):
-    r = tomcat.deploy_servercontext(safe_path, tomcat_manager_server.contextfile, version=version)
+    r = tomcat.deploy_servercontext(
+        safe_path, tomcat_manager_server.contextfile, version=version
+    )
     assert_tomcatresponse.success(r)
     r = tomcat.undeploy(safe_path, version=version)
     assert_tomcatresponse.success(r)
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
 def test_deploy_servercontext_update(
-        tomcat,
-        tomcat_manager_server,
-        safe_path,
-        version,
-        assert_tomcatresponse
+    tomcat, tomcat_manager_server, safe_path, version, assert_tomcatresponse
 ):
     r = tomcat.deploy_servercontext(
-        safe_path,
-        tomcat_manager_server.contextfile,
-        version=version,
+        safe_path, tomcat_manager_server.contextfile, version=version,
     )
     assert_tomcatresponse.success(r)
     r = tomcat.deploy_servercontext(
-        safe_path,
-        tomcat_manager_server.contextfile,
-        version=version,
-        update=True,
+        safe_path, tomcat_manager_server.contextfile, version=version, update=True,
     )
     assert_tomcatresponse.success(r)
     r = tomcat.undeploy(safe_path, version=version)
     assert_tomcatresponse.success(r)
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
 def test_deploy_servercontext_warfile(
-        tomcat,
-        tomcat_manager_server,
-        safe_path,
-        version,
-        assert_tomcatresponse
+    tomcat, tomcat_manager_server, safe_path, version, assert_tomcatresponse
 ):
     r = tomcat.deploy_servercontext(
         safe_path,
@@ -207,13 +199,10 @@ def test_deploy_servercontext_warfile(
     r = tomcat.undeploy(safe_path, version=version)
     assert_tomcatresponse.success(r)
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
 def test_deploy_servercontext_warfile_update(
-        tomcat,
-        tomcat_manager_server,
-        safe_path,
-        version,
-        assert_tomcatresponse
+    tomcat, tomcat_manager_server, safe_path, version, assert_tomcatresponse
 ):
     r = tomcat.deploy_servercontext(
         safe_path,
@@ -243,7 +232,8 @@ def test_undeploy_no_path(tomcat):
     with pytest.raises(ValueError):
         r = tomcat.undeploy(None)
     with pytest.raises(ValueError):
-        r = tomcat.undeploy('')
+        r = tomcat.undeploy("")
+
 
 ###
 #
@@ -254,17 +244,19 @@ def test_start_no_path(tomcat):
     with pytest.raises(ValueError):
         r = tomcat.start(None)
     with pytest.raises(ValueError):
-        r = tomcat.start('')
+        r = tomcat.start("")
+
 
 def test_stop_no_path(tomcat):
     with pytest.raises(ValueError):
         r = tomcat.stop(None)
     with pytest.raises(ValueError):
-        r = tomcat.stop('')
+        r = tomcat.stop("")
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
 def test_stop_start(tomcat, localwar_file, safe_path, version, assert_tomcatresponse):
-    with open(localwar_file, 'rb') as localwar_fileobj:
+    with open(localwar_file, "rb") as localwar_fileobj:
         r = tomcat.deploy_localwar(safe_path, localwar_fileobj, version=version)
     assert_tomcatresponse.success(r)
 
@@ -287,9 +279,10 @@ def test_reload_no_path(tomcat):
     with pytest.raises(ValueError):
         r = tomcat.reload(None)
     with pytest.raises(ValueError):
-        r = tomcat.reload('')
+        r = tomcat.reload("")
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
 def test_reload(tomcat, localwar_file, safe_path, version, assert_tomcatresponse):
     r = tomcat.deploy_localwar(safe_path, localwar_file, version=version)
     assert_tomcatresponse.success(r)
@@ -310,9 +303,10 @@ def test_sessions_no_path(tomcat):
     with pytest.raises(ValueError):
         r = tomcat.sessions(None)
     with pytest.raises(ValueError):
-        r = tomcat.sessions('')
+        r = tomcat.sessions("")
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
 def test_sessions(tomcat, localwar_file, safe_path, version, assert_tomcatresponse):
     r = tomcat.deploy_localwar(safe_path, localwar_file, version=version)
     assert_tomcatresponse.success(r)
@@ -334,9 +328,10 @@ def test_expire_no_path(tomcat):
     with pytest.raises(ValueError):
         r = tomcat.expire(None)
     with pytest.raises(ValueError):
-        r = tomcat.expire('')
+        r = tomcat.expire("")
 
-@pytest.mark.parametrize('version', VERSION_VALUES)
+
+@pytest.mark.parametrize("version", VERSION_VALUES)
 def test_expire(tomcat, localwar_file, safe_path, version, assert_tomcatresponse):
     r = tomcat.deploy_localwar(safe_path, localwar_file, version=version)
     assert_tomcatresponse.success(r)

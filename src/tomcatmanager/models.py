@@ -41,6 +41,7 @@ class TomcatError(Exception):
     Raised when the Tomcat Server responds with an error.
     """
 
+
 ###
 #
 # build status codes
@@ -48,10 +49,10 @@ class TomcatError(Exception):
 ###
 STATUS_CODES = {
     # 'sent from tomcat': 'friendly name'
-    'OK': 'ok',
-    'FAIL': 'fail',
+    "OK": "ok",
+    "FAIL": "fail",
     # if we can't find tomcat, we invent a NOTFOUND value
-    'NOTFOUND': 'notfound',
+    "NOTFOUND": "notfound",
 }
 # pylint: disable=invalid-name
 status_codes = AttrDict()
@@ -99,11 +100,13 @@ class TomcatManagerResponse:
         - The HTTP request must return a status code of ``200 OK``
         - The first line of the response from the Tomcat Server must begin with ``OK``.
         """
-        return all([
-            self.response is not None,
-            self.response.status_code == requests.codes.ok,
-            self.status_code == tm.status_codes.ok,
-            ])
+        return all(
+            [
+                self.response is not None,
+                self.response.status_code == requests.codes.ok,
+                self.status_code == tm.status_codes.ok,
+            ]
+        )
 
     def raise_for_status(self):
         """
@@ -200,56 +203,51 @@ class TomcatManagerResponse:
             if response.status_code == requests.codes.ok:
                 try:
                     statusline = response.text.splitlines()[0]
-                    code = statusline.split(' ', 1)[0]
+                    code = statusline.split(" ", 1)[0]
                     if code in tm.status_codes.values():
                         self.status_code = code
-                        self.status_message = statusline.split(' ', 1)[1][2:]
+                        self.status_message = statusline.split(" ", 1)[1][2:]
                         if len(lines) > 1:
                             self.result = "\n".join(lines[1:])
                     else:
                         self.status_code = tm.status_codes.notfound
-                        self.status_message = 'Tomcat Manager not found'
+                        self.status_message = "Tomcat Manager not found"
                 except IndexError:
                     pass
 
 
 APPLICATION_STATES = [
-    'running',
-    'stopped',
+    "running",
+    "stopped",
 ]
 application_states = AttrDict()
 """docstring for application_states"""
 for _state in APPLICATION_STATES:
     application_states[_state] = _state
 
-TA = TypeVar('TA', bound='TomcatApplication')
-class TomcatApplication():
+TA = TypeVar("TA", bound="TomcatApplication")
+
+
+class TomcatApplication:
     """
     Discrete data about an application running inside a Tomcat Server.
 
     A list of these objects is returned by :meth:`.TomcatManager.list`.
     """
+
     @classmethod
     def sort_by_state_by_path_by_version(cls, app: TA):
         """
         Function to create a key usable by ``sort`` to sort by state, by path, by version.
         """
-        return '{}:{}:{}'.format(
-            app.state or '',
-            app.path or '',
-            app.version or ''
-            )
+        return "{}:{}:{}".format(app.state or "", app.path or "", app.version or "")
 
     @classmethod
     def sort_by_path_by_version_by_state(cls, app: TA):
         """
         Function to create a key usable by ``sort`` to sort by path, by version, by state
         """
-        return '{}:{}:{}'.format(
-            app.path or '',
-            app.version or '',
-            app.state or ''
-            )
+        return "{}:{}:{}".format(app.path or "", app.version or "", app.state or "")
 
     def __init__(self):
         self._path = None
@@ -261,15 +259,15 @@ class TomcatApplication():
     def __str__(self):
         """Format this application as it comes from the tomcat server."""
         fmt = "{}:{}:{}:{}"
-        sessions = ''
+        sessions = ""
         if self.sessions is not None:
             sessions = self.sessions
         return fmt.format(
-            self.path or '',
-            self.state or '',
+            self.path or "",
+            self.state or "",
             sessions,
-            self.directory_and_version or ''
-            )
+            self.directory_and_version or "",
+        )
 
     def __lt__(self, other: TA):
         """
@@ -306,7 +304,7 @@ class TomcatApplication():
         app_details = line.rstrip().split(":")
         self._path, self._state, sessions, dirver = app_details[:4]
         self._sessions = int(sessions)
-        dirver = dirver.split('##')
+        dirver = dirver.split("##")
         self._directory = dirver[0]
         if len(dirver) == 1:
             self._version = None
@@ -375,7 +373,7 @@ class TomcatApplication():
         if self.directory:
             dandv = self.directory
             if self.version:
-                dandv += '##{}'.format(self.version)
+                dandv += "##{}".format(self.version)
         return dandv
 
 
@@ -410,22 +408,22 @@ class ServerInfo(dict):
         self._os_architecture = None
         self._jvm_version = None
         self._jvm_vendor = None
-        result = kwargs.pop('result', None)
+        result = kwargs.pop("result", None)
         self._parse(result)
 
     def _parse(self, result: str):
         """Parse up a list of lines from the server."""
         if result:
             for line in result.splitlines():
-                key, value = line.rstrip().split(':', 1)
+                key, value = line.rstrip().split(":", 1)
                 self[key] = value.lstrip()
 
-            self._tomcat_version = self['Tomcat Version']
-            self._os_name = self['OS Name']
-            self._os_version = self['OS Version']
-            self._os_architecture = self['OS Architecture']
-            self._jvm_version = self['JVM Version']
-            self._jvm_vendor = self['JVM Vendor']
+            self._tomcat_version = self["Tomcat Version"]
+            self._os_name = self["OS Name"]
+            self._os_version = self["OS Version"]
+            self._os_architecture = self["OS Architecture"]
+            self._jvm_version = self["JVM Version"]
+            self._jvm_vendor = self["JVM Vendor"]
 
     @property
     def tomcat_version(self):
