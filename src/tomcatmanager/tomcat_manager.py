@@ -106,7 +106,10 @@ class TomcatManager:
             url = ""
         r = TomcatManagerResponse()
         r.response = requests.get(
-            url, auth=(self.user, self._password), params=payload, timeout=self.timeout,
+            url,
+            auth=(self.user, self._password),
+            params=payload,
+            timeout=self.timeout,
         )
         return r
 
@@ -122,10 +125,12 @@ class TomcatManager:
         Connect to a Tomcat Manager server.
 
         :param url:      url where the Tomcat Manager web application is
-                         deployed :param user:     (optional) user to
-                         authenticate with :param password: (optional) password
-                         to authenticate with :return:
-                         :meth:`~tomcatmanager.models.TomcatManagerResponse`
+                         deployed
+        :param user:     (optional) user to
+                         authenticate with
+        :param password: (optional) password
+                         to authenticate with
+        :return:         :meth:`~tomcatmanager.models.TomcatManagerResponse`
                          object
 
         You don't have to connect before using any other commands. If you
