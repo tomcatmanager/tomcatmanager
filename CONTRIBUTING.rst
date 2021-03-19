@@ -13,11 +13,15 @@ Create Python Environments
 --------------------------
 
 tomcatamanger uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run the
-test suite against multiple python versions. I recommend using `pyenv
-<https://github.com/pyenv/pyenv>`_ with the `pyenv-virtualenv
-<https://github.com/pyenv/pyenv-virtualenv>`_ plugin to manage these various
-versions. If you are a Windows user, ``pyenv`` won't work for you, you'll
-probably have to use `conda <https://conda.io/>`_.
+test suite against multiple python versions. If you don't have to debug anything
+on a specific python version, you can just use tox. If you do need to debug
+on specific versions of python, it's easiest to create a new python environment
+with the specific version(s) you want.
+
+I recommend using `pyenv <https://github.com/pyenv/pyenv>`_ with the
+`pyenv-virtualenv <https://github.com/pyenv/pyenv-virtualenv>`_ plugin to
+manage these various versions. If you are a Windows user, ``pyenv`` won't work
+for you, you'll probably have to use `conda <https://conda.io/>`_.
 
 This distribution includes a shell script ``build-pyenvs.sh`` which
 automates the creation of these environments.
@@ -25,14 +29,14 @@ automates the creation of these environments.
 If you prefer to create these virtual envs by hand, do the following::
 
   $ cd tomcatmanager
-  $ pyenv install 3.8.0
-  $ pyenv virtualenv -p python3.8 3.8.0 tomcatmanager-3.8
-  $ pyenv install 3.7.5
-  $ pyenv virtualenv -p python3.7 3.7.5 tomcatmanager-3.7
-  $ pyenv install 3.6.9
-  $ pyenv virtualenv -p python3.6 3.6.9 tomcatmanager-3.6
-  $ pyenv install 3.5.8
-  $ pyenv virtualenv -p python3.5 3.5.8 tomcatmanager-3.5
+  $ pyenv install 3.9.1
+  $ pyenv virtualenv -p python3.9 3.9.1 tomcatmanager-3.9
+  $ pyenv install 3.8.7
+  $ pyenv virtualenv -p python3.8 3.8.7 tomcatmanager-3.8
+  $ pyenv install 3.7.10
+  $ pyenv virtualenv -p python3.7 3.7.10 tomcatmanager-3.7
+  $ pyenv install 3.6.13
+  $ pyenv virtualenv -p python3.6 3.6.13 tomcatmanager-3.6
 
 
 Now set pyenv to make all four of those available at the same time::
@@ -47,18 +51,18 @@ utilize.
 =============  ======  =================
 Command        python   virtualenv
 =============  ======  =================
-``python``     3.8.0   tomcatmanager-3.8
-``python3``    3.8.0   tomcatmanager-3.8
-``python3.8``  3.8.0   tomcatmanager-3.8
-``python3.7``  3.7.5   tomcatmanager-3.7
-``python3.6``  3.6.9   tomcatmanager-3.6
-``python3.5``  3.5.8   tomcatmanager-3.5
-``pip``        3.8.0   tomcatmanager-3.8
-``pip3``       3.8.0   tomcatmanager-3.8
-``pip3.8``     3.8.0   tomcatmanager-3.8
-``pip3.7``     3.7.5   tomcatmanager-3.7
-``pip3.6``     3.6.9   tomcatmanager-3.6
-``pip3.5``     3.5.8   tomcatmanager-3.5
+``python``     3.9.1   tomcatmanager-3.9
+``python3``    3.9.1   tomcatmanager-3.9
+``python3.9``  3.9.1   tomcatmanager-3.9
+``python3.8``  3.8.7   tomcatmanager-3.5
+``python3.7``  3.7.10  tomcatmanager-3.7
+``python3.6``  3.6.13  tomcatmanager-3.6
+``pip``        3.9.1   tomcatmanager-3.9
+``pip3``       3.9.1   tomcatmanager-3.9
+``pip3.9``     3.9.1   tomcatmanager-3.9
+``pip3.8``     3.8.7   tomcatmanager-3.8
+``pip3.7``     3.7.10  tomcatmanager-3.7
+``pip3.6``     3.6.13  tomcatmanager-3.6
 =============  ======  =================
 
 
@@ -73,11 +77,11 @@ This installs the tomcatmanager package "in-place", so the package points
 to the source code instead of copying files to the python
 ``site-packages`` folder.
 
-All the dependencies now have been installed in the ``tomcatmanager-3.8``
+All the dependencies now have been installed in the ``tomcatmanager-3.9``
 virtualenv. If you want to work in other virtualenvs, you'll need to manually
 select it, and install again::
 
-  $ pyenv shell tomcatmanager-3.6
+  $ pyenv shell tomcatmanager-3.8
   $ pip install -e .[dev]
 
 
