@@ -13,6 +13,17 @@ and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`
 Unreleased
 ----------
 
+Added
+^^^^^
+
+- Add support for Python 3.9
+
+
+Removed
+^^^^^^^
+
+- Drop support for Python 3.5
+
 
 1.0.2 (2020-03-05)
 ------------------
