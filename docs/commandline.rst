@@ -76,6 +76,52 @@ shell exit code appropriately. The exit codes are:
   | **127** = unknown command
 
 
+Servers and Commands
+--------------------
+
+The first argument of ``tomcat-manager`` is the url of the server. The rest
+of the arguments are any commands and their arguments from
+:doc:`Interactive Use <interactive>`.
+
+.. code-block:: bash
+
+  $ tomcat-manager http://localhost:8080/manager deploy server /tmp/myfancyapp.war /fancy
+
+
+Timeout
+-------
+
+By default, network operations timeout in 10 seconds. You can change this value:
+
+.. code-block:: bash
+
+  $ tomcat-manager --timeout=2.5 http://localhost:8080/manager list
+
+This command line option is the same as the ``timeout`` :ref:`Setting <settings>`.
+
+
+Credentials
+-----------
+
+If your server requires authentication, you can add the user name on the command
+line:
+
+.. code-block:: bash
+
+  $ tomcat-manager --user=ace http://localhost:8080/manager list
+  Password:
+
+and you will be prompted for the password. You can also specify the password on
+the command line, but this is not secure:
+
+.. code-block:: bash
+
+  $ tomcat-manager --user=ace --password=newenglandclamchowder http://localhost:8080/manager list
+  Password:
+
+If you want unattended authenticated access, server shortcuts are a better option.
+
+
 Server Shortcuts
 ----------------
 

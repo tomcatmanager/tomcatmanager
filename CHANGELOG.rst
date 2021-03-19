@@ -18,6 +18,10 @@ Added
 
 - Add support for Python 3.9
 
+Changed
+^^^^^^^
+
+- Improved documentation for network timeouts
 
 Removed
 ^^^^^^^
