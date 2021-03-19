@@ -83,10 +83,30 @@ class TomcatManager:
         Initialize a new TomcatManager object.
         """
         self.url = None
+        """Url of the Tomcat Manager web application we are connected to.
+
+        Best to treat this as read-only. This attribute is set by the :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method. Look there for more info.
+        """
+
         self.user = None
+        """User we successfully authenticated to the Tomcat Manager web application with
+
+        Best to treat this as read-only. This attribute is set by the :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method. Look there for more info.
+        """
+
         self._password = None
 
-        self.timeout = 15
+        self.timeout = 10
+        """Seconds to wait before giving up on network operations. Can be a
+        float or an int. Default is `10`. I surely don't want to wait forever,
+        but if you do, set to `0`.
+
+        Usage::
+
+            >>> import tomcatmanager as tm
+            >>> tomcat = tm.TomcatManager()
+            >>> tomcat.timeout = 3.5
+        """
 
     def _get(self, cmd: str, payload: dict = None) -> TomcatManagerResponse:
         """
@@ -94,7 +114,9 @@ class TomcatManager:
 
         :param cmd:     name of the command from the tomcat server url
                         i.e. 'http://localhost:8080/manager/text/{cmd}
+        :type cmd: str
         :param payload: dict of params for `requests.get()`
+        :type payload: dict, optional
         :return:        `TomcatManagerResponse` object
         """
         base = self.url or ""
@@ -118,26 +140,45 @@ class TomcatManager:
     # convenience and utility methods
     #
     ###
+    @property
+    def is_connected(self) -> bool:
+        """
+        Does the url point to an actual tomcat server and are the credentials valid?
+
+        :return: True if connected to a tomcat server, otherwise, False.
+        :rtype: bool
+        """
+        # pylint: disable=broad-except
+        try:
+            r = self._get("list")
+            return r.ok
+        except Exception:
+            return False
+
     def connect(
-        self, url: str, user: str = "", password: str = ""
+        self, url: str, user: str = "", password: str = "", timeout: float = None
     ) -> TomcatManagerResponse:
         """
         Connect to a Tomcat Manager server.
 
         :param url:      url where the Tomcat Manager web application is
                          deployed
-        :param user:     (optional) user to
-                         authenticate with
-        :param password: (optional) password
-                         to authenticate with
+        :type url: str
+        :param user:     user to authenticate with
+        :type user: str, optional
+        :param password: password to authenticate with
+        :type password: str, optional
+        :param timeout: int or float timeout in seconds for network operations
+        :type timeout: int or float, optional
         :return:         :meth:`~tomcatmanager.models.TomcatManagerResponse`
                          object
+        :rtype: tomcatmanager.models.TomcatManagerResponse
 
         You don't have to connect before using any other commands. If you
         initialized the object with credentials you can call any other method.
         This method:
 
-        - give you a way to change the credentials on an existing object
+        - gives you a way to change the credentials on an existing object
         - provide a convenient mechanism to validate you can actually connect
           to the server
         - allow you to inspect the response so you can see why you can't
@@ -173,10 +214,13 @@ class TomcatManager:
 
         Requesting url's via http can also result in redirection to another
         url. If that occurs, the new url, not the one you passed, will be
-        stored in the url attribute.
+        stored in the :attr:`url` attribute.
 
-        You can also use :meth:`.TomcatManager.is_connected` to check if you
-        are connected.
+        If you pass authentication credentials and the connection is successful,
+        the user will be stored in the :attr:`user` attribute.
+
+        If you discard or don't save the return object from this method, you can
+        call :meth:`is_connected` to check if you are connected.
 
         If you want to raise more exceptions see
         :meth:`.TomcatManagerResponse.raise_for_status`.
@@ -204,20 +248,6 @@ class TomcatManager:
         r.result = ""
         r.status_message = ""
         return r
-
-    @property
-    def is_connected(self) -> bool:
-        """
-        Does the url point to an actual tomcat server and are the credentials valid?
-
-        :return: True if connected to a tomcat server, otherwise, False.
-        """
-        # pylint: disable=broad-except
-        try:
-            r = self._get("list")
-            return r.ok
-        except Exception:
-            return False
 
     ###
     #
