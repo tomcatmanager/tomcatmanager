@@ -153,7 +153,7 @@ namespace_clean.add_task(docs_clean, name="docs")
 @invoke.task
 def livehtml(context):
     "Launch webserver on http://localhost:8000 with rendered documentation"
-    watch = "-z src/tomcatmanager -z tests -z ."
+    watch = "--watch src/tomcatmanager --watch tests --watch ."
     builder = "html"
     outputdir = os.path.join(DOCS_BUILDDIR, builder)
     cmdline = "sphinx-autobuild -b {} {} {} {}".format(
