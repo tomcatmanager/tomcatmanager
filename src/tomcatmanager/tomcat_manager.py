@@ -560,7 +560,7 @@ class TomcatManager:
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.list()
             >>> if r.ok:
-            ...     running = filter(lambda app: app.state == tm.application_states.running, r.apps)
+            ...     running = filter(lambda app: app.state == tm.ApplicationState.RUNNING, r.apps)
         """
         r = self._get("list")
         apps = []

@@ -1108,7 +1108,7 @@ change the value of one of this program's settings
                 self.poutput(
                     fmt.format(
                         app.path,
-                        app.state,
+                        app.state.value,
                         str(app.sessions),
                         app.directory_and_version,
                     )
