@@ -39,7 +39,7 @@ from pkg_resources import get_distribution, DistributionNotFound
 from .tomcat_manager import TomcatManager
 from .models import TomcatError
 from .models import status_codes
-from .models import application_states
+from .models import ApplicationState
 from .interactive_tomcat_manager import InteractiveTomcatManager
 
 try:

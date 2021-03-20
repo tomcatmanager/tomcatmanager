@@ -22,12 +22,14 @@ Changed
 ^^^^^^^
 
 - Improved documentation for network timeouts
+- TomcatApplication.state now contains an enum instead of an attrdict
+- The tomcatmanager.application_states dict has been replaced by the tomcatmanager.ApplicationState enum.
 
 Removed
 ^^^^^^^
 
 - Drop support for Python 3.5
-
+- No more dependency on attrdict module, which has been archived.
 
 1.0.2 (2020-03-05)
 ------------------

@@ -2,5 +2,5 @@ TomcatManager
 =============
 
 .. autoclass:: tomcatmanager.tomcat_manager.TomcatManager
-   :members:
-   :undoc-members:
+    :members:
+    :undoc-members:

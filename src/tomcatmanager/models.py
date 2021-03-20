@@ -25,13 +25,14 @@
 tomcatmanager.models
 --------------------
 
-This module contains the data objects created by and used by tomcatmanager.
+This module contains the data objects created and used by tomcatmanager.
 """
 
-from typing import TypeVar
+import enum
+import typing
 
-from attrdict import AttrDict
 import requests
+from attrdict import AttrDict
 
 import tomcatmanager as tm
 
@@ -216,16 +217,32 @@ class TomcatManagerResponse:
                     pass
 
 
-APPLICATION_STATES = [
-    "running",
-    "stopped",
-]
-application_states = AttrDict()
-"""docstring for application_states"""
-for _state in APPLICATION_STATES:
-    application_states[_state] = _state
+@enum.unique
+class ApplicationState(enum.Enum):
+    """An enumeration of the various tomcat application states"""
 
-TA = TypeVar("TA", bound="TomcatApplication")
+    RUNNING = "running"
+    STOPPED = "stopped"
+
+    @classmethod
+    def parse(cls, state: str):
+        """Return one of the enums from a string sent by the Tomcat Manager
+        web application.
+
+        :param state: the string value of the application state from the
+            tomcat server
+        :type state: str
+        :return: :class:`.ApplicationState` instance
+        :rtype:  tomcatmanager.models.ApplicationState
+        :raises ValueError: if the string does not represent a known application state
+        """
+        for _, member in cls.__members__.items():
+            if state == member.value:
+                return member
+        raise ValueError("{} is an unknown application state".format(state))
+
+
+TA = typing.TypeVar("TA", bound="TomcatApplication")
 
 
 class TomcatApplication:
@@ -264,7 +281,7 @@ class TomcatApplication:
             sessions = self.sessions
         return fmt.format(
             self.path or "",
-            self.state or "",
+            self.state.value or "",
             sessions,
             self.directory_and_version or "",
         )
@@ -302,7 +319,8 @@ class TomcatApplication:
         Where version and the two hash marks that precede it are optional.
         """
         app_details = line.rstrip().split(":")
-        self._path, self._state, sessions, dirver = app_details[:4]
+        self._path, state, sessions, dirver = app_details[:4]
+        self._state = ApplicationState.parse(state)
         self._sessions = int(sessions)
         dirver = dirver.split("##")
         self._directory = dirver[0]
@@ -323,15 +341,14 @@ class TomcatApplication:
         """
         The current state of the application.
 
-        ``tomcatmanager.application_states`` is a dictionary of all the valid
-        values for this property. In addition to being a dictionary, it also has
-        attributes for each possible state::
+        ``tomcatmanager.ApplicationState`` is an enum of the values for this
+        property.
 
             >>> import tomcatmanager as tm
-            >>> tm.application_states['stopped']
-            'stopped'
-            >>> tm.application_states.running
-            'running'
+            >>> tm.ApplicationState.STOPPED
+            <ApplicationState.STOPPED: 'stopped'>
+            >>> tm.ApplicationState.RUNNING
+            <ApplicationState.RUNNING: 'running'>
         """
         return self._state
 

@@ -88,6 +88,26 @@ def test_http_response_fail(tomcat, mock_text):
 
 ###
 #
+# test ApplicationState
+#
+###
+def test__application_state_parse_running():
+    state = tm.ApplicationState.parse("running")
+    assert state == tm.ApplicationState.RUNNING
+
+
+def test_application_state_parse_stopped():
+    state = tm.ApplicationState.parse("stopped")
+    assert state == tm.ApplicationState.STOPPED
+
+
+def test_application_state_parse_unknown():
+    with pytest.raises(ValueError):
+        _ = tm.ApplicationState.parse("fred flintstone")
+
+
+###
+#
 # test TomcatApplication
 #
 ###
@@ -111,7 +131,7 @@ def test_parse_root():
     ta = tm.models.TomcatApplication()
     ta.parse(line)
     assert ta.path == "/"
-    assert ta.state == tm.application_states.running
+    assert ta.state == tm.ApplicationState.RUNNING
     assert ta.sessions == 0
     assert ta.directory == "ROOT"
     assert ta.version is None
@@ -123,7 +143,7 @@ def test_parse_app_with_slash_in_directory():
     ta = tm.models.TomcatApplication()
     ta.parse(line)
     assert ta.path == "/manager"
-    assert ta.state == tm.application_states.running
+    assert ta.state == tm.ApplicationState.RUNNING
     assert ta.sessions == 0
     assert ta.directory == "/usr/share/tomcat8-admin/manager"
     assert ta.version is None
@@ -142,7 +162,7 @@ def test_parse_version():
     ta = tm.models.TomcatApplication()
     ta.parse(line)
     assert ta.path == "/shiny"
-    assert ta.state == tm.application_states.stopped
+    assert ta.state == tm.ApplicationState.STOPPED
     assert ta.sessions == 17
     assert ta.directory == "shiny"
     assert ta.version == "v2.0.6"
