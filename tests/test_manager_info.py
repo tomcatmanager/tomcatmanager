@@ -51,7 +51,7 @@ def test_status_xml_fail(tomcat, assert_tomcatresponse):
         mock_status.return_value = 204  # No Content
         r = tomcat.status_xml()
         assert_tomcatresponse.failure(r)
-        assert r.status_code == tm.status_codes.fail
+        assert r.status_code == tm.StatusCode.FAIL
 
 
 def test_vm_info(tomcat, assert_tomcatresponse):

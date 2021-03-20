@@ -13,6 +13,7 @@ Python API documentation for tomcatmanager |release|
    TomcatManagerResponse
    TomcatApplication
    ApplicationState
+   StatusCode
    ServerInfo
    TomcatError
    migrating2
@@ -23,6 +24,7 @@ Here's the classes defined by this package:
 * :doc:`TomcatManagerResponse`
 * :doc:`TomcatApplication`
 * :doc:`ApplicationState`
+* :doc:`StatusCode`
 * :doc:`ServerInfo`
 * :doc:`TomcatError`
 

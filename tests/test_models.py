@@ -65,7 +65,7 @@ def test_http_response_not_tomcat(tomcat, mock_text, content):
     # like we might get if they put a regular web page in for the URL
     mock_text.return_value = content
     r = tomcat.vm_info()
-    assert r.status_code == tm.status_codes.notfound
+    assert r.status_code == tm.StatusCode.NOTFOUND
     assert r.status_message == "Tomcat Manager not found"
     assert r.result is None
 
@@ -73,7 +73,7 @@ def test_http_response_not_tomcat(tomcat, mock_text, content):
 def test_http_response_valid(tomcat, mock_text):
     mock_text.return_value = "OK - some message\nthe result"
     r = tomcat.vm_info()
-    assert r.status_code == tm.status_codes.ok
+    assert r.status_code == tm.StatusCode.OK
     assert r.status_message == "some message"
     assert r.result == "the result"
 
@@ -81,7 +81,7 @@ def test_http_response_valid(tomcat, mock_text):
 def test_http_response_fail(tomcat, mock_text):
     mock_text.return_value = "FAIL - some message"
     r = tomcat.vm_info()
-    assert r.status_code == tm.status_codes.fail
+    assert r.status_code == tm.StatusCode.FAIL
     assert r.status_message == "some message"
     assert r.result is None
 

@@ -34,7 +34,7 @@ from typing import List, Any
 
 import requests
 
-from .models import status_codes, TomcatManagerResponse, ServerInfo, TomcatApplication
+from .models import StatusCode, TomcatManagerResponse, ServerInfo, TomcatApplication
 
 
 class TomcatManager:
@@ -643,11 +643,11 @@ class TomcatManager:
         # we have to force a status_code and a status_message
         # because the server doesn't return them
         if r.response.status_code == requests.codes.ok:
-            r.status_code = status_codes.ok
-            r.status_message = status_codes.ok
+            r.status_code = StatusCode.OK
+            r.status_message = StatusCode.OK.value
         else:
-            r.status_code = status_codes.fail
-            r.status_message = status_codes.fail
+            r.status_code = StatusCode.FAIL
+            r.status_message = StatusCode.FAIL.value
         return r
 
     def vm_info(self) -> TomcatManagerResponse:
@@ -714,7 +714,7 @@ class TomcatManager:
         resources = {}
         for line in r.result.splitlines():
             resource, classname = line.rstrip().split(":", 1)
-            if resource[:7] != status_codes.fail + " - ":
+            if resource[:7] != StatusCode.FAIL.value + " - ":
                 resources[resource] = classname.lstrip()
         r.resources = resources
         return r

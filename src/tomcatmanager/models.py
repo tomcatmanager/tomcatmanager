@@ -43,22 +43,36 @@ class TomcatError(Exception):
     """
 
 
-###
-#
-# build status codes
-#
-###
-STATUS_CODES = {
-    # 'sent from tomcat': 'friendly name'
-    "OK": "ok",
-    "FAIL": "fail",
-    # if we can't find tomcat, we invent a NOTFOUND value
-    "NOTFOUND": "notfound",
-}
-# pylint: disable=invalid-name
-status_codes = AttrDict()
-for _code, _title in STATUS_CODES.items():
-    status_codes[_title] = _code
+@enum.unique
+class StatusCode(enum.Enum):
+    """An enumeration of the various Tomcat Manager web application status codes
+
+    ``tomcatmanager`` uses the excellent `requests <https://github.com/psf/requests>`_
+    library, which uses a custom LookupDict class to store HTTP status codes in a
+    dictionary. After much debate on whether we should do it the requests way, or
+    a more pythonic way, I chose to use a native Enum class instead.
+    """
+
+    OK = "OK"
+    FAIL = "FAIL"
+    NOTFOUND = "NOTFOUND"
+
+    @classmethod
+    def parse(cls, code: str):
+        """Return one of the enums from a string sent by the Tomcat Manager
+        web application.
+
+        :param state: the string value of the status code from the
+            tomcat server
+        :type state: str
+        :return: :class:`.StatusCode` instance
+        :rtype:  tomcatmanager.models.StatusCode
+        :raises ValueError: if the string does not represent a known status code
+        """
+        for _, member in cls.__members__.items():
+            if code == member.value:
+                return member
+        raise ValueError("{} is an unknown status code".format(code))
 
 
 # pylint: disable=too-many-instance-attributes
@@ -99,13 +113,14 @@ class TomcatManagerResponse:
         For this property to return True:
 
         - The HTTP request must return a status code of ``200 OK``
-        - The first line of the response from the Tomcat Server must begin with ``OK``.
+        - The first line of the response from the Tomcat Manager web application
+          must begin with ``OK``.
         """
         return all(
             [
                 self.response is not None,
                 self.response.status_code == requests.codes.ok,
-                self.status_code == tm.status_codes.ok,
+                self.status_code == tm.StatusCode.OK,
             ]
         )
 
@@ -116,12 +131,12 @@ class TomcatManagerResponse:
         First this method calls ``requests.Response.raise_for_status()`` which
         raises exceptions if a 4xx or 5xx response is received from the server.
 
-        If that doesn't raise anything, then it raises a :class:`.TomcatError`
+        If that doesn't raise anything, then it raises a :class:`TomcatError`
         if there is not an ``OK`` response from the first line of text back
         from the Tomcat Manager web app.
         """
         self.response.raise_for_status()
-        if self.status_code != tm.status_codes.ok:
+        if self.status_code != tm.StatusCode.OK:
             raise TomcatError(self.status_message)
 
     @property
@@ -134,20 +149,12 @@ class TomcatManagerResponse:
         errors as well as tomcat errors. However, if you want specific access
         to the status of the tomcat command, use this method.
 
-        There are three status codes:
-
-        - ``OK``
-        - ``FAIL``
-        - ``NOTFOUND``
-
-        ``tomcatmanager.status_codes`` is a dictionary which makes it
-        easy to check this code against known values. It also has attributes
-        with friendly names, as shown here::
+        The status codes are enumerated in :class:`StatusCode`.
 
             >>> import tomcatmanager as tm
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.server_info()
-            >>> r.status_code == tm.status_codes.ok
+            >>> r.status_code == tm.StatusCode.OK
             True
         """
         return self._status_code
@@ -204,17 +211,15 @@ class TomcatManagerResponse:
             if response.status_code == requests.codes.ok:
                 try:
                     statusline = response.text.splitlines()[0]
-                    code = statusline.split(" ", 1)[0]
-                    if code in tm.status_codes.values():
-                        self.status_code = code
-                        self.status_message = statusline.split(" ", 1)[1][2:]
-                        if len(lines) > 1:
-                            self.result = "\n".join(lines[1:])
-                    else:
-                        self.status_code = tm.status_codes.notfound
-                        self.status_message = "Tomcat Manager not found"
-                except IndexError:
-                    pass
+                    codestr = statusline.split(" ", 1)[0]
+                    code = StatusCode.parse(codestr)
+                    self.status_code = code
+                    self.status_message = statusline.split(" ", 1)[1][2:]
+                    if len(lines) > 1:
+                        self.result = "\n".join(lines[1:])
+                except (IndexError, ValueError):
+                    self.status_code = tm.StatusCode.NOTFOUND
+                    self.status_message = "Tomcat Manager not found"
 
 
 @enum.unique

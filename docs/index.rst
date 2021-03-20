@@ -44,7 +44,7 @@ And for the ultimate in flexibility, you can use the python package directly:
    >>> tomcat.is_connected
    True
    >>> r = tomcat.stop('/someapp')
-   >>> r.status_code == tm.status_codes.ok
+   >>> r.status_code == tm.StatusCode.OK
    False
    >>> r.status_message
    'No context exists named /someapp'

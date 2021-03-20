@@ -78,7 +78,7 @@ def test_connect_auth(tomcat_manager_server):
         tomcat_manager_server.password,
     )
     assert isinstance(r, tm.models.TomcatManagerResponse)
-    assert r.status_code == tm.status_codes.ok
+    assert r.status_code == tm.StatusCode.OK
     assert tomcat.is_connected
     assert r.result == ""
     assert r.status_message == ""
@@ -119,7 +119,7 @@ def test_connect_sets_timeout(tomcat_manager_server):
         timeout=5,
     )
     assert isinstance(r, tm.models.TomcatManagerResponse)
-    assert r.status_code == tm.status_codes.ok
+    assert r.status_code == tm.StatusCode.OK
     assert tomcat.is_connected
     assert r.result == ""
     assert r.status_message == ""

@@ -53,7 +53,7 @@ def assert_tomcatresponse():
         def success(self, r):
             """Assertions on TomcatResponse for calls that should be successful."""
             assert (
-                r.status_code == tm.status_codes.ok
+                r.status_code == tm.StatusCode.OK
             ), 'message from server: "{}"'.format(r.status_message)
             assert r.status_message != None
             assert r.status_message
@@ -61,7 +61,7 @@ def assert_tomcatresponse():
 
         def failure(self, r):
             """Assertions on TomcatResponse for calls that should fail."""
-            assert r.status_code == tm.status_codes.fail
+            assert r.status_code == tm.StatusCode.FAIL
             with pytest.raises(tm.TomcatError):
                 r.raise_for_status()
 
