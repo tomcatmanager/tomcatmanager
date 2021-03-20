@@ -107,3 +107,21 @@ def test_connect_timeout(tomcat_manager_server, mocker):
             tomcat_manager_server.user,
             tomcat_manager_server.password,
         )
+
+
+def test_connect_sets_timeout(tomcat_manager_server):
+    tomcat = tm.TomcatManager()
+    tomcat.timeout = 10
+    r = tomcat.connect(
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+        timeout=5,
+    )
+    assert isinstance(r, tm.models.TomcatManagerResponse)
+    assert r.status_code == tm.status_codes.ok
+    assert tomcat.is_connected
+    assert r.result == ""
+    assert r.status_message == ""
+    assert tomcat.timeout == 5
+    r.raise_for_status()

@@ -233,6 +233,8 @@ class TomcatManager:
         self.url = url
         self.user = user
         self._password = password
+        if timeout:
+            self.timeout = timeout
         r = self._get("serverinfo")
 
         if r.ok:
