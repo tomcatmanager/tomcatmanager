@@ -85,13 +85,17 @@ class TomcatManager:
         self.url = None
         """Url of the Tomcat Manager web application we are connected to.
 
-        Best to treat this as read-only. This attribute is set by the :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method. Look there for more info.
+        Best to treat this as read-only. This attribute is set by the
+        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method.
+        Look there for more info.
         """
 
         self.user = None
         """User we successfully authenticated to the Tomcat Manager web application with
 
-        Best to treat this as read-only. This attribute is set by the :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method. Look there for more info.
+        Best to treat this as read-only. This attribute is set by the
+        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method.
+        Look there for more info.
         """
 
         self._password = None

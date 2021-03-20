@@ -696,8 +696,8 @@ change the value of one of this program's settings
         if param_name in self.settables:
             try:
                 settable = self.settables[param_name]
-            except KeyError:
-                raise ValueError
+            except KeyError as keyerr:
+                raise ValueError from keyerr
 
             value = cmd2.utils.strip_quotes(value)
             current_value = getattr(self, param_name)
