@@ -31,6 +31,17 @@ import tomcatmanager as tm
 from tomcatmanager.__main__ import main
 
 
+def test_main_noargs(mocker):
+    mock_cmdloop = mocker.patch("tomcatmanager.InteractiveTomcatManager.cmdloop")
+    # shouldn't have to do this, but it's a nasty bug in cmd2
+    # TODO issue created at https://github.com/python-cmd2/cmd2/issues/1077
+    # when this issue is closed, the following line should not be necessary
+    mocker.patch("cmd2.Cmd._register_subcommands")
+    argv = []
+    main(argv)
+    assert mock_cmdloop.call_count == 1
+
+
 def test_main_user_password_url_command(tomcat_manager_server, capsys):
     cmdline = "-u {user} -p {password} {url} list".format(**tomcat_manager_server)
     argv = cmdline.split(" ")
