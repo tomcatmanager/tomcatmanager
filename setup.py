@@ -43,7 +43,12 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     python_requires=">=3.6",
-    install_requires=["cmd2>=1,<2", "requests>=2,<3", "appdirs", "attrdict",],
+    install_requires=[
+        "cmd2>=1,<2",
+        "requests>=2,<3",
+        "appdirs",
+        "attrdict",
+    ],
     setup_requires=["setuptools_scm"],
     # dependencies for development and testing
     # $ pip install -e .[dev]
@@ -68,5 +73,9 @@ setup(
         ],
     },
     # define the scripts that should be created on installation
-    entry_points={"console_scripts": ["tomcat-manager=tomcatmanager.__main__:main",],},
+    entry_points={
+        "console_scripts": [
+            "tomcat-manager=tomcatmanager.__main__:main",
+        ],
+    },
 )

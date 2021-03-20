@@ -174,11 +174,16 @@ def test_deploy_servercontext_update(
     tomcat, tomcat_manager_server, safe_path, version, assert_tomcatresponse
 ):
     r = tomcat.deploy_servercontext(
-        safe_path, tomcat_manager_server.contextfile, version=version,
+        safe_path,
+        tomcat_manager_server.contextfile,
+        version=version,
     )
     assert_tomcatresponse.success(r)
     r = tomcat.deploy_servercontext(
-        safe_path, tomcat_manager_server.contextfile, version=version, update=True,
+        safe_path,
+        tomcat_manager_server.contextfile,
+        version=version,
+        update=True,
     )
     assert_tomcatresponse.success(r)
     r = tomcat.undeploy(safe_path, version=version)

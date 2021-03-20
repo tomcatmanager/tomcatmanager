@@ -29,6 +29,7 @@ import cmd2
 
 import tomcatmanager as tm
 
+
 def get_itm(tms):
     """
     Using this as a fixture with capsys breaks capsys. So we use a function.
@@ -301,10 +302,12 @@ def test_list_parse_args_failure(cmdline):
 
 @pytest.mark.parametrize("raw", ["", "-r", "--raw"])
 @pytest.mark.parametrize(
-    "state", ["", "-s running", "-s stopped", "--state=running", "--state=stopped"],
+    "state",
+    ["", "-s running", "-s stopped", "--state=running", "--state=stopped"],
 )
 @pytest.mark.parametrize(
-    "sort", ["", "-b state", "-b path", "--by=state", "--by=path"],
+    "sort",
+    ["", "-b state", "-b path", "--by=state", "--by=path"],
 )
 def test_list_parse_args(raw, state, sort):
     itm = tm.InteractiveTomcatManager()

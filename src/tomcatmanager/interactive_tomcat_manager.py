@@ -86,7 +86,10 @@ def _deploy_parser(
     contextfunc: Callable,
 ) -> argparse.ArgumentParser:
     """Construct a argument parser for the deploy or redeploy commands."""
-    deploy_parser = argparse.ArgumentParser(prog=name, description=desc,)
+    deploy_parser = argparse.ArgumentParser(
+        prog=name,
+        description=desc,
+    )
     deploy_subparsers = deploy_parser.add_subparsers(title="methods", dest="method")
     # local subparser
     deploy_local_parser = deploy_subparsers.add_parser(
@@ -119,7 +122,9 @@ def _deploy_parser(
         help="deploy a contextfile already on the server",
     )
     deploy_context_parser.add_argument(
-        "-v", "--version", help="version string to associate with this deployment",
+        "-v",
+        "--version",
+        help="version string to associate with this deployment",
     )
     deploy_context_parser.add_argument("contextfile")
     deploy_context_parser.add_argument("warfile", nargs="?")
@@ -522,7 +527,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.show_help_from(self.config_parser)
 
     show_parser = argparse.ArgumentParser(
-        prog="show", description="Show all settings or a specific setting.",
+        prog="show",
+        description="Show all settings or a specific setting.",
     )
     show_parser.add_argument(
         "setting",
@@ -760,13 +766,19 @@ change the value of one of this program's settings
         help="a section from the config file which contains at least a url",
     )
     connect_parser.add_argument(
-        "url", nargs="?", help="the url where the tomcat manager web app is located",
+        "url",
+        nargs="?",
+        help="the url where the tomcat manager web app is located",
     )
     connect_parser.add_argument(
-        "user", nargs="?", help="optional user to use for authentication",
+        "user",
+        nargs="?",
+        help="optional user to use for authentication",
     )
     connect_parser.add_argument(
-        "password", nargs="?", help="optional password to use for authentication",
+        "password",
+        nargs="?",
+        help="optional password to use for authentication",
     )
 
     def do_connect(self, cmdline: cmd2.Statement):
@@ -989,7 +1001,8 @@ change the value of one of this program's settings
         self.show_help_from(self.stop_parser)
 
     reload_parser = _path_version_parser(
-        "reload", "Start and stop a tomcat application. Synonym for 'restart'.",
+        "reload",
+        "Start and stop a tomcat application. Synonym for 'restart'.",
     )
 
     @requires_connection
@@ -1003,7 +1016,8 @@ change the value of one of this program's settings
         self.show_help_from(self.reload_parser)
 
     restart_parser = _path_version_parser(
-        "restart", "Start and stop a tomcat application.",
+        "restart",
+        "Start and stop a tomcat application.",
     )
 
     @requires_connection
@@ -1017,10 +1031,12 @@ change the value of one of this program's settings
         self.show_help_from(self.restart_parser)
 
     sessions_parser = argparse.ArgumentParser(
-        prog="sessions", description="Show active sessions for a tomcat application.",
+        prog="sessions",
+        description="Show active sessions for a tomcat application.",
     )
     sessions_parser.add_argument(
-        "path", help="The path part of the URL where the application is deployed.",
+        "path",
+        help="The path part of the URL where the application is deployed.",
     )
     sessions_parser.add_argument(
         "-v",
@@ -1043,7 +1059,8 @@ change the value of one of this program's settings
         self.show_help_from(self.sessions_parser)
 
     expire_parser = argparse.ArgumentParser(
-        prog="expire", description="expire idle sessions",
+        prog="expire",
+        description="expire idle sessions",
     )
     expire_parser.add_argument(
         "-v",
@@ -1053,7 +1070,8 @@ change the value of one of this program's settings
              in order to expire sessions.""",
     )
     expire_parser.add_argument(
-        "path", help="The path part of the URL where the application is deployed.",
+        "path",
+        help="The path part of the URL where the application is deployed.",
     )
     expire_parser.add_argument(
         "idle",
@@ -1074,10 +1092,15 @@ change the value of one of this program's settings
         self.show_help_from(self.expire_parser)
 
     list_parser = argparse.ArgumentParser(
-        prog="list", description="Show all installed applications", add_help=False,
+        prog="list",
+        description="Show all installed applications",
+        add_help=False,
     )
     list_parser.add_argument(
-        "-r", "--raw", action="store_true", help="show apps without formatting",
+        "-r",
+        "--raw",
+        action="store_true",
+        help="show apps without formatting",
     )
     list_parser.add_argument(
         "-s",
@@ -1160,7 +1183,8 @@ change the value of one of this program's settings
     #
     ###
     serverinfo_parser = argparse.ArgumentParser(
-        prog="serverinfo", description="show information about the tomcat server",
+        prog="serverinfo",
+        description="show information about the tomcat server",
     )
 
     @requires_connection
@@ -1175,7 +1199,8 @@ change the value of one of this program's settings
         self.show_help_from(self.serverinfo_parser)
 
     status_parser = argparse.ArgumentParser(
-        prog="status", description="show server status information in xml format",
+        prog="status",
+        description="show server status information in xml format",
     )
 
     @requires_connection
@@ -1191,7 +1216,8 @@ change the value of one of this program's settings
         self.show_help_from(self.status_parser)
 
     vminfo_parser = argparse.ArgumentParser(
-        prog="vminfo", description="show diagnostic information about the jvm",
+        prog="vminfo",
+        description="show diagnostic information about the jvm",
     )
 
     @requires_connection
@@ -1222,7 +1248,8 @@ change the value of one of this program's settings
         self.show_help_from(self.sslconnectorciphers_parser)
 
     threaddump_parser = argparse.ArgumentParser(
-        prog="threaddump", description="show a jvm thread dump",
+        prog="threaddump",
+        description="show a jvm thread dump",
     )
 
     @requires_connection
@@ -1237,7 +1264,8 @@ change the value of one of this program's settings
         self.show_help_from(self.threaddump_parser)
 
     resources_parser = argparse.ArgumentParser(
-        prog="resources", description="show global JNDI resources configured in tomcat",
+        prog="resources",
+        description="show global JNDI resources configured in tomcat",
     )
     resources_parser.add_argument(
         "class_name",
@@ -1298,7 +1326,8 @@ change the value of one of this program's settings
         return self.do_exit(cmdline)
 
     version_parser = argparse.ArgumentParser(
-        prog="version", description="show the version number of this program",
+        prog="version",
+        description="show the version number of this program",
     )
 
     def do_version(self, cmdline: cmd2.Statement):
@@ -1336,7 +1365,8 @@ change the value of one of this program's settings
         self.show_help_from(self.exit_code_parser)
 
     license_parser = argparse.ArgumentParser(
-        prog="license", description="show the software license for this program",
+        prog="license",
+        description="show the software license for this program",
     )
 
     def do_license(self, cmdline: cmd2.Statement):
