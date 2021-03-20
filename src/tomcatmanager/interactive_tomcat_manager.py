@@ -1130,7 +1130,8 @@ change the value of one of this program's settings
         rtn = []
         # select the apps that should be included
         if args.state:
-            rtn = filter(lambda app: app.state == args.state, apps)
+            filter_state = tm.models.ApplicationState.parse(args.state)
+            rtn = filter(lambda app: app.state == filter_state, apps)
         else:
             rtn = apps
         # now sort them

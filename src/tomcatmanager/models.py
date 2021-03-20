@@ -257,14 +257,14 @@ class TomcatApplication:
         """
         Function to create a key usable by ``sort`` to sort by state, by path, by version.
         """
-        return "{}:{}:{}".format(app.state or "", app.path or "", app.version or "")
+        return "{}:{}:{}".format(app.state.value or "", app.path or "", app.version or "")
 
     @classmethod
     def sort_by_path_by_version_by_state(cls, app: TA):
         """
         Function to create a key usable by ``sort`` to sort by path, by version, by state
         """
-        return "{}:{}:{}".format(app.path or "", app.version or "", app.state or "")
+        return "{}:{}:{}".format(app.path or "", app.version or "", app.state.value or "")
 
     def __init__(self):
         self._path = None
