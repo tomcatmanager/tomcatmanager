@@ -36,8 +36,8 @@ def _positive_integer(value):
         ivalue = int(value)
         if ivalue < 0:
             raise argparse.ArgumentTypeError(msg)
-    except ValueError:
-        raise argparse.ArgumentTypeError(msg)
+    except ValueError as valerror:
+        raise argparse.ArgumentTypeError(msg) from valerror
     return ivalue
 
 
