@@ -25,9 +25,9 @@
 import unittest.mock as mock
 
 import pytest
+import cmd2
 
 import tomcatmanager as tm
-
 
 def get_itm(tms):
     """
@@ -294,7 +294,7 @@ LIST_CMDLINE_BAD = [
 def test_list_parse_args_failure(cmdline):
     itm = tm.InteractiveTomcatManager()
     statement = itm.statement_parser.parse(cmdline)
-    with pytest.raises(SystemExit):
+    with pytest.raises(cmd2.Cmd2ArgparseError):
         itm.parse_args(itm.list_parser, statement.argv)
     assert itm.exit_code == itm.exit_codes.usage
 

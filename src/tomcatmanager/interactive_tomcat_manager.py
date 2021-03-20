@@ -373,7 +373,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.exit_code = self.exit_codes.usage
         # argv includes the command name, the arg parser doesn't
         # expect it, so let's omit it
-        args = parser.parse_args(argv[1:])
+        try:
+            args = parser.parse_args(argv[1:])
+        except SystemExit as sysexit:
+            # argparse throws SystemExit if an argument parse error occurs
+            # cmd2 will exit to the shell if this exception is raised
+            # we have to catch it
+            raise cmd2.Cmd2ArgparseError from sysexit
+
         # no usage error, assume success
         self.exit_code = self.exit_codes.success
         return args
