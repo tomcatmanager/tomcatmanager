@@ -199,14 +199,15 @@ class InteractiveTomcatManager(cmd2.Cmd):
             shortcuts=shortcuts,
             allow_cli_args=False,
             terminators=[],
+            auto_load_commands=False,
         )
 
         self.echo = False
         self.self_in_py = True
 
         to_remove = [
-            "abbrev",
-            "continuation_prompt",
+            "max_completion_items",
+            "always_show_hint",
             "debug",
             "echo",
             "editor",
