@@ -15,7 +15,6 @@ Python API documentation for tomcatmanager |release|
    ApplicationState
    ServerInfo
    TomcatError
-   InteractiveTomcatManager
    migrating2
 
 Here's the classes defined by this package:
@@ -26,7 +25,6 @@ Here's the classes defined by this package:
 * :doc:`ApplicationState`
 * :doc:`ServerInfo`
 * :doc:`TomcatError`
-* :doc:`InteractiveTomcatManager`
 
 Migrating from previous versions:
 
