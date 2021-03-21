@@ -298,6 +298,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 # finished.
                 pass
 
+    # pylint: disable=unused-argument
     def perror(self, msg: Any = "", *, end: str = "\n", apply_style=False) -> None:
         """
         Print an error message or an exception.

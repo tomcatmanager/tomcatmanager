@@ -120,13 +120,13 @@ def tomcat_manager_server(request):
 
 @pytest.fixture
 def tomcat(tomcat_manager_server):
-    tomcat = tm.TomcatManager()
-    tomcat.connect(
+    tc = tm.TomcatManager()
+    tc.connect(
         tomcat_manager_server.url,
         tomcat_manager_server.user,
         tomcat_manager_server.password,
     )
-    return tomcat
+    return tc
 
 
 @pytest.fixture

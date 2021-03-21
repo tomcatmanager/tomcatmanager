@@ -234,10 +234,9 @@ clean_tasks = list(namespace_clean.tasks.values())
 
 
 @invoke.task(pre=list(namespace_clean.tasks.values()), default=True)
+# pylint: disable=unused-argument
 def clean_all(context):
     "Run all clean tasks"
-    # pylint: disable=unused-argument
-    pass
 
 
 namespace_clean.add_task(clean_all, "all")
