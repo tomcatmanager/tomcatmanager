@@ -10,7 +10,6 @@ tomcatmanager
 .. image:: https://img.shields.io/badge/license-MIT-orange.svg
       :target: https://github.com/tomcatmanager/tomcatmanager/blob/master/LICENSE
       :alt: license
-|
 .. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/main?label=build%20%28main%29
       :target: https://github.com/tomcatmanager/tomcatmanager/tree/main
       :alt: main branch build status
@@ -23,8 +22,8 @@ tomcatmanager
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
       :target: https://github.com/psf/black
       :alt: code style black
-.. image:: https://readthedocs.org/projects/tomcatmanager/badge/?version=latest
-      :target: http://tomcatmanager.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/tomcatmanager/badge/?version=stable
+      :target: http://tomcatmanager.readthedocs.io/en/stable
       :alt: Documentation Status
 
 If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
@@ -143,7 +142,7 @@ Documentation
 -------------
 
 Complete documentation for the last released version is available at
-`<http://tomcatmanager.readthedocs.io/en/latest/>`_. It includes material
+`<http://tomcatmanager.readthedocs.io/en/stable/>`_. It includes material
 showing how to use ``tomcat-manager`` from the command line or using
 interactive mode. There is also a walkthrough of how to use the API from and an
 API reference.
