@@ -44,7 +44,7 @@ What Can It Do?
 This package installs a command line utility called ``tomcat-manager``. It's
 easily scriptable using your favorite shell:
 
-.. code-block:: none
+.. code-block::
 
    $ tomcat-manager --user=ace --password=newenglandclamchowder \
    http://localhost:8080/manager deploy local sample.war /sampleapp
@@ -53,7 +53,7 @@ easily scriptable using your favorite shell:
 
 There is also an interactive mode:
 
-.. code-block:: none
+.. code-block::
 
    $ tomcat-manager
    tomcat-manager>connect http://localhost:8080/manager ace

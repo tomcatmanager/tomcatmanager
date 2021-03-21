@@ -74,7 +74,7 @@ class TomcatManager:
         return all(
             [
                 hasattr(obj, "__iter__"),
-                not isinstance(obj, (str, bytes, list, tuple, collections.Mapping)),
+                not isinstance(obj, (str, bytes, list, tuple, collections.abc.Mapping)),
             ]
         )
 

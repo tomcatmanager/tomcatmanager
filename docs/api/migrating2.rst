@@ -47,8 +47,9 @@ If you are doing alternative checking like this::
         if r.status_code == tm.status_codes.notfound:
             print("Tomcat Manager web application was not found")
 
-you might consider this a good opportunity to update your code to check :attr:`.TomcatManagerResponse.ok` instead. If that doesn't work for you, then you'll
-have to change it to be something like this::
+you might consider this a good opportunity to update your code to check
+:attr:`.TomcatManagerResponse.ok` instead. If that doesn't work for you, then
+you'll have to change it to be something like this::
 
     import tomcatmanager as tm
     tomcat = tm.TomcatManager()
