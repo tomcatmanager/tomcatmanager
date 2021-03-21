@@ -42,8 +42,7 @@ def get_itm(tms):
     Using this as a fixture with capsys breaks capsys. So we use a function.
     """
     itm = tm.InteractiveTomcatManager()
-    args = "connect {url} {user} {password}".format(**tms)
-    itm.onecmd_plus_hooks(args)
+    itm.onecmd_plus_hooks(tms.connect_command)
     return itm
 
 
@@ -76,7 +75,7 @@ def itm_with_config(mocker, configstring):
 def assert_connected_to(itm, url, capsys):
     itm.onecmd_plus_hooks("which")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
     assert url in out
 
 
@@ -128,13 +127,13 @@ HELP_COMMANDS = [
 @pytest.mark.parametrize("command", HELP_COMMANDS)
 def test_command_help(tomcat_manager_server, command):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.error
+    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("{} -h".format(command))
-    assert itm.exit_code == itm.exit_codes.usage
+    assert itm.exit_code == itm.EXIT_USAGE
 
-    itm.exit_code = itm.exit_codes.error
+    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("{} --help".format(command))
-    assert itm.exit_code == itm.exit_codes.usage
+    assert itm.exit_code == itm.EXIT_USAGE
 
 
 # copy the list
@@ -152,7 +151,7 @@ def test_help_matches_argparser(command, capsys):
     out, _ = capsys.readouterr()
     parser_func = getattr(itm, "{}_parser".format(command))
     assert out == parser_func.format_help()
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 def test_help_set(capsys):
@@ -161,7 +160,7 @@ def test_help_set(capsys):
     itm.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "change the value of one of this program's settings" in out
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 def test_help(capsys):
@@ -173,7 +172,7 @@ def test_help(capsys):
     assert "Managing applications" in out
     assert "Server information" in out
     assert "Settings, configuration, and tools" in out
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 ###
@@ -277,14 +276,14 @@ def test_config_edit(itm_nc, mocker):
     mock_os_system = mocker.patch("os.system")
     itm_nc.onecmd_plus_hooks("config edit")
     assert mock_os_system.call_count == 1
-    assert itm_nc.exit_code == itm_nc.exit_codes.success
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
 def test_config_edit_no_editor(itm_nc, capsys):
     itm_nc.editor = None
     itm_nc.onecmd_plus_hooks("config edit")
     out, err = capsys.readouterr()
-    assert itm_nc.exit_code == itm_nc.exit_codes.error
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
     assert not out
     assert err.startswith("no editor: ")
 
@@ -292,7 +291,7 @@ def test_config_edit_no_editor(itm_nc, capsys):
 def test_config_invalid_action(itm_nc, capsys):
     itm_nc.onecmd_plus_hooks("config bogus")
     out, err = capsys.readouterr()
-    assert itm_nc.exit_code == itm_nc.exit_codes.usage
+    assert itm_nc.exit_code == itm_nc.EXIT_USAGE
     assert not out
     assert err.startswith("usage: ")
 
@@ -310,7 +309,7 @@ def test_config_file_command(mocker, capsys):
     itm.onecmd_plus_hooks("config file")
     out, _ = capsys.readouterr()
     assert out == "{}\n".format(fname)
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 def test_load_config(mocker):
@@ -355,7 +354,7 @@ def test_show_noargs(command, capsys):
     # not going to parse all the lines, but there
     # should be one per setting
     assert len(out.splitlines()) == len(itm.settables)
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 @pytest.mark.parametrize("command", SHOW_SETTINGS)
@@ -364,7 +363,7 @@ def test_show_valid_setting(command, capsys):
     itm.onecmd_plus_hooks("{} prompt".format(command))
     out, _ = capsys.readouterr()
     assert out.startswith("prompt='{}' ".format(itm.prompt))
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 @pytest.mark.parametrize("command", SHOW_SETTINGS)
@@ -374,7 +373,7 @@ def test_show_invalid_setting(command, capsys):
     out, err = capsys.readouterr()
     assert not out
     assert err == "unknown setting: 'bogus'\n"
-    assert itm.exit_code == itm.exit_codes.error
+    assert itm.exit_code == itm.EXIT_ERROR
 
 
 def test_set_noargs(capsys):
@@ -383,7 +382,7 @@ def test_set_noargs(capsys):
     out, err = capsys.readouterr()
     assert not out
     assert err == "invalid syntax: try {setting}={value}\n"
-    assert itm.exit_code == itm.exit_codes.usage
+    assert itm.exit_code == itm.EXIT_USAGE
 
 
 def test_set_string():
@@ -391,7 +390,7 @@ def test_set_string():
     prompt = str(uuid.uuid1())
     itm.onecmd_plus_hooks("set prompt={}".format(prompt))
     assert itm.prompt == prompt
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 def test_set_integer_valid():
@@ -399,7 +398,7 @@ def test_set_integer_valid():
     itm.timeout = 10
     itm.onecmd_plus_hooks("set timeout=5")
     assert itm.timeout == 5
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 def test_set_integer_invalid():
@@ -407,7 +406,7 @@ def test_set_integer_invalid():
     itm.timeout = 10
     itm.onecmd_plus_hooks("set timeout=joe")
     assert itm.timeout == 10
-    assert itm.exit_code == itm.exit_codes.error
+    assert itm.exit_code == itm.EXIT_ERROR
 
 
 def test_set_boolean_valid():
@@ -415,7 +414,7 @@ def test_set_boolean_valid():
     itm.echo = False
     itm.onecmd_plus_hooks("set echo=True")
     assert itm.echo is True
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 def test_set_boolean_invalid():
@@ -423,7 +422,7 @@ def test_set_boolean_invalid():
     itm.echo = False
     itm.onecmd_plus_hooks("set echo=notaboolean")
     assert itm.echo is False
-    assert itm.exit_code == itm.exit_codes.error
+    assert itm.exit_code == itm.EXIT_ERROR
 
 
 def test_set_with_invalid_param():
@@ -443,7 +442,7 @@ def test_timeout_property():
     itm.timeout = 5
     assert itm.tomcat.timeout == 5
     itm.onecmd_plus_hooks("set timeout={}".format(timeout))
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
     assert itm.timeout == timeout
     assert itm.tomcat.timeout == timeout
 
@@ -464,7 +463,7 @@ def test_do_set_success(arg, value):
     itm = tm.InteractiveTomcatManager()
     itm.do_set(arg)
     assert itm.prompt == value
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 SETTINGS_FAILURE = [
@@ -477,7 +476,7 @@ SETTINGS_FAILURE = [
 def test_do_set_fail(arg):
     itm = tm.InteractiveTomcatManager()
     itm.do_set(arg)
-    assert itm.exit_code == itm.exit_codes.error
+    assert itm.exit_code == itm.EXIT_ERROR
 
 
 PREFIXES = [
@@ -492,12 +491,11 @@ PREFIXES = [
 @pytest.mark.parametrize("prefix, expected", PREFIXES)
 def test_status_prefix(tomcat_manager_server, prefix, expected, capsys):
     itm = tm.InteractiveTomcatManager()
-    args = "connect {url} {user} {password}".format(**tomcat_manager_server)
     itm.status_prefix = prefix
-    itm.onecmd_plus_hooks(args)
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
     out, err = capsys.readouterr()
     assert err.startswith(expected)
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 ###
@@ -507,89 +505,95 @@ def test_status_prefix(tomcat_manager_server, prefix, expected, capsys):
 ###
 def test_connect(tomcat_manager_server, capsys):
     itm = tm.InteractiveTomcatManager()
-    cmdline = "connect {url} {user} {password}".format(**tomcat_manager_server)
-    itm.onecmd_plus_hooks(cmdline)
-    assert itm.exit_code == itm.exit_codes.success
-    assert_connected_to(itm, tomcat_manager_server["url"], capsys)
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert_connected_to(itm, tomcat_manager_server.url, capsys)
 
 
 def test_connect_password_prompt(tomcat_manager_server, capsys, mocker):
     itm = tm.InteractiveTomcatManager()
     mock_getpass = mocker.patch("getpass.getpass")
-    mock_getpass.return_value = tomcat_manager_server["password"]
+    mock_getpass.return_value = tomcat_manager_server.password
     # this should call getpass.getpass, which is now mocked to return the password
-    cmdline = "connect {url} {user}".format(**tomcat_manager_server)
+    cmdline = "connect {} {}".format(
+        tomcat_manager_server.url, tomcat_manager_server.user
+    )
     itm.onecmd_plus_hooks(cmdline)
     # make sure it got called
     assert mock_getpass.call_count == 1
-    assert itm.exit_code == itm.exit_codes.success
-    assert_connected_to(itm, tomcat_manager_server["url"], capsys)
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert_connected_to(itm, tomcat_manager_server.url, capsys)
 
 
 def test_connect_config(tomcat_manager_server, capsys, mocker):
     configname = str(uuid.uuid1())
     config = """[{}]
-    url={url}
-    user={user}
-    password={password}"""
-    configstring = config.format(configname, **tomcat_manager_server)
+    url={}
+    user={}
+    password={}"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
     itm = itm_with_config(mocker, configstring)
     cmdline = "connect {}".format(configname)
     itm.onecmd_plus_hooks(cmdline)
-    assert itm.exit_code == itm.exit_codes.success
-    assert_connected_to(itm, tomcat_manager_server["url"], capsys)
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert_connected_to(itm, tomcat_manager_server.url, capsys)
 
 
 def test_connect_config_password_prompt(tomcat_manager_server, capsys, mocker):
     configname = str(uuid.uuid1())
     config = """[{}]
-    url={url}
-    user={user}"""
-    configstring = config.format(configname, **tomcat_manager_server)
+    url={}
+    user={}"""
+    configstring = config.format(
+        configname, tomcat_manager_server.url, tomcat_manager_server.user
+    )
     itm = itm_with_config(mocker, configstring)
     mock_getpass = mocker.patch("getpass.getpass")
-    mock_getpass.return_value = tomcat_manager_server["password"]
+    mock_getpass.return_value = tomcat_manager_server.password
     # this will call getpass.getpass, which is now mocked to return the password
     cmdline = "connect {}".format(configname)
     itm.onecmd_plus_hooks(cmdline)
     assert mock_getpass.call_count == 1
-    assert itm.exit_code == itm.exit_codes.success
-    assert_connected_to(itm, tomcat_manager_server["url"], capsys)
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert_connected_to(itm, tomcat_manager_server.url, capsys)
 
 
 def test_connect_with_connection_error(tomcat_manager_server, capsys, mocker):
     connect_mock = mocker.patch("tomcatmanager.TomcatManager.connect")
     connect_mock.side_effect = requests.exceptions.ConnectionError()
     itm = tm.InteractiveTomcatManager()
-    cmdline = "connect {url} {user} {password}".format(**tomcat_manager_server)
-    itm.onecmd_plus_hooks(cmdline)
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
     out, err = capsys.readouterr()
     assert not out
     assert connect_mock.call_count == 1
     assert err == "connection error\n"
-    assert itm.exit_code == itm.exit_codes.error
+    assert itm.exit_code == itm.EXIT_ERROR
 
 
 def test_connect_with_timeout(tomcat_manager_server, capsys, mocker):
     connect_mock = mocker.patch("tomcatmanager.TomcatManager.connect")
     connect_mock.side_effect = requests.exceptions.Timeout()
     itm = tm.InteractiveTomcatManager()
-    cmdline = "connect {url} {user} {password}".format(**tomcat_manager_server)
-    itm.onecmd_plus_hooks(cmdline)
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
     out, err = capsys.readouterr()
     assert not out
     assert connect_mock.call_count == 1
     assert err == "connection timeout\n"
-    assert itm.exit_code == itm.exit_codes.error
+    assert itm.exit_code == itm.EXIT_ERROR
 
 
 def test_which(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.error
+    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("which")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.success
-    assert tomcat_manager_server["url"] in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert tomcat_manager_server.url in out
 
 
 REQUIRES_CONNECTION = [
@@ -619,7 +623,7 @@ def test_requires_connection(command, capsys):
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks(command)
     out, err = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.error
+    assert itm.exit_code == itm.EXIT_ERROR
     assert not out
     assert err == "not connected\n"
 
@@ -642,27 +646,27 @@ NOARGS_INFO_COMMANDS = [
 @pytest.mark.parametrize("cmdname", NOARGS_INFO_COMMANDS)
 def test_info_commands_noargs(tomcat_manager_server, cmdname):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.success
+    itm.exit_code = itm.EXIT_SUCCESS
     itm.onecmd_plus_hooks("{} argument".format(cmdname))
-    assert itm.exit_code == itm.exit_codes.usage
+    assert itm.exit_code == itm.EXIT_USAGE
 
 
 def test_serverinfo(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.error
+    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("serverinfo")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
     assert "Tomcat Version: " in out
     assert "JVM Version: " in out
 
 
 def test_status(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.error
+    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("status")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
     assert "</status>" in out
     assert "</jvm>" in out
     assert "</connector>" in out
@@ -670,10 +674,10 @@ def test_status(tomcat_manager_server, capsys):
 
 def test_vminfo(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.error
+    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("vminfo")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
     assert "Runtime information:" in out
     assert "architecture:" in out
     assert "System properties:" in out
@@ -681,47 +685,47 @@ def test_vminfo(tomcat_manager_server, capsys):
 
 def test_sslconnectorciphers(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.error
+    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslconnectorciphers")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
     assert "Connector" in out
     assert "SSL" in out
 
 
 def test_threaddump(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.error
+    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("threaddump")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
     assert "java.lang.Thread.State" in out
 
 
 def test_resources(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.error
+    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("resources")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
     assert "UserDatabase: " in out
 
 
 def test_resources_class_name(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.success
+    itm.exit_code = itm.EXIT_SUCCESS
     # this class has to be hand coded in the mock server
     itm.onecmd_plus_hooks("resources com.example.Nothing")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.error
+    assert itm.exit_code == itm.EXIT_ERROR
     assert not out
 
 
 def test_findleakers(tomcat_manager_server):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.exit_codes.error
+    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("findleakers")
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 ###
@@ -732,13 +736,13 @@ def test_findleakers(tomcat_manager_server):
 def test_exit():
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks("exit")
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 def test_quit():
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks("quit")
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 def test_exit_code(capsys):
@@ -747,15 +751,15 @@ def test_exit_code(capsys):
     out, _ = capsys.readouterr()
     itm.onecmd_plus_hooks("exit_code")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.success
-    assert out == "{}\n".format(itm.exit_codes.success)
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert out == "{}\n".format(itm.EXIT_SUCCESS)
 
 
 def test_version(capsys):
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks("version")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.success
+    assert itm.exit_code == itm.EXIT_SUCCESS
     assert tm.__version__ in out
 
 
@@ -764,7 +768,7 @@ def test_default(capsys):
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks(cmdline)
     out, err = capsys.readouterr()
-    assert itm.exit_code == itm.exit_codes.command_not_found
+    assert itm.exit_code == itm.EXIT_COMMAND_NOT_FOUND
     assert not out
     assert err == "unknown command: {}\n".format(cmdline)
 

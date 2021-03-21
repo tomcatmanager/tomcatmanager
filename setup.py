@@ -47,7 +47,6 @@ setup(
         "cmd2>=1,<2",
         "requests>=2,<3",
         "appdirs",
-        "attrdict",
     ],
     setup_requires=["setuptools_scm"],
     # dependencies for development and testing

@@ -43,7 +43,11 @@ def test_main_noargs(mocker):
 
 
 def test_main_user_password_url_command(tomcat_manager_server, capsys):
-    cmdline = "-u {user} -p {password} {url} list".format(**tomcat_manager_server)
+    cmdline = "-u {} -p {} {} list".format(
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+        tomcat_manager_server.url,
+    )
     argv = cmdline.split(" ")
     exit_code = main(argv)
     out, err = capsys.readouterr()
@@ -56,7 +60,11 @@ def test_main_user_password_url_command(tomcat_manager_server, capsys):
 
 
 def test_main_quiet(tomcat_manager_server, capsys):
-    cmdline = "-q -u {user} -p {password} {url} list".format(**tomcat_manager_server)
+    cmdline = "-q -u {} -p {} {} list".format(
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+        tomcat_manager_server.url,
+    )
     argv = cmdline.split(" ")
     exit_code = main(argv)
     out, err = capsys.readouterr()
@@ -87,7 +95,11 @@ def test_main_version(capsys):
 
 
 def test_main_debug(tomcat_manager_server, capsys):
-    cmdline = "-d -u {user} -p {password} {url} list".format(**tomcat_manager_server)
+    cmdline = "-d -u {} -p {} {} list".format(
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+        tomcat_manager_server.url,
+    )
     argv = cmdline.split(" ")
     exit_code = main(argv)
     out, err = capsys.readouterr()
@@ -99,7 +111,11 @@ def test_main_debug(tomcat_manager_server, capsys):
 
 
 def test_main_version_with_others(tomcat_manager_server, capsys):
-    cmdline = "-v -q -u {user} -p {password} {url} list".format(**tomcat_manager_server)
+    cmdline = "-v -q -u {} -p {} {} list".format(
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+        tomcat_manager_server.url,
+    )
     argv = cmdline.split(" ")
     with pytest.raises(SystemExit) as exit_e:
         main(argv)
@@ -113,7 +129,11 @@ def test_main_version_with_others(tomcat_manager_server, capsys):
 def test_main_stdin(tomcat_manager_server, capsys):
     inio = io.StringIO("list\n")
     stdin = sys.stdin
-    cmdline = "-u {user} -p {password} {url}".format(**tomcat_manager_server)
+    cmdline = "-u {} -p {} {}".format(
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+        tomcat_manager_server.url,
+    )
     argv = cmdline.split(" ")
     try:
         sys.stdin = inio
@@ -133,7 +153,11 @@ def test_main_stdin(tomcat_manager_server, capsys):
 def test_main_echo(tomcat_manager_server, capsys):
     inio = io.StringIO("list\n")
     stdin = sys.stdin
-    cmdline = "-e -u {user} -p {password} {url}".format(**tomcat_manager_server)
+    cmdline = "-e -u {} -p {} {}".format(
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+        tomcat_manager_server.url,
+    )
     argv = cmdline.split(" ")
     try:
         sys.stdin = inio
@@ -152,7 +176,11 @@ def test_main_echo(tomcat_manager_server, capsys):
 
 
 def test_main_status_to_stdout(tomcat_manager_server, capsys):
-    cmdline = "-s -u {user} -p {password} {url} list".format(**tomcat_manager_server)
+    cmdline = "-s -u {} -p {} {} list".format(
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+        tomcat_manager_server.url,
+    )
     argv = cmdline.split(" ")
     exit_code = main(argv)
     out, _ = capsys.readouterr()
@@ -164,8 +192,10 @@ def test_main_status_to_stdout(tomcat_manager_server, capsys):
 
 
 def test_main_timeout(tomcat_manager_server, capsys):
-    cmdline = "-t 25 -u {user} -p {password} {url} settings timeout".format(
-        **tomcat_manager_server
+    cmdline = "-t 25 -u {} -p {} {} settings timeout".format(
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+        tomcat_manager_server.url,
     )
     argv = cmdline.split(" ")
     exit_code = main(argv)

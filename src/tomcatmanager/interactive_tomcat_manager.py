@@ -38,7 +38,6 @@ from http.client import responses
 from typing import Callable, Any, List
 
 import appdirs
-from attrdict import AttrDict
 import requests
 import cmd2
 
@@ -53,7 +52,7 @@ def requires_connection(func: Callable) -> Callable:
             func(self, *args, **kwargs)
         else:
             # print the message
-            self.exit_code = self.exit_codes.error
+            self.exit_code = self.EXIT_ERROR
             self.perror("not connected")
 
     _requires_connection.__doc__ = func.__doc__
@@ -141,12 +140,18 @@ class InteractiveTomcatManager(cmd2.Cmd):
     which mirrors bash standard values for exit codes (available via $?)
     """
 
+    # exit codes for exit_code attribute
+    EXIT_SUCCESS = 0
+    EXIT_ERROR = 1
+    EXIT_USAGE = 2
+    EXIT_COMMAND_NOT_FOUND = 127
+    # for the help displaying the exit code meanings
     EXIT_CODES = {
         # 'number': 'name'
-        0: "success",
-        1: "error",
-        2: "usage",
-        127: "command_not_found",
+        EXIT_SUCCESS: "success",
+        EXIT_ERROR: "error",
+        EXIT_USAGE: "usage",
+        EXIT_COMMAND_NOT_FOUND: "command not found",
     }
 
     # Possible boolean values
@@ -164,10 +169,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         "f": False,
         "off": False,
     }
-
-    exit_codes = AttrDict()
-    for _code, _title in EXIT_CODES.items():
-        exit_codes[_title] = _code
 
     # for configuration
     app_name = "tomcat-manager"
@@ -342,7 +343,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     def default(self, statement: cmd2.Statement):
         """what to do if we don't recognize the command the user entered"""
-        self.exit_code = self.exit_codes.command_not_found
+        self.exit_code = self.EXIT_COMMAND_NOT_FOUND
         self.perror("unknown command: {}".format(statement.command))
 
     ###
@@ -356,18 +357,18 @@ class InteractiveTomcatManager(cmd2.Cmd):
         Sets exit_code to 0 and calls {func}. If func throws a TomcatError,
         set exit_code to 1 and print the exception
         """
-        self.exit_code = self.exit_codes.success
+        self.exit_code = self.EXIT_SUCCESS
         r = func(*args, **kwargs)
         try:
             r.raise_for_status()
         except tm.TomcatError as err:
-            self.exit_code = self.exit_codes.error
+            self.exit_code = self.EXIT_ERROR
             self.perror(str(err))
         return r
 
     def show_help_from(self, argparser: argparse.ArgumentParser):
         """Set exit code and output help from an argparser."""
-        self.exit_code = self.exit_codes.success
+        self.exit_code = self.EXIT_SUCCESS
         self.poutput(argparser.format_help())
 
     def parse_args(
@@ -375,7 +376,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     ) -> argparse.Namespace:
         """Use argparse to parse a list of arguments a-la sys.argv"""
         # assume we get a usage error
-        self.exit_code = self.exit_codes.usage
+        self.exit_code = self.EXIT_USAGE
         # argv includes the command name, the arg parser doesn't
         # expect it, so let's omit it
         try:
@@ -387,7 +388,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             raise cmd2.Cmd2ArgparseError from sysexit
 
         # no usage error, assume success
-        self.exit_code = self.exit_codes.success
+        self.exit_code = self.EXIT_SUCCESS
         return args
 
     def _which_server(self):
@@ -468,7 +469,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
             for line in help_:
                 self.poutput(line)
-            self.exit_code = self.exit_codes.success
+            self.exit_code = self.EXIT_SUCCESS
 
     @staticmethod
     def _help_add_header(help_: List, header: str) -> List:
@@ -500,11 +501,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         if args.action == "file":
             self.poutput(self.config_file)
-            self.exit_code = self.exit_codes.success
+            self.exit_code = self.EXIT_SUCCESS
         else:
             if not self.editor:
                 self.perror("no editor: use 'set editor={path}' to specify one")
-                self.exit_code = self.exit_codes.error
+                self.exit_code = self.EXIT_ERROR
                 return
 
             # ensure the configuration directory exists
@@ -520,7 +521,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             # read it back in and apply it
             self.pfeedback("reloading configuration")
             self.load_config()
-            self.exit_code = self.exit_codes.success
+            self.exit_code = self.EXIT_SUCCESS
 
     def help_config(self):
         """Show help for the 'config' command."""
@@ -558,10 +559,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
                         self.settables[setting].description,
                     )
                 )
-            self.exit_code = self.exit_codes.success
+            self.exit_code = self.EXIT_SUCCESS
         else:
             self.perror("unknown setting: '{}'".format(args.setting))
-            self.exit_code = self.exit_codes.error
+            self.exit_code = self.EXIT_ERROR
 
     def help_show(self):
         """Show help for the 'show' command."""
@@ -595,29 +596,29 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 config.read_string(setting_string)
             except configparser.ParsingError:
                 self.perror("invalid syntax: try {setting}={value}")
-                self.exit_code = self.exit_codes.error
+                self.exit_code = self.EXIT_ERROR
                 return
             for param_name in config["settings"]:
                 if param_name in self.settables:
                     try:
                         self._change_setting(param_name, config["settings"][param_name])
-                        self.exit_code = self.exit_codes.success
+                        self.exit_code = self.EXIT_SUCCESS
                     except ValueError as err:
                         if self.debug:
                             self.perror(None)
                         else:
                             self.perror(err)
-                        self.exit_code = self.exit_codes.error
+                        self.exit_code = self.EXIT_ERROR
                 else:
                     self.perror("unknown setting: '{}'".format(param_name))
-                    self.exit_code = self.exit_codes.error
+                    self.exit_code = self.EXIT_ERROR
         else:
             self.perror("invalid syntax: try {setting}={value}")
-            self.exit_code = self.exit_codes.usage
+            self.exit_code = self.EXIT_USAGE
 
     def help_set(self):
         """Show help for the 'set' command."""
-        self.exit_code = self.exit_codes.success
+        self.exit_code = self.EXIT_SUCCESS
         self.poutput(
             """usage: set {setting}={value}
 
@@ -813,7 +814,7 @@ change the value of one of this program's settings
             r = self.tomcat.connect(url, user, password)
             if r.ok:
                 self.pfeedback(self._which_server())
-                self.exit_code = self.exit_codes.success
+                self.exit_code = self.EXIT_SUCCESS
             else:
                 if self.debug:
                     # raise the exception and print the output
@@ -821,7 +822,7 @@ change the value of one of this program's settings
                         r.raise_for_status()
                     except (requests.HTTPError, tm.TomcatError):
                         self.perror(None)
-                        self.exit_code = self.exit_codes.error
+                        self.exit_code = self.EXIT_ERROR
                 else:
                     # need to see whether we got an http error or whether
                     # tomcat wasn't at the url
@@ -840,19 +841,19 @@ change the value of one of this program's settings
                                 responses[r.response.status_code],
                             )
                         )
-                    self.exit_code = self.exit_codes.error
+                    self.exit_code = self.EXIT_ERROR
         except requests.exceptions.ConnectionError:
             if self.debug:
                 self.perror(None)
             else:
                 self.perror("connection error")
-            self.exit_code = self.exit_codes.error
+            self.exit_code = self.EXIT_ERROR
         except requests.exceptions.Timeout:
             if self.debug:
                 self.perror(None)
             else:
                 self.perror("connection timeout")
-            self.exit_code = self.exit_codes.error
+            self.exit_code = self.EXIT_ERROR
 
     def help_connect(self):
         """Show help for the connect command."""
@@ -882,7 +883,7 @@ change the value of one of this program's settings
         """Deploy a local war file to the tomcat server."""
         warfile = os.path.expanduser(args.warfile)
         with open(warfile, "rb") as fileobj:
-            self.exit_code = self.exit_codes.success
+            self.exit_code = self.EXIT_SUCCESS
             self.docmd(
                 self.tomcat.deploy_localwar,
                 args.path,
@@ -893,7 +894,7 @@ change the value of one of this program's settings
 
     def deploy_server(self, args: argparse.Namespace, update: bool = False):
         """Deploy a war file to the tomcat server."""
-        self.exit_code = self.exit_codes.success
+        self.exit_code = self.EXIT_SUCCESS
         self.docmd(
             self.tomcat.deploy_serverwar,
             args.path,
@@ -904,7 +905,7 @@ change the value of one of this program's settings
 
     def deploy_context(self, args: argparse.Namespace, update: bool = False):
         """Deploy a context xml file to the tomcat server."""
-        self.exit_code = self.exit_codes.success
+        self.exit_code = self.EXIT_SUCCESS
         self.docmd(
             self.tomcat.deploy_servercontext,
             args.path,
@@ -930,7 +931,7 @@ change the value of one of this program's settings
             args.func(self, args, update=False)
         except AttributeError:
             self.help_deploy()
-            self.exit_code = self.exit_codes.error
+            self.exit_code = self.EXIT_ERROR
 
     def help_deploy(self):
         """Show help for the deploy command."""
@@ -952,7 +953,7 @@ change the value of one of this program's settings
             args.func(self, args, update=True)
         except AttributeError:
             self.help_redeploy()
-            self.exit_code = self.exit_codes.error
+            self.exit_code = self.EXIT_ERROR
 
     def help_redeploy(self):
         """Show help for the redeploy command."""
@@ -1126,7 +1127,7 @@ change the value of one of this program's settings
             return
 
         apps = self._list_process_apps(response.apps, args)
-        self.exit_code = self.exit_codes.success
+        self.exit_code = self.EXIT_SUCCESS
         if args.raw:
             for app in apps:
                 self.poutput(app)
@@ -1282,7 +1283,7 @@ change the value of one of this program's settings
             for resource, classname in iter(sorted(r.resources.items())):
                 self.poutput("{}: {}".format(resource, classname))
         else:
-            self.exit_code = self.exit_codes.error
+            self.exit_code = self.EXIT_ERROR
 
     def help_resources(self):
         """Show help for the 'resources' command."""
@@ -1314,7 +1315,7 @@ change the value of one of this program's settings
     ###
     def do_exit(self, _):
         """Exit the interactive command prompt."""
-        self.exit_code = self.exit_codes.success
+        self.exit_code = self.EXIT_SUCCESS
         return True
 
     def do_quit(self, cmdline: cmd2.Statement):
@@ -1342,7 +1343,7 @@ change the value of one of this program's settings
     exit_code_epilog = []
     exit_code_epilog.append("The codes have the following meanings:")
     for number, name in EXIT_CODES.items():
-        exit_code_epilog.append("    {:3}  {}".format(number, name.replace("_", " ")))
+        exit_code_epilog.append("    {:3}  {}".format(number, name))
 
     exit_code_parser = argparse.ArgumentParser(
         prog="exit_code",

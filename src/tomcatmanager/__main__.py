@@ -128,7 +128,7 @@ def main(argv=None):
         itm.onecmd_plus_hooks("connect {url} {user} {password}".format_map(server_info))
 
         if args.command:
-            if itm.exit_code == itm.exit_codes.success:
+            if itm.exit_code == itm.EXIT_SUCCESS:
                 # we connected successfully, go run the command
                 itm.onecmd_plus_hooks(
                     "{} {}".format(args.command, " ".join(args.command_args))

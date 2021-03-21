@@ -4,10 +4,24 @@
 import os
 
 import pytest
-from attrdict import AttrDict
 
 import tomcatmanager as tm
 from tests.mock_server80 import start_mock_server80
+
+###
+#
+# helper class
+#
+###
+class TomcatServer:
+    def __init__(self):
+        self.url = None
+        self.user = None
+        self.password = None
+        self.warfile = None
+        self.contextfile = None
+        self.connect_command = None
+
 
 ###
 #
@@ -40,6 +54,12 @@ def pytest_addoption(parser):
         help="contextfile: path to context.xml file on the tomcat server",
     )
 
+
+###
+#
+# fixtures
+#
+###
 
 # use a fixture to return a class with a bunch
 # of assertion helper methods
@@ -83,18 +103,19 @@ def assert_tomcatresponse():
 def tomcat_manager_server(request):
     """start a local http server which provides a similar interface to a real Tomcat Manager app"""
     url = request.config.getoption("--url")
+    tms = TomcatServer()
     if url:
         # use the server info specified on the command line
-        tms = AttrDict()
         tms.url = url
         tms.user = request.config.getoption("--user")
         tms.password = request.config.getoption("--password")
         tms.warfile = request.config.getoption("--warfile")
         tms.contextfile = request.config.getoption("--contextfile")
+        tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
         return tms
     else:
         # go start up a fake server
-        return start_mock_server80()
+        return start_mock_server80(tms)
 
 
 @pytest.fixture

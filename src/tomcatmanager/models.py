@@ -32,7 +32,6 @@ import enum
 import typing
 
 import requests
-from attrdict import AttrDict
 
 import tomcatmanager as tm
 

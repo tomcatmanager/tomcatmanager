@@ -35,7 +35,6 @@ import socket
 from threading import Thread
 
 import requests
-from attrdict import AttrDict
 
 USER = "admin"
 PASSWORD = "admin"
@@ -1004,7 +1003,7 @@ Default maximum session inactive interval 30 minutes
 #
 #
 ###
-def start_mock_server80():
+def start_mock_server80(tms):
     """Start a mock Tomcat Manager application
 
     :returns: a tuple: (url, user, password) where the server is accessible
@@ -1016,12 +1015,12 @@ def start_mock_server80():
     address, port = sock.getsockname()
     sock.close()
 
-    tms = AttrDict()
     tms.url = "http://localhost:{}/manager".format(port)
     tms.user = USER
     tms.password = PASSWORD
     tms.warfile = "/path/to/server.war"
     tms.contextfile = "path/to/context.xml"
+    tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
 
     mock_server = HTTPServer(("localhost", port), MockRequestHandler80)
     mock_server_thread = Thread(target=mock_server.serve_forever)
