@@ -1,21 +1,23 @@
 tomcatmanager
 =============
 
-.. image:: https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version&colorB=1074b5
+.. image:: https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version
       :target: https://pypi.python.org/pypi/tomcatmanager
       :alt: latest version
-.. image:: https://img.shields.io/pypi/pyversions/tomcatmanager.svg?colorB=1074b5
+.. image:: https://img.shields.io/pypi/pyversions/tomcatmanager.svg
       :target: https://pypi.python.org/pypi/tomcatmanager
       :alt: python
 .. image:: https://img.shields.io/badge/license-MIT-orange.svg
       :target: https://github.com/tomcatmanager/tomcatmanager/blob/master/LICENSE
       :alt: license
-.. image:: https://img.shields.io/travis/tomcatmanager/tomcatmanager/develop.svg
-      :target: https://travis-ci.org/tomcatmanager/tomcatmanager
-      :alt: build status
-.. image:: https://img.shields.io/appveyor/ci/kotfu/tomcatmanager/develop.svg
-      :target: https://ci.appveyor.com/project/kotfu/tomcatmanager
-      :alt: build status
+
+
+.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/main?label=build%20%28main%29
+      :target: https://github.com/tomcatmanager/tomcatmanager/tree/main
+      :alt: main branch build status
+.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/develop?label=build%20%28develop%29
+      :target: https://github.com/tomcatmanager/tomcatmanager/tree/develop
+      :alt: develop branch build status
 .. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
@@ -141,4 +143,12 @@ The ``tomcat-manager`` command line tool supports the following commands:
 Documentation
 -------------
 
-Complete documentation is available at `<http://tomcatmanager.readthedocs.io/en/latest/>`_
+Complete documentation for the last released version is available at
+`<http://tomcatmanager.readthedocs.io/en/latest/>`_. It includes material
+showing how to use ``tomcat-manager`` from the command line or using
+interactive mode. There is also a walkthrough of how to use the API from and an
+API reference.
+
+Documentation is also built from the `develop
+<https://github.com/tomcatmanager/tomcatmanager/tree/develop>`_ branch, and
+published at `<https://tomcatmanager.readthedocs.io/en/develop/>`_.
