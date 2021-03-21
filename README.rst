@@ -10,9 +10,7 @@ tomcatmanager
 .. image:: https://img.shields.io/badge/license-MIT-orange.svg
       :target: https://github.com/tomcatmanager/tomcatmanager/blob/master/LICENSE
       :alt: license
-
 |
-
 .. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/main?label=build%20%28main%29
       :target: https://github.com/tomcatmanager/tomcatmanager/tree/main
       :alt: main branch build status
@@ -23,7 +21,7 @@ tomcatmanager
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-:target: https://github.com/psf/black
+      :target: https://github.com/psf/black
       :alt: code style black
 .. image:: https://readthedocs.org/projects/tomcatmanager/badge/?version=latest
       :target: http://tomcatmanager.readthedocs.io/en/latest/?badge=latest
