@@ -12,16 +12,14 @@ Clone the repo from github::
 Create Python Environments
 --------------------------
 
-tomcatamanger uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run the
-test suite against multiple python versions. If you don't have to debug anything
-on a specific python version, you can just use tox. If you do need to debug
-on specific versions of python, it's easiest to create a new python environment
-with the specific version(s) you want.
+tomcatmanager uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run the
+test suite against multiple python versions. tox expects that when it runs
+``python3.7`` it will actually get a python from the 3.7.x series.
 
 I recommend using `pyenv <https://github.com/pyenv/pyenv>`_ with the
 `pyenv-virtualenv <https://github.com/pyenv/pyenv-virtualenv>`_ plugin to
-manage these various versions. If you are a Windows user, ``pyenv`` won't work
-for you, you'll probably have to use `conda <https://conda.io/>`_.
+manage these various python versions. If you are a Windows user, ``pyenv``
+won't work for you, you'll probably have to use `conda <https://conda.io/>`_.
 
 This distribution includes a shell script ``build-pyenvs.sh`` which
 automates the creation of these environments.
@@ -128,6 +126,11 @@ wheel distribution.
 Testing
 -------
 
+This project has Github Actions configured to run tests when you push or merge
+a pull request. Any push triggers a test run against all supported versions of
+python in a linux environment. Any pull request triggers a test run against all
+supported versions of python on all supported operating systems.
+
 To ensure the tests can run without an external dependencies,
 ``tests/mock_server80.py`` contains a HTTP server which emulates the behavior
 of Tomcat Manager 8.0. There is a test fixture to start this server, and all
@@ -138,8 +141,8 @@ You can run the tests against all the supported versions of python using tox::
 
   $ tox
 
-tox expects that when it runs ``python3.4`` it will actually get a python from
-the 3.4.x series. That's why we set up the various python environments earlier.
+tox expects that when it runs ``python3.7`` it will actually get a python from
+the 3.7.x series. That's why we set up the various python environments earlier.
 
 If you just want to run the tests in your current python environment, use
 pytest::
@@ -157,7 +160,7 @@ tests across the number of cores you have::
 
 In many of the doctests you'll see something like:
 
->>> tomcat = getfixture('tomcat')
+  >>> tomcat = getfixture('tomcat')
 
 This ``getfixture()`` helper imports fixtures defined in ``conftest.py``,
 which has several benefits:
@@ -246,7 +249,7 @@ Use ``pylint`` to check code quality. There is a pylint config file for the
 tests and for the main module::
 
   $ pylint --rcfile=tests/pylintrc tests
-  $ pylint --rcfile=tomcatmanager/pylintrc tomcatmanager
+  $ pylint --rcfile=tomcatmanager/pylintrc src
 
 You are welcome to use the pylint comment directives to disable certain
 messages in the code, but pull requests containing these directives will be
@@ -276,6 +279,9 @@ Please format the code in your PR using ``black`` before submitting it.
 Documentation
 -------------
 
+Documentation is not an afterthought for this project. All PR's must include
+relevant documentation or they will be rejected.
+
 The documentation is written in reStructured Test, and turned into HTML using
 `Sphinx <http://www.sphinx-doc.org>`_::
 
@@ -303,6 +309,10 @@ documentation automatically rebuilt as you save your changes.
   noticing and reloading source code modules as they change. If you change
   the source code and want to make sure you are seeing the current changes
   in your browser, best to kill the webserver and start it back up again.
+
+.. note::
+
+  As of Sphinx 3.5, ``sphinx-autobuild`` seems to be much improved and
 
 Use ``doc8`` to check documentation quality::
 

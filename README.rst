@@ -88,7 +88,7 @@ And for the ultimate in flexibility, you can use the python package directly:
 Installation
 ------------
 
-You'll need Python >= 3.5. Install using pip:
+You'll need Python >= 3.6. Install using pip:
 
 .. code-block:: bash
 
@@ -144,9 +144,11 @@ Documentation
 Complete documentation for the last released version is available at
 `<http://tomcatmanager.readthedocs.io/en/stable/>`_. It includes material
 showing how to use ``tomcat-manager`` from the command line or using
-interactive mode. There is also a walkthrough of how to use the API from and an
+interactive mode. There is also a walkthrough of how to use the API and an
 API reference.
 
 Documentation is also built from the `develop
 <https://github.com/tomcatmanager/tomcatmanager/tree/develop>`_ branch, and
-published at `<https://tomcatmanager.readthedocs.io/en/develop/>`_.
+published at `<https://tomcatmanager.readthedocs.io/en/develop/>`_. The develop
+branch may not yet be released to PyPi, but you can see the documentation for what's
+coming up in the next release.
