@@ -28,5 +28,5 @@ jobs:
       if: matrix.python-version == '3.9'
       uses: codecov/codecov-action@v1
       with:
-        file: .coverage
+        file: coverage.xml
         verbose: true
