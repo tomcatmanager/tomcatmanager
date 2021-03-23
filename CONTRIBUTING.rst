@@ -126,10 +126,14 @@ wheel distribution.
 Testing
 -------
 
-This project has Github Actions configured to run tests when you push or merge
-a pull request. Any push triggers a test run against all supported versions of
-python in a linux environment. Any pull request triggers a test run against all
-supported versions of python on all supported operating systems.
+Unit testing provides reliability and consistency in released software. This
+project strives for 100% unit test coverage. We aren't quite there on the
+interactive program, but the API has 100% coverage.
+
+This repository has Github Actions configured to run tests when you push or
+merge a pull request. Any push triggers a test run against all supported
+versions of python in a linux environment. Any pull request triggers a test run
+against all supported versions of python on all supported operating systems.
 
 To ensure the tests can run without an external dependencies,
 ``tests/mock_server80.py`` contains a HTTP server which emulates the behavior
@@ -259,14 +263,15 @@ carefully scrutinized.
 Code Formatting
 ---------------
 
-Use [black](https://black.readthedocs.io/en/stable/index.html) to format your
-code. We use the default configuration, including a line length of 88 characters.
+Use `black <https://black.readthedocs.io/en/stable/index.html>`_ to format your
+code. We use the default configuration, including a line length of 88
+characters.
 
-To format all the code in the project using ``black``, do:
+To format all the code in the project using ``black``, do::
 
   $ invoke black
 
-You can check whether ``black`` would make any changes to the source code by:
+You can check whether ``black`` would make any changes to the source code by::
 
   $ invoke black-check
 
@@ -300,23 +305,11 @@ Type::
 Then point your browser at `<http://localhost:8000>`_ to see the
 documentation automatically rebuilt as you save your changes.
 
-.. note::
-
-  The ``sphinx-autobuild`` module has some limitations. Much of the
-  documentation produced in this project is contained in the source code, and
-  is incorporated via the Sphinx ``autodoc`` module. In order for ``autodoc``
-  to work, it must import the source code, and it's not very good about
-  noticing and reloading source code modules as they change. If you change
-  the source code and want to make sure you are seeing the current changes
-  in your browser, best to kill the webserver and start it back up again.
-
-.. note::
-
-  As of Sphinx 3.5, ``sphinx-autobuild`` seems to be much improved and
-
 Use ``doc8`` to check documentation quality::
 
   $ invoke doc8
+
+``doc8`` shows no errors in the documentation and we like to keep it that way.
 
 
 Make a Release
@@ -351,7 +344,7 @@ To make a release and deploy it to `PyPI
 
       $ invoke pypi
 
-11. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/latest/.
+11. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
     Make sure they look good. Add a "Version" in readthedocs which points to the tag
     you just created. Prune old versions as necessary.
 
