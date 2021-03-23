@@ -60,6 +60,8 @@ you'll have to change it to be something like this::
         if r.status_code == tm.StatusCode.NOTFOUND:
             print("Tomcat Manager web application was not found")
 
+See :class:`.StatusCode` for the list of all available status codes.
+
 
 Application State
 -----------------
