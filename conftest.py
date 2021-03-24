@@ -99,9 +99,10 @@ def assert_tomcatresponse():
 # fixtures for testing TomcatManager()
 #
 ###
-@pytest.fixture
+@pytest.fixture(scope="session")
 def tomcat_manager_server(request):
-    """start a local http server which provides a similar interface to a real Tomcat Manager app"""
+    """start a local http server which provides a similar interface to a
+    real Tomcat Manager app"""
     url = request.config.getoption("--url")
     tms = TomcatServer()
     if url:

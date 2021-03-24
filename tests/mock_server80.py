@@ -32,7 +32,7 @@ from urllib.parse import urlparse
 from urllib.parse import parse_qs
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import socket
-from threading import Thread
+import threading
 
 import requests
 
@@ -1023,8 +1023,8 @@ def start_mock_server80(tms):
     tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
 
     mock_server = HTTPServer(("localhost", port), MockRequestHandler80)
-    mock_server_thread = Thread(target=mock_server.serve_forever)
-    mock_server_thread.setDaemon(True)
+    mock_server_thread = threading.Thread(target=mock_server.serve_forever)
+    mock_server_thread.daemon = True
     mock_server_thread.start()
 
     return tms
