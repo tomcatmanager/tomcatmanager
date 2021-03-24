@@ -1,12 +1,14 @@
 name: Format
 
 on: push
+  # allow sloppiness on feature or bugfix branches
+  branches:
+    - main
+    - develop
 
 jobs:
-  format:
-
+  black:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -16,8 +18,21 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade setuptools wheel black doc8
+        pip install --upgrade setuptools wheel black
     - name: black
       run: python -m black --check --diff .
+
+  doc8:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@master
+      with:
+        python-version: '3.9'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install --upgrade setuptools wheel doc8
     - name: doc8
       run: python -m doc8 docs
