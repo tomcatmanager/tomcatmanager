@@ -32,7 +32,9 @@ from tomcatmanager.__main__ import main
 
 
 def test_main_noargs(mocker):
-    mock_cmdloop = mocker.patch("tomcatmanager.InteractiveTomcatManager.cmdloop", autospec=True)
+    mock_cmdloop = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.cmdloop", autospec=True
+    )
     argv = []
     main(argv)
     assert mock_cmdloop.call_count == 1

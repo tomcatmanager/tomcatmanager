@@ -21,7 +21,8 @@ This library and associated tools do their work via the `Tomcat Manager
 <https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html>`_ web application
 included in the Tomcat distribution.
 
-You will need the URL where the Tomcat Manager application is available. You can use the URL that points directly to the container, or the URL of a proxy
+You will need the URL where the Tomcat Manager application is available. You
+can use the URL that points directly to the container, or the URL of a proxy
 like nginx or Apache HTTP Server you have deployed in front of Tomcat. TLS is
 recommended, but it works without if you must.
 
