@@ -278,7 +278,8 @@ You can check whether ``black`` would make any changes to the source code by::
 Black integrates with many common editors and IDE's, that's the easiest way to
 ensure that your code is always formatted.
 
-Please format the code in your PR using ``black`` before submitting it.
+Please format the code in your PR using ``black`` before submitting it, this
+project is configured to not allow merges if ``black`` would change anything.
 
 
 Documentation
@@ -287,8 +288,22 @@ Documentation
 Documentation is not an afterthought for this project. All PR's must include
 relevant documentation or they will be rejected.
 
-The documentation is written in reStructured Test, and turned into HTML using
-`Sphinx <http://www.sphinx-doc.org>`_::
+The documentation is written in reStructured Test, and is assembled from both
+the ``docs/`` directory and from the docstrings in the code. We use `Sphinx
+formatted docstrings
+<https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html>`_. We
+encourage references to other methods and classes in docstrings, and choose to
+optimize docstrings for clarity and usefulness in the rendered output rather
+than ease of reading in the source code.
+
+The code includes type hints as a convenience, but does not provide stub files
+nor do we use mypy to check for proper static typing. Our philosophy is that
+the dynamic nature of Python is a benefit and we shouldn't impose static type
+checking, but annotations of expected types can be helpful for documentation
+purposes.
+
+`Sphinx <http://www.sphinx-doc.org>`_ transforms the documentation source files
+into html::
 
   $ cd docs
   $ make html
@@ -309,7 +324,13 @@ Use ``doc8`` to check documentation quality::
 
   $ invoke doc8
 
-``doc8`` shows no errors in the documentation and we like to keep it that way.
+This project is configured to prevent merges to the main or develop branch if
+doc8 returns any errors.
+
+When code is pushed to the main branch, which only happens when we cut a new
+release, the documentation is automatically built and deployed to
+`https://tomcatmanager.readthedocs.io/en/stable/ <https://tomcatmanager.readthedocs.io/en/stable/>`_. When code is pushed to the
+develop branch, the documentation is automatically built and deployed to `https://tomcatmanager.readthedocs.io/en/develop/ <https://tomcatmanager.readthedocs.io/en/develop/>`_.
 
 
 Make a Release
