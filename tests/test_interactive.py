@@ -82,11 +82,7 @@ def assert_connected_to(itm, url, capsys):
 @pytest.fixture
 def itm_nc(mocker):
     """Don't allow it to load a config file"""
-    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config")
-    # shouldn't have to do this, but it's a nasty bug in cmd2
-    # TODO issue created at https://github.com/python-cmd2/cmd2/issues/1077
-    # when this issue is closed, the following line should not be necessary
-    mocker.patch("cmd2.Cmd._register_subcommands")
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
     itm = tm.InteractiveTomcatManager()
     return itm
 
