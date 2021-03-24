@@ -47,6 +47,7 @@ setup(
         "cmd2>=1,<2",
         "requests>=2,<3",
         "appdirs",
+        "importlib_metadata>=1.6.0;python_version<'3.8'",
     ],
     setup_requires=["setuptools_scm"],
     # dependencies for development and testing

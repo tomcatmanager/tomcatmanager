@@ -34,7 +34,12 @@ The interactive command line program ``tomcat-manager`` provided by this
 package is an instance of :class:`.InteractiveTomcatManager`.
 """
 
-from pkg_resources import get_distribution, DistributionNotFound
+try:
+    # for python 3.8+
+    import importlib.metadata as importlib_metadata
+except ImportError: # pragma: nocover
+    # for python < 3.8
+    import importlib_metadata # pragma: nocover
 
 from .tomcat_manager import TomcatManager
 from .models import TomcatError
@@ -43,7 +48,7 @@ from .models import ApplicationState
 from .interactive_tomcat_manager import InteractiveTomcatManager
 
 try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:
-    __version__ = "unknown"
+    __version__ = importlib_metadata.version(__name__)
+except importlib_metadata.PackageNotFoundError: # pragma: nocover
+    __version__ = "unknown" # pragma: nocover
 VERSION_STRING = "{} (works with Tomcat >= 7.0 and <= 9.0)".format(__version__)
