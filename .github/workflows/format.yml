@@ -1,10 +1,11 @@
 name: Format
 
-on: push
-  # allow sloppiness on feature or bugfix branches
-  branches:
-    - main
-    - develop
+on:
+  push:
+    # allow sloppiness on feature or bugfix branches
+    branches:
+      - main
+      - develop
 
 jobs:
   black:
