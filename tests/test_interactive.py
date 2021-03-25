@@ -431,7 +431,7 @@ def test_set_with_invalid_param():
 
 
 def test_timeout_property():
-    timeout = 10
+    timeout = 8.5
     itm = tm.InteractiveTomcatManager()
     # set this to a value that we know will cause it to change when we execute
     # the command

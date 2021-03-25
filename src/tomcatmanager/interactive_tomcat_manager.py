@@ -186,12 +186,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.feedback_to_output = value
 
     @property
-    def timeout(self) -> int:
+    def timeout(self) -> float:
         """Proxy property for timeout"""
         return self.tomcat.timeout
 
     @timeout.setter
-    def timeout(self, value: int):
+    def timeout(self, value: float):
         """Proxy property for timeout"""
         self.tomcat.timeout = value
 
@@ -243,7 +243,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         self.add_settable(cmd2.Settable("editor", str, "Program used to edit files"))
         self.add_settable(
-            cmd2.Settable("timeout", int, "Seconds to wait for HTTP connections")
+            cmd2.Settable("timeout", float, "Seconds to wait for HTTP connections")
         )
         self.add_settable(
             cmd2.Settable(
