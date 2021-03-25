@@ -25,6 +25,7 @@
 import unittest.mock as mock
 
 import pytest
+import requests
 
 import tomcatmanager as tm
 
@@ -70,17 +71,28 @@ def test_http_response_not_tomcat(tomcat, mock_text, content):
     assert r.result is None
 
 
-def test_http_response_valid(tomcat, mock_text):
-    mock_text.return_value = "OK - some message\nthe result"
+def test_http_status_server_error(tomcat, mocker):
+    mock_code = mocker.patch(
+        "requests.Response.status_code", create=True, new_callable=mock.PropertyMock
+    )
+    mock_code.return_value = requests.codes.server_error
     r = tomcat.vm_info()
+    assert not r.ok
+
+
+def test_http_result_valid(tomcat, mock_text):
+    mock_text.return_value = "OK - some message\nthe result"
+    r = tomcat.thread_dump()
+    assert r.ok
     assert r.status_code == tm.StatusCode.OK
     assert r.status_message == "some message"
     assert r.result == "the result"
 
 
-def test_http_response_fail(tomcat, mock_text):
+def test_http_result_fail(tomcat, mock_text):
     mock_text.return_value = "FAIL - some message"
-    r = tomcat.vm_info()
+    r = tomcat.thread_dump()
+    assert not r.ok
     assert r.status_code == tm.StatusCode.FAIL
     assert r.status_message == "some message"
     assert r.result is None

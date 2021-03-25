@@ -712,10 +712,11 @@ class TomcatManager:
             r = self._get("resources")
 
         resources = {}
-        for line in r.result.splitlines():
-            resource, classname = line.rstrip().split(":", 1)
-            if resource[:7] != StatusCode.FAIL.value + " - ":
-                resources[resource] = classname.lstrip()
+        if r.result:
+            for line in r.result.splitlines():
+                resource, classname = line.rstrip().split(":", 1)
+                if resource[:7] != StatusCode.FAIL.value + " - ":
+                    resources[resource] = classname.lstrip()
         r.resources = resources
         return r
 

@@ -88,13 +88,13 @@ class TomcatManagerResponse:
         ...     r = tomcat.server_info()
         ...     r.raise_for_status()
         ...     if r.ok:
-        ...         print(r.server_info.os_name)
+        ...         print("Operating System: {}".format(r.server_info.os_name))
         ...     else:
         ...         print('Error: {}'.format(r.status_message))
         ... except Exception as err:
         ...     # handle exception
         ...     pass
-        Linux
+        Operating System: ...
 
     """
 
@@ -206,19 +206,17 @@ class TomcatManagerResponse:
         # parse the text to get the status code and results
         if response.text:
             lines = response.text.splitlines()
-            # get the status line, if the request completed OK
-            if response.status_code == requests.codes.ok:
-                try:
-                    statusline = response.text.splitlines()[0]
-                    codestr = statusline.split(" ", 1)[0]
-                    code = StatusCode.parse(codestr)
-                    self.status_code = code
-                    self.status_message = statusline.split(" ", 1)[1][2:]
-                    if len(lines) > 1:
-                        self.result = "\n".join(lines[1:])
-                except (IndexError, ValueError):
-                    self.status_code = tm.StatusCode.NOTFOUND
-                    self.status_message = "Tomcat Manager not found"
+            try:
+                statusline = response.text.splitlines()[0]
+                codestr = statusline.split(" ", 1)[0]
+                code = StatusCode.parse(codestr)
+                self.status_code = code
+                self.status_message = statusline.split(" ", 1)[1][2:]
+                if len(lines) > 1:
+                    self.result = "\n".join(lines[1:])
+            except (IndexError, ValueError):
+                self.status_code = tm.StatusCode.NOTFOUND
+                self.status_message = "Tomcat Manager not found"
 
 
 @enum.unique

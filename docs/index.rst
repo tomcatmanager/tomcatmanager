@@ -49,17 +49,6 @@ And for the ultimate in flexibility, you can use the python package directly:
    >>> r.status_message
    'No context exists named /someapp'
 
-System Requirements
--------------------
-
-You'll need Python 3.5 or higher on macOS, Windows, or Linux.
-
-The following Tomcat versions are supported:
-
-- 7.0.x
-- 8.0.x
-- 8.5.x
-- 9.0.x
 
 Table of Contents
 -----------------

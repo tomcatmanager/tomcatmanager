@@ -75,7 +75,6 @@ def assert_tomcatresponse():
             assert (
                 r.status_code == tm.StatusCode.OK
             ), 'message from server: "{}"'.format(r.status_message)
-            assert r.status_message != None
             assert r.status_message
             r.raise_for_status()
 
@@ -88,7 +87,6 @@ def assert_tomcatresponse():
         def info(self, r):
             """Assertions on TomcatResponse for info-type commands that should be successful."""
             self.success(r)
-            assert r.result != None
             assert r.result
 
     return AssertResponse()

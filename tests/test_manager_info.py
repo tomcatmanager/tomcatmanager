@@ -78,17 +78,31 @@ def test_resources_list(tomcat, assert_tomcatresponse):
     assert isinstance(r.resources, dict)
 
 
-def test_resources_named_class(tomcat, assert_tomcatresponse):
+def test_resources_named_class(tomcat, mocker, assert_tomcatresponse):
+    mock_result = mocker.patch(
+        "requests.Response.text", create=True, new_callable=mock.PropertyMock
+    )
+    mock_result.return_value = """OK - Listed global resources of type [org.apache.catalina.users.MemoryUserDatabase]
+UserDatabase:org.apache.catalina.users.MemoryUserDatabase"""
     r = tomcat.resources("org.apache.catalina.users.MemoryUserDatabase")
     assert_tomcatresponse.info(r)
     assert isinstance(r.resources, dict)
     assert len(r.resources) == 1
     assert len(r.result.splitlines()) == len(r.resources)
+    assert r.resources["UserDatabase"] == "org.apache.catalina.users.MemoryUserDatabase"
 
 
-def test_resources_named_class_not_registered(tomcat, assert_tomcatresponse):
+def test_resources_named_class_not_registered(tomcat, mocker):
+    mock_result = mocker.patch(
+        "requests.Response.text", create=True, new_callable=mock.PropertyMock
+    )
+    mock_result.return_value = "OK - Listed global resources of type [com.example.Nothing]"
     r = tomcat.resources("com.example.Nothing")
-    assert_tomcatresponse.info(r)
+
+    assert r.status_code == tm.StatusCode.OK
+    assert r.status_message
+    # we did a query that should return no results
+    assert not r.result
     assert isinstance(r.resources, dict)
     assert not r.resources
 

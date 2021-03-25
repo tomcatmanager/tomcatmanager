@@ -51,4 +51,4 @@ try:
     __version__ = importlib_metadata.version(__name__)
 except importlib_metadata.PackageNotFoundError:  # pragma: nocover
     __version__ = "unknown"  # pragma: nocover
-VERSION_STRING = "{} (works with Tomcat >= 7.0 and <= 9.0)".format(__version__)
+VERSION_STRING = "{} (works with Tomcat >= 7 and <= 10)".format(__version__)
