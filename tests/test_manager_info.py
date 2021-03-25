@@ -96,7 +96,9 @@ def test_resources_named_class_not_registered(tomcat, mocker):
     mock_result = mocker.patch(
         "requests.Response.text", create=True, new_callable=mock.PropertyMock
     )
-    mock_result.return_value = "OK - Listed global resources of type [com.example.Nothing]"
+    mock_result.return_value = (
+        "OK - Listed global resources of type [com.example.Nothing]"
+    )
     r = tomcat.resources("com.example.Nothing")
 
     assert r.status_code == tm.StatusCode.OK
