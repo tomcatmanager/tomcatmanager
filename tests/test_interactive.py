@@ -563,6 +563,7 @@ def test_connect_with_connection_error(tomcat_manager_server, capsys, mocker):
     connect_mock = mocker.patch("tomcatmanager.TomcatManager.connect")
     connect_mock.side_effect = requests.exceptions.ConnectionError()
     itm = tm.InteractiveTomcatManager()
+    itm.debug = False
     itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
     out, err = capsys.readouterr()
     assert not out
@@ -575,6 +576,7 @@ def test_connect_with_timeout(tomcat_manager_server, capsys, mocker):
     connect_mock = mocker.patch("tomcatmanager.TomcatManager.connect")
     connect_mock.side_effect = requests.exceptions.Timeout()
     itm = tm.InteractiveTomcatManager()
+    itm.debug = False
     itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
     out, err = capsys.readouterr()
     assert not out
