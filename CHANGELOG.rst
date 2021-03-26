@@ -13,7 +13,10 @@ and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`
 Unreleased
 ----------
 
-None yet.
+Changed
+^^^^^^^
+
+- Allow float timeouts and timeout=0 from the command line
 
 
 2.0.0 (2021-03-26)

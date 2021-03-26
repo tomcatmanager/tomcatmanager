@@ -191,7 +191,7 @@ def test_main_status_to_stdout(tomcat_manager_server, capsys):
 
 
 def test_main_timeout(tomcat_manager_server, capsys):
-    cmdline = "-t 25 -u {} -p {} {} settings timeout".format(
+    cmdline = "-t 7.8 -u {} -p {} {} settings timeout".format(
         tomcat_manager_server.user,
         tomcat_manager_server.password,
         tomcat_manager_server.url,
@@ -201,4 +201,17 @@ def test_main_timeout(tomcat_manager_server, capsys):
     out, _ = capsys.readouterr()
     out = out.splitlines()
     assert exit_code == 0
-    assert "timeout=25" in out[0]
+    assert "timeout=7.8" in out[0]
+
+def test_main_timeout_zero(tomcat_manager_server, capsys):
+    cmdline = "-t 0 -u {} -p {} {} settings timeout".format(
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+        tomcat_manager_server.url,
+    )
+    argv = cmdline.split(" ")
+    exit_code = main(argv)
+    out, _ = capsys.readouterr()
+    out = out.splitlines()
+    assert exit_code == 0
+    assert "timeout=0.0" in out[0]
