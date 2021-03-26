@@ -149,8 +149,7 @@ class TomcatManager:
         """
         Does the url point to an actual tomcat server and are the credentials valid?
 
-        :return: True if connected to a tomcat server, otherwise, False.
-        :rtype: bool
+        :return: ``True`` if connected to a tomcat server, otherwise, ``False``.
         """
         # pylint: disable=broad-except
         try:
@@ -167,16 +166,15 @@ class TomcatManager:
 
         :param url:      url where the Tomcat Manager web application is
                          deployed
-        :type url: str
-        :param user:     user to authenticate with
-        :type user: str
-        :param password: password to authenticate with
-        :type password: str
-        :param timeout: int or float timeout in seconds for network operations
-        :type timeout: int or float
+        :param user:     (optional) user to authenticate with
+        :param password: (optional) password to authenticate with
+        :param timeout: timeout in seconds for network operations
         :return:         :meth:`~tomcatmanager.models.TomcatManagerResponse`
                          object with an additional ``server_info`` attribute
-        :rtype: tomcatmanager.models.TomcatManagerResponse
+
+        The ``server_info`` attribute contains a :class:`.ServerInfo` object,
+        which is a dictionary with some added properties for well-known values
+        returned from the Tomcat server.
 
         This method:
 
