@@ -1,30 +1,34 @@
 tomcatmanager
 =============
 
-.. image:: https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version
+.. image:: https://img.shields.io/pypi/v/tomcatmanager?label=latest%20version
       :target: https://pypi.python.org/pypi/tomcatmanager
       :alt: latest version
-.. image:: https://img.shields.io/pypi/pyversions/tomcatmanager.svg
+.. image:: https://img.shields.io/pypi/pyversions/tomcatmanager
       :target: https://pypi.python.org/pypi/tomcatmanager
-      :alt: python
-.. image:: https://img.shields.io/badge/license-MIT-orange.svg
+      :alt: supported python versions
+.. image:: https://img.shields.io/badge/license-MIT-orange
       :target: https://github.com/tomcatmanager/tomcatmanager/blob/master/LICENSE
       :alt: license
 .. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/main?label=build%20%28main%29
       :target: https://github.com/tomcatmanager/tomcatmanager/tree/main
       :alt: main branch build status
-.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/develop.svg?label=build%20%28develop%29
+.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/develop?label=build%20%28develop%29
       :target: https://github.com/tomcatmanager/tomcatmanager/tree/develop
       :alt: develop branch build status
-.. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/main.svg?token=3YbxJ1PKwJ
+.. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/main?token=3YbxJ1PKwJ
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+.. image:: https://img.shields.io/badge/code%20style-black-000000
       :target: https://github.com/psf/black
       :alt: code style black
-.. image:: https://readthedocs.org/projects/tomcatmanager/badge/?version=stable
+.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Docs%20Test/main?label=docs%20%28main%29
       :target: http://tomcatmanager.readthedocs.io/en/stable
-      :alt: Documentation Status
+      :alt: main branch documentation status
+.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/develop?label=docs%20%28develop%29
+      :target: https://tomcatmanager.readthedocs.io/en/develop/
+      :alt: develop branch documentation status
+
 
 If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
 
@@ -95,6 +99,8 @@ You'll need Python >= 3.6. Install using pip:
    $ pip install tomcatmanager
 
 Works on Windows, macOS, and Linux.
+
+Works with Tomcat >= 7 and <= 10.
 
 
 Tomcat Configuration
