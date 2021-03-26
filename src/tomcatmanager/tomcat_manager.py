@@ -47,7 +47,7 @@ class TomcatManager:
     `server_info()` method.
 
     >>> import tomcatmanager as tm
-    >>> url = 'http://localhost:8080/manager'
+    >>> url = 'http://localhost:808099/manager'
     >>> user = 'ace'
     >>> password = 'newenglandclamchowder'
     >>> tomcat = tm.TomcatManager()
@@ -65,7 +65,6 @@ class TomcatManager:
     ...     # handle exception
     ...     print('Error: not connected')
     Error: not connected
-
     """
 
     @classmethod
@@ -98,6 +97,7 @@ class TomcatManager:
         Look there for more info.
         """
 
+        # ask nicely for people not to access the password attribute
         self._password = None
 
         self.timeout = 10
@@ -154,7 +154,7 @@ class TomcatManager:
         """
         # pylint: disable=broad-except
         try:
-            r = self._get("list")
+            r = self._get("serverinfo")
             return r.ok
         except Exception:
             return False
@@ -169,22 +169,22 @@ class TomcatManager:
                          deployed
         :type url: str
         :param user:     user to authenticate with
-        :type user: str, optional
+        :type user: str
         :param password: password to authenticate with
-        :type password: str, optional
+        :type password: str
         :param timeout: int or float timeout in seconds for network operations
-        :type timeout: int or float, optional
+        :type timeout: int or float
         :return:         :meth:`~tomcatmanager.models.TomcatManagerResponse`
-                         object
+                         object with an additional ``server_info`` attribute
         :rtype: tomcatmanager.models.TomcatManagerResponse
 
-        You don't have to connect before using any other commands. If you
-        initialized the object with credentials you can call any other method.
         This method:
 
         - gives you a way to change the credentials on an existing object
-        - provide a convenient mechanism to validate you can actually connect
+        - provides a convenient mechanism to validate you can actually connect
           to the server
+        - returns a response object that includes information about the server
+          you are connected to
         - allow you to inspect the response so you can see why you can't
           connect
 
@@ -235,7 +235,7 @@ class TomcatManager:
         self._password = password
         if timeout:
             self.timeout = timeout
-        r = self._get("serverinfo")
+        r = self.server_info()
 
         if r.ok:
             # _get added /text/serverinfo onto the end of the passed in url

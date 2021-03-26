@@ -31,7 +31,9 @@ commands, and returns the responses to you as an instance of
 :class:`.TomcatManagerResponse`.
 
 The interactive command line program ``tomcat-manager`` provided by this
-package is an instance of :class:`.InteractiveTomcatManager`.
+package is an instance of ``InteractiveTomcatManager``. This command
+line program uses the API documented here, but it not considered part of
+the published API.
 """
 
 try:

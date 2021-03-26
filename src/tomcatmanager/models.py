@@ -244,15 +244,14 @@ class ApplicationState(enum.Enum):
         raise ValueError("{} is an unknown application state".format(state))
 
 
-TA = typing.TypeVar("TA", bound="TomcatApplication")
-
-
 class TomcatApplication:
     """
     Discrete data about an application running inside a Tomcat Server.
 
     A list of these objects is returned by :meth:`.TomcatManager.list`.
     """
+
+    TA = typing.TypeVar("TA", bound="TomcatApplication")
 
     @classmethod
     def sort_by_state_by_path_by_version(cls, app: TA):

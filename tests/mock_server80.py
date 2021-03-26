@@ -223,12 +223,12 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         """Send the server information."""
         self.send_text(
             """OK - Server info
-Tomcat Version: Apache Tomcat/10.0.4 (Ubuntu)
-OS Name: Linux
-OS Version: 4.4.0-89-generic
-OS Architecture: amd64
-JVM Version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
-JVM Vendor: Oracle Corporation"""
+Tomcat Version: [Apache Tomcat/10.0.4]
+OS Name: [Linux]
+OS Version: [5.4.0-67-generic]
+OS Architecture: [amd64]
+JVM Version: [1.8.0_282-8u282-b08-0ubuntu1~20.04-b08]
+JVM Vendor: [Private Build]"""
         )
 
     # pylint: disable=line-too-long

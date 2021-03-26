@@ -830,6 +830,10 @@ change the value of one of this program's settings
             r = self.tomcat.connect(url, user, password)
             if r.ok:
                 self.pfeedback(self._which_server())
+                if r.server_info.tomcat_version:
+                    self.pfeedback(
+                        "tomcat version: {}".format(r.server_info.tomcat_version)
+                    )
                 self.exit_code = self.EXIT_SUCCESS
             else:
                 if self.debug:
