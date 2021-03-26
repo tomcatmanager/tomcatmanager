@@ -25,12 +25,12 @@
 tomcatmanager.models
 --------------------
 
-This module contains the data objects created by and used by tomcatmanager.
+This module contains the data objects created and used by tomcatmanager.
 """
 
-from typing import TypeVar
+import enum
+import typing
 
-from attrdict import AttrDict
 import requests
 
 import tomcatmanager as tm
@@ -41,22 +41,37 @@ class TomcatError(Exception):
     Raised when the Tomcat Server responds with an error.
     """
 
-###
-#
-# build status codes
-#
-###
-STATUS_CODES = {
-    # 'sent from tomcat': 'friendly name'
-    'OK': 'ok',
-    'FAIL': 'fail',
-    # if we can't find tomcat, we invent a NOTFOUND value
-    'NOTFOUND': 'notfound',
-}
-# pylint: disable=invalid-name
-status_codes = AttrDict()
-for _code, _title in STATUS_CODES.items():
-    status_codes[_title] = _code
+
+@enum.unique
+class StatusCode(enum.Enum):
+    """An enumeration of the various Tomcat Manager web application status codes
+
+    ``tomcatmanager`` uses the excellent `requests <https://github.com/psf/requests>`_
+    library, which uses a custom LookupDict class to store HTTP status codes in a
+    dictionary. After much debate on whether we should do it the requests way, or
+    a more pythonic way, I chose to use a native Enum class instead.
+    """
+
+    OK = "OK"
+    FAIL = "FAIL"
+    NOTFOUND = "NOTFOUND"
+
+    @classmethod
+    def parse(cls, code: str):
+        """Return one of the enums from a string sent by the Tomcat Manager
+        web application.
+
+        :param state: the string value of the status code from the
+            tomcat server
+        :type state: str
+        :return: :class:`.StatusCode` instance
+        :rtype:  tomcatmanager.models.StatusCode
+        :raises ValueError: if the string does not represent a known status code
+        """
+        for _, member in cls.__members__.items():
+            if code == member.value:
+                return member
+        raise ValueError("{} is an unknown status code".format(code))
 
 
 # pylint: disable=too-many-instance-attributes
@@ -73,13 +88,13 @@ class TomcatManagerResponse:
         ...     r = tomcat.server_info()
         ...     r.raise_for_status()
         ...     if r.ok:
-        ...         print(r.server_info.os_name)
+        ...         print("Operating System: {}".format(r.server_info.os_name))
         ...     else:
         ...         print('Error: {}'.format(r.status_message))
         ... except Exception as err:
         ...     # handle exception
         ...     pass
-        Linux
+        Operating System: ...
 
     """
 
@@ -97,13 +112,16 @@ class TomcatManagerResponse:
         For this property to return True:
 
         - The HTTP request must return a status code of ``200 OK``
-        - The first line of the response from the Tomcat Server must begin with ``OK``.
+        - The first line of the response from the Tomcat Manager web application
+          must begin with ``OK``.
         """
-        return all([
-            self.response is not None,
-            self.response.status_code == requests.codes.ok,
-            self.status_code == tm.status_codes.ok,
-            ])
+        return all(
+            [
+                self.response is not None,
+                self.response.status_code == requests.codes.ok,
+                self.status_code == tm.StatusCode.OK,
+            ]
+        )
 
     def raise_for_status(self):
         """
@@ -112,12 +130,12 @@ class TomcatManagerResponse:
         First this method calls ``requests.Response.raise_for_status()`` which
         raises exceptions if a 4xx or 5xx response is received from the server.
 
-        If that doesn't raise anything, then it raises a :class:`.TomcatError`
+        If that doesn't raise anything, then it raises a :class:`TomcatError`
         if there is not an ``OK`` response from the first line of text back
         from the Tomcat Manager web app.
         """
         self.response.raise_for_status()
-        if self.status_code != tm.status_codes.ok:
+        if self.status_code != tm.StatusCode.OK:
             raise TomcatError(self.status_message)
 
     @property
@@ -130,20 +148,12 @@ class TomcatManagerResponse:
         errors as well as tomcat errors. However, if you want specific access
         to the status of the tomcat command, use this method.
 
-        There are three status codes:
-
-        - ``OK``
-        - ``FAIL``
-        - ``NOTFOUND``
-
-        ``tomcatmanager.status_codes`` is a dictionary which makes it
-        easy to check this code against known values. It also has attributes
-        with friendly names, as shown here::
+        The status codes are enumerated in :class:`StatusCode`.
 
             >>> import tomcatmanager as tm
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.server_info()
-            >>> r.status_code == tm.status_codes.ok
+            >>> r.status_code == tm.StatusCode.OK
             True
         """
         return self._status_code
@@ -196,60 +206,70 @@ class TomcatManagerResponse:
         # parse the text to get the status code and results
         if response.text:
             lines = response.text.splitlines()
-            # get the status line, if the request completed OK
-            if response.status_code == requests.codes.ok:
-                try:
-                    statusline = response.text.splitlines()[0]
-                    code = statusline.split(' ', 1)[0]
-                    if code in tm.status_codes.values():
-                        self.status_code = code
-                        self.status_message = statusline.split(' ', 1)[1][2:]
-                        if len(lines) > 1:
-                            self.result = "\n".join(lines[1:])
-                    else:
-                        self.status_code = tm.status_codes.notfound
-                        self.status_message = 'Tomcat Manager not found'
-                except IndexError:
-                    pass
+            try:
+                statusline = response.text.splitlines()[0]
+                codestr = statusline.split(" ", 1)[0]
+                code = StatusCode.parse(codestr)
+                self.status_code = code
+                self.status_message = statusline.split(" ", 1)[1][2:]
+                if len(lines) > 1:
+                    self.result = "\n".join(lines[1:])
+            except (IndexError, ValueError):
+                self.status_code = tm.StatusCode.NOTFOUND
+                self.status_message = "Tomcat Manager not found"
 
 
-APPLICATION_STATES = [
-    'running',
-    'stopped',
-]
-application_states = AttrDict()
-"""docstring for application_states"""
-for _state in APPLICATION_STATES:
-    application_states[_state] = _state
+@enum.unique
+class ApplicationState(enum.Enum):
+    """An enumeration of the various tomcat application states"""
 
-TA = TypeVar('TA', bound='TomcatApplication')
-class TomcatApplication():
+    RUNNING = "running"
+    STOPPED = "stopped"
+
+    @classmethod
+    def parse(cls, state: str):
+        """Return one of the enums from a string sent by the Tomcat Manager
+        web application.
+
+        :param state: the string value of the application state from the
+            tomcat server
+        :type state: str
+        :return: :class:`.ApplicationState` instance
+        :rtype:  tomcatmanager.models.ApplicationState
+        :raises ValueError: if the string does not represent a known application state
+        """
+        for _, member in cls.__members__.items():
+            if state == member.value:
+                return member
+        raise ValueError("{} is an unknown application state".format(state))
+
+
+class TomcatApplication:
     """
     Discrete data about an application running inside a Tomcat Server.
 
     A list of these objects is returned by :meth:`.TomcatManager.list`.
     """
+
+    TA = typing.TypeVar("TA", bound="TomcatApplication")
+
     @classmethod
     def sort_by_state_by_path_by_version(cls, app: TA):
         """
         Function to create a key usable by ``sort`` to sort by state, by path, by version.
         """
-        return '{}:{}:{}'.format(
-            app.state or '',
-            app.path or '',
-            app.version or ''
-            )
+        return "{}:{}:{}".format(
+            app.state.value or "", app.path or "", app.version or ""
+        )
 
     @classmethod
     def sort_by_path_by_version_by_state(cls, app: TA):
         """
         Function to create a key usable by ``sort`` to sort by path, by version, by state
         """
-        return '{}:{}:{}'.format(
-            app.path or '',
-            app.version or '',
-            app.state or ''
-            )
+        return "{}:{}:{}".format(
+            app.path or "", app.version or "", app.state.value or ""
+        )
 
     def __init__(self):
         self._path = None
@@ -261,15 +281,15 @@ class TomcatApplication():
     def __str__(self):
         """Format this application as it comes from the tomcat server."""
         fmt = "{}:{}:{}:{}"
-        sessions = ''
+        sessions = ""
         if self.sessions is not None:
             sessions = self.sessions
         return fmt.format(
-            self.path or '',
-            self.state or '',
+            self.path or "",
+            self.state.value or "",
             sessions,
-            self.directory_and_version or ''
-            )
+            self.directory_and_version or "",
+        )
 
     def __lt__(self, other: TA):
         """
@@ -291,22 +311,23 @@ class TomcatApplication():
 
         Tomcat Manager outputs a line like this for each application:
 
-        .. code-block:: none
+        .. code-block::
 
            /shiny:running:0:shiny##v2.0.6
 
         The data elements in this line can be described as:
 
-        .. code-block:: none
+        .. code-block::
 
            {path}:{state}:{sessions}:{directory}##{version}
 
         Where version and the two hash marks that precede it are optional.
         """
         app_details = line.rstrip().split(":")
-        self._path, self._state, sessions, dirver = app_details[:4]
+        self._path, state, sessions, dirver = app_details[:4]
+        self._state = ApplicationState.parse(state)
         self._sessions = int(sessions)
-        dirver = dirver.split('##')
+        dirver = dirver.split("##")
         self._directory = dirver[0]
         if len(dirver) == 1:
             self._version = None
@@ -325,15 +346,14 @@ class TomcatApplication():
         """
         The current state of the application.
 
-        ``tomcatmanager.application_states`` is a dictionary of all the valid
-        values for this property. In addition to being a dictionary, it also has
-        attributes for each possible state::
+        ``tomcatmanager.ApplicationState`` is an enum of the values for this
+        property.
 
             >>> import tomcatmanager as tm
-            >>> tm.application_states['stopped']
-            'stopped'
-            >>> tm.application_states.running
-            'running'
+            >>> tm.ApplicationState.STOPPED
+            <ApplicationState.STOPPED: 'stopped'>
+            >>> tm.ApplicationState.RUNNING
+            <ApplicationState.RUNNING: 'running'>
         """
         return self._state
 
@@ -375,7 +395,7 @@ class TomcatApplication():
         if self.directory:
             dandv = self.directory
             if self.version:
-                dandv += '##{}'.format(self.version)
+                dandv += "##{}".format(self.version)
         return dandv
 
 
@@ -410,22 +430,22 @@ class ServerInfo(dict):
         self._os_architecture = None
         self._jvm_version = None
         self._jvm_vendor = None
-        result = kwargs.pop('result', None)
+        result = kwargs.pop("result", None)
         self._parse(result)
 
     def _parse(self, result: str):
         """Parse up a list of lines from the server."""
         if result:
             for line in result.splitlines():
-                key, value = line.rstrip().split(':', 1)
+                key, value = line.rstrip().split(":", 1)
                 self[key] = value.lstrip()
 
-            self._tomcat_version = self['Tomcat Version']
-            self._os_name = self['OS Name']
-            self._os_version = self['OS Version']
-            self._os_architecture = self['OS Architecture']
-            self._jvm_version = self['JVM Version']
-            self._jvm_vendor = self['JVM Vendor']
+            self._tomcat_version = self["Tomcat Version"]
+            self._os_name = self["OS Name"]
+            self._os_version = self["OS Version"]
+            self._os_architecture = self["OS Architecture"]
+            self._jvm_version = self["JVM Version"]
+            self._jvm_vendor = self["JVM Vendor"]
 
     @property
     def tomcat_version(self):

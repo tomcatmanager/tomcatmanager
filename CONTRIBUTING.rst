@@ -12,12 +12,14 @@ Clone the repo from github::
 Create Python Environments
 --------------------------
 
-tomcatamanger uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run the
-test suite against multiple python versions. I recommend using `pyenv
-<https://github.com/pyenv/pyenv>`_ with the `pyenv-virtualenv
-<https://github.com/pyenv/pyenv-virtualenv>`_ plugin to manage these various
-versions. If you are a Windows user, ``pyenv`` won't work for you, you'll
-probably have to use `conda <https://conda.io/>`_.
+tomcatmanager uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run the
+test suite against multiple python versions. tox expects that when it runs
+``python3.7`` it will actually get a python from the 3.7.x series.
+
+I recommend using `pyenv <https://github.com/pyenv/pyenv>`_ with the
+`pyenv-virtualenv <https://github.com/pyenv/pyenv-virtualenv>`_ plugin to
+manage these various python versions. If you are a Windows user, ``pyenv``
+won't work for you, you'll probably have to use `conda <https://conda.io/>`_.
 
 This distribution includes a shell script ``build-pyenvs.sh`` which
 automates the creation of these environments.
@@ -25,14 +27,14 @@ automates the creation of these environments.
 If you prefer to create these virtual envs by hand, do the following::
 
   $ cd tomcatmanager
-  $ pyenv install 3.8.0
-  $ pyenv virtualenv -p python3.8 3.8.0 tomcatmanager-3.8
-  $ pyenv install 3.7.5
-  $ pyenv virtualenv -p python3.7 3.7.5 tomcatmanager-3.7
-  $ pyenv install 3.6.9
-  $ pyenv virtualenv -p python3.6 3.6.9 tomcatmanager-3.6
-  $ pyenv install 3.5.8
-  $ pyenv virtualenv -p python3.5 3.5.8 tomcatmanager-3.5
+  $ pyenv install 3.9.1
+  $ pyenv virtualenv -p python3.9 3.9.1 tomcatmanager-3.9
+  $ pyenv install 3.8.7
+  $ pyenv virtualenv -p python3.8 3.8.7 tomcatmanager-3.8
+  $ pyenv install 3.7.10
+  $ pyenv virtualenv -p python3.7 3.7.10 tomcatmanager-3.7
+  $ pyenv install 3.6.13
+  $ pyenv virtualenv -p python3.6 3.6.13 tomcatmanager-3.6
 
 
 Now set pyenv to make all four of those available at the same time::
@@ -47,18 +49,18 @@ utilize.
 =============  ======  =================
 Command        python   virtualenv
 =============  ======  =================
-``python``     3.8.0   tomcatmanager-3.8
-``python3``    3.8.0   tomcatmanager-3.8
-``python3.8``  3.8.0   tomcatmanager-3.8
-``python3.7``  3.7.5   tomcatmanager-3.7
-``python3.6``  3.6.9   tomcatmanager-3.6
-``python3.5``  3.5.8   tomcatmanager-3.5
-``pip``        3.8.0   tomcatmanager-3.8
-``pip3``       3.8.0   tomcatmanager-3.8
-``pip3.8``     3.8.0   tomcatmanager-3.8
-``pip3.7``     3.7.5   tomcatmanager-3.7
-``pip3.6``     3.6.9   tomcatmanager-3.6
-``pip3.5``     3.5.8   tomcatmanager-3.5
+``python``     3.9.1   tomcatmanager-3.9
+``python3``    3.9.1   tomcatmanager-3.9
+``python3.9``  3.9.1   tomcatmanager-3.9
+``python3.8``  3.8.7   tomcatmanager-3.5
+``python3.7``  3.7.10  tomcatmanager-3.7
+``python3.6``  3.6.13  tomcatmanager-3.6
+``pip``        3.9.1   tomcatmanager-3.9
+``pip3``       3.9.1   tomcatmanager-3.9
+``pip3.9``     3.9.1   tomcatmanager-3.9
+``pip3.8``     3.8.7   tomcatmanager-3.8
+``pip3.7``     3.7.10  tomcatmanager-3.7
+``pip3.6``     3.6.13  tomcatmanager-3.6
 =============  ======  =================
 
 
@@ -73,11 +75,11 @@ This installs the tomcatmanager package "in-place", so the package points
 to the source code instead of copying files to the python
 ``site-packages`` folder.
 
-All the dependencies now have been installed in the ``tomcatmanager-3.8``
+All the dependencies now have been installed in the ``tomcatmanager-3.9``
 virtualenv. If you want to work in other virtualenvs, you'll need to manually
 select it, and install again::
 
-  $ pyenv shell tomcatmanager-3.6
+  $ pyenv shell tomcatmanager-3.8
   $ pip install -e .[dev]
 
 
@@ -120,12 +122,18 @@ That one command will remove all superflous cache, testing, and build
 files, render the documentation, and build a source distribution and a
 wheel distribution.
 
-You probably won't need to read further in this document unless you
-want more information about the specific tools used.
-
 
 Testing
 -------
+
+Unit testing provides reliability and consistency in released software. This
+project strives for 100% unit test coverage. We aren't quite there on the
+interactive program, but the API has 100% coverage.
+
+This repository has Github Actions configured to run tests when you push or
+merge a pull request. Any push triggers a test run against all supported
+versions of python in a linux environment. Any pull request triggers a test run
+against all supported versions of python on all supported operating systems.
 
 To ensure the tests can run without an external dependencies,
 ``tests/mock_server80.py`` contains a HTTP server which emulates the behavior
@@ -137,8 +145,8 @@ You can run the tests against all the supported versions of python using tox::
 
   $ tox
 
-tox expects that when it runs ``python3.4`` it will actually get a python from
-the 3.4.x series. That's why we set up the various python environments earlier.
+tox expects that when it runs ``python3.7`` it will actually get a python from
+the 3.7.x series. That's why we set up the various python environments earlier.
 
 If you just want to run the tests in your current python environment, use
 pytest::
@@ -156,7 +164,7 @@ tests across the number of cores you have::
 
 In many of the doctests you'll see something like:
 
->>> tomcat = getfixture('tomcat')
+  >>> tomcat = getfixture('tomcat')
 
 This ``getfixture()`` helper imports fixtures defined in ``conftest.py``,
 which has several benefits:
@@ -245,27 +253,64 @@ Use ``pylint`` to check code quality. There is a pylint config file for the
 tests and for the main module::
 
   $ pylint --rcfile=tests/pylintrc tests
-  $ pylint --rcfile=tomcatmanager/pylintrc tomcatmanager
+  $ pylint --rcfile=tomcatmanager/pylintrc src
 
 You are welcome to use the pylint comment directives to disable certain
 messages in the code, but pull requests containing these directives will be
 carefully scrutinized.
 
-As allowed by
-`PEP 8 <https://www.python.org/dev/peps/pep-0008/#maximum-line-length>`_
-this project uses a nominal line length of 100 characters.
+
+Code Formatting
+---------------
+
+Use `black <https://black.readthedocs.io/en/stable/index.html>`_ to format your
+code. We use the default configuration, including a line length of 88
+characters.
+
+To format all the code in the project using ``black``, do::
+
+  $ invoke black
+
+You can check whether ``black`` would make any changes to the source code by::
+
+  $ invoke black-check
+
+Black integrates with many common editors and IDE's, that's the easiest way to
+ensure that your code is always formatted.
+
+Please format the code in your PR using ``black`` before submitting it, this
+project is configured to not allow merges if ``black`` would change anything.
 
 
 Documentation
 -------------
 
-The documentation is written in reStructured Test, and turned into HTML using
-`Sphinx <http://www.sphinx-doc.org>`_::
+Documentation is not an afterthought for this project. All PR's must include
+relevant documentation or they will be rejected.
+
+The documentation is written in reStructured Test, and is assembled from both
+the ``docs/`` directory and from the docstrings in the code. We use `Sphinx
+formatted docstrings
+<https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html>`_. We
+encourage references to other methods and classes in docstrings, and choose to
+optimize docstrings for clarity and usefulness in the rendered output rather
+than ease of reading in the source code.
+
+The code includes type hints as a convenience, but does not provide stub files
+nor do we use mypy to check for proper static typing. Our philosophy is that
+the dynamic nature of Python is a benefit and we shouldn't impose static type
+checking, but annotations of expected types can be helpful for documentation
+purposes.
+
+`Sphinx <http://www.sphinx-doc.org>`_ transforms the documentation source files
+into html::
 
   $ cd docs
   $ make html
 
-The output will be in ``docs/build/html``.
+The output will be in ``docs/build/html``. We treat warnings as errors, and the
+documentation has none. Pull requests which generate errors when the
+documentation is build will be rejected.
 
 If you are doing a lot of documentation work, the `sphinx-autobuild
 <https://github.com/GaretJax/sphinx-autobuild>`_ module has been integrated.
@@ -277,19 +322,17 @@ Type::
 Then point your browser at `<http://localhost:8000>`_ to see the
 documentation automatically rebuilt as you save your changes.
 
-.. note::
-
-  The ``sphinx-autobuild`` module has some limitations. Much of the
-  documentation produced in this project is contained in the source code, and
-  is incorporated via the Sphinx ``autodoc`` module. In order for ``autodoc``
-  to work, it must import the source code, and it's not very good about
-  noticing and reloading source code modules as they change. If you change
-  the source code and want to make sure you are seeing the current changes
-  in your browser, best to kill the webserver and start it back up again.
-
 Use ``doc8`` to check documentation quality::
 
   $ invoke doc8
+
+This project is configured to prevent merges to the main or develop branch if
+doc8 returns any errors.
+
+When code is pushed to the main branch, which only happens when we cut a new
+release, the documentation is automatically built and deployed to
+`https://tomcatmanager.readthedocs.io/en/stable/ <https://tomcatmanager.readthedocs.io/en/stable/>`_. When code is pushed to the
+develop branch, the documentation is automatically built and deployed to `https://tomcatmanager.readthedocs.io/en/develop/ <https://tomcatmanager.readthedocs.io/en/develop/>`_.
 
 
 Make a Release
@@ -304,7 +347,9 @@ To make a release and deploy it to `PyPI
 
 3. Review and update ``CHANGELOG.rst``.
 
-4. Update the milestone corresponding to the release at `https://github.com/tomcatmanager/tomcatmanager/milestones <https://github.com/tomcatmanager/tomcatmanager/milestones>`_
+4. Update and close the milestone corresponding to the release at
+   `https://github.com/tomcatmanager/tomcatmanager/milestones
+   <https://github.com/tomcatmanager/tomcatmanager/milestones>`_
 
 5. Push the **develop** branch to github.
 
@@ -316,19 +361,21 @@ To make a release and deploy it to `PyPI
 
 8. Tag the **master** branch with the new version number, and push the tag.
 
-9. Build source distribution, wheel distribution, and upload them to pypi staging::
+9. Create a new release on Github.
+
+10. Build source distribution, wheel distribution, and upload them to pypi staging::
 
      $ invoke pypi-test
 
-10. Build source distribution, wheel distribution, and upload them to pypi::
+11. Build source distribution, wheel distribution, and upload them to pypi::
 
       $ invoke pypi
 
-11. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/latest/.
+12. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
     Make sure they look good. Add a "Version" in readthedocs which points to the tag
     you just created. Prune old versions as necessary.
 
-12. Switch back to the **develop** branch. Merge changes in from **master**.
+13. Switch back to the **develop** branch. Merge changes in from **master**.
 
-13. Add an **Unreleased** section to the top of ``CHANGELOG.rst``. Push the
+14. Add an **Unreleased** section to the top of ``CHANGELOG.rst``. Push the
     change to github.

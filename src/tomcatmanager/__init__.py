@@ -31,19 +31,26 @@ commands, and returns the responses to you as an instance of
 :class:`.TomcatManagerResponse`.
 
 The interactive command line program ``tomcat-manager`` provided by this
-package is an instance of :class:`.InteractiveTomcatManager`.
+package is an instance of ``InteractiveTomcatManager``. This command
+line program uses the API documented here, but it not considered part of
+the published API.
 """
 
-from pkg_resources import get_distribution, DistributionNotFound
+try:
+    # for python 3.8+
+    import importlib.metadata as importlib_metadata
+except ImportError:  # pragma: nocover
+    # for python < 3.8
+    import importlib_metadata  # pragma: nocover
 
 from .tomcat_manager import TomcatManager
 from .models import TomcatError
-from .models import status_codes
-from .models import application_states
+from .models import StatusCode
+from .models import ApplicationState
 from .interactive_tomcat_manager import InteractiveTomcatManager
 
 try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:
-    __version__ = 'unknown'
-VERSION_STRING = '{} (works with Tomcat >= 7.0 and <= 9.0)'.format(__version__)
+    __version__ = importlib_metadata.version(__name__)
+except importlib_metadata.PackageNotFoundError:  # pragma: nocover
+    __version__ = "unknown"  # pragma: nocover
+VERSION_STRING = "{} (works with Tomcat >= 7 and <= 10)".format(__version__)

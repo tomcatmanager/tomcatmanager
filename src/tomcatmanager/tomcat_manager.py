@@ -34,7 +34,7 @@ from typing import List, Any
 
 import requests
 
-from .models import status_codes, TomcatManagerResponse, ServerInfo, TomcatApplication
+from .models import StatusCode, TomcatManagerResponse, ServerInfo, TomcatApplication
 
 
 class TomcatManager:
@@ -47,7 +47,7 @@ class TomcatManager:
     `server_info()` method.
 
     >>> import tomcatmanager as tm
-    >>> url = 'http://localhost:8080/manager'
+    >>> url = 'http://localhost:808099/manager'
     >>> user = 'ace'
     >>> password = 'newenglandclamchowder'
     >>> tomcat = tm.TomcatManager()
@@ -65,26 +65,52 @@ class TomcatManager:
     ...     # handle exception
     ...     print('Error: not connected')
     Error: not connected
-
     """
 
     @classmethod
     def _is_stream(cls, obj) -> bool:
         """return True if passed a stream type object"""
-        return all([
-            hasattr(obj, '__iter__'),
-            not isinstance(obj, (str, bytes, list, tuple, collections.Mapping))
-        ])
+        return all(
+            [
+                hasattr(obj, "__iter__"),
+                not isinstance(obj, (str, bytes, list, tuple, collections.abc.Mapping)),
+            ]
+        )
 
     def __init__(self):
         """
         Initialize a new TomcatManager object.
         """
         self.url = None
+        """Url of the Tomcat Manager web application we are connected to.
+
+        Best to treat this as read-only. This attribute is set by the
+        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method.
+        Look there for more info.
+        """
+
         self.user = None
+        """User we successfully authenticated to the Tomcat Manager web application with
+
+        Best to treat this as read-only. This attribute is set by the
+        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method.
+        Look there for more info.
+        """
+
+        # ask nicely for people not to access the password attribute
         self._password = None
 
-        self.timeout = 15
+        self.timeout = 10
+        """Seconds to wait before giving up on network operations. Can be a
+        float or an int. Default is ``10``. I surely don't want to wait forever,
+        but if you do, set to ``0``.
+
+        Usage::
+
+            >>> import tomcatmanager as tm
+            >>> tomcat = tm.TomcatManager()
+            >>> tomcat.timeout = 3.5
+        """
 
     def _get(self, cmd: str, payload: dict = None) -> TomcatManagerResponse:
         """
@@ -92,23 +118,25 @@ class TomcatManager:
 
         :param cmd:     name of the command from the tomcat server url
                         i.e. 'http://localhost:8080/manager/text/{cmd}
+        :type cmd: str
         :param payload: dict of params for `requests.get()`
+        :type payload: dict, optional
         :return:        `TomcatManagerResponse` object
         """
-        base = self.url or ''
+        base = self.url or ""
         # if we have no url, don't add other stuff to it because it makes
         # the exceptions hard to understand
         if base:
-            url = base + '/text/' + cmd
+            url = base + "/text/" + cmd
         else:
-            url = ''
+            url = ""
         r = TomcatManagerResponse()
         r.response = requests.get(
             url,
             auth=(self.user, self._password),
             params=payload,
             timeout=self.timeout,
-            )
+        )
         return r
 
     ###
@@ -116,24 +144,45 @@ class TomcatManager:
     # convenience and utility methods
     #
     ###
-    def connect(self, url: str, user: str = '', password: str = '') -> TomcatManagerResponse:
+    @property
+    def is_connected(self) -> bool:
+        """
+        Does the url point to an actual tomcat server and are the credentials valid?
+
+        :return: ``True`` if connected to a tomcat server, otherwise, ``False``.
+        """
+        # pylint: disable=broad-except
+        try:
+            r = self._get("serverinfo")
+            return r.ok
+        except Exception:
+            return False
+
+    def connect(
+        self, url: str, user: str = "", password: str = "", timeout: float = None
+    ) -> TomcatManagerResponse:
         """
         Connect to a Tomcat Manager server.
 
         :param url:      url where the Tomcat Manager web application is
-                         deployed :param user:     (optional) user to
-                         authenticate with :param password: (optional) password
-                         to authenticate with :return:
-                         :meth:`~tomcatmanager.models.TomcatManagerResponse`
-                         object
+                         deployed
+        :param user:     (optional) user to authenticate with
+        :param password: (optional) password to authenticate with
+        :param timeout: timeout in seconds for network operations
+        :return:         :meth:`~tomcatmanager.models.TomcatManagerResponse`
+                         object with an additional ``server_info`` attribute
 
-        You don't have to connect before using any other commands. If you
-        initialized the object with credentials you can call any other method.
+        The ``server_info`` attribute contains a :class:`.ServerInfo` object,
+        which is a dictionary with some added properties for well-known values
+        returned from the Tomcat server.
+
         This method:
 
-        - give you a way to change the credentials on an existing object
-        - provide a convenient mechanism to validate you can actually connect
+        - gives you a way to change the credentials on an existing object
+        - provides a convenient mechanism to validate you can actually connect
           to the server
+        - returns a response object that includes information about the server
+          you are connected to
         - allow you to inspect the response so you can see why you can't
           connect
 
@@ -167,10 +216,13 @@ class TomcatManager:
 
         Requesting url's via http can also result in redirection to another
         url. If that occurs, the new url, not the one you passed, will be
-        stored in the url attribute.
+        stored in the :attr:`url` attribute.
 
-        You can also use :meth:`.TomcatManager.is_connected` to check if you
-        are connected.
+        If you pass authentication credentials and the connection is successful,
+        the user will be stored in the :attr:`user` attribute.
+
+        If you discard or don't save the return object from this method, you can
+        call :meth:`is_connected` to check if you are connected.
 
         If you want to raise more exceptions see
         :meth:`.TomcatManagerResponse.raise_for_status`.
@@ -179,7 +231,9 @@ class TomcatManager:
         self.url = url
         self.user = user
         self._password = password
-        r = self._get('serverinfo')
+        if timeout:
+            self.timeout = timeout
+        r = self.server_info()
 
         if r.ok:
             # _get added /text/serverinfo onto the end of the passed in url
@@ -195,35 +249,18 @@ class TomcatManager:
             self._password = None
         # hide the fact that we retrieved results, we don't
         # want people relying on or using this data
-        r.result = ''
-        r.status_message = ''
+        r.result = ""
+        r.status_message = ""
         return r
-
-    @property
-    def is_connected(self) -> bool:
-        """
-        Does the url point to an actual tomcat server and are the credentials valid?
-
-        :return: True if connected to a tomcat server, otherwise, False.
-        """
-        # pylint: disable=broad-except
-        try:
-            r = self._get('list')
-            return r.ok
-        except Exception:
-            return False
 
     ###
     #
     # managing applications
     #
     ###
-    def deploy_localwar(self,
-                        path: str,
-                        warfile: str,
-                        version: str = None,
-                        update: bool = False
-                       ) -> TomcatManagerResponse:
+    def deploy_localwar(
+        self, path: str, warfile: str, version: str = None, update: bool = False
+    ) -> TomcatManagerResponse:
         """
         Deploy a warfile on the local file system to the Tomcat server.
 
@@ -244,18 +281,18 @@ class TomcatManager:
         """
         params = {}
         if path:
-            params['path'] = path
+            params["path"] = path
         else:
-            raise ValueError('no path specified')
+            raise ValueError("no path specified")
         if not warfile:
-            raise ValueError('no warfile specified')
+            raise ValueError("no warfile specified")
         if version:
-            params['version'] = version
+            params["version"] = version
         if update:
-            params['update'] = 'true'
+            params["update"] = "true"
 
-        base = self.url or ''
-        url = base + '/text/deploy'
+        base = self.url or ""
+        url = base + "/text/deploy"
         r = TomcatManagerResponse()
         # have to have the requests.put call in two places so we can
         # properly close the file if we open it
@@ -266,24 +303,21 @@ class TomcatManager:
                 params=params,
                 data=warfile,
                 timeout=self.timeout,
-                )
+            )
         else:
-            with open(warfile, 'rb') as warobj:
+            with open(warfile, "rb") as warobj:
                 r.response = requests.put(
                     url,
                     auth=(self.user, self._password),
                     params=params,
                     data=warobj,
                     timeout=self.timeout,
-                    )
+                )
         return r
 
-    def deploy_serverwar(self,
-                         path: str,
-                         warfile: str,
-                         version: str = None,
-                         update: bool = False
-                        ) -> TomcatManagerResponse:
+    def deploy_serverwar(
+        self, path: str, warfile: str, version: str = None, update: bool = False
+    ) -> TomcatManagerResponse:
         """
         Deploy a warfile on the local file system to the Tomcat server.
 
@@ -302,28 +336,29 @@ class TomcatManager:
         """
         params = {}
         if path:
-            params['path'] = path
+            params["path"] = path
         else:
-            raise ValueError('no path specified')
+            raise ValueError("no path specified")
         if warfile:
-            params['war'] = warfile
+            params["war"] = warfile
         else:
-            raise ValueError('no warfile specified')
+            raise ValueError("no warfile specified")
         if version:
-            params['version'] = version
+            params["version"] = version
         if update:
-            params['update'] = 'true'
-        r = self._get('deploy', params)
+            params["update"] = "true"
+        r = self._get("deploy", params)
         return r
 
     # pylint: disable=too-many-arguments
-    def deploy_servercontext(self,
-                             path: str,
-                             contextfile: str,
-                             warfile: str = None,
-                             version: str = None,
-                             update: bool = False
-                            ) -> TomcatManagerResponse:
+    def deploy_servercontext(
+        self,
+        path: str,
+        contextfile: str,
+        warfile: str = None,
+        version: str = None,
+        update: bool = False,
+    ) -> TomcatManagerResponse:
         """
         Deploy a Tomcat application defined by a context file.
 
@@ -345,20 +380,20 @@ class TomcatManager:
         """
         params = {}
         if path:
-            params['path'] = path
+            params["path"] = path
         else:
-            raise ValueError('no path specified')
+            raise ValueError("no path specified")
         if contextfile:
-            params['config'] = contextfile
+            params["config"] = contextfile
         else:
-            raise ValueError('no contextfile specified')
+            raise ValueError("no contextfile specified")
         if warfile:
-            params['war'] = warfile
+            params["war"] = warfile
         if version:
-            params['version'] = version
+            params["version"] = version
         if update:
-            params['update'] = 'true'
-        r = self._get('deploy', params)
+            params["update"] = "true"
+        r = self._get("deploy", params)
         return r
 
     def undeploy(self, path: str, version: str = None) -> TomcatManagerResponse:
@@ -375,12 +410,12 @@ class TomcatManager:
         """
         params = {}
         if path:
-            params = {'path': path}
+            params = {"path": path}
         else:
-            raise ValueError('no path specified')
+            raise ValueError("no path specified")
         if version:
-            params['version'] = version
-        return self._get('undeploy', params)
+            params["version"] = version
+        return self._get("undeploy", params)
 
     def start(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
@@ -396,12 +431,12 @@ class TomcatManager:
         """
         params = {}
         if path:
-            params['path'] = path
+            params["path"] = path
         else:
-            raise ValueError('no path specified')
+            raise ValueError("no path specified")
         if version:
-            params['version'] = version
-        return self._get('start', params)
+            params["version"] = version
+        return self._get("start", params)
 
     def stop(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
@@ -417,12 +452,12 @@ class TomcatManager:
         """
         params = {}
         if path:
-            params['path'] = path
+            params["path"] = path
         else:
-            raise ValueError('no path specified')
+            raise ValueError("no path specified")
         if version:
-            params['version'] = version
-        return self._get('stop', params)
+            params["version"] = version
+        return self._get("stop", params)
 
     def reload(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
@@ -438,12 +473,12 @@ class TomcatManager:
         """
         params = {}
         if path:
-            params['path'] = path
+            params["path"] = path
         else:
-            raise ValueError('no path specified')
+            raise ValueError("no path specified")
         if version:
-            params['version'] = version
-        return self._get('reload', params)
+            params["version"] = version
+        return self._get("reload", params)
 
     def sessions(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
@@ -468,17 +503,19 @@ class TomcatManager:
         """
         params = {}
         if path:
-            params['path'] = path
+            params["path"] = path
         else:
-            raise ValueError('no path specified')
+            raise ValueError("no path specified")
         if version:
-            params['version'] = version
-        r = self._get('sessions', params)
+            params["version"] = version
+        r = self._get("sessions", params)
         if r.ok:
             r.sessions = r.result
         return r
 
-    def expire(self, path: str, version: str = None, idle: Any = None) -> TomcatManagerResponse:
+    def expire(
+        self, path: str, version: str = None, idle: Any = None
+    ) -> TomcatManagerResponse:
         """
         Expire sessions idle for longer than idle minutes.
 
@@ -501,14 +538,14 @@ class TomcatManager:
         """
         params = {}
         if path:
-            params['path'] = path
+            params["path"] = path
         else:
-            raise ValueError('no path specified')
+            raise ValueError("no path specified")
         if version:
-            params['version'] = version
+            params["version"] = version
         if idle:
-            params['idle'] = idle
-        r = self._get('expire', params)
+            params["idle"] = idle
+        r = self._get("expire", params)
         if r.ok:
             r.sessions = r.result
         return r
@@ -527,9 +564,9 @@ class TomcatManager:
             >>> tomcat = getfixture('tomcat')
             >>> r = tomcat.list()
             >>> if r.ok:
-            ...     running = filter(lambda app: app.state == tm.application_states.running, r.apps)
+            ...     running = filter(lambda app: app.state == tm.ApplicationState.RUNNING, r.apps)
         """
-        r = self._get('list')
+        r = self._get("list")
         apps = []
         for line in r.result.splitlines():
             app = TomcatApplication()
@@ -563,7 +600,7 @@ class TomcatManager:
             True
 
         """
-        r = self._get('serverinfo')
+        r = self._get("serverinfo")
         r.server_info = ServerInfo(result=r.result)
         return r
 
@@ -589,26 +626,26 @@ class TomcatManager:
         say it does.
         """
         # this command isn't in the /manager/text url space, so we can't use _get()
-        base = self.url or ''
-        url = base + '/status/all'
+        base = self.url or ""
+        url = base + "/status/all"
         r = TomcatManagerResponse()
         r.response = requests.get(
             url,
             auth=(self.user, self._password),
-            params={'XML': 'true'},
+            params={"XML": "true"},
             timeout=self.timeout,
-            )
+        )
         r.result = r.response.text
         r.status_xml = r.result
 
         # we have to force a status_code and a status_message
         # because the server doesn't return them
         if r.response.status_code == requests.codes.ok:
-            r.status_code = status_codes.ok
-            r.status_message = status_codes.ok
+            r.status_code = StatusCode.OK
+            r.status_message = StatusCode.OK.value
         else:
-            r.status_code = status_codes.fail
-            r.status_message = status_codes.fail
+            r.status_code = StatusCode.FAIL
+            r.status_message = StatusCode.FAIL.value
         return r
 
     def vm_info(self) -> TomcatManagerResponse:
@@ -618,7 +655,7 @@ class TomcatManager:
         :return: :class:`.TomcatManagerResponse` object with an additional
                  ``vm_info`` attribute
         """
-        r = self._get('vminfo')
+        r = self._get("vminfo")
         r.vm_info = r.result
         return r
 
@@ -629,8 +666,44 @@ class TomcatManager:
         :return: :class:`.TomcatManagerResponse` object with an additional
                  ``ssl_connector_ciphers`` attribute
         """
-        r = self._get('sslConnectorCiphers')
+        r = self._get("sslConnectorCiphers")
         r.ssl_connector_ciphers = r.result
+        return r
+
+    def ssl_connector_certs(self) -> TomcatManagerResponse:
+        """
+        Get the SSL certificate chain currently configured for each virtual host
+
+        :return: :class:`.TomcatManagerResponse` object with an additional
+                 ``ssl_connector_certs`` attribute
+        """
+        r = self._get("sslConnectorCerts")
+        r.ssl_connector_certs = r.result
+        return r
+
+    def ssl_connector_trusted_certs(self) -> TomcatManagerResponse:
+        """
+        Get the trusted certificates currently configured for each virtual host
+
+        :return: :class:`.TomcatManagerResponse` object with an additional
+                 ``ssl_connector_trusted_certs`` attribute
+        """
+        r = self._get("sslConnectorTrustedCerts")
+        r.ssl_connector_trusted_certs = r.result
+        return r
+
+    def ssl_reload(self, host: str = None) -> TomcatManagerResponse:
+        """
+        Reload TLS certificates and keys (but not server.xml) for a specified or all virtual hosts
+
+        :param host: (optional) Host name to reload, if omitted, reload all virtual hosts
+
+        :return: :class:`.TomcatManagerResponse` object
+        """
+        if host:
+            r = self._get("sslReload", {"tlsHostName": str(host)})
+        else:
+            r = self._get("sslReload")
         return r
 
     def thread_dump(self) -> TomcatManagerResponse:
@@ -640,7 +713,7 @@ class TomcatManager:
         :return: :class:`.TomcatManagerResponse` object with an additional
                  ``thread_dump`` attribute
         """
-        r = self._get('threaddump')
+        r = self._get("threaddump")
         r.thread_dump = r.result
         return r
 
@@ -668,18 +741,18 @@ class TomcatManager:
         and the class name as the value.
         """
         if type_:
-            r = self._get('resources', {'type': str(type_)})
+            r = self._get("resources", {"type": str(type_)})
         else:
-            r = self._get('resources')
+            r = self._get("resources")
 
         resources = {}
-        for line in r.result.splitlines():
-            resource, classname = line.rstrip().split(':', 1)
-            if resource[:7] != status_codes.fail + ' - ':
-                resources[resource] = classname.lstrip()
+        if r.result:
+            for line in r.result.splitlines():
+                resource, classname = line.rstrip().split(":", 1)
+                if resource[:7] != StatusCode.FAIL.value + " - ":
+                    resources[resource] = classname.lstrip()
         r.resources = resources
         return r
-
 
     def find_leakers(self) -> TomcatManagerResponse:
         """
@@ -714,7 +787,7 @@ class TomcatManager:
             ... else:
             ...     cnt = 0
         """
-        r = self._get('findleaks', {'statusLine': 'true'})
+        r = self._get("findleaks", {"statusLine": "true"})
         r.leakers = self._parse_leakers(r.result)
         return r
 

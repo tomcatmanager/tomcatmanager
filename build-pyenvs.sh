@@ -23,7 +23,7 @@
 # virtualenvs will be added to '.python-version'. Feel free to modify
 # this list, but note that this script intentionally won't install
 # dev, rc, or beta python releases
-declare -a pythons=("3.8" "3.7" "3.6" "3.5")
+declare -a pythons=("3.9" "3.8" "3.7" "3.6")
 
 # function to find the latest patch of a minor version of python
 function find_latest_version {

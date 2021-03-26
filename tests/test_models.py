@@ -25,6 +25,7 @@
 import unittest.mock as mock
 
 import pytest
+import requests
 
 import tomcatmanager as tm
 
@@ -37,12 +38,15 @@ def test_ok(tomcat):
     r = tomcat.list()
     assert r.ok
 
+
 @pytest.fixture
 def mock_text(mocker):
-    return mocker.patch('requests.models.Response.text', create=True,
-                        new_callable=mock.PropertyMock)
+    return mocker.patch(
+        "requests.models.Response.text", create=True, new_callable=mock.PropertyMock
+    )
 
-@pytest.mark.parametrize('value', [None, ''])
+
+@pytest.mark.parametrize("value", [None, ""])
 def test_http_response_empty(tomcat, mock_text, value):
     mock_text.return_value = value
     response = tomcat.vm_info()
@@ -50,32 +54,69 @@ def test_http_response_empty(tomcat, mock_text, value):
     assert response.status_message is None
     assert response.result is None
 
+
 CONTENTS = [
-    'malformedwithnospace',
+    "malformedwithnospace",
     '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">',
 ]
-@pytest.mark.parametrize('content', CONTENTS)
+
+
+@pytest.mark.parametrize("content", CONTENTS)
 def test_http_response_not_tomcat(tomcat, mock_text, content):
     # like we might get if they put a regular web page in for the URL
     mock_text.return_value = content
     r = tomcat.vm_info()
-    assert r.status_code == tm.status_codes.notfound
-    assert r.status_message == 'Tomcat Manager not found'
+    assert r.status_code == tm.StatusCode.NOTFOUND
+    assert r.status_message == "Tomcat Manager not found"
     assert r.result is None
 
-def test_http_response_valid(tomcat, mock_text):
-    mock_text.return_value = 'OK - some message\nthe result'
-    r = tomcat.vm_info()
-    assert r.status_code == tm.status_codes.ok
-    assert r.status_message == 'some message'
-    assert r.result == 'the result'
 
-def test_http_response_fail(tomcat, mock_text):
-    mock_text.return_value = 'FAIL - some message'
+def test_http_status_server_error(tomcat, mocker):
+    mock_code = mocker.patch(
+        "requests.Response.status_code", create=True, new_callable=mock.PropertyMock
+    )
+    mock_code.return_value = requests.codes.server_error
     r = tomcat.vm_info()
-    assert r.status_code == tm.status_codes.fail
-    assert r.status_message == 'some message'
+    assert not r.ok
+
+
+def test_http_result_valid(tomcat, mock_text):
+    mock_text.return_value = "OK - some message\nthe result"
+    r = tomcat.thread_dump()
+    assert r.ok
+    assert r.status_code == tm.StatusCode.OK
+    assert r.status_message == "some message"
+    assert r.result == "the result"
+
+
+def test_http_result_fail(tomcat, mock_text):
+    mock_text.return_value = "FAIL - some message"
+    r = tomcat.thread_dump()
+    assert not r.ok
+    assert r.status_code == tm.StatusCode.FAIL
+    assert r.status_message == "some message"
     assert r.result is None
+
+
+###
+#
+# test ApplicationState
+#
+###
+def test__application_state_parse_running():
+    state = tm.ApplicationState.parse("running")
+    assert state == tm.ApplicationState.RUNNING
+
+
+def test_application_state_parse_stopped():
+    state = tm.ApplicationState.parse("stopped")
+    assert state == tm.ApplicationState.STOPPED
+
+
+def test_application_state_parse_unknown():
+    with pytest.raises(ValueError):
+        _ = tm.ApplicationState.parse("fred flintstone")
+
 
 ###
 #
@@ -96,66 +137,75 @@ def apps():
 /shiny:running:15:shiny##v2.0.7
 """
 
+
 def test_parse_root():
-    line = '/:running:0:ROOT'
+    line = "/:running:0:ROOT"
     ta = tm.models.TomcatApplication()
     ta.parse(line)
-    assert ta.path == '/'
-    assert ta.state == tm.application_states.running
+    assert ta.path == "/"
+    assert ta.state == tm.ApplicationState.RUNNING
     assert ta.sessions == 0
-    assert ta.directory == 'ROOT'
+    assert ta.directory == "ROOT"
     assert ta.version is None
     assert ta.directory_and_version == ta.directory
+
 
 def test_parse_app_with_slash_in_directory():
-    line = '/manager:running:0:/usr/share/tomcat8-admin/manager'
+    line = "/manager:running:0:/usr/share/tomcat8-admin/manager"
     ta = tm.models.TomcatApplication()
     ta.parse(line)
-    assert ta.path == '/manager'
-    assert ta.state == tm.application_states.running
+    assert ta.path == "/manager"
+    assert ta.state == tm.ApplicationState.RUNNING
     assert ta.sessions == 0
-    assert ta.directory == '/usr/share/tomcat8-admin/manager'
+    assert ta.directory == "/usr/share/tomcat8-admin/manager"
     assert ta.version is None
     assert ta.directory_and_version == ta.directory
 
+
 def test_parse_app_with_non_integer_sessions():
-    line = '/:running:not_an_integer:ROOT'
+    line = "/:running:not_an_integer:ROOT"
     ta = tm.models.TomcatApplication()
     with pytest.raises(ValueError):
         ta.parse(line)
 
+
 def test_parse_version():
-    line = '/shiny:stopped:17:shiny##v2.0.6'
+    line = "/shiny:stopped:17:shiny##v2.0.6"
     ta = tm.models.TomcatApplication()
     ta.parse(line)
-    assert ta.path == '/shiny'
-    assert ta.state == tm.application_states.stopped
+    assert ta.path == "/shiny"
+    assert ta.state == tm.ApplicationState.STOPPED
     assert ta.sessions == 17
-    assert ta.directory == 'shiny'
-    assert ta.version == 'v2.0.6'
-    assert ta.directory_and_version == 'shiny##v2.0.6'
+    assert ta.directory == "shiny"
+    assert ta.version == "v2.0.6"
+    assert ta.directory_and_version == "shiny##v2.0.6"
+
 
 def test_str_without_version():
-    line = '/shiny:running:8:shiny'
+    line = "/shiny:running:8:shiny"
     ta = tm.models.TomcatApplication()
     ta.parse(line)
     assert str(ta) == line
+
 
 def test_str_with_version():
-    line = '/shiny:stopped:17:shiny##v2.0.6'
+    line = "/shiny:stopped:17:shiny##v2.0.6"
     ta = tm.models.TomcatApplication()
     ta.parse(line)
     assert str(ta) == line
 
+
 def test_str_with_zero_sessions():
-    line = '/shiny:running:0:shiny##v2.0.6'
+    line = "/shiny:running:0:shiny##v2.0.6"
     ta = tm.models.TomcatApplication()
     ta.parse(line)
     assert str(ta) == line
+
 
 def test_directory_and_version_empty():
     ta = tm.models.TomcatApplication()
     assert ta.directory_and_version is None
+
 
 def parse_apps(lines):
     apps = []
@@ -164,6 +214,7 @@ def parse_apps(lines):
         app.parse(line)
         apps.append(app)
     return apps
+
 
 def test_lt(apps):
     sorted_apps = """/:running:0:ROOT
@@ -179,10 +230,11 @@ def test_lt(apps):
 """
     apps = parse_apps(apps)
     apps.sort()
-    result = ''
+    result = ""
     strapps = map(str, apps)
-    result = '\n'.join(strapps) + '\n'
+    result = "\n".join(strapps) + "\n"
     assert result == sorted_apps
+
 
 def test_sort_by_spv(apps):
     sorted_apps = """/:running:0:ROOT
@@ -198,10 +250,11 @@ def test_sort_by_spv(apps):
 """
     apps = parse_apps(apps)
     apps.sort(key=tm.models.TomcatApplication.sort_by_state_by_path_by_version)
-    result = ''
+    result = ""
     strapps = map(str, apps)
-    result = '\n'.join(strapps) + '\n'
+    result = "\n".join(strapps) + "\n"
     assert result == sorted_apps
+
 
 def test_sort_by_pvs(apps):
     sorted_apps = """/:running:0:ROOT
@@ -217,9 +270,9 @@ def test_sort_by_pvs(apps):
 """
     apps = parse_apps(apps)
     apps.sort(key=tm.models.TomcatApplication.sort_by_path_by_version_by_state)
-    result = ''
+    result = ""
     strapps = map(str, apps)
-    result = '\n'.join(strapps) + '\n'
+    result = "\n".join(strapps) + "\n"
     assert result == sorted_apps
 
 
@@ -230,23 +283,25 @@ def test_sort_by_pvs(apps):
 ###
 def test_dict(server_info):
     sinfo = tm.models.ServerInfo(result=server_info)
-    assert sinfo['Tomcat Version'] == 'Apache Tomcat/8.0.32 (Ubuntu)'
-    assert sinfo['OS Name'] == 'Linux'
-    assert sinfo['OS Version'] == '4.4.0-89-generic'
-    assert sinfo['OS Architecture'] == 'amd64'
-    assert sinfo['JVM Version'] == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
-    assert sinfo['JVM Vendor'] == 'Oracle Corporation'
+    assert sinfo["Tomcat Version"] == "Apache Tomcat/8.0.32 (Ubuntu)"
+    assert sinfo["OS Name"] == "Linux"
+    assert sinfo["OS Version"] == "4.4.0-89-generic"
+    assert sinfo["OS Architecture"] == "amd64"
+    assert sinfo["JVM Version"] == "1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11"
+    assert sinfo["JVM Vendor"] == "Oracle Corporation"
+
 
 def test_properties(server_info):
     sinfo = tm.models.ServerInfo(result=server_info)
-    assert sinfo.tomcat_version == 'Apache Tomcat/8.0.32 (Ubuntu)'
-    assert sinfo.os_name == 'Linux'
-    assert sinfo.os_version == '4.4.0-89-generic'
-    assert sinfo.os_architecture == 'amd64'
-    assert sinfo.jvm_version == '1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11'
-    assert sinfo.jvm_vendor == 'Oracle Corporation'
+    assert sinfo.tomcat_version == "Apache Tomcat/8.0.32 (Ubuntu)"
+    assert sinfo.os_name == "Linux"
+    assert sinfo.os_version == "4.4.0-89-generic"
+    assert sinfo.os_architecture == "amd64"
+    assert sinfo.jvm_version == "1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11"
+    assert sinfo.jvm_vendor == "Oracle Corporation"
+
 
 def test_parse_extra(server_info):
     lines = server_info + "New Key: New Value\n"
     sinfo = tm.models.ServerInfo(result=lines)
-    assert sinfo['New Key'] == 'New Value'
+    assert sinfo["New Key"] == "New Value"

@@ -1,27 +1,34 @@
 tomcatmanager
 =============
 
-.. image:: https://img.shields.io/pypi/v/tomcatmanager.svg?label=latest%20version&colorB=1074b5
+.. image:: https://img.shields.io/pypi/v/tomcatmanager?label=latest%20version
       :target: https://pypi.python.org/pypi/tomcatmanager
       :alt: latest version
-.. image:: https://img.shields.io/pypi/pyversions/tomcatmanager.svg?colorB=1074b5
+.. image:: https://img.shields.io/pypi/pyversions/tomcatmanager
       :target: https://pypi.python.org/pypi/tomcatmanager
-      :alt: python
-.. image:: https://img.shields.io/badge/license-MIT-orange.svg
+      :alt: supported python versions
+.. image:: https://img.shields.io/badge/license-MIT-orange
       :target: https://github.com/tomcatmanager/tomcatmanager/blob/master/LICENSE
       :alt: license
-.. image:: https://img.shields.io/travis/tomcatmanager/tomcatmanager/develop.svg
-      :target: https://travis-ci.org/tomcatmanager/tomcatmanager
-      :alt: build status
-.. image:: https://img.shields.io/appveyor/ci/kotfu/tomcatmanager/develop.svg
-      :target: https://ci.appveyor.com/project/kotfu/tomcatmanager
-      :alt: build status
-.. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/develop.svg
+.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/main?label=build%20%28main%29
+      :target: https://github.com/tomcatmanager/tomcatmanager/tree/main
+      :alt: main branch build status
+.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/develop?label=build%20%28develop%29
+      :target: https://github.com/tomcatmanager/tomcatmanager/tree/develop
+      :alt: develop branch build status
+.. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/main?token=3YbxJ1PKwJ
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
-.. image:: https://readthedocs.org/projects/tomcatmanager/badge/?version=latest
-      :target: http://tomcatmanager.readthedocs.io/en/latest/?badge=latest
-      :alt: Documentation Status
+.. image:: https://img.shields.io/badge/code%20style-black-000000
+      :target: https://github.com/psf/black
+      :alt: code style black
+.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Docs%20Test/main?label=docs%20%28main%29
+      :target: http://tomcatmanager.readthedocs.io/en/stable
+      :alt: main branch documentation status
+.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/develop?label=docs%20%28develop%29
+      :target: https://tomcatmanager.readthedocs.io/en/develop/
+      :alt: develop branch documentation status
+
 
 If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
 
@@ -41,7 +48,7 @@ What Can It Do?
 This package installs a command line utility called ``tomcat-manager``. It's
 easily scriptable using your favorite shell:
 
-.. code-block:: text
+.. code-block::
 
    $ tomcat-manager --user=ace --password=newenglandclamchowder \
    http://localhost:8080/manager deploy local sample.war /sampleapp
@@ -50,10 +57,11 @@ easily scriptable using your favorite shell:
 
 There is also an interactive mode:
 
-.. code-block:: text
+.. code-block::
 
    $ tomcat-manager
-   tomcat-manager>connect http://localhost:8080/manager ace newenglandclamchowder
+   tomcat-manager>connect http://localhost:8080/manager ace
+   Password:
    --connected to http://localhost:8080/manager as ace
    tomcat-manager>list
    Path                     Status  Sessions Directory
@@ -75,7 +83,7 @@ And for the ultimate in flexibility, you can use the python package directly:
    >>> tomcat.is_connected
    True
    >>> r = tomcat.stop('/someapp')
-   >>> r.status_code == tm.status_codes.ok
+   >>> r.ok
    False
    >>> r.status_message
    'No context exists named /someapp'
@@ -84,13 +92,15 @@ And for the ultimate in flexibility, you can use the python package directly:
 Installation
 ------------
 
-You'll need Python >= 3.5. Install using pip:
+You'll need Python >= 3.6. Install using pip:
 
 .. code-block:: bash
 
    $ pip install tomcatmanager
 
 Works on Windows, macOS, and Linux.
+
+Works with Tomcat >= 7 and <= 10.
 
 
 Tomcat Configuration
@@ -137,4 +147,14 @@ The ``tomcat-manager`` command line tool supports the following commands:
 Documentation
 -------------
 
-Complete documentation is available at `<http://tomcatmanager.readthedocs.io/en/latest/>`_
+Complete documentation for the last released version is available at
+`<http://tomcatmanager.readthedocs.io/en/stable/>`_. It includes material
+showing how to use ``tomcat-manager`` from the command line or using
+interactive mode. There is also a walkthrough of how to use the API and an
+API reference.
+
+Documentation is also built from the `develop
+<https://github.com/tomcatmanager/tomcatmanager/tree/develop>`_ branch, and
+published at `<https://tomcatmanager.readthedocs.io/en/develop/>`_. The develop
+branch may not yet be released to PyPi, but you can see the documentation for what's
+coming up in the next release.

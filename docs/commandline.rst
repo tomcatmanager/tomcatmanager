@@ -8,7 +8,7 @@ Say you want to find out how many active sessions there are in the oldest
 version of our ``shiny`` app (told you it would feel kind of hollow). You could
 use interactive mode:
 
-.. code-block:: text
+.. code-block::
 
   $ tomcat-manager
   tomcat-manager>connect https://www.example.com/manager ace newenglandclamchowder
@@ -76,13 +76,62 @@ shell exit code appropriately. The exit codes are:
   | **127** = unknown command
 
 
+Servers and Commands
+--------------------
+
+The first argument of ``tomcat-manager`` is the url of the server. The rest
+of the arguments are any commands and their arguments from
+:doc:`Interactive Use <interactive>`.
+
+.. code-block:: bash
+
+  $ tomcat-manager http://localhost:8080/manager deploy server /tmp/myfancyapp.war /fancy
+
+
+Timeout
+-------
+
+By default, network operations timeout in 10 seconds. You can change this
+value:
+
+.. code-block:: bash
+
+  $ tomcat-manager --timeout=2.5 http://localhost:8080/manager list
+
+This command line option is the same as the ``timeout`` :ref:`Setting
+<settings>`.
+
+
+Credentials
+-----------
+
+If your server requires authentication, you can add the user name on the
+command line:
+
+.. code-block:: bash
+
+  $ tomcat-manager --user=ace http://localhost:8080/manager list
+  Password:
+
+and you will be prompted for the password. You can also specify the password on
+the command line, but this is not secure:
+
+.. code-block:: bash
+
+  $ tomcat-manager --user=ace --password=newenglandclamchowder http://localhost:8080/manager list
+  Password:
+
+If you want unattended authenticated access, server shortcuts are a better
+option.
+
+
 Server Shortcuts
 ----------------
 
 You can use :ref:`server_shortcuts` from the command line with or without
 commands:
 
-.. code-block:: text
+.. code-block::
 
   $ tomcat-manager localhost
   --connected to http://localhost:8080/manager as ace
@@ -94,7 +143,7 @@ commands:
 
 Or:
 
-.. code-block:: text
+.. code-block::
 
   $ tomcat-manager localhost list
   --connected to http://localhost:8080/manager as ace
@@ -164,16 +213,16 @@ switches that change what's included in the output. These options correspond to
 the settings default to ``False``, but be aware that you may have altered them
 your :ref:`configuration_file`, which is read on startup.
 
-==========================  ======================  ======================================
+==========================  ====================  =====================================
 Option                      Setting                 Description
-==========================  ======================  ======================================
-``-e, --echo``              ``echo``                Add the command to the output stream.
-``-q, --quiet``             ``quiet``               Don't show non-essential feedback.
-``-s, --status-to-stdout``  ``status_to_stdout``    Send status information to ``stdout``
-                                                    instead of ``stderr``.
-``-d, --debug``             ``debug``               Show detailed exception and stack
-                                                    trace, even if ``quiet`` is True.
-==========================  ======================  ======================================
+==========================  ====================  =====================================
+``-e, --echo``              ``echo``              Add the command to the output stream.
+``-q, --quiet``             ``quiet``             Don't show non-essential feedback.
+``-s, --status-to-stdout``  ``status_to_stdout``  Send status information to ``stdout``
+                                                  instead of ``stderr``.
+``-d, --debug``             ``debug``             Show detailed exception and stack
+                                                  trace, even if ``quiet`` is True.
+==========================  ====================  =====================================
 
 Some commands show additional status information during their execution which
 is not part of the output. If ``quiet=True`` then all status output is
@@ -190,7 +239,7 @@ first one uses the shell to redirect status messages to the bitbucket, the
 second one uses the ``--quiet`` switch to instruct ``tomcat-manager`` to
 suppress status messages.
 
-.. code-block:: text
+.. code-block::
 
   $ tomcat-manager localhost list 2>/dev/null
   Path                     Status  Sessions Directory
@@ -207,7 +256,7 @@ If you pipe commands into ``tomcat-manager`` instead of providing them as
 arguments, the ``--echo`` command line switch can be included which will print
 the prompt and command to the output:
 
-.. code-block:: text
+.. code-block::
 
   $ echo list | tomcat-manager --echo localhost
   --connected to https://home.kotfu.net/manager as ace
@@ -223,16 +272,16 @@ errors, and outputs a terse message describing the problem. For example, if my
 Tomcat container is not currently running, or if the HTTP request fails for any
 other reason, you will see something like this:
 
-.. code-block:: text
+.. code-block::
 
-  $ tm vm list
+  $ tomcat-manager vm list
   connection error
 
 If you want all the gory detail, give the ``--debug`` command line switch or
 set ``debug=True``. Then you'll see something like this (stack trace truncated
 with '...'):
 
-.. code-block:: text
+.. code-block::
 
   $ tm --debug vm list
   Traceback (most recent call last):

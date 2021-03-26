@@ -1,7 +1,24 @@
 Installation
 ============
 
-You need Python 3.5 or higher. Install using ``pip``::
+System Requirements
+-------------------
+
+You'll need Python 3.6 or higher on macOS, Windows, or Linux.
+
+The following Tomcat versions are supported:
+
+- 7.0.x
+- 8.0.x
+- 8.5.x
+- 9.0.x
+- 10.0.x
+
+
+Installation
+------------
+
+Install using ``pip``::
 
   pip install tomcatmanager
 

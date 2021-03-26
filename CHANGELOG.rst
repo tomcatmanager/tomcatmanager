@@ -3,11 +3,44 @@
 Changelog
 =========
 All notable changes to
-`tomcatmanager <https://github.com/tomcatmanager/tomcatmanager>`_ will
-be documented in this file.
+`tomcatmanager <https://github.com/tomcatmanager/tomcatmanager>`_ are
+documented in this file.
 
 The format is based on `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_
 and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
+
+
+2.0.0 (2021-03-26)
+------------------
+
+Added
+^^^^^
+
+- Support for Python 3.9
+- Support for Tomcat 10
+- New methods on TomcatManager: ``ssl_connector_certs()``,
+  ``ssl_connector_trusted_certs()``, and ``ssl_reload()``
+- New commands in ``tomcat-manager``: ``sslconnectorcerts``,
+  ``sslconnectortrustedcerts`` and ``sslreload``
+- Documentation for `migrating from 1.x to 2.x
+  <https://tomcatmanager.readthedocs.io/en/stable/api/migrating2.html>`_
+
+Changed
+^^^^^^^
+
+- ``TomcatApplication.state`` now contains an ``Enum`` instead of an
+  ``AttrDict``
+- The ``tomcatmanager.application_states`` dict has been replaced by the
+  ``tomcatmanager.ApplicationState`` enum
+- Timeouts can now be ``float`` instead of ``int``
+- Improved documentation for network timeouts
+
+Removed
+^^^^^^^
+
+- Support for Python 3.5, which as of 2020-09-13 no longer receives
+  security updates
+- Dependency on ``attrdict`` module, which has been archived
 
 
 1.0.2 (2020-03-05)
@@ -16,7 +49,7 @@ and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`
 Changed
 ^^^^^^^
 
-- upstream cmd2 library released v1.0.0. Now require cmd2>=1,<2.
+- upstream ``cmd2`` library released v1.0.0. Now require ``cmd2>=1,<2``.
 
 Fixed
 ^^^^^
@@ -30,7 +63,7 @@ Fixed
 Changed
 ^^^^^^^
 
-- cmd2=0.10 changed the way settings work. We now require that version or higher.
+- ``cmd2=0.10`` changed the way settings work. We now require that version or higher.
 
 
 1.0.0 (2020-02-01)
@@ -39,15 +72,15 @@ Changed
 Changed
 ^^^^^^^
 
-- Switch documentation theme from 'alabaster' to 'sphinx_rtd_theme'
+- Switch documentation theme from ``alabaster`` to ``sphinx_rtd_theme``
 
 Added
 ^^^^^
 
 - Already have a setting to control network timeouts. Added a command line option
-  '--timeout' to do the same, making it easier for modify for command-line only use.
-- Adjustments for upstream changes in cmd2. No longer pinned to cmd2=0.9.4, but require
-  cmd2>=0.9.14.
+  ``--timeout`` to do the same, making it easier for modify for command-line only use.
+- Adjustments for upstream changes in ``cmd2``. No longer pinned to
+  ``cmd2=0.9.4``, but require ``cmd2>=0.9.14``.
 - Add support for Python 3.8.
 - Add documentation style checking using ``doc8``.
 
