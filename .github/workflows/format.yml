@@ -1,11 +1,6 @@
 name: Format
 
-on:
-  push:
-    # allow sloppiness on feature or bugfix branches
-    branches:
-      - main
-      - develop
+on: push
 
 jobs:
   black:
@@ -20,7 +15,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install --upgrade setuptools wheel black
-    - name: black
+    - name: Check code format with black
       run: python -m black --check --diff .
 
   doc8:
@@ -35,5 +30,5 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install --upgrade setuptools wheel doc8
-    - name: doc8
+    - name: Check documentation format with doc8
       run: python -m doc8 docs

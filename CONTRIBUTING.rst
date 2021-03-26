@@ -308,7 +308,9 @@ into html::
   $ cd docs
   $ make html
 
-The output will be in ``docs/build/html``.
+The output will be in ``docs/build/html``. We treat warnings as errors, and the
+documentation has none. Pull requests which generate errors when the
+documentation is build will be rejected.
 
 If you are doing a lot of documentation work, the `sphinx-autobuild
 <https://github.com/GaretJax/sphinx-autobuild>`_ module has been integrated.
