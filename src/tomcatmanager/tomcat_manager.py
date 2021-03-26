@@ -100,7 +100,7 @@ class TomcatManager:
         # ask nicely for people not to access the password attribute
         self._password = None
 
-        self.timeout = 10
+        self.timeout = 10.0
         """Seconds to wait before giving up on network operations. Can be a
         float or an int. Default is ``10``. I surely don't want to wait forever,
         but if you do, set to ``0``.
