@@ -203,6 +203,7 @@ def test_main_timeout(tomcat_manager_server, capsys):
     assert exit_code == 0
     assert "timeout=7.8" in out[0]
 
+
 def test_main_timeout_zero(tomcat_manager_server, capsys):
     cmdline = "-t 0 -u {} -p {} {} settings timeout".format(
         tomcat_manager_server.user,
