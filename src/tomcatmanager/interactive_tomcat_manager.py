@@ -443,7 +443,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
             help_ = self._help_add_header(help_, "TLS configuration")
             help_.append(
-                "sslconnectorciphers       {}".format(self.do_sslconnectorciphers.__doc__)
+                "sslconnectorciphers       {}".format(
+                    self.do_sslconnectorciphers.__doc__
+                )
             )
             help_.append(
                 "sslconnectorcerts         {}".format(self.do_sslconnectorcerts.__doc__)
@@ -453,7 +455,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     self.do_sslconnectortrustedcerts.__doc__
                 )
             )
-            help_.append("sslreload                 {}".format(self.do_sslreload.__doc__))
+            help_.append(
+                "sslreload                 {}".format(self.do_sslreload.__doc__)
+            )
 
             help_ = self._help_add_header(help_, "Settings, configuration, and tools")
             help_.append("config       {}".format(self.do_config.__doc__))
@@ -1309,7 +1313,6 @@ change the value of one of this program's settings
         r = self.docmd(self.tomcat.ssl_reload, args.host_name)
         if r.ok:
             self.pfeedback(r.status_message)
-
 
     def help_sslreload(self):
         """Show help for the 'resources' command."""
