@@ -672,6 +672,42 @@ class TomcatManager:
         r.ssl_connector_ciphers = r.result
         return r
 
+    def ssl_connector_certs(self) -> TomcatManagerResponse:
+        """
+        Get the SSL certificate chain currently configured for each virtual host
+
+        :return: :class:`.TomcatManagerResponse` object with an additional
+                 ``ssl_connector_certs`` attribute
+        """
+        r = self._get("sslConnectorCerts")
+        r.ssl_connector_certs = r.result
+        return r
+
+    def ssl_connector_trusted_certs(self) -> TomcatManagerResponse:
+        """
+        Get the trusted certificates currently configured for each virtual host
+
+        :return: :class:`.TomcatManagerResponse` object with an additional
+                 ``ssl_connector_trusted_certs`` attribute
+        """
+        r = self._get("sslConnectorTrustedCerts")
+        r.ssl_connector_trusted_certs = r.result
+        return r
+
+    def ssl_reload(self, host: str = None) -> TomcatManagerResponse:
+        """
+        Reload TLS certificates and keys (but not server.xml) for a specified or all virtual hosts
+
+        :param host: (optional) Host name to reload, if omitted, reload all virtual hosts
+
+        :return: :class:`.TomcatManagerResponse` object
+        """
+        if host:
+            r = self._get("sslReload", {"tlsHostName": str(host)})
+        else:
+            r = self._get("sslReload")
+        return r
+
     def thread_dump(self) -> TomcatManagerResponse:
         """
         Get a jvm thread dump.

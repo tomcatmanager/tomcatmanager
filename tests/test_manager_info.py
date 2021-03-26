@@ -60,12 +60,6 @@ def test_vm_info(tomcat, assert_tomcatresponse):
     assert r.result == r.vm_info
 
 
-def test_ssl_connector_ciphers(tomcat, assert_tomcatresponse):
-    r = tomcat.ssl_connector_ciphers()
-    assert_tomcatresponse.info(r)
-    assert r.result == r.ssl_connector_ciphers
-
-
 def test_thread_dump(tomcat, assert_tomcatresponse):
     r = tomcat.thread_dump()
     assert_tomcatresponse.info(r)

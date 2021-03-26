@@ -62,7 +62,12 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
     SERVER_INFO_PATTERN = re.compile(r"^/manager/text/serverinfo($|\?.*$)")
     STATUS_PATTERN = re.compile(r"^/manager/status(/|/all)?($|\?.*$)")
     VM_INFO_PATTERN = re.compile(r"^/manager/text/vminfo($|\?.*$)")
-    SSL_PATTERN = re.compile(r"^/manager/text/sslConnectorCiphers($|\?.*$)")
+    SSL_CIPHERS_PATTERN = re.compile(r"^/manager/text/sslConnectorCiphers($|\?.*$)")
+    SSL_CERTS_PATTERN = re.compile(r"^/manager/text/sslConnectorCerts($|\?.*$)")
+    SSL_TRUSTED_CERTS_PATTERN = re.compile(
+        r"^/manager/text/sslConnectorTrustedCerts($|\?.*$)"
+    )
+    SSL_RELOAD_PATTERN = re.compile(r"^/manager/text/sslReload($|\?.*$)")
     THREAD_DUMP_PATTERN = re.compile(r"^/manager/text/threaddump($|\?.*$)")
     RESOURCES_PATTERN = re.compile(r"^/manager/text/resources($|\?.*$)")
     FIND_LEAKERS_PATTERN = re.compile(r"^/manager/text/findleaks($|\?.*$)")
@@ -97,8 +102,14 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
             self.get_status()
         elif re.search(self.VM_INFO_PATTERN, self.path):
             self.get_vm_info()
-        elif re.search(self.SSL_PATTERN, self.path):
+        elif re.search(self.SSL_CIPHERS_PATTERN, self.path):
             self.get_ssl_connector_ciphers()
+        elif re.search(self.SSL_CERTS_PATTERN, self.path):
+            self.get_ssl_connector_certs()
+        elif re.search(self.SSL_TRUSTED_CERTS_PATTERN, self.path):
+            self.get_ssl_connector_trusted_certs()
+        elif re.search(self.SSL_RELOAD_PATTERN, self.path):
+            self.get_ssl_reload()
         elif re.search(self.THREAD_DUMP_PATTERN, self.path):
             self.get_thread_dump()
         elif re.search(self.RESOURCES_PATTERN, self.path):
@@ -212,7 +223,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         """Send the server information."""
         self.send_text(
             """OK - Server info
-Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
+Tomcat Version: Apache Tomcat/10.0.4 (Ubuntu)
 OS Name: Linux
 OS Version: 4.4.0-89-generic
 OS Architecture: amd64
@@ -604,6 +615,26 @@ Logger information:
 Connector[HTTP/1.1-8080]
   SSL is not enabled for this connector"""
         )
+
+    def get_ssl_connector_certs(self):
+        """Send the SSL certs."""
+        self.send_text(
+            """OK - Connector / Certificate Chain information
+Connector[HTTP/1.1-8080]
+SSL is not enabled for this connector"""
+        )
+
+    def get_ssl_connector_trusted_certs(self):
+        """Send the trusted SSL certs."""
+        self.send_text(
+            """OK - Connector / Trusted Certificate information
+Connector[HTTP/1.1-8080]
+SSL is not enabled for this connector"""
+        )
+
+    def get_ssl_reload(self):
+        """Reload the SSL certificates."""
+        self.send_text("""OK - Reloaded TLS configuration for [_default_]""")
 
     def get_thread_dump(self):
         """Send a JVM thread dump"""

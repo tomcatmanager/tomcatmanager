@@ -437,12 +437,23 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help_.append("findleakers          {}".format(self.do_findleakers.__doc__))
             help_.append("resources            {}".format(self.do_resources.__doc__))
             help_.append("serverinfo           {}".format(self.do_serverinfo.__doc__))
-            help_.append(
-                "sslconnectorciphers  {}".format(self.do_sslconnectorciphers.__doc__)
-            )
             help_.append("status               {}".format(self.do_status.__doc__))
             help_.append("threaddump           {}".format(self.do_threaddump.__doc__))
             help_.append("vminfo               {}".format(self.do_vminfo.__doc__))
+
+            help_ = self._help_add_header(help_, "TLS configuration")
+            help_.append(
+                "sslconnectorciphers       {}".format(self.do_sslconnectorciphers.__doc__)
+            )
+            help_.append(
+                "sslconnectorcerts         {}".format(self.do_sslconnectorcerts.__doc__)
+            )
+            help_.append(
+                "sslconnectortrustedcerts  {}".format(
+                    self.do_sslconnectortrustedcerts.__doc__
+                )
+            )
+            help_.append("sslreload                 {}".format(self.do_sslreload.__doc__))
 
             help_ = self._help_add_header(help_, "Settings, configuration, and tools")
             help_.append("config       {}".format(self.do_config.__doc__))
@@ -1248,6 +1259,61 @@ change the value of one of this program's settings
     def help_sslconnectorciphers(self):
         """Show help for the 'sslconnectorciphers' command."""
         self.show_help_from(self.sslconnectorciphers_parser)
+
+    sslconnectorcerts_parser = argparse.ArgumentParser(
+        prog="sslconnectorcerts",
+        description="show SSL/TLS certificate chain for each connector",
+    )
+
+    @requires_connection
+    def do_sslconnectorcerts(self, cmdline: cmd2.Statement):
+        """Show SSL/TLS certificate chain for each connector."""
+        self.parse_args(self.sslconnectorcerts_parser, cmdline.argv)
+        r = self.docmd(self.tomcat.ssl_connector_certs)
+        self.poutput(r.ssl_connector_certs)
+
+    def help_sslconnectorcerts(self):
+        """Show help for the 'sslconnectorcerts' command."""
+        self.show_help_from(self.sslconnectorcerts_parser)
+
+    sslconnectortrustedcerts_parser = argparse.ArgumentParser(
+        prog="sslconnectortrustedcerts",
+        description="show SSL/TLS trusted certificates for each connector",
+    )
+
+    @requires_connection
+    def do_sslconnectortrustedcerts(self, cmdline: cmd2.Statement):
+        """Show SSL/TLS trusted certificates for each connector."""
+        self.parse_args(self.sslconnectortrustedcerts_parser, cmdline.argv)
+        r = self.docmd(self.tomcat.ssl_connector_trusted_certs)
+        self.poutput(r.ssl_connector_trusted_certs)
+
+    def help_sslconnectortrustedcerts(self):
+        """Show help for the 'sslconnectortrustedcerts' command."""
+        self.show_help_from(self.sslconnectortrustedcerts_parser)
+
+    sslreload_parser = argparse.ArgumentParser(
+        prog="sslreload",
+        description="reload SSL/TLS certificates and keys",
+    )
+    sslreload_parser.add_argument(
+        "host_name",
+        nargs="?",
+        help="Optional host name to reload SSL/TLS certificates and keys for.",
+    )
+
+    @requires_connection
+    def do_sslreload(self, cmdline: cmd2.Statement):
+        """Reload SSL/TLS certificates and keys."""
+        args = self.parse_args(self.sslreload_parser, cmdline.argv)
+        r = self.docmd(self.tomcat.ssl_reload, args.host_name)
+        if r.ok:
+            self.pfeedback(r.status_message)
+
+
+    def help_sslreload(self):
+        """Show help for the 'resources' command."""
+        self.show_help_from(self.sslreload_parser)
 
     threaddump_parser = argparse.ArgumentParser(
         prog="threaddump",

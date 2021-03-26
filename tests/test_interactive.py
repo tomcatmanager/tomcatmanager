@@ -691,6 +691,35 @@ def test_sslconnectorciphers(tomcat_manager_server, capsys):
     assert "SSL" in out
 
 
+def test_sslconnectorcerts(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.EXIT_ERROR
+    itm.onecmd_plus_hooks("sslconnectorcerts")
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert "Connector" in out
+    assert "SSL" in out
+
+
+def test_sslconnectortrustedcerts(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.EXIT_ERROR
+    itm.onecmd_plus_hooks("sslconnectortrustedcerts")
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert "Connector" in out
+    assert "SSL" in out
+
+
+def test_sslreload(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.EXIT_ERROR
+    itm.onecmd_plus_hooks("sslreload")
+    out, err = capsys.readouterr()
+    assert "load" in out or "load" in err
+    assert "TLS" in out or "TLS" in err
+
+
 def test_threaddump(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
     itm.exit_code = itm.EXIT_ERROR
