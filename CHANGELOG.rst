@@ -10,32 +10,37 @@ The format is based on `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_
 and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
 
 
-Unreleased
-----------
+2.0.0 (2021-03-26)
+------------------
 
 Added
 ^^^^^
 
-- Add support for Python 3.9
-- Add support for Tomcat 10
-- Add ``ssl_connector_certs()``, ``ssl_connector_trusted_certs()``, and
-  ``ssl_reload()`` methods to TomcatManager
-- Add ``sslconnectorcerts``, ``sslconnectortrustedcerts`` and ``sslreload``
-  commands to ``tomcat-manager``
+- Support for Python 3.9
+- Support for Tomcat 10
+- New methods on TomcatManager: ``ssl_connector_certs()``,
+  ``ssl_connector_trusted_certs()``, and ``ssl_reload()``
+- New commands in ``tomcat-manager``: ``sslconnectorcerts``,
+  ``sslconnectortrustedcerts`` and ``sslreload``
+- Documentation for `migrating from 1.x to 2.x
+  <https://tomcatmanager.readthedocs.io/en/stable/api/migrating2.html>`_
 
 Changed
 ^^^^^^^
 
+- ``TomcatApplication.state`` now contains an ``Enum`` instead of an
+  ``AttrDict``
+- The ``tomcatmanager.application_states`` dict has been replaced by the
+  ``tomcatmanager.ApplicationState`` enum
+- Timeouts can now be ``float`` instead of ``int``
 - Improved documentation for network timeouts
-- ``TomcatApplication.state`` now contains an ``Enum`` instead of an ``AttrDict``
-- The ``tomcatmanager.application_states`` dict has been replaced by the ``tomcatmanager.ApplicationState`` enum.
-- timeouts can now be ``float`` instead of ``int``
 
 Removed
 ^^^^^^^
 
-- Drop support for Python 3.5
-- No more dependency on ``attrdict`` module, which has been archived.
+- Support for Python 3.5, which as of 2020-09-13 no longer receives
+  security updates
+- Dependency on ``attrdict`` module, which has been archived
 
 
 1.0.2 (2020-03-05)
