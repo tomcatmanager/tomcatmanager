@@ -710,19 +710,16 @@ change the value of one of this program's settings
 
         Calls the settable onchange callback if it exists.
         """
-        if param_name in self.settables:
-            try:
-                settable = self.settables[param_name]
-            except KeyError as keyerr:
-                raise ValueError from keyerr
+        try:
+            settable = self.settables[param_name]
 
             value = cmd2.utils.strip_quotes(value)
             current_value = getattr(self, param_name)
             setattr(self, param_name, settable.val_type(value))
-            if current_value != value and settable.onchange_cb:
+            if current_value != value and settable.onchange_cb:  # pragma: nocover
                 settable.onchange_cb(param_name, current_value, value)
-        else:
-            raise ValueError
+        except KeyError as keyerr:
+            raise ValueError from keyerr
 
     def convert_to_boolean(self, value: Any):
         """Return a boolean value translating from other types if necessary."""
@@ -949,7 +946,7 @@ change the value of one of this program's settings
         args = self.parse_args(self.deploy_parser, cmdline.argv)
         try:
             args.func(self, args, update=False)
-        except AttributeError:
+        except AttributeError:  # pragma: nocover
             self.help_deploy()
             self.exit_code = self.EXIT_ERROR
 
@@ -971,7 +968,7 @@ change the value of one of this program's settings
         args = self.parse_args(self.redeploy_parser, cmdline.argv)
         try:
             args.func(self, args, update=True)
-        except AttributeError:
+        except AttributeError:  # pragma: nocover
             self.help_redeploy()
             self.exit_code = self.EXIT_ERROR
 
@@ -1143,28 +1140,26 @@ change the value of one of this program's settings
         args = self.parse_args(self.list_parser, cmdline.argv)
 
         response = self.docmd(self.tomcat.list)
-        if not response.ok:
-            return
-
-        apps = self._list_process_apps(response.apps, args)
-        self.exit_code = self.EXIT_SUCCESS
-        if args.raw:
-            for app in apps:
-                self.poutput(app)
-        else:
-            fmt = "{:24.24} {:7.7} {:>8.8} {:36.36}"
-            dashes = "-" * 80
-            self.poutput(fmt.format("Path", "State", "Sessions", "Directory"))
-            self.poutput(fmt.format(dashes, dashes, dashes, dashes))
-            for app in apps:
-                self.poutput(
-                    fmt.format(
-                        app.path,
-                        app.state.value,
-                        str(app.sessions),
-                        app.directory_and_version,
+        if response.ok:
+            apps = self._list_process_apps(response.apps, args)
+            self.exit_code = self.EXIT_SUCCESS
+            if args.raw:
+                for app in apps:
+                    self.poutput(app)
+            else:
+                fmt = "{:24.24} {:7.7} {:>8.8} {:36.36}"
+                dashes = "-" * 80
+                self.poutput(fmt.format("Path", "State", "Sessions", "Directory"))
+                self.poutput(fmt.format(dashes, dashes, dashes, dashes))
+                for app in apps:
+                    self.poutput(
+                        fmt.format(
+                            app.path,
+                            app.state.value,
+                            str(app.sessions),
+                            app.directory_and_version,
+                        )
                     )
-                )
 
     def help_list(self):
         """Show help for the 'list' command."""
@@ -1486,6 +1481,6 @@ class EvaluatingConfigParser(configparser.ConfigParser):
         if "'" in val or '"' in val:
             try:
                 val = ast.literal_eval(val)
-            except ValueError:
+            except ValueError:  # pragma: nocover
                 pass
         return val

@@ -432,6 +432,7 @@ def test_set_debug_invalid():
     assert itm.echo is False
     assert itm.exit_code == itm.EXIT_ERROR
 
+
 def test_set_with_invalid_param():
     itm = tm.InteractiveTomcatManager()
     # this uuid won't be in itm.settables
