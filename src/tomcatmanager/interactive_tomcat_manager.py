@@ -292,7 +292,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.stdout.write(msg_str)
                 if not msg_str.endswith(end):
                     self.stdout.write(end)
-            except BrokenPipeError:
+            except BrokenPipeError:  # pragma: nocover
                 # This occurs if a command's output is being piped to another
                 # process and that process closes before the command is
                 # finished.
@@ -526,7 +526,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
             # ensure the configuration directory exists
             configdir = os.path.dirname(self.config_file)
-            if not os.path.exists(configdir):
+            if not os.path.exists(configdir):  # pragma: nocover
                 os.makedirs(configdir)
 
             # go edit the file

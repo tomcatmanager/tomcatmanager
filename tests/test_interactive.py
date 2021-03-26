@@ -112,6 +112,9 @@ HELP_COMMANDS = [
     "status",
     "vminfo",
     "sslconnectorciphers",
+    "sslconnectorcerts",
+    "sslconnectortrustedcerts",
+    "sslreload",
     "threaddump",
     "resources",
     "findleakers",
@@ -389,19 +392,19 @@ def test_set_string():
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
-def test_set_integer_valid():
+def test_set_float_valid():
     itm = tm.InteractiveTomcatManager()
-    itm.timeout = 10
-    itm.onecmd_plus_hooks("set timeout=5")
-    assert itm.timeout == 5
+    itm.timeout = 10.0
+    itm.onecmd_plus_hooks("set timeout=5.5")
+    assert itm.timeout == 5.5
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
-def test_set_integer_invalid():
+def test_set_float_invalid():
     itm = tm.InteractiveTomcatManager()
-    itm.timeout = 10
+    itm.timeout = 10.0
     itm.onecmd_plus_hooks("set timeout=joe")
-    assert itm.timeout == 10
+    assert itm.timeout == 10.0
     assert itm.exit_code == itm.EXIT_ERROR
 
 
@@ -420,6 +423,14 @@ def test_set_boolean_invalid():
     assert itm.echo is False
     assert itm.exit_code == itm.EXIT_ERROR
 
+
+def test_set_debug_invalid():
+    itm = tm.InteractiveTomcatManager()
+    itm.echo = False
+    itm.debug = True
+    itm.onecmd_plus_hooks("set echo=notaboolean")
+    assert itm.echo is False
+    assert itm.exit_code == itm.EXIT_ERROR
 
 def test_set_with_invalid_param():
     itm = tm.InteractiveTomcatManager()
@@ -610,6 +621,9 @@ REQUIRES_CONNECTION = [
     "status",
     "vminfo",
     "sslconnectorciphers",
+    "sslconnectorcerts",
+    "sslconnectortrustedcerts",
+    "sslreload",
     "threaddump",
     "resources",
     "findleakers",
@@ -636,6 +650,8 @@ NOARGS_INFO_COMMANDS = [
     "status",
     "vminfo",
     "sslconnectorciphers",
+    "sslconnectorcerts",
+    "sslconnectortrustedcerts",
     "threaddump",
     "findleakers",
 ]
@@ -718,6 +734,16 @@ def test_sslreload(tomcat_manager_server, capsys):
     out, err = capsys.readouterr()
     assert "load" in out or "load" in err
     assert "TLS" in out or "TLS" in err
+
+
+def test_sslreload_host(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.EXIT_ERROR
+    itm.onecmd_plus_hooks("sslreload www.example.com")
+    out, err = capsys.readouterr()
+    assert "load" in out or "load" in err
+    assert "TLS" in out or "TLS" in err
+    assert "www.example.com" in out or "www.example.com" in err
 
 
 def test_threaddump(tomcat_manager_server, capsys):
@@ -826,3 +852,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
     assert out == expected
+
+
+###
+#
+# other tests
+#
+###
+def test_thrown_exception(tomcat_manager_server, mocker, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.EXIT_SUCCESS
+    raise_mock = mocker.patch(
+        "tomcatmanager.models.TomcatManagerResponse.raise_for_status"
+    )
+    raise_mock.side_effect = tm.TomcatError()
+    itm.onecmd_plus_hooks("serverinfo")
+    _, err = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_ERROR
+    assert err

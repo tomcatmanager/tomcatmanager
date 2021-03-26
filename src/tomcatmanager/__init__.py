@@ -41,7 +41,7 @@ try:
     import importlib.metadata as importlib_metadata
 except ImportError:  # pragma: nocover
     # for python < 3.8
-    import importlib_metadata  # pragma: nocover
+    import importlib_metadata
 
 from .tomcat_manager import TomcatManager
 from .models import TomcatError
@@ -52,5 +52,5 @@ from .interactive_tomcat_manager import InteractiveTomcatManager
 try:
     __version__ = importlib_metadata.version(__name__)
 except importlib_metadata.PackageNotFoundError:  # pragma: nocover
-    __version__ = "unknown"  # pragma: nocover
+    __version__ = "unknown"
 VERSION_STRING = "{} (works with Tomcat >= 7 and <= 10)".format(__version__)

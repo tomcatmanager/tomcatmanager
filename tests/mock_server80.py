@@ -634,7 +634,14 @@ SSL is not enabled for this connector"""
 
     def get_ssl_reload(self):
         """Reload the SSL certificates."""
-        self.send_text("""OK - Reloaded TLS configuration for [_default_]""")
+        url = urlparse(self.path)
+        query_string = parse_qs(url.query, keep_blank_values=True)
+        host_name = None
+        if "tlsHostName" in query_string:
+            host_name = query_string["tlsHostName"]
+            self.send_text("OK - Reloaded TLS configuration for [{}]".format(host_name))
+        else:
+            self.send_text("""OK - Reloaded TLS configuration for [_default_]""")
 
     def get_thread_dump(self):
         """Send a JVM thread dump"""
