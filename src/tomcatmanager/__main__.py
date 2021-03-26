@@ -135,5 +135,5 @@ def main(argv=None):
     return itm.exit_code
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == "__main__":  # pragma: nocover
+    sys.exit(main())  # pragma: nocover
