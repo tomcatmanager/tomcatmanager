@@ -185,8 +185,9 @@ def test_main_status_to_stdout(tomcat_manager_server, capsys):
     out = out.splitlines()
     assert exit_code == 0
     assert "--connected to" in out[0]
-    assert "Path" in out[1]
-    assert "Sessions" in out[1]
+    assert "--tomcat version" in out[1]
+    assert "Path" in out[2]
+    assert "Sessions" in out[2]
 
 
 def test_main_timeout(tomcat_manager_server, capsys):
