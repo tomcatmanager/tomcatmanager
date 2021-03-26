@@ -318,6 +318,12 @@ def test_load_config(mocker):
     assert itm.prompt == prompt
 
 
+def test_load_config_file_not_found(mocker):
+    with mock.patch('builtins.open', mock.mock_open()) as mocked_open:
+        mocked_open.side_effect = FileNotFoundError()
+        itm = tm.InteractiveTomcatManager()
+        assert len(itm.config.sections()) == 0
+
 def test_load_config_bogus_setting(mocker):
     configstring = "[settings]\nbogus=True\n"
     # this shouldn't throw any exceptions
@@ -368,6 +374,7 @@ def test_show_valid_setting(command, capsys):
 @pytest.mark.parametrize("command", SHOW_SETTINGS)
 def test_show_invalid_setting(command, capsys):
     itm = tm.InteractiveTomcatManager()
+    itm.debug=False
     itm.onecmd_plus_hooks("{} bogus".format(command))
     out, err = capsys.readouterr()
     assert not out
@@ -402,11 +409,19 @@ def test_set_float_valid():
 
 def test_set_float_invalid():
     itm = tm.InteractiveTomcatManager()
+    itm.debug=False
     itm.timeout = 10.0
     itm.onecmd_plus_hooks("set timeout=joe")
     assert itm.timeout == 10.0
     assert itm.exit_code == itm.EXIT_ERROR
 
+def test_set_float_invalid_debug():
+    itm = tm.InteractiveTomcatManager()
+    itm.debug=True
+    itm.timeout = 10.0
+    itm.onecmd_plus_hooks("set timeout=joe")
+    assert itm.timeout == 10.0
+    assert itm.exit_code == itm.EXIT_ERROR
 
 def test_set_boolean_valid():
     itm = tm.InteractiveTomcatManager()
@@ -518,6 +533,81 @@ def test_connect(tomcat_manager_server, capsys):
     assert_connected_to(itm, tomcat_manager_server.url, capsys)
 
 
+def test_connect_fail_debug(tomcat_manager_server, mocker):
+    itm = tm.InteractiveTomcatManager()
+    itm.debug = True
+    mock_ok = mocker.patch(
+        "tomcatmanager.models.TomcatManagerResponse.ok",
+        new_callable=mock.PropertyMock,
+    )
+    mock_ok.return_value = False
+    raise_mock = mocker.patch(
+        "tomcatmanager.models.TomcatManagerResponse.raise_for_status"
+    )
+    raise_mock.side_effect = tm.TomcatError()
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    assert itm.exit_code == itm.EXIT_ERROR
+
+class MockResponse():
+    def __init__(self, code):
+        self.status_code = code
+
+FAIL_MESSAGES = [
+    (requests.codes.ok, "tomcat manager not found"),
+    (requests.codes.not_found, "tomcat manager not found"),
+    (requests.codes.server_error, "http error"),
+]
+@pytest.mark.parametrize("code, errmsg", FAIL_MESSAGES)
+def test_connect_fail_ok(tomcat_manager_server, mocker, code, errmsg, capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.debug = False
+    mock_ok = mocker.patch(
+        "tomcatmanager.models.TomcatManagerResponse.response",
+        new_callable=mock.PropertyMock,
+    )
+    qmr = MockResponse(code)
+    mock_ok.return_value = qmr
+
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    out, err = capsys.readouterr()
+    assert not out
+    assert errmsg in err
+    assert itm.exit_code == itm.EXIT_ERROR
+
+
+# def test_connect_fail_not_found(tomcat_manager_server, mocker, capsys):
+#     itm = tm.InteractiveTomcatManager()
+#     itm.debug = False
+#     mock_ok = mocker.patch(
+#         "tomcatmanager.models.TomcatManagerResponse.response",
+#         new_callable=mock.PropertyMock,
+#     )
+#     qmr = MockResponse(requests.codes.not_found)
+#     mock_ok.return_value = qmr
+
+#     itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+#     out, err = capsys.readouterr()
+#     assert not out
+#     assert "tomcat manager not found" in err
+#     assert itm.exit_code == itm.EXIT_ERROR
+
+
+# def test_connect_fail_other(tomcat_manager_server, mocker, capsys):
+#     itm = tm.InteractiveTomcatManager()
+#     itm.debug = False
+#     mock_ok = mocker.patch(
+#         "tomcatmanager.models.TomcatManagerResponse.response",
+#         new_callable=mock.PropertyMock,
+#     )
+#     qmr = MockResponse(requests.codes.server_error)
+#     mock_ok.return_value = qmr
+
+#     itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+#     out, err = capsys.readouterr()
+#     assert not out
+#     assert "http error" in err
+#     assert itm.exit_code == itm.EXIT_ERROR
+
 def test_connect_password_prompt(tomcat_manager_server, capsys, mocker):
     itm = tm.InteractiveTomcatManager()
     mock_getpass = mocker.patch("getpass.getpass")
@@ -583,6 +673,17 @@ def test_connect_with_connection_error(tomcat_manager_server, capsys, mocker):
     assert err == "connection error\n"
     assert itm.exit_code == itm.EXIT_ERROR
 
+def test_connect_with_connection_error_debug(tomcat_manager_server, capsys, mocker):
+    connect_mock = mocker.patch("tomcatmanager.TomcatManager.connect")
+    connect_mock.side_effect = requests.exceptions.ConnectionError()
+    itm = tm.InteractiveTomcatManager()
+    itm.debug = True
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    out, err = capsys.readouterr()
+    assert not out
+    assert connect_mock.call_count == 1
+    assert "requests.exceptions.ConnectionError" in err
+    assert itm.exit_code == itm.EXIT_ERROR
 
 def test_connect_with_timeout(tomcat_manager_server, capsys, mocker):
     connect_mock = mocker.patch("tomcatmanager.TomcatManager.connect")
@@ -596,6 +697,17 @@ def test_connect_with_timeout(tomcat_manager_server, capsys, mocker):
     assert err == "connection timeout\n"
     assert itm.exit_code == itm.EXIT_ERROR
 
+def test_connect_with_timeout_debug(tomcat_manager_server, capsys, mocker):
+    connect_mock = mocker.patch("tomcatmanager.TomcatManager.connect")
+    connect_mock.side_effect = requests.exceptions.Timeout()
+    itm = tm.InteractiveTomcatManager()
+    itm.debug = True
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    out, err = capsys.readouterr()
+    assert not out
+    assert connect_mock.call_count == 1
+    assert "requests.exceptions.Timeout" in err
+    assert itm.exit_code == itm.EXIT_ERROR
 
 def test_which(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)

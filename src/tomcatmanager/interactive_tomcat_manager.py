@@ -30,11 +30,11 @@ import argparse
 import ast
 import configparser
 import getpass
+import http.client
 import os
 import sys
 import traceback
 import xml.dom.minidom
-from http.client import responses
 from typing import Callable, Any, List
 
 import appdirs
@@ -825,6 +825,7 @@ change the value of one of this program's settings
 
         try:
             r = self.tomcat.connect(url, user, password)
+
             if r.ok:
                 self.pfeedback(self._which_server())
                 if r.server_info.tomcat_version:
@@ -855,7 +856,7 @@ change the value of one of this program's settings
                         self.perror(
                             "http error: {} {}".format(
                                 r.response.status_code,
-                                responses[r.response.status_code],
+                                http.client.responses[r.response.status_code],
                             )
                         )
                     self.exit_code = self.EXIT_ERROR
