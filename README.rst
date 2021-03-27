@@ -140,7 +140,10 @@ The ``tomcat-manager`` command line tool supports the following commands:
   version and architecture, and jvm version
 - **status** - show server status information in xml format
 - **vminfo** - show diagnostic information about the jvm
-- **sslconnectorciphers** - show ssl/tls ciphers configured for each connector
+- **sslconnectorciphers** - show tls ciphers configured for each connector
+- **sslconnectorcerts** - show tls certificate chain for each virtual host
+- **sslconnectortrustedcerts** - show trusted certificates for each virtual host
+- **sslreload** - reload tls certificate and key files
 - **threaddump** - show a jvm thread dump
 - **resources** - show the global jdni resources configured in tomcat
 - **findleakers** - show tomcat applications that leak memory
