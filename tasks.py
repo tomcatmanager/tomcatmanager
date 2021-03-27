@@ -115,6 +115,7 @@ namespace.add_task(black)
 #
 #####
 DOCS_SRCDIR = "docs"
+DOCS_ADDITIONAL = "README.rst CONTRIBUTING.rst CHANGELOG.rst"
 DOCS_BUILDDIR = os.path.join("docs", "build")
 SPHINX_OPTS = "-nvWT"  # Be nitpicky, verbose, and treat warnings as errors
 
@@ -134,7 +135,7 @@ namespace.add_task(docs)
 @invoke.task()
 def doc8(context):
     "Check documentation with doc8"
-    context.run("doc8 {}".format(DOCS_SRCDIR))
+    context.run("doc8 {} {}".format(DOCS_SRCDIR, DOCS_ADDITIONAL))
 
 
 namespace.add_task(doc8)
