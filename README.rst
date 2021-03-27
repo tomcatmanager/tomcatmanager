@@ -30,7 +30,8 @@ tomcatmanager
       :alt: develop branch documentation status
 
 
-If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
+If you use Apache Tomcat for any sort of development work you’ve probably deployed
+lots of applications to it. There are a several ways to get your war files deployed:
 
 - use the `Tomcat Manager <https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html>`_
   application in your browser
@@ -38,8 +39,7 @@ If you use Apache Tomcat for any sort of development work you’ve probably depl
   Tomcat
 - use `Cargo <https://codehaus-cargo.github.io/>`_ and its plugins for ant and maven
 
-Here's another way: a command line tool and python library for managing a
-Tomcat server.
+Here's another way: a command line tool and python library for managing a Tomcat server.
 
 
 What Can It Do?
@@ -127,7 +127,8 @@ Features
 The ``tomcat-manager`` command line tool supports the following commands:
 
 - **deploy** - deploy a war file containing a tomcat application in the tomcat server
-- **redeploy** - remove the application currently installed at a given path and install a new war file there
+- **redeploy** - remove the application currently installed at a given path and
+  install a new war file there
 - **undeploy** - remove an application from the tomcat server
 - **start** - start a tomcat application that has been deployed but isn't running
 - **stop** - stop a tomcat application and leave it deployed on the server
@@ -135,7 +136,8 @@ The ``tomcat-manager`` command line tool supports the following commands:
 - **sessions** - show active sessions for a particular tomcat application
 - **expire** - expire idle sessions
 - **list** - show all installed applications
-- **serverinfo** - show information about the server, including tomcat version, OS version and architecture, and jvm version
+- **serverinfo** - show information about the server, including tomcat version, OS
+  version and architecture, and jvm version
 - **status** - show server status information in xml format
 - **vminfo** - show diagnostic information about the jvm
 - **sslconnectorciphers** - show ssl/tls ciphers configured for each connector

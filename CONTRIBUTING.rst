@@ -12,17 +12,17 @@ Clone the repo from github::
 Create Python Environments
 --------------------------
 
-tomcatmanager uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run the
-test suite against multiple python versions. tox expects that when it runs
-``python3.7`` it will actually get a python from the 3.7.x series.
+tomcatmanager uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run the test
+suite against multiple python versions. tox expects that when it runs ``python3.7`` it
+will actually get a python from the 3.7.x series.
 
-I recommend using `pyenv <https://github.com/pyenv/pyenv>`_ with the
-`pyenv-virtualenv <https://github.com/pyenv/pyenv-virtualenv>`_ plugin to
-manage these various python versions. If you are a Windows user, ``pyenv``
-won't work for you, you'll probably have to use `conda <https://conda.io/>`_.
+I recommend using `pyenv <https://github.com/pyenv/pyenv>`_ with the `pyenv-virtualenv
+<https://github.com/pyenv/pyenv-virtualenv>`_ plugin to manage these various python
+versions. If you are a Windows user, ``pyenv`` won't work for you, you'll probably
+have to use `conda <https://conda.io/>`_.
 
-This distribution includes a shell script ``build-pyenvs.sh`` which
-automates the creation of these environments.
+This distribution includes a shell script ``build-pyenvs.sh`` which automates the
+creation of these environments.
 
 If you prefer to create these virtual envs by hand, do the following::
 
@@ -41,10 +41,9 @@ Now set pyenv to make all four of those available at the same time::
 
   $ pyenv local tomcatmanager-3.8 tomcatmanager-3.7 tomcatmanager-3.6 tomcatmanager-3.5
 
-Whether you ran the script, or did it by hand, you now have isolated virtualenvs
-for each of the minor python versions. This table shows various python commands,
-the version of python which will be executed, and the virtualenv it will
-utilize.
+Whether you ran the script, or did it by hand, you now have isolated virtualenvs for
+each of the minor python versions. This table shows various python commands, the
+version of python which will be executed, and the virtualenv it will utilize.
 
 =============  ======  =================
 Command        python   virtualenv
@@ -71,13 +70,12 @@ Now install all the development dependencies::
 
   $ pip install -e .[dev]
 
-This installs the tomcatmanager package "in-place", so the package points
-to the source code instead of copying files to the python
-``site-packages`` folder.
+This installs the tomcatmanager package "in-place", so the package points to the
+source code instead of copying files to the python ``site-packages`` folder.
 
-All the dependencies now have been installed in the ``tomcatmanager-3.9``
-virtualenv. If you want to work in other virtualenvs, you'll need to manually
-select it, and install again::
+All the dependencies now have been installed in the ``tomcatmanager-3.9`` virtualenv.
+If you want to work in other virtualenvs, you'll need to manually select it, and
+install again::
 
   $ pyenv shell tomcatmanager-3.8
   $ pip install -e .[dev]
@@ -86,15 +84,14 @@ select it, and install again::
 Branches, Tags, and Versions
 ----------------------------
 
-This project uses a simplified version of the `git flow branching
-strategy <http://nvie.com/posts/a-successful-git-branching-model/>`_. We
-don't use release branches, and we generally don't do hotfixes, so we
-don't have any of those branches either. The master branch always
-contains the latest release of the code uploaded to PyPI, with a tag for
-the version number of that release.
+This project uses a simplified version of the `git flow branching strategy
+<http://nvie.com/posts/a-successful-git-branching-model/>`_. We don't use release
+branches, and we generally don't do hotfixes, so we don't have any of those branches
+either. The master branch always contains the latest release of the code uploaded to
+PyPI, with a tag for the version number of that release.
 
-The develop branch is where all the action occurs. Feature branches are
-welcome. When it's time for a release, we merge develop into master.
+The develop branch is where all the action occurs. Feature branches are welcome. When
+it's time for a release, we merge develop into master.
 
 This project uses `semantic versioning <https://semver.org/>`_.
 
@@ -102,15 +99,13 @@ This project uses `semantic versioning <https://semver.org/>`_.
 Invoking Common Development Tasks
 ---------------------------------
 
-This project uses many other python modules for various development tasks,
-including testing, rendering documentation, and building and distributing
-releases. These modules can be configured many different ways, which can
-make it difficult to learn the specific incantations required for each
-project you are familiar with.
+This project uses many other python modules for various development tasks, including
+testing, rendering documentation, and building and distributing releases. These
+modules can be configured many different ways, which can make it difficult to learn
+the specific incantations required for each project you are familiar with.
 
-This project uses `invoke <http://www.pyinvoke.org>`_ to provide a clean,
-high level interface for these development tasks. To see the full list of
-functions available::
+This project uses `invoke <http://www.pyinvoke.org>`_ to provide a clean, high level
+interface for these development tasks. To see the full list of functions available::
 
   $ invoke -l
 
@@ -118,46 +113,45 @@ You can run multiple tasks in a single invocation, for example::
 
   $ invoke clean docs sdist wheel
 
-That one command will remove all superflous cache, testing, and build
-files, render the documentation, and build a source distribution and a
-wheel distribution.
+That one command will remove all superflous cache, testing, and build files, render
+the documentation, and build a source distribution and a wheel distribution.
 
 
 Testing
 -------
 
-Unit testing provides reliability and consistency in released software. This
-project strives for 100% unit test coverage. We aren't quite there on the
-interactive program, but the API has 100% coverage.
+Unit testing provides reliability and consistency in released software. This project
+strives for 100% unit test coverage. We aren't quite there on the interactive program,
+but the API has 100% coverage.
 
-This repository has Github Actions configured to run tests when you push or
-merge a pull request. Any push triggers a test run against all supported
-versions of python in a linux environment. Any pull request triggers a test run
-against all supported versions of python on all supported operating systems.
+This repository has Github Actions configured to run tests when you push or merge a
+pull request. Any push triggers a test run against all supported versions of python in
+a linux environment. Any pull request triggers a test run against all supported
+versions of python on all supported operating systems.
 
 To ensure the tests can run without an external dependencies,
-``tests/mock_server80.py`` contains a HTTP server which emulates the behavior
-of Tomcat Manager 8.0. There is a test fixture to start this server, and all
-the tests run against this fixture. I created this fixture to speed up testing
-time. It doesn't do everything a real Tomcat server does, but it's close enough for the tests to run, and it allows you to parallelize the test suite using ``python-xdist``.
+``tests/mock_server80.py`` contains a HTTP server which emulates the behavior of
+Tomcat Manager 8.0. There is a test fixture to start this server, and all the tests
+run against this fixture. I created this fixture to speed up testing time. It doesn't
+do everything a real Tomcat server does, but it's close enough for the tests to run,
+and it allows you to parallelize the test suite using ``python-xdist``.
 
 You can run the tests against all the supported versions of python using tox::
 
   $ tox
 
-tox expects that when it runs ``python3.7`` it will actually get a python from
-the 3.7.x series. That's why we set up the various python environments earlier.
+tox expects that when it runs ``python3.7`` it will actually get a python from the
+3.7.x series. That's why we set up the various python environments earlier.
 
-If you just want to run the tests in your current python environment, use
-pytest::
+If you just want to run the tests in your current python environment, use pytest::
 
   $ pytest
 
-This runs all the test in ``tests/`` and also runs doctests in
-``tomcatmanager/`` and ``docs/``.
+This runs all the test in ``tests/`` and also runs doctests in ``tomcatmanager/`` and
+``docs/``.
 
-You can speed up the test suite by using ``pytest-xdist`` to parallelize the
-tests across the number of cores you have::
+You can speed up the test suite by using ``pytest-xdist`` to parallelize the tests
+across the number of cores you have::
 
   $ pip install pytest-xdist
   $ pytest -n8
@@ -166,8 +160,8 @@ In many of the doctests you'll see something like:
 
   >>> tomcat = getfixture('tomcat')
 
-This ``getfixture()`` helper imports fixtures defined in ``conftest.py``,
-which has several benefits:
+This ``getfixture()`` helper imports fixtures defined in ``conftest.py``, which has
+several benefits:
 
 - reduces the amount of redundant code in doctests which shows connecting
   to a tomcat server and handling exceptions
@@ -178,28 +172,25 @@ Testing Against A Real Server
 -----------------------------
 
 If you wish, you can run the test suite against a real Tomcat Server instead of
-against the mock server included in this distribution. Running the test suite
-will deploy and undeploy an app hundreds of times, and will definitely trigger
-garbage collection, so you might not want to run it against a production
-server.
+against the mock server included in this distribution. Running the test suite will
+deploy and undeploy an app hundreds of times, and will definitely trigger garbage
+collection, so you might not want to run it against a production server.
 
-It's also slow (which is why the tests normally run against a mock server).
-When I run the test suite against a stock Tomcat on a Linode with 2 cores and
-4GB of memory it takes approximately 3 minutes to complete. I don't think
-throwing more CPU at this would make it any faster: during the run of the test
-suite the Tomcat Server never consumes more than a few percent of the CPU
-capacity.
+It's also slow (which is why the tests normally run against a mock server). When I run
+the test suite against a stock Tomcat on a Linode with 2 cores and 4GB of memory it
+takes approximately 3 minutes to complete. I don't think throwing more CPU at this
+would make it any faster: during the run of the test suite the Tomcat Server never
+consumes more than a few percent of the CPU capacity.
 
 You must prepare some files on the server in order for the test suite to run
-successfully. Some of the tests instruct the Tomcat Server to deploy an
-application from a warfile stored on the server. I suggest you use the minimal
-application included in this distribution at
-``tomcatmanager/tests/war/sample.war``, but you can use any valid war file. Put
-this file in some directory on the server; I typically put it in
-``/tmp/sample.war``.
+successfully. Some of the tests instruct the Tomcat Server to deploy an application
+from a warfile stored on the server. I suggest you use the minimal application
+included in this distribution at ``tomcatmanager/tests/war/sample.war``, but you can
+use any valid war file. Put this file in some directory on the server; I typically put
+it in ``/tmp/sample.war``.
 
-You must also construct a minimal context file on the server. You can see an
-example of such a context file in ``tomcatmanager/tests/war/context.xml``:
+You must also construct a minimal context file on the server. You can see an example
+of such a context file in ``tomcatmanager/tests/war/context.xml``:
 
 .. code-block:: xml
 
@@ -208,11 +199,11 @@ example of such a context file in ``tomcatmanager/tests/war/context.xml``:
   <Context path='/ignored' docBase='/tmp/sample.war'>
   </Context>
 
-The ``docBase`` attribute must point to a valid war file or the tests will
-fail. It can be the same minimal war file you already put on the server. The
-``path`` attribute is ignored for context files that are not visible to Tomcat
-when it starts up, so it doesn't matter what you have there. I typically put
-this context file at ``/tmp/context.xml``.
+The ``docBase`` attribute must point to a valid war file or the tests will fail. It
+can be the same minimal war file you already put on the server. The ``path`` attribute
+is ignored for context files that are not visible to Tomcat when it starts up, so it
+doesn't matter what you have there. I typically put this context file at
+``/tmp/context.xml``.
 
 You will also need:
 
@@ -230,42 +221,39 @@ With all these prerequisites ready, you can feed them to ``pytest`` as shown:
 
 .. warning::
 
-  If you test against a real Tomcat server, you should not use the
-  ``pytest-xdist`` plugin to parallelize testing across multiple CPUs or
-  many platforms. Many of the tests depend on deploying and undeploying an
-  app at a specific path, and that path is shared across the entire test
-  suite. It wouldn't help much anyway because the testing is constrained
-  by the speed of the Tomcat server.
+  If you test against a real Tomcat server, you should not use the ``pytest-xdist``
+  plugin to parallelize testing across multiple CPUs or many platforms. Many of the
+  tests depend on deploying and undeploying an app at a specific path, and that path
+  is shared across the entire test suite. It wouldn't help much anyway because the
+  testing is constrained by the speed of the Tomcat server.
 
-If you kill the test suite in the middle of a run, you may leave the test
-application deployed in your tomcat server. If this happens, you must undeploy
-it before rerunning the test suite or you will get lots of errors.
+If you kill the test suite in the middle of a run, you may leave the test application
+deployed in your tomcat server. If this happens, you must undeploy it before rerunning
+the test suite or you will get lots of errors.
 
-When the test suite deploys applications, it will be at the path returned by
-the ``safe_path`` fixture in ``conftest.py``. You can modify that fixture if
-for some reason you need to deploy at a different path.
+When the test suite deploys applications, it will be at the path returned by the
+``safe_path`` fixture in ``conftest.py``. You can modify that fixture if for some
+reason you need to deploy at a different path.
 
 
 Code Quality
 ------------
 
-Use ``pylint`` to check code quality. There is a pylint config file for the
-tests and for the main module::
+Use ``pylint`` to check code quality. There is a pylint config file for the tests and
+for the main module::
 
   $ pylint --rcfile=tests/pylintrc tests
   $ pylint --rcfile=tomcatmanager/pylintrc src
 
-You are welcome to use the pylint comment directives to disable certain
-messages in the code, but pull requests containing these directives will be
-carefully scrutinized.
+You are welcome to use the pylint comment directives to disable certain messages in
+the code, but pull requests containing these directives will be carefully scrutinized.
 
 
 Code Formatting
 ---------------
 
-Use `black <https://black.readthedocs.io/en/stable/index.html>`_ to format your
-code. We use the default configuration, including a line length of 88
-characters.
+Use `black <https://black.readthedocs.io/en/stable/index.html>`_ to format your code.
+We use the default configuration, including a line length of 88 characters.
 
 To format all the code in the project using ``black``, do::
 
@@ -275,32 +263,30 @@ You can check whether ``black`` would make any changes to the source code by::
 
   $ invoke black-check
 
-Black integrates with many common editors and IDE's, that's the easiest way to
-ensure that your code is always formatted.
+Black integrates with many common editors and IDE's, that's the easiest way to ensure
+that your code is always formatted.
 
-Please format the code in your PR using ``black`` before submitting it, this
-project is configured to not allow merges if ``black`` would change anything.
+Please format the code in your PR using ``black`` before submitting it, this project
+is configured to not allow merges if ``black`` would change anything.
 
 
 Documentation
 -------------
 
-Documentation is not an afterthought for this project. All PR's must include
-relevant documentation or they will be rejected.
+Documentation is not an afterthought for this project. All PR's must include relevant
+documentation or they will be rejected.
 
-The documentation is written in reStructured Test, and is assembled from both
-the ``docs/`` directory and from the docstrings in the code. We use `Sphinx
-formatted docstrings
-<https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html>`_. We
-encourage references to other methods and classes in docstrings, and choose to
-optimize docstrings for clarity and usefulness in the rendered output rather
-than ease of reading in the source code.
+The documentation is written in reStructured Test, and is assembled from both the
+``docs/`` directory and from the docstrings in the code. We use `Sphinx formatted
+docstrings <https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html>`_.
+We encourage references to other methods and classes in docstrings, and choose to
+optimize docstrings for clarity and usefulness in the rendered output rather than ease
+of reading in the source code.
 
-The code includes type hints as a convenience, but does not provide stub files
-nor do we use mypy to check for proper static typing. Our philosophy is that
-the dynamic nature of Python is a benefit and we shouldn't impose static type
-checking, but annotations of expected types can be helpful for documentation
-purposes.
+The code includes type hints as a convenience, but does not provide stub files nor do
+we use mypy to check for proper static typing. Our philosophy is that the dynamic
+nature of Python is a benefit and we shouldn't impose static type checking, but
+annotations of expected types can be helpful for documentation purposes.
 
 `Sphinx <http://www.sphinx-doc.org>`_ transforms the documentation source files
 into html::
@@ -309,8 +295,8 @@ into html::
   $ make html
 
 The output will be in ``docs/build/html``. We treat warnings as errors, and the
-documentation has none. Pull requests which generate errors when the
-documentation is build will be rejected.
+documentation has none. Pull requests which generate errors when the documentation is
+build will be rejected.
 
 If you are doing a lot of documentation work, the `sphinx-autobuild
 <https://github.com/GaretJax/sphinx-autobuild>`_ module has been integrated.
@@ -329,17 +315,20 @@ Use ``doc8`` to check documentation quality::
 This project is configured to prevent merges to the main or develop branch if
 doc8 returns any errors.
 
-When code is pushed to the main branch, which only happens when we cut a new
-release, the documentation is automatically built and deployed to
-`https://tomcatmanager.readthedocs.io/en/stable/ <https://tomcatmanager.readthedocs.io/en/stable/>`_. When code is pushed to the
-develop branch, the documentation is automatically built and deployed to `https://tomcatmanager.readthedocs.io/en/develop/ <https://tomcatmanager.readthedocs.io/en/develop/>`_.
+When code is pushed to the main branch, which only happens when we cut a new release,
+the documentation is automatically built and deployed to
+`https://tomcatmanager.readthedocs.io/en/stable/
+<https://tomcatmanager.readthedocs.io/en/stable/>`_. When code is pushed to the
+develop branch, the documentation is automatically built and deployed to
+`https://tomcatmanager.readthedocs.io/en/develop/
+<https://tomcatmanager.readthedocs.io/en/develop/>`_.
 
 
 Make a Release
 --------------
 
-To make a release and deploy it to `PyPI
-<https://pypi.python.org/pypi>`_, do the following:
+To make a release and deploy it to `PyPI <https://pypi.python.org/pypi>`_, do the
+following:
 
 1. Merge everything to be included in the release into the **develop** branch.
 
@@ -365,11 +354,11 @@ To make a release and deploy it to `PyPI
 
 10. Build source distribution, wheel distribution, and upload them to pypi staging::
 
-     $ invoke pypi-test
+    $ invoke pypi-test
 
 11. Build source distribution, wheel distribution, and upload them to pypi::
 
-      $ invoke pypi
+    $ invoke pypi
 
 12. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
     Make sure they look good. Add a "Version" in readthedocs which points to the tag
