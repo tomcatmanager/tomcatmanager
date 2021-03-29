@@ -112,24 +112,13 @@ class TomcatManager:
         """
         Initialize a new TomcatManager object.
         """
-        self.url = None
-        """Url of the Tomcat Manager web application we are connected to.
-
-        Best to treat this as read-only. This attribute is set by the
-        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method.
-        Look there for more info.
-        """
-
-        self.user = None
-        """User we successfully authenticated to the Tomcat Manager web application with
-
-        Best to treat this as read-only. This attribute is set by the
-        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method.
-        Look there for more info.
-        """
-
+        self._url = None
+        self._user = None
         # ask nicely for people not to access the password attribute
         self._password = None
+        # where we keep track of the version of tomcat we are connected to
+        # this is set by connect()
+        self._tomcat_major = None
 
         self.timeout = 10.0
         """Seconds to wait before giving up on network operations. Can be a
@@ -143,9 +132,27 @@ class TomcatManager:
             >>> tomcat.timeout = 3.5
         """
 
-        # where we keep track of the version of tomcat we are connected to
-        # this is set by connect()
-        self._tomcat_major = None
+
+    @property
+    def url(self):
+        """Url of the Tomcat Manager web application we are connected to.
+
+        This attribute is set by the
+        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method. Look there
+        for more info.
+        """
+        return self._url
+
+    @property
+    def user(self):
+        """User we successfully authenticated to the Tomcat Manager web application
+        with
+
+        This attribute is set by the
+        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method. Look there
+        for more info.
+        """
+        return self._user
 
     def _get(self, cmd: str, payload: dict = None) -> TomcatManagerResponse:
         """
@@ -158,7 +165,7 @@ class TomcatManager:
         :type payload: dict, optional
         :return:        `TomcatManagerResponse` object
         """
-        base = self.url or ""
+        base = self._url or ""
         # if we have no url, don't add other stuff to it because it makes
         # the exceptions hard to understand
         if base:
@@ -168,7 +175,7 @@ class TomcatManager:
         r = TomcatManagerResponse()
         r.response = requests.get(
             url,
-            auth=(self.user, self._password),
+            auth=(self._user, self._password),
             params=payload,
             timeout=self.timeout,
         )
@@ -263,8 +270,8 @@ class TomcatManager:
         :meth:`.TomcatManagerResponse.raise_for_status`.
 
         """
-        self.url = url
-        self.user = user
+        self._url = url
+        self._user = user
         self._password = password
         if timeout:
             self.timeout = timeout
@@ -277,11 +284,11 @@ class TomcatManager:
             # url, not the one passed in
             match = re.search(r"(.*)/text/serverinfo$", r.response.url)
             if match:
-                self.url = match.group(1)
+                self._url = match.group(1)
         else:
             # don't save the parameters if we don't succeed
-            self.url = None
-            self.user = None
+            self._url = None
+            self._user = None
             self._password = None
             self._tomcat_major = None
         # hide the fact that we retrieved results, we don't
@@ -328,7 +335,7 @@ class TomcatManager:
         if update:
             params["update"] = "true"
 
-        base = self.url or ""
+        base = self._url or ""
         url = base + "/text/deploy"
         r = TomcatManagerResponse()
         # have to have the requests.put call in two places so we can
@@ -336,7 +343,7 @@ class TomcatManager:
         if self._is_stream(warfile):
             r.response = requests.put(
                 url,
-                auth=(self.user, self._password),
+                auth=(self._user, self._password),
                 params=params,
                 data=warfile,
                 timeout=self.timeout,
@@ -345,7 +352,7 @@ class TomcatManager:
             with open(warfile, "rb") as warobj:
                 r.response = requests.put(
                     url,
-                    auth=(self.user, self._password),
+                    auth=(self._user, self._password),
                     params=params,
                     data=warobj,
                     timeout=self.timeout,
@@ -664,12 +671,12 @@ class TomcatManager:
         say it does.
         """
         # this command isn't in the /manager/text url space, so we can't use _get()
-        base = self.url or ""
+        base = self._url or ""
         url = base + "/status/all"
         r = TomcatManagerResponse()
         r.response = requests.get(
             url,
-            auth=(self.user, self._password),
+            auth=(self._user, self._password),
             params={"XML": "true"},
             timeout=self.timeout,
         )
