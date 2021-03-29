@@ -28,13 +28,44 @@ tomcatmanager
 A python wrapper for interacting with the Tomcat Manager web application.
 """
 
+import functools
 import collections
 import re
-from typing import List, Any
+from typing import Callable, List, Any
 
 import requests
 
-from .models import StatusCode, TomcatManagerResponse, ServerInfo, TomcatApplication
+from .models import (
+    StatusCode,
+    TomcatManagerResponse,
+    ServerInfo,
+    TomcatApplication,
+    TomcatMajor,
+)
+
+
+def _supported_by(tomcats: List = None) -> Callable:
+    """Decorator to indicate which versions of Tomcat support this method
+
+    Only useful on the :class:`.TomcatManager` class and not intended to be part
+    of the public API, thus it starts with an _
+
+    Usage:
+
+    @_supported_by([Tomcat.7, Tomcat.8])
+    def ssl_reload():
+        ...
+    """
+
+    def supported_decorator(method: Callable):
+        @functools.wraps(method)
+        def supported_wrapper(self, *args, **kwargs):
+            # print("in supported wrapper with tomcats={}".format(tomcats))
+            return method(self, *args, **kwargs)
+
+        return supported_wrapper
+
+    return supported_decorator
 
 
 class TomcatManager:
@@ -111,6 +142,10 @@ class TomcatManager:
             >>> tomcat = tm.TomcatManager()
             >>> tomcat.timeout = 3.5
         """
+
+        # where we keep track of the version of tomcat we are connected to
+        # this is set by connect()
+        self._tomcat_major = None
 
     def _get(self, cmd: str, payload: dict = None) -> TomcatManagerResponse:
         """
@@ -236,6 +271,7 @@ class TomcatManager:
         r = self.server_info()
 
         if r.ok:
+            self._tomcat_major = r.server_info.tomcat_major
             # _get added /text/serverinfo onto the end of the passed in url
             # we may have been redirected, and we want to store the new
             # url, not the one passed in
@@ -247,6 +283,7 @@ class TomcatManager:
             self.url = None
             self.user = None
             self._password = None
+            self._tomcat_major = None
         # hide the fact that we retrieved results, we don't
         # want people relying on or using this data
         r.result = ""
@@ -480,6 +517,7 @@ class TomcatManager:
             params["version"] = version
         return self._get("reload", params)
 
+    @_supported_by([TomcatMajor.V7, TomcatMajor.V8, TomcatMajor.V9, TomcatMajor.V10])
     def sessions(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Get the age of the sessions in an application.

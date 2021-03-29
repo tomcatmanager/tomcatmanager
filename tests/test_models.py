@@ -293,6 +293,7 @@ def test_dict(server_info):
 
 def test_properties(server_info):
     sinfo = tm.models.ServerInfo(result=server_info)
+    assert sinfo.tomcat_major == tm.TomcatMajor.V8
     assert sinfo.tomcat_version == "Apache Tomcat/8.0.32 (Ubuntu)"
     assert sinfo.os_name == "Linux"
     assert sinfo.os_version == "4.4.0-89-generic"
@@ -305,3 +306,28 @@ def test_parse_extra(server_info):
     lines = server_info + "New Key: New Value\n"
     sinfo = tm.models.ServerInfo(result=lines)
     assert sinfo["New Key"] == "New Value"
+
+
+###
+#
+# test Tomcat
+#
+###
+TOMCAT_VERSIONS = [
+    ("", tm.TomcatMajor.UNSUPPORTED),
+    ("Apache Tomcat/sixpointfive", tm.TomcatMajor.UNSUPPORTED),
+    ("Apache Tomcat/6.0.3", tm.TomcatMajor.UNSUPPORTED),
+    ("Tomcat Version: Apache Tomcat/7.0.33", tm.TomcatMajor.V7),
+    ("Apache Tomcat/7.0.108", tm.TomcatMajor.V7),
+    ("Apache Tomcat/8.0.0", tm.TomcatMajor.V8),
+    ("Apache Tomcat/8.5.16", tm.TomcatMajor.V8),
+    ("Apache Tomcat/9.0.44", tm.TomcatMajor.V9),
+    ("Tomcat Version: [Apache Tomcat/10.0.1", tm.TomcatMajor.V10),
+    ("[Apache Tomcat/10.0.4]", tm.TomcatMajor.V10),
+    ("[Apache Tomcat/11.0.1]", tm.TomcatMajor.VNEXT),
+]
+
+
+@pytest.mark.parametrize("version_string, major", TOMCAT_VERSIONS)
+def test_10_style(version_string, major):
+    assert tm.TomcatMajor.parse(version_string) == major

@@ -47,6 +47,7 @@ from .tomcat_manager import TomcatManager
 from .models import TomcatError
 from .models import StatusCode
 from .models import ApplicationState
+from .models import TomcatMajor
 from .interactive_tomcat_manager import InteractiveTomcatManager
 
 try:

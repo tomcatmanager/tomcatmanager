@@ -30,6 +30,7 @@ This module contains the data objects created and used by tomcatmanager.
 
 import enum
 import typing
+import re
 
 import requests
 
@@ -39,6 +40,19 @@ import tomcatmanager as tm
 class TomcatError(Exception):
     """
     Raised when the Tomcat Server responds with an error.
+    """
+
+
+class TomcatNotImplementedError(Exception):
+    """
+    Raised when a Tomcat Manager web application does not support a python
+    API call.
+    """
+
+
+class TomcatNotConnected(Exception):
+    """
+    Raised when a method is called on TomcatManager without the connect() method being called first.
     """
 
 
@@ -424,6 +438,7 @@ class ServerInfo(dict):
         line with the status info
         """
         super().__init__(*args, **kwargs)
+        self._tomcat_major = None
         self._tomcat_version = None
         self._os_name = None
         self._os_version = None
@@ -439,13 +454,24 @@ class ServerInfo(dict):
             for line in result.splitlines():
                 key, value = line.rstrip().split(":", 1)
                 self[key] = value.lstrip()
-
             self._tomcat_version = self["Tomcat Version"]
+            self._tomcat_major = TomcatMajor.parse(self._tomcat_version)
             self._os_name = self["OS Name"]
             self._os_version = self["OS Version"]
             self._os_architecture = self["OS Architecture"]
             self._jvm_version = self["JVM Version"]
             self._jvm_vendor = self["JVM Vendor"]
+
+    @property
+    def tomcat_major(self):
+        """A enumeration Tomcat version from :class:`.Tomcat`
+
+        This value is computed, not received from the server, and therefore
+        does not show up in the dictionary, ie server_info["tomcat_version"]
+        does not exist.
+
+        """
+        return self._tomcat_major
 
     @property
     def tomcat_version(self):
@@ -476,3 +502,52 @@ class ServerInfo(dict):
     def jvm_vendor(self):
         """The java virtual machine vendor."""
         return self._jvm_vendor
+
+
+@enum.unique
+class TomcatMajor(enum.Enum):
+    """An enumeration of the supported Tomcat major version numbers
+
+    A Major version has the meaning defined at `https://semver.org
+    <https://semver.org>`_
+    """
+
+    V7 = "7"
+    V8 = "8"
+    V9 = "9"
+    V10 = "10"
+    VNEXT = "next"
+    UNSUPPORTED = "unsupported"
+
+    @classmethod
+    def parse(cls, version_string: str):
+        """Return one of the enums from a string sent by the Tomcat Manager
+        web application.
+
+        :param version_string: the string value of the application state from the
+            tomcat server
+        :return: :class:`.Tomcat` instance
+        :raises ValueError: if the version string does not represent a known app
+        """
+        version_re = re.compile(r"(\d+)\.(\d+)\.(\d+)")
+        match = version_re.search(version_string)
+        ver = TomcatMajor.UNSUPPORTED
+        if match:
+            try:
+                major_ver = int(match.group(1))
+                if major_ver < 7:
+                    ver = TomcatMajor.UNSUPPORTED
+                if major_ver == 7:
+                    ver = TomcatMajor.V7
+                elif major_ver == 8:
+                    ver = TomcatMajor.V8
+                elif major_ver == 9:
+                    ver = TomcatMajor.V9
+                elif major_ver == 10:
+                    ver = TomcatMajor.V10
+                elif major_ver > 10:
+                    ver = TomcatMajor.VNEXT
+            except ValueError:
+                # leave as UNSUPPORTED
+                pass
+        return ver
