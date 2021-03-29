@@ -310,7 +310,7 @@ def test_parse_extra(server_info):
 
 ###
 #
-# test Tomcat
+# test TomcatMajor
 #
 ###
 TOMCAT_VERSIONS = [
@@ -329,5 +329,13 @@ TOMCAT_VERSIONS = [
 
 
 @pytest.mark.parametrize("version_string, major", TOMCAT_VERSIONS)
-def test_10_style(version_string, major):
+def test_tomcatmajor(version_string, major):
     assert tm.TomcatMajor.parse(version_string) == major
+
+
+def test_tomcatmajor_lowest():
+    assert tm.TomcatMajor.lowest_supported() == tm.TomcatMajor.V7
+
+
+def test_tomcatmajor_highest():
+    assert tm.TomcatMajor.highest_supported() == tm.TomcatMajor.V10

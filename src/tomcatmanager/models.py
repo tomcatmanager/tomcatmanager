@@ -509,13 +509,19 @@ class TomcatMajor(enum.Enum):
     """An enumeration of the supported Tomcat major version numbers
 
     A Major version has the meaning defined at `https://semver.org
-    <https://semver.org>`_
+    <https://semver.org>`_.
+
+    This enumation includes a value VNEXT, so that this module can mostly keep working
+    when accessing a version of Tomcat that the module doesn't officially support yet.
+
+    It also includes a value UNSUPPORTED, for older versions of Tomcat that are not
+    supported by this module.
     """
 
-    V7 = "7"
-    V8 = "8"
-    V9 = "9"
-    V10 = "10"
+    V7 = 7
+    V8 = 8
+    V9 = 9
+    V10 = 10
     VNEXT = "next"
     UNSUPPORTED = "unsupported"
 
@@ -551,3 +557,19 @@ class TomcatMajor(enum.Enum):
                 # leave as UNSUPPORTED
                 pass
         return ver
+
+    @classmethod
+    def lowest_supported(cls):
+        """
+        Return the lowest officially supported Tomcat major version
+        """
+        return TomcatMajor.V7
+
+    @classmethod
+    def highest_supported(cls):
+        """
+        Return the highest officially supported Tomcat major version
+
+        This does not include TomcatMajor.VNEXT, which exists
+        """
+        return TomcatMajor.V10
