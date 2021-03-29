@@ -55,5 +55,7 @@ try:
 except importlib_metadata.PackageNotFoundError:  # pragma: nocover
     __version__ = "unknown"
 VERSION_STRING = "{} (works with Tomcat >= {} and <= {})".format(
-    __version__, TomcatMajor.lowest_supported().value, TomcatMajor.highest_supported().value
+    __version__,
+    TomcatMajor.lowest_supported().value,
+    TomcatMajor.highest_supported().value,
 )
