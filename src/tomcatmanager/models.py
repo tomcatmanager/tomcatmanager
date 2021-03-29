@@ -31,6 +31,7 @@ This module contains the data objects created and used by tomcatmanager.
 import enum
 import typing
 import re
+from typing import List
 
 import requests
 
@@ -467,7 +468,7 @@ class ServerInfo(dict):
         """A enumeration Tomcat version from :class:`.Tomcat`
 
         This value is computed, not received from the server, and therefore
-        does not show up in the dictionary, ie server_info["tomcat_version"]
+        does not show up in the dictionary, ie server_info["tomcat_major"]
         does not exist.
 
         """
@@ -514,8 +515,7 @@ class TomcatMajor(enum.Enum):
     This enumation includes a value VNEXT, so that this module can mostly keep working
     when accessing a version of Tomcat that the module doesn't officially support yet.
 
-    It also includes a value UNSUPPORTED, for older versions of Tomcat that are not
-    supported by this module.
+    It also includes a value UNSUPPORTED, for older versions of Tomcat that are unknown to this module.
     """
 
     V7 = 7
@@ -539,37 +539,43 @@ class TomcatMajor(enum.Enum):
         match = version_re.search(version_string)
         ver = TomcatMajor.UNSUPPORTED
         if match:
-            try:
-                major_ver = int(match.group(1))
-                if major_ver < 7:
-                    ver = TomcatMajor.UNSUPPORTED
-                if major_ver == 7:
-                    ver = TomcatMajor.V7
-                elif major_ver == 8:
-                    ver = TomcatMajor.V8
-                elif major_ver == 9:
-                    ver = TomcatMajor.V9
-                elif major_ver == 10:
-                    ver = TomcatMajor.V10
-                elif major_ver > 10:
-                    ver = TomcatMajor.VNEXT
-            except ValueError:
-                # leave as UNSUPPORTED
-                pass
+            # shouldn't ever throw exceptions because of the regex
+            major_ver = int(match.group(1))
+            if major_ver < 7:
+                ver = TomcatMajor.UNSUPPORTED
+            if major_ver == 7:
+                ver = TomcatMajor.V7
+            elif major_ver == 8:
+                ver = TomcatMajor.V8
+            elif major_ver == 9:
+                ver = TomcatMajor.V9
+            elif major_ver == 10:
+                ver = TomcatMajor.V10
+            elif major_ver > 10:
+                ver = TomcatMajor.VNEXT
         return ver
+
+    @staticmethod
+    def supported() -> List:
+        """
+        Return the list of officially supported Tomcat major versions
+        """
+        return [TomcatMajor.V7, TomcatMajor.V8, TomcatMajor.V9, TomcatMajor.V10]
 
     @classmethod
     def lowest_supported(cls):
         """
         Return the lowest officially supported Tomcat major version
         """
-        return TomcatMajor.V7
+        return TomcatMajor.supported()[0]
 
     @classmethod
     def highest_supported(cls):
         """
         Return the highest officially supported Tomcat major version
 
-        This does not include TomcatMajor.VNEXT, which exists
+        This does not include TomcatMajor.VNEXT, which exists to ensure this
+        module mostly works on future versions of tomcat before official support
+        is added.
         """
-        return TomcatMajor.V10
+        return TomcatMajor.supported()[-1]

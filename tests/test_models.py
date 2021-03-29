@@ -333,6 +333,15 @@ def test_tomcatmajor(version_string, major):
     assert tm.TomcatMajor.parse(version_string) == major
 
 
+def test_tomcatmajor_supported():
+    assert tm.TomcatMajor.supported() == [
+        tm.TomcatMajor.V7,
+        tm.TomcatMajor.V8,
+        tm.TomcatMajor.V9,
+        tm.TomcatMajor.V10,
+    ]
+
+
 def test_tomcatmajor_lowest():
     assert tm.TomcatMajor.lowest_supported() == tm.TomcatMajor.V7
 
