@@ -465,12 +465,11 @@ class ServerInfo(dict):
 
     @property
     def tomcat_major(self):
-        """A enumeration Tomcat version from :class:`.Tomcat`
+        """An instance of TomcatMajor indicating which major version of Tomcat
+        is running on the server.
 
-        This value is computed, not received from the server, and therefore
-        does not show up in the dictionary, ie server_info["tomcat_major"]
-        does not exist.
-
+        This value is computed, not received from the server, and therefore does not
+        show up in the dictionary, ie server_info["tomcat_major"] does not exist.
         """
         return self._tomcat_major
 

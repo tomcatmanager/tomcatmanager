@@ -47,8 +47,8 @@ from .models import (
 def _supported_by(tomcats: List = None) -> Callable:
     """Decorator to indicate which versions of Tomcat support this method
 
-    Only useful on the :class:`.TomcatManager` class and not intended to be part
-    of the public API, thus it starts with an _
+    Only useful on the TomcatManager class and not intended to be part
+    of the public API
 
     Usage:
 
@@ -132,7 +132,6 @@ class TomcatManager:
             >>> tomcat.timeout = 3.5
         """
 
-
     @property
     def url(self):
         """Url of the Tomcat Manager web application we are connected to.
@@ -181,6 +180,31 @@ class TomcatManager:
         )
         return r
 
+    def _clear_server_attrs(self):
+        """
+        Clear the private attributes describing the server.
+
+        Intended to be called from connect() and is_connected()
+        """
+        self._user = None
+        self._password = None
+        self._url = None
+        self._tomcat_major = None
+
+    def _set_server_attrs(self, response: TomcatManagerResponse):
+        """
+        Set private attributes based on whether we connected to the url.
+
+        Intended to be called from connect() and is_connected()
+        """
+        self._tomcat_major = response.server_info.tomcat_major
+        # _get added /text/serverinfo onto the end of the passed in url
+        # we may have been redirected, and we want to store the new
+        # url, not the one passed in
+        match = re.search(r"(.*)/text/serverinfo$", response.response.url)
+        if match:
+            self._url = match.group(1)
+
     ###
     #
     # convenience and utility methods
@@ -195,7 +219,8 @@ class TomcatManager:
         """
         # pylint: disable=broad-except
         try:
-            r = self._get("serverinfo")
+            r = self.server_info()
+            self._set_server_attrs(r)
             return r.ok
         except Exception:
             return False
@@ -256,6 +281,9 @@ class TomcatManager:
         raise exceptions for everything. If the credentials are incorrect, you
         won't get an exception unless you ask for it.
 
+        Passing a timeout parameter to this method has the side effect of
+        setting the :attr:`timeout` attribute on this object.
+
         Requesting url's via http can also result in redirection to another
         url. If that occurs, the new url, not the one you passed, will be
         stored in the :attr:`url` attribute.
@@ -270,29 +298,22 @@ class TomcatManager:
         :meth:`.TomcatManagerResponse.raise_for_status`.
 
         """
+        if timeout:
+            self.timeout = timeout
+
+        self._clear_server_attrs()
         self._url = url
         self._user = user
         self._password = password
-        if timeout:
-            self.timeout = timeout
         r = self.server_info()
 
         if r.ok:
-            self._tomcat_major = r.server_info.tomcat_major
-            # _get added /text/serverinfo onto the end of the passed in url
-            # we may have been redirected, and we want to store the new
-            # url, not the one passed in
-            match = re.search(r"(.*)/text/serverinfo$", r.response.url)
-            if match:
-                self._url = match.group(1)
+            self._set_server_attrs(r)
         else:
             # don't save the parameters if we don't succeed
-            self._url = None
-            self._user = None
-            self._password = None
-            self._tomcat_major = None
+            self._clear_server_attrs()
         # hide the fact that we retrieved results, we don't
-        # want people relying on or using this data
+        # want callers relying on or using this data
         r.result = ""
         r.status_message = ""
         return r
