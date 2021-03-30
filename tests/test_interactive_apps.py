@@ -252,15 +252,6 @@ def test_expire(tomcat_manager_server, localwar_file, safe_path, version):
 # list
 #
 ###
-@pytest.fixture()
-def mock_apps(mocker):
-    return mocker.patch(
-        "tomcatmanager.models.TomcatManagerResponse.result",
-        create=True,
-        new_callable=mock.PropertyMock,
-    )
-
-
 def parse_apps(lines):
     """helper function to turn colon seperated text into objects"""
     apps = []
@@ -317,7 +308,7 @@ def test_list_parse_args(raw, state, sort):
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
-def test_list_sort_by_state(tomcat_manager_server, mock_apps, capsys):
+def test_list_sort_by_state(tomcat_manager_server, mocker, capsys):
     raw_apps = """/shiny:stopped:0:shiny##v2.0.6
 /:running:0:ROOT
 /shiny:running:15:shiny##v2.0.7
@@ -330,14 +321,21 @@ def test_list_sort_by_state(tomcat_manager_server, mock_apps, capsys):
 /shiny:running:15:shiny##v2.0.7
 /shiny:stopped:0:shiny##v2.0.6
 """
-    mock_apps.return_value = raw_apps
     interactive_tomcat = get_itm(tomcat_manager_server)
+    # have to mock this here because it messes up prior commands
+    # if we do it sooner
+    mock_apps = mocker.patch(
+        "tomcatmanager.models.TomcatManagerResponse.result",
+        create=True,
+        new_callable=mock.PropertyMock,
+    )
+    mock_apps.return_value = raw_apps
     interactive_tomcat.onecmd_plus_hooks("list --raw -b state")
     out, _ = capsys.readouterr()
     assert out == expected
 
 
-def test_list_sort_by_path(tomcat_manager_server, mock_apps, capsys):
+def test_list_sort_by_path(tomcat_manager_server, mocker, capsys):
     raw_apps = """/:running:0:ROOT
 /shiny:stopped:0:shiny##v2.0.6
 /shiny:running:15:shiny##v2.0.7
@@ -350,14 +348,21 @@ def test_list_sort_by_path(tomcat_manager_server, mock_apps, capsys):
 /shiny:stopped:0:shiny##v2.0.6
 /shiny:running:15:shiny##v2.0.7
 """
-    mock_apps.return_value = raw_apps
     interactive_tomcat = get_itm(tomcat_manager_server)
+    # have to mock this here because it messes up prior commands
+    # if we do it sooner
+    mock_apps = mocker.patch(
+        "tomcatmanager.models.TomcatManagerResponse.result",
+        create=True,
+        new_callable=mock.PropertyMock,
+    )
+    mock_apps.return_value = raw_apps
     interactive_tomcat.onecmd_plus_hooks("list --raw -b path")
     out, _ = capsys.readouterr()
     assert out == expected
 
 
-def test_list_state_running(tomcat_manager_server, mock_apps, capsys):
+def test_list_state_running(tomcat_manager_server, mocker, capsys):
     raw_apps = """/:running:0:ROOT
 /shiny:stopped:17:shiny##v2.0.6
 /shiny:running:15:shiny##v2.0.7
@@ -368,8 +373,15 @@ def test_list_state_running(tomcat_manager_server, mock_apps, capsys):
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:running:15:shiny##v2.0.7
 """
-    mock_apps.return_value = raw_apps
     interactive_tomcat = get_itm(tomcat_manager_server)
+    # have to mock this here because it messes up prior commands
+    # if we do it sooner
+    mock_apps = mocker.patch(
+        "tomcatmanager.models.TomcatManagerResponse.result",
+        create=True,
+        new_callable=mock.PropertyMock,
+    )
+    mock_apps.return_value = raw_apps
     interactive_tomcat.onecmd_plus_hooks("list --raw -s running")
     out, _ = capsys.readouterr()
     assert out == expected

@@ -133,7 +133,7 @@ class TomcatManager:
         """
 
     @property
-    def url(self):
+    def url(self) -> str:
         """Url of the Tomcat Manager web application we are connected to.
 
         This attribute is set by the
@@ -143,7 +143,7 @@ class TomcatManager:
         return self._url
 
     @property
-    def user(self):
+    def user(self) -> str:
         """User we successfully authenticated to the Tomcat Manager web application
         with
 
@@ -152,6 +152,18 @@ class TomcatManager:
         for more info.
         """
         return self._user
+
+    @property
+    def tomcat_major(self) -> TomcatMajor:
+        """If connected to a server, this contains an instance of
+        :class:`.TomcatMajor` describing the major version of
+        Tomcat we are connected to.
+
+        This attribute is set by the
+        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method. Look there
+        for more info.
+        """
+        return self._tomcat_major
 
     def _get(self, cmd: str, payload: dict = None) -> TomcatManagerResponse:
         """
@@ -217,13 +229,7 @@ class TomcatManager:
 
         :return: ``True`` if connected to a tomcat server, otherwise, ``False``.
         """
-        # pylint: disable=broad-except
-        try:
-            r = self.server_info()
-            self._set_server_attrs(r)
-            return r.ok
-        except Exception:
-            return False
+        return self._url and self._tomcat_major
 
     def connect(
         self, url: str, user: str = "", password: str = "", timeout: float = None
@@ -231,27 +237,25 @@ class TomcatManager:
         """
         Connect to a Tomcat Manager server.
 
-        :param url:      url where the Tomcat Manager web application is
-                         deployed
-        :param user:     (optional) user to authenticate with
-        :param password: (optional) password to authenticate with
-        :param timeout: timeout in seconds for network operations
-        :return:         :meth:`~tomcatmanager.models.TomcatManagerResponse`
-                         object with an additional ``server_info`` attribute
+        :param url:      url where the Tomcat Manager web application is deployed
+                         :param user:     (optional) user to authenticate with :param
+                         password: (optional) password to authenticate with :param
+                         timeout: timeout in seconds for network operations :return:
+                         :meth:`~tomcatmanager.models.TomcatManagerResponse` object
+                         with an additional ``server_info`` attribute
 
-        The ``server_info`` attribute contains a :class:`.ServerInfo` object,
-        which is a dictionary with some added properties for well-known values
-        returned from the Tomcat server.
+        The ``server_info`` attribute contains a :class:`.ServerInfo` object, which is
+        a dictionary with some added properties for well-known values returned from
+        the Tomcat server.
 
         This method:
 
         - gives you a way to change the credentials on an existing object
-        - provides a convenient mechanism to validate you can actually connect
-          to the server
-        - returns a response object that includes information about the server
-          you are connected to
-        - allow you to inspect the response so you can see why you can't
-          connect
+        - provides a convenient mechanism to validate you can actually connect to the
+          server
+        - returns a response object that includes information about the server you are
+          connected to
+        - allow you to inspect the response so you can see why you can't connect
 
         Usage::
 
@@ -271,28 +275,33 @@ class TomcatManager:
             ...    print('not connected')
             not connected
 
-        The only way to validate whether we are connected is to make an HTTP
-        request to the server and see if it returns successfully. Internally
-        this method tries to retrieve ``/manager/text/serverinfo``.
+        The only way to validate whether we are connected is to make an HTTP request
+        to the server and see if it returns successfully. Internally this method tries
+        to retrieve ``/manager/text/serverinfo``.
 
-        Requesting url's via http can raise all kinds of exceptions. For
-        example, if you give a URL where no web server is listening, you'll get
-        a ``requests.connections.ConnectionError``. However, this method won't
-        raise exceptions for everything. If the credentials are incorrect, you
-        won't get an exception unless you ask for it.
+        Requesting url's via http can raise all kinds of exceptions. For example, if
+        you give a URL where no web server is listening, you'll get a
+        ``requests.connections.ConnectionError``. However, this method won't raise
+        exceptions for everything. If the credentials are incorrect, you won't get an
+        exception unless you ask for it.
 
-        Passing a timeout parameter to this method has the side effect of
-        setting the :attr:`timeout` attribute on this object.
+        Passing a timeout parameter to this method has the side effect of setting the
+        :attr:`timeout` attribute on this object.
 
-        Requesting url's via http can also result in redirection to another
-        url. If that occurs, the new url, not the one you passed, will be
-        stored in the :attr:`url` attribute.
+        Requesting url's via http can also result in redirection to another url. If
+        that occurs, the new url, not the one you passed, will be stored in the
+        :attr:`url` attribute.
 
-        If you pass authentication credentials and the connection is successful,
-        the user will be stored in the :attr:`user` attribute.
+        If you pass authentication credentials and the connection is successful, the
+        user will be stored in the :attr:`user` attribute.
 
-        If you discard or don't save the return object from this method, you can
-        call :meth:`is_connected` to check if you are connected.
+        Upon successful connection, an instance of :class:`.TomcatMajor` will be
+        stored in :attr:`tomcat_major` indicating the major version of Tomcat running
+        on the server. Further details about the server are available in the
+        `server_info` attribute of the returned response.
+
+        If you discard or don't save the return object from this method, you can call
+        :meth:`is_connected` to check if you are connected.
 
         If you want to raise more exceptions see
         :meth:`.TomcatManagerResponse.raise_for_status`.
@@ -312,10 +321,6 @@ class TomcatManager:
         else:
             # don't save the parameters if we don't succeed
             self._clear_server_attrs()
-        # hide the fact that we retrieved results, we don't
-        # want callers relying on or using this data
-        r.result = ""
-        r.status_message = ""
         return r
 
     ###
