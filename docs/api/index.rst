@@ -16,4 +16,4 @@ Python API documentation for tomcatmanager |release|
    ServerInfo
    TomcatError
    migrating2
-
+   migrating3
