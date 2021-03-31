@@ -427,7 +427,8 @@ class TomcatMajor(enum.Enum):
     This enumation includes a value VNEXT, so that this module can mostly keep working
     when accessing a version of Tomcat that the module doesn't officially support yet.
 
-    It also includes a value UNSUPPORTED, for older versions of Tomcat that are unknown to this module.
+    It also includes a value UNSUPPORTED, for older versions of Tomcat that are unknown
+    to this module.
     """
 
     V7 = 7
