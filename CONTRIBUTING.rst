@@ -116,6 +116,18 @@ You can run multiple tasks in a single invocation, for example::
 That one command will remove all superflous cache, testing, and build files, render
 the documentation, and build a source distribution and a wheel distribution.
 
+To make it easy to check everything before you commit, you can just type:
+
+  $ invoke check
+  ...
+  $ echo $?
+  0
+
+and it will test, lint, and format all the code and all the documentation. If this
+doesn't complete everything successfully then you still need to fix some stuff before
+you commit or submit a pull request. In this context, complete everything successfully
+means all tests pass, lint returns a perfect score, doc8 returns a perfect score, etc.
+
 
 Testing
 -------
