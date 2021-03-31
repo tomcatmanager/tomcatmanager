@@ -132,7 +132,7 @@ def _deploy_parser(
     return deploy_parser
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-many-instance-attributes
 class InteractiveTomcatManager(cmd2.Cmd):
     """An interactive command line tool for the Tomcat Manager web application.
 
@@ -407,6 +407,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     def do_help(self, args: str):
         """Show available commands, or help on a specific command."""
+        # pylint: disable=too-many-statements
         if args:
             # they want help on a specific command, use cmd2 for that
             super().do_help(args)
@@ -797,6 +798,7 @@ change the value of one of this program's settings
 
     def do_connect(self, cmdline: cmd2.Statement):
         """Connect to a tomcat manager instance."""
+        # pylint: disable=too-many-branches, too-many-statements
         url = None
         user = None
         password = None
