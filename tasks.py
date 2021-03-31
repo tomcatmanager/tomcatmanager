@@ -40,7 +40,7 @@ namespace.add_collection(namespace_check, "check")
 @invoke.task
 def pytest(context):
     "Run tests and code coverage using pytest"
-    context.run("pytest --cov=tomcatmanager", pty=True)
+    context.run("pytest", echo=True, pty=True)
 
 
 namespace.add_task(pytest)
@@ -61,7 +61,7 @@ namespace_clean.add_task(pytest_clean, "pytest")
 @invoke.task
 def tox(context):
     "Run unit and integration tests on multiple python versions using tox"
-    context.run("tox")
+    context.run("tox", echo=True)
 
 
 namespace.add_task(tox)
@@ -80,7 +80,7 @@ namespace_clean.add_task(tox_clean, "tox")
 @invoke.task
 def pylint(context):
     "Check code quality using pylint"
-    context.run("pylint src/tomcatmanager tests")
+    context.run("pylint src/tomcatmanager tests", echo=True)
 
 
 namespace.add_task(pylint)
@@ -90,7 +90,7 @@ namespace_check.add_task(pylint)
 @invoke.task
 def black_check(context):
     """Check if code is properly formatted using black"""
-    context.run("black --check *.py tests src docs")
+    context.run("black --check *.py tests src docs", echo=True)
 
 
 namespace.add_task(black_check)
@@ -99,7 +99,7 @@ namespace.add_task(black_check)
 @invoke.task
 def black(context):
     """Format code using black"""
-    context.run("black *.py tests src docs")
+    context.run("black *.py tests src docs", echo=True)
 
 
 namespace.add_task(black)
@@ -122,7 +122,7 @@ def docs(context, builder="html"):
     cmdline = "python -msphinx -M {} {} {} {}".format(
         builder, DOCS_SRCDIR, DOCS_BUILDDIR, SPHINX_OPTS
     )
-    context.run(cmdline)
+    context.run(cmdline, echo=True)
 
 
 namespace.add_task(docs)
@@ -132,7 +132,7 @@ namespace_check.add_task(docs)
 @invoke.task()
 def doc8(context):
     "Check documentation with doc8"
-    context.run("doc8 {} {}".format(DOCS_SRCDIR, DOCS_ADDITIONAL))
+    context.run("doc8 {} {}".format(DOCS_SRCDIR, DOCS_ADDITIONAL), echo=True)
 
 
 namespace.add_task(doc8)
@@ -158,7 +158,7 @@ def livehtml(context):
     cmdline = "sphinx-autobuild -b {} {} {} {}".format(
         builder, DOCS_SRCDIR, outputdir, watch
     )
-    context.run(cmdline, pty=True)
+    context.run(cmdline, echo=True, pty=True)
 
 
 namespace.add_task(livehtml)
