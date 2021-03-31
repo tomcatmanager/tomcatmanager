@@ -21,6 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+# pylint: disable=protected-access, missing-function-docstring, too-many-lines
+# pylint: disable=missing-module-docstring, unused-variable, redefined-outer-name
 
 import os
 import tempfile
@@ -49,8 +51,8 @@ def get_itm(tms):
 def itm_with_config(mocker, configstring):
     """Return an InteractiveTomcatManager object with the config set from the passed string."""
     itm = tm.InteractiveTomcatManager()
-    fd, fname = tempfile.mkstemp(prefix="", suffix=".ini")
-    os.close(fd)
+    fdesc, fname = tempfile.mkstemp(prefix="", suffix=".ini")
+    os.close(fdesc)
     with open(fname, "w") as fobj:
         fobj.write(configstring)
 
@@ -318,7 +320,7 @@ def test_load_config(mocker):
     assert itm.prompt == prompt
 
 
-def test_load_config_file_not_found(mocker):
+def test_load_config_file_not_found():
     with mock.patch("builtins.open", mock.mock_open()) as mocked_open:
         mocked_open.side_effect = FileNotFoundError()
         itm = tm.InteractiveTomcatManager()
@@ -552,7 +554,9 @@ def test_connect_fail_debug(tomcat_manager_server, mocker):
     assert itm.exit_code == itm.EXIT_ERROR
 
 
+# pylint: disable=too-few-public-methods
 class MockResponse:
+    """Simple class to help mock.patch"""
     def __init__(self, code):
         self.status_code = code
 

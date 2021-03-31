@@ -21,6 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+# pylint: disable=protected-access, missing-function-docstring
+# pylint: disable=missing-module-docstring, unused-variable, redefined-outer-name
 
 import unittest.mock as mock
 
@@ -140,71 +142,71 @@ def apps():
 
 def test_parse_root():
     line = "/:running:0:ROOT"
-    ta = tm.models.TomcatApplication()
-    ta.parse(line)
-    assert ta.path == "/"
-    assert ta.state == tm.ApplicationState.RUNNING
-    assert ta.sessions == 0
-    assert ta.directory == "ROOT"
-    assert ta.version is None
-    assert ta.directory_and_version == ta.directory
+    tcapp = tm.models.TomcatApplication()
+    tcapp.parse(line)
+    assert tcapp.path == "/"
+    assert tcapp.state == tm.ApplicationState.RUNNING
+    assert tcapp.sessions == 0
+    assert tcapp.directory == "ROOT"
+    assert tcapp.version is None
+    assert tcapp.directory_and_version == tcapp.directory
 
 
 def test_parse_app_with_slash_in_directory():
     line = "/manager:running:0:/usr/share/tomcat8-admin/manager"
-    ta = tm.models.TomcatApplication()
-    ta.parse(line)
-    assert ta.path == "/manager"
-    assert ta.state == tm.ApplicationState.RUNNING
-    assert ta.sessions == 0
-    assert ta.directory == "/usr/share/tomcat8-admin/manager"
-    assert ta.version is None
-    assert ta.directory_and_version == ta.directory
+    tcapp = tm.models.TomcatApplication()
+    tcapp.parse(line)
+    assert tcapp.path == "/manager"
+    assert tcapp.state == tm.ApplicationState.RUNNING
+    assert tcapp.sessions == 0
+    assert tcapp.directory == "/usr/share/tomcat8-admin/manager"
+    assert tcapp.version is None
+    assert tcapp.directory_and_version == tcapp.directory
 
 
 def test_parse_app_with_non_integer_sessions():
     line = "/:running:not_an_integer:ROOT"
-    ta = tm.models.TomcatApplication()
+    tcapp = tm.models.TomcatApplication()
     with pytest.raises(ValueError):
-        ta.parse(line)
+        tcapp.parse(line)
 
 
 def test_parse_version():
     line = "/shiny:stopped:17:shiny##v2.0.6"
-    ta = tm.models.TomcatApplication()
-    ta.parse(line)
-    assert ta.path == "/shiny"
-    assert ta.state == tm.ApplicationState.STOPPED
-    assert ta.sessions == 17
-    assert ta.directory == "shiny"
-    assert ta.version == "v2.0.6"
-    assert ta.directory_and_version == "shiny##v2.0.6"
+    tcapp = tm.models.TomcatApplication()
+    tcapp.parse(line)
+    assert tcapp.path == "/shiny"
+    assert tcapp.state == tm.ApplicationState.STOPPED
+    assert tcapp.sessions == 17
+    assert tcapp.directory == "shiny"
+    assert tcapp.version == "v2.0.6"
+    assert tcapp.directory_and_version == "shiny##v2.0.6"
 
 
 def test_str_without_version():
     line = "/shiny:running:8:shiny"
-    ta = tm.models.TomcatApplication()
-    ta.parse(line)
-    assert str(ta) == line
+    tcapp = tm.models.TomcatApplication()
+    tcapp.parse(line)
+    assert str(tcapp) == line
 
 
 def test_str_with_version():
     line = "/shiny:stopped:17:shiny##v2.0.6"
-    ta = tm.models.TomcatApplication()
-    ta.parse(line)
-    assert str(ta) == line
+    tcapp = tm.models.TomcatApplication()
+    tcapp.parse(line)
+    assert str(tcapp) == line
 
 
 def test_str_with_zero_sessions():
     line = "/shiny:running:0:shiny##v2.0.6"
-    ta = tm.models.TomcatApplication()
-    ta.parse(line)
-    assert str(ta) == line
+    tcapp = tm.models.TomcatApplication()
+    tcapp.parse(line)
+    assert str(tcapp) == line
 
 
 def test_directory_and_version_empty():
-    ta = tm.models.TomcatApplication()
-    assert ta.directory_and_version is None
+    tcapp = tm.models.TomcatApplication()
+    assert tcapp.directory_and_version is None
 
 
 def parse_apps(lines):

@@ -21,6 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+# pylint: disable=protected-access, missing-function-docstring
+# pylint: disable=missing-module-docstring, unused-variable
 
 import unittest.mock as mock
 
@@ -76,6 +78,7 @@ def test_resources_named_class(tomcat, mocker, assert_tomcatresponse):
     mock_result = mocker.patch(
         "requests.Response.text", create=True, new_callable=mock.PropertyMock
     )
+    # pylint: disable= line-too-long
     mock_result.return_value = """OK - Listed global resources of type [org.apache.catalina.users.MemoryUserDatabase]
 UserDatabase:org.apache.catalina.users.MemoryUserDatabase"""
     r = tomcat.resources("org.apache.catalina.users.MemoryUserDatabase")

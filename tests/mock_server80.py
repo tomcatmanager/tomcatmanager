@@ -21,6 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+# pylint: disable=too-many-lines, too-many-public-methods
 
 """
 Mock up a Tomcat Manager application that behaves like tomcat version 8.0.x
@@ -85,7 +86,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         # pylint: disable=arguments-differ,unused-argument
         return
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches, invalid-name
     @requires_authorization
     def do_GET(self):
         """Handle all HTTP GET requests."""
