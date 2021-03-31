@@ -557,6 +557,7 @@ def test_connect_fail_debug(tomcat_manager_server, mocker):
 # pylint: disable=too-few-public-methods
 class MockResponse:
     """Simple class to help mock.patch"""
+
     def __init__(self, code):
         self.status_code = code
 

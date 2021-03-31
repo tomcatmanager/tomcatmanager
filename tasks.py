@@ -46,6 +46,7 @@ def pytest(context):
 namespace.add_task(pytest)
 namespace_check.add_task(pytest)
 
+
 @invoke.task
 def pytest_clean(context):
     "Remove pytest cache and code coverage files and directories"
@@ -84,6 +85,7 @@ def pylint(context):
 
 namespace.add_task(pylint)
 namespace_check.add_task(pylint)
+
 
 @invoke.task
 def black_check(context):
@@ -126,6 +128,7 @@ def docs(context, builder="html"):
 namespace.add_task(docs)
 namespace_check.add_task(docs)
 
+
 @invoke.task()
 def doc8(context):
     "Check documentation with doc8"
@@ -134,6 +137,7 @@ def doc8(context):
 
 namespace.add_task(doc8)
 namespace_check.add_task(doc8)
+
 
 @invoke.task
 def docs_clean(context):
@@ -223,17 +227,20 @@ def bytecode_clean(context):
 
 namespace_clean.add_task(bytecode_clean, "bytecode")
 
+
 @invoke.task(pre=list(namespace_check.tasks.values()), default=True)
-def check_all(context): # pylint: disable=unused-argument
+def check_all(context):
     "Run this before you commit or submit a pull request"
+    # pylint: disable=unused-argument
+
 
 namespace_check.add_task(check_all, "all")
 
 
 @invoke.task(pre=list(namespace_clean.tasks.values()), default=True)
-# pylint: disable=unused-argument
 def clean_all(context):
-    "Run all clean tasks"
+    "Clean everything"
+    # pylint: disable=unused-argument
 
 
 namespace_clean.add_task(clean_all, "all")
