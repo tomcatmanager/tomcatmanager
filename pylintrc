@@ -1,11 +1,14 @@
 #
 # pylint configuration for tomcatmanager package
 #
-#   $ pylint --rcfile=tomcatmanager/pylintrc tomcatmanager
+#   $ pylint src/tomcatmanager tests
 #
 
 [basic]
-good-names=ok,r
+good-names=r,ok
+# allow for longer method and function names
+method-rgx=(([a-z][a-z0-9_]{2,50})|(_[a-z0-9_]*))$
+function-rgx=(([a-z][a-z0-9_]{2,50})|(_[a-z0-9_]*))$
 
 [messages control]
 # no-member          requests uses LookupDict which makes all these errors
