@@ -40,7 +40,7 @@ from .models import (
     TomcatManagerResponse,
     ServerInfo,
     TomcatApplication,
-    TomcatMajor,
+    TomcatMajorMinor,
     TomcatNotImplementedError,
     TomcatNotConnected,
 )
@@ -85,14 +85,14 @@ class TomcatManager:
         expect they will work in future versions of Tomcat too. Use the
         decorator like this:
 
-            @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+            @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
             def list(self):
                 ...
 
         If a method is known to only work in certain versions of Tomcat, use
         the decorator like this:
 
-            @_implemented_by([TomcatMajor.V8, TomcatMajor.V9, TomcatMajor.V10, TomcatMajor.VNEXT])
+            @_implemented_by([TomcatMajorMinor.V8, TomcatMajorMinor.V9, TomcatMajorMinor.V10, TomcatMajorMinor.VNEXT])
             def ssl_reload(self):
                 ...
 
@@ -114,11 +114,11 @@ class TomcatManager:
                 # celff is the instance of TomcatManager
                 # these are the arguments passed to the decorated function
                 if celff.is_connected:
-                    if celff.tomcat_major in self.tomcats:
+                    if celff.tomcat_major_minor in self.tomcats:
                         return method(celff, *args, **kwargs)
                     raise TomcatNotImplementedError(
                         "'{}' not implemented on Tomcat {}".format(
-                            method.__name__, celff.tomcat_major.value
+                            method.__name__, celff.tomcat_major_minor.value
                         )
                     )
                 raise TomcatNotConnected("not connected")
@@ -145,7 +145,7 @@ class TomcatManager:
         self._password = None
         # where we keep track of the version of tomcat we are connected to
         # this is set by connect()
-        self._tomcat_major = None
+        self._tomcat_major_minor = None
 
         self.timeout = 10.0
         """Seconds to wait before giving up on network operations. Can be a
@@ -181,16 +181,16 @@ class TomcatManager:
         return self._user
 
     @property
-    def tomcat_major(self) -> TomcatMajor:
+    def tomcat_major_minor(self) -> TomcatMajorMinor:
         """If connected to a server, this contains an instance of
-        :class:`.TomcatMajor` describing the major version of
+        :class:`.TomcatMajorMinor` describing the major version of
         Tomcat we are connected to.
 
         This attribute is set by the
         :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method. Look there
         for more info.
         """
-        return self._tomcat_major
+        return self._tomcat_major_minor
 
     def _get(self, cmd: str, payload: dict = None) -> TomcatManagerResponse:
         """
@@ -228,7 +228,7 @@ class TomcatManager:
         self._user = None
         self._password = None
         self._url = None
-        self._tomcat_major = None
+        self._tomcat_major_minor = None
 
     def _set_server_attrs(self, response: TomcatManagerResponse):
         """
@@ -236,7 +236,7 @@ class TomcatManager:
 
         Intended to be called from connect() and is_connected()
         """
-        self._tomcat_major = response.server_info.tomcat_major
+        self._tomcat_major_minor = response.server_info.tomcat_major_minor
         # _get added /text/serverinfo onto the end of the passed in url
         # we may have been redirected, and we want to store the new
         # url, not the one passed in
@@ -256,7 +256,7 @@ class TomcatManager:
 
         :return: ``True`` if connected to a tomcat server, otherwise, ``False``.
         """
-        return self._url and self._tomcat_major
+        return self._url and self._tomcat_major_minor
 
     def connect(
         self, url: str, user: str = "", password: str = "", timeout: float = None
@@ -322,8 +322,8 @@ class TomcatManager:
         If you pass authentication credentials and the connection is successful, the
         user will be stored in the :attr:`user` attribute.
 
-        Upon successful connection, an instance of :class:`.TomcatMajor` will be
-        stored in :attr:`tomcat_major` indicating the major version of Tomcat running
+        Upon successful connection, an instance of :class:`.TomcatMajorMinor` will be
+        stored in :attr:`tomcat_major_minor` indicating the major version of Tomcat running
         on the server. Further details about the server are available in the
         `server_info` attribute of the returned response.
 
@@ -358,7 +358,7 @@ class TomcatManager:
     # managing applications
     #
     ###
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def deploy_localwar(
         self, path: str, warfile: str, version: str = None, update: bool = False
     ) -> TomcatManagerResponse:
@@ -416,7 +416,7 @@ class TomcatManager:
                 )
         return r
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def deploy_serverwar(
         self, path: str, warfile: str, version: str = None, update: bool = False
     ) -> TomcatManagerResponse:
@@ -452,7 +452,7 @@ class TomcatManager:
         r = self._get("deploy", params)
         return r
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def deploy_servercontext(
         self,
         path: str,
@@ -500,7 +500,7 @@ class TomcatManager:
         r = self._get("deploy", params)
         return r
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def undeploy(self, path: str, version: str = None) -> TomcatManagerResponse:
         """Undeploy the application at a given path.
 
@@ -522,7 +522,7 @@ class TomcatManager:
             params["version"] = version
         return self._get("undeploy", params)
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def start(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Start the application at a given path.
@@ -544,7 +544,7 @@ class TomcatManager:
             params["version"] = version
         return self._get("start", params)
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def stop(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Stop the application at a given path.
@@ -566,7 +566,7 @@ class TomcatManager:
             params["version"] = version
         return self._get("stop", params)
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def reload(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Reload (stop and start) the application at a given path.
@@ -588,7 +588,7 @@ class TomcatManager:
             params["version"] = version
         return self._get("reload", params)
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def sessions(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Get the age of the sessions in an application.
@@ -622,7 +622,7 @@ class TomcatManager:
             r.sessions = r.result
         return r
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def expire(
         self, path: str, version: str = None, idle: Any = None
     ) -> TomcatManagerResponse:
@@ -660,7 +660,7 @@ class TomcatManager:
             r.sessions = r.result
         return r
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def list(self) -> TomcatManagerResponse:
         """
         Get a list of all applications currently installed.
@@ -692,7 +692,7 @@ class TomcatManager:
     #
     ###
     @_implemented_by(
-        [TomcatMajor.V8, TomcatMajor.V9, TomcatMajor.V10, TomcatMajor.VNEXT]
+        [TomcatMajorMinor.V8_0, TomcatMajorMinor.V8_5, TomcatMajorMinor.V9_0, TomcatMajorMinor.V10_0, TomcatMajorMinor.VNEXT]
     )
     def ssl_connector_ciphers(self) -> TomcatManagerResponse:
         """
@@ -705,7 +705,7 @@ class TomcatManager:
         r.ssl_connector_ciphers = r.result
         return r
 
-    @_implemented_by([TomcatMajor.V9, TomcatMajor.V10, TomcatMajor.VNEXT])
+    @_implemented_by([TomcatMajorMinor.V8_5, TomcatMajorMinor.V9_0, TomcatMajorMinor.V10_0, TomcatMajorMinor.VNEXT])
     def ssl_connector_certs(self) -> TomcatManagerResponse:
         """
         Get the SSL certificate chain currently configured for each virtual host
@@ -717,7 +717,7 @@ class TomcatManager:
         r.ssl_connector_certs = r.result
         return r
 
-    @_implemented_by([TomcatMajor.V9, TomcatMajor.V10, TomcatMajor.VNEXT])
+    @_implemented_by([TomcatMajorMinor.V8_5, TomcatMajorMinor.V9_0, TomcatMajorMinor.V10_0, TomcatMajorMinor.VNEXT])
     def ssl_connector_trusted_certs(self) -> TomcatManagerResponse:
         """
         Get the trusted certificates currently configured for each virtual host
@@ -729,7 +729,7 @@ class TomcatManager:
         r.ssl_connector_trusted_certs = r.result
         return r
 
-    @_implemented_by([TomcatMajor.V9, TomcatMajor.V10, TomcatMajor.VNEXT])
+    @_implemented_by([TomcatMajorMinor.V8_5, TomcatMajorMinor.V9_0, TomcatMajorMinor.V10_0, TomcatMajorMinor.VNEXT])
     def ssl_reload(self, host: str = None) -> TomcatManagerResponse:
         """
         Reload TLS certificates and keys (but not server.xml) for a specified or all virtual hosts
@@ -749,7 +749,7 @@ class TomcatManager:
     # These commands return info about the server
     #
     ###
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def server_info(self) -> TomcatManagerResponse:
         """
         Get information about the Tomcat server.
@@ -774,7 +774,7 @@ class TomcatManager:
         r.server_info = ServerInfo(result=r.result)
         return r
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def status_xml(self) -> TomcatManagerResponse:
         """
         Get server status information in XML format.
@@ -819,7 +819,7 @@ class TomcatManager:
             r.status_message = StatusCode.FAIL.value
         return r
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def vm_info(self) -> TomcatManagerResponse:
         """
         Get diagnostic information about the JVM.
@@ -831,7 +831,7 @@ class TomcatManager:
         r.vm_info = r.result
         return r
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def thread_dump(self) -> TomcatManagerResponse:
         """
         Get a jvm thread dump.
@@ -843,7 +843,7 @@ class TomcatManager:
         r.thread_dump = r.result
         return r
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def resources(self, type_: str = None) -> TomcatManagerResponse:
         """
         Get the global JNDI resources available for use in resource links for context config files
@@ -881,7 +881,7 @@ class TomcatManager:
         r.resources = resources
         return r
 
-    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def find_leakers(self) -> TomcatManagerResponse:
         """
         Get apps that leak memory.

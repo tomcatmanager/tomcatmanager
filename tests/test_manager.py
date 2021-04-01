@@ -77,7 +77,7 @@ def test_connect_noauth(tomcat_manager_server):
 def test_connect_auth(tomcat_manager_server):
     tomcat = tm.TomcatManager()
     assert not tomcat.is_connected
-    assert not tomcat.tomcat_major
+    assert not tomcat.tomcat_major_minor
     r = tomcat.connect(
         tomcat_manager_server.url,
         tomcat_manager_server.user,
@@ -87,7 +87,7 @@ def test_connect_auth(tomcat_manager_server):
     assert r.status_code == tm.StatusCode.OK
     assert r.server_info
     assert tomcat.is_connected
-    assert tomcat.tomcat_major
+    assert tomcat.tomcat_major_minor
     r.raise_for_status()
 
 
@@ -96,7 +96,7 @@ def test_connect_connection_error(tomcat_manager_server, mocker):
     get_mock.side_effect = requests.exceptions.ConnectionError()
     tomcat = tm.TomcatManager()
     assert not tomcat.is_connected
-    assert not tomcat.tomcat_major
+    assert not tomcat.tomcat_major_minor
     with pytest.raises(requests.exceptions.ConnectionError):
         r = tomcat.connect(
             tomcat_manager_server.url,
@@ -110,7 +110,7 @@ def test_connect_timeout(tomcat_manager_server, mocker):
     get_mock.side_effect = requests.exceptions.Timeout()
     tomcat = tm.TomcatManager()
     assert not tomcat.is_connected
-    assert not tomcat.tomcat_major
+    assert not tomcat.tomcat_major_minor
     with pytest.raises(requests.exceptions.Timeout):
         r = tomcat.connect(
             tomcat_manager_server.url,
@@ -123,7 +123,7 @@ def test_connect_sets_timeout(tomcat_manager_server):
     tomcat = tm.TomcatManager()
     tomcat.timeout = 10
     assert not tomcat.is_connected
-    assert not tomcat.tomcat_major
+    assert not tomcat.tomcat_major_minor
     r = tomcat.connect(
         tomcat_manager_server.url,
         tomcat_manager_server.user,
@@ -134,6 +134,6 @@ def test_connect_sets_timeout(tomcat_manager_server):
     assert r.status_code == tm.StatusCode.OK
     assert r.server_info
     assert tomcat.is_connected
-    assert tomcat.tomcat_major
+    assert tomcat.tomcat_major_minor
     assert tomcat.timeout == 5
     r.raise_for_status()

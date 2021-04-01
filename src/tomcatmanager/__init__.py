@@ -50,7 +50,7 @@ from .models import (
     TomcatNotImplementedError,
     StatusCode,
     ApplicationState,
-    TomcatMajor,
+    TomcatMajorMinor,
 )
 from .interactive_tomcat_manager import InteractiveTomcatManager
 
@@ -60,6 +60,6 @@ except importlib_metadata.PackageNotFoundError:  # pragma: nocover
     __version__ = "unknown"
 VERSION_STRING = "{} (works with Tomcat >= {} and <= {})".format(
     __version__,
-    TomcatMajor.lowest_supported().value,
-    TomcatMajor.highest_supported().value,
+    TomcatMajorMinor.lowest_supported().value,
+    TomcatMajorMinor.highest_supported().value,
 )

@@ -295,7 +295,7 @@ def test_dict(server_info):
 
 def test_properties(server_info):
     sinfo = tm.models.ServerInfo(result=server_info)
-    assert sinfo.tomcat_major == tm.TomcatMajor.V8
+    assert sinfo.tomcat_major_minor == tm.TomcatMajorMinor.V8_0
     assert sinfo.tomcat_version == "Apache Tomcat/8.0.32 (Ubuntu)"
     assert sinfo.os_name == "Linux"
     assert sinfo.os_version == "4.4.0-89-generic"
@@ -316,37 +316,39 @@ def test_parse_extra(server_info):
 #
 ###
 TOMCAT_VERSIONS = [
-    ("", tm.TomcatMajor.UNSUPPORTED),
-    ("Apache Tomcat/sixpointfive", tm.TomcatMajor.UNSUPPORTED),
-    ("Apache Tomcat/6.0.3", tm.TomcatMajor.UNSUPPORTED),
-    ("Tomcat Version: Apache Tomcat/7.0.33", tm.TomcatMajor.V7),
-    ("Apache Tomcat/7.0.108", tm.TomcatMajor.V7),
-    ("Apache Tomcat/8.0.0", tm.TomcatMajor.V8),
-    ("Apache Tomcat/8.5.16", tm.TomcatMajor.V8),
-    ("Apache Tomcat/9.0.44", tm.TomcatMajor.V9),
-    ("Tomcat Version: [Apache Tomcat/10.0.1", tm.TomcatMajor.V10),
-    ("[Apache Tomcat/10.0.4]", tm.TomcatMajor.V10),
-    ("[Apache Tomcat/11.0.1]", tm.TomcatMajor.VNEXT),
+    ("", tm.TomcatMajorMinor.UNSUPPORTED),
+    ("Apache Tomcat/sixpointfive", tm.TomcatMajorMinor.UNSUPPORTED),
+    ("Apache Tomcat/6.0.3", tm.TomcatMajorMinor.UNSUPPORTED),
+    ("Tomcat Version: Apache Tomcat/7.0.33", tm.TomcatMajorMinor.V7_0),
+    ("Apache Tomcat/7.0.108", tm.TomcatMajorMinor.V7_0),
+    ("Apache Tomcat/8.0.0", tm.TomcatMajorMinor.V8_0),
+    ("Apache Tomcat/8.5.16", tm.TomcatMajorMinor.V8_5),
+    ("Apache Tomcat/9.0.44", tm.TomcatMajorMinor.V9_0),
+    ("Tomcat Version: [Apache Tomcat/10.0.1", tm.TomcatMajorMinor.V10_0),
+    ("[Apache Tomcat/10.0.4]", tm.TomcatMajorMinor.V10_0),
+    ("[Apache Tomcat/10.1.3]", tm.TomcatMajorMinor.VNEXT),
+    ("[Apache Tomcat/11.0.1]", tm.TomcatMajorMinor.VNEXT),
 ]
 
 
 @pytest.mark.parametrize("version_string, major", TOMCAT_VERSIONS)
 def test_tomcatmajor(version_string, major):
-    assert tm.TomcatMajor.parse(version_string) == major
+    assert tm.TomcatMajorMinor.parse(version_string) == major
 
 
 def test_tomcatmajor_supported():
-    assert tm.TomcatMajor.supported() == [
-        tm.TomcatMajor.V7,
-        tm.TomcatMajor.V8,
-        tm.TomcatMajor.V9,
-        tm.TomcatMajor.V10,
+    assert tm.TomcatMajorMinor.supported() == [
+        tm.TomcatMajorMinor.V7_0,
+        tm.TomcatMajorMinor.V8_0,
+        tm.TomcatMajorMinor.V8_5,
+        tm.TomcatMajorMinor.V9_0,
+        tm.TomcatMajorMinor.V10_0,
     ]
 
 
 def test_tomcatmajor_lowest():
-    assert tm.TomcatMajor.lowest_supported() == tm.TomcatMajor.V7
+    assert tm.TomcatMajorMinor.lowest_supported() == tm.TomcatMajorMinor.V7_0
 
 
 def test_tomcatmajor_highest():
-    assert tm.TomcatMajor.highest_supported() == tm.TomcatMajor.V10
+    assert tm.TomcatMajorMinor.highest_supported() == tm.TomcatMajorMinor.V10_0

@@ -47,10 +47,10 @@ def test_implemented_by_invalid(mocker):
     )
     cmock.return_value = True
     vmock = mocker.patch(
-        "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major",
+        "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major_minor",
         new_callable=mock.PropertyMock,
     )
-    vmock.return_value = tm.TomcatMajor.V7
+    vmock.return_value = tm.TomcatMajorMinor.V7_0
 
     with pytest.raises(tm.TomcatNotImplementedError):
         response = tomcat.ssl_reload()
@@ -64,10 +64,10 @@ def test_implemented_by_decorations7(mocker):
     )
     cmock.return_value = True
     vmock = mocker.patch(
-        "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major",
+        "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major_minor",
         new_callable=mock.PropertyMock,
     )
-    vmock.return_value = tm.TomcatMajor.V7
+    vmock.return_value = tm.TomcatMajorMinor.V7_0
     # don't care if this errors because all we care is that the decorator
     # allowed us to try and make a HTTP request. Functionality of the
     # decorated method is tested elsewhere
@@ -115,7 +115,7 @@ def test_implemented_by_decorations7(mocker):
     assert gmock.call_count == 7
 
 
-def test_implemented_by_decorations8(mocker):
+def test_implemented_by_decorations8_0(mocker):
     tomcat = tm.TomcatManager()
     cmock = mocker.patch(
         "tomcatmanager.tomcat_manager.TomcatManager.is_connected",
@@ -123,10 +123,10 @@ def test_implemented_by_decorations8(mocker):
     )
     cmock.return_value = True
     vmock = mocker.patch(
-        "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major",
+        "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major_minor",
         new_callable=mock.PropertyMock,
     )
-    vmock.return_value = tm.TomcatMajor.V8
+    vmock.return_value = tm.TomcatMajorMinor.V8_0
     # don't care if this errors because all we care is that the decorator
     # allowed us to try and make a HTTP request. Functionality of the
     # decorated method is tested elsewhere
@@ -178,9 +178,10 @@ def test_implemented_by_decorations8(mocker):
 
 
 TOMCAT_MAJORS = [
-    tm.TomcatMajor.V9,
-    tm.TomcatMajor.V10,
-    tm.TomcatMajor.VNEXT,
+    tm.TomcatMajorMinor.V8_5,
+    tm.TomcatMajorMinor.V9_0,
+    tm.TomcatMajorMinor.V10_0,
+    tm.TomcatMajorMinor.VNEXT,
 ]
 
 
@@ -209,9 +210,9 @@ METHOD_MATRIX = [
 ]
 
 
-@pytest.mark.parametrize("tomcat_major", TOMCAT_MAJORS)
+@pytest.mark.parametrize("tomcat_major_minor", TOMCAT_MAJORS)
 @pytest.mark.parametrize("method, arg_count, exc", METHOD_MATRIX)
-def test_implemented_by_decorations_short(mocker, tomcat_major, arg_count, method, exc):
+def test_implemented_by_decorations_short(mocker, tomcat_major_minor, arg_count, method, exc):
     tomcat = tm.TomcatManager()
     cmock = mocker.patch(
         "tomcatmanager.tomcat_manager.TomcatManager.is_connected",
@@ -219,10 +220,10 @@ def test_implemented_by_decorations_short(mocker, tomcat_major, arg_count, metho
     )
     cmock.return_value = True
     vmock = mocker.patch(
-        "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major",
+        "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major_minor",
         new_callable=mock.PropertyMock,
     )
-    vmock.return_value = tomcat_major
+    vmock.return_value = tomcat_major_minor
     # don't care if this errors because all we care is that the decorator
     # allowed us to try and make a HTTP request. Functionality of the
     # decorated method is tested elsewhere
