@@ -31,7 +31,7 @@ A python wrapper for interacting with the Tomcat Manager web application.
 import functools
 import collections
 import re
-from typing import Callable, List, Any
+from typing import List, Any
 
 import requests
 
@@ -41,31 +41,9 @@ from .models import (
     ServerInfo,
     TomcatApplication,
     TomcatMajor,
+    TomcatNotImplementedError,
+    TomcatNotConnected,
 )
-
-
-def _supported_by(tomcats: List = None) -> Callable:
-    """Decorator to indicate which versions of Tomcat support this method
-
-    Only useful on the TomcatManager class and not intended to be part
-    of the public API
-
-    Usage:
-
-    @_supported_by([Tomcat.7, Tomcat.8])
-    def ssl_reload():
-        ...
-    """
-
-    def supported_decorator(method: Callable):
-        @functools.wraps(method)
-        def supported_wrapper(self, *args, **kwargs):
-            # print("in supported wrapper with tomcats={}".format(tomcats))
-            return method(self, *args, **kwargs)
-
-        return supported_wrapper
-
-    return supported_decorator
 
 
 class TomcatManager:
@@ -97,6 +75,55 @@ class TomcatManager:
     ...     print('Error: not connected')
     Error: not connected
     """
+
+    # pylint: disable=too-many-public-methods
+
+    class _implemented_by:
+        """Decorator to show which versions of tomcat implement this method
+
+        Most methods in TomcatManager work in all versions of Tomcat, and we
+        expect they will work in future versions of Tomcat too. Use the
+        decorator like this:
+
+            @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
+            def list(self):
+                ...
+
+        If a method is known to only work in certain versions of Tomcat, use
+        the decorator like this:
+
+            @_implemented_by([TomcatMajor.V8, TomcatMajor.V9, TomcatMajor.V10, TomcatMajor.VNEXT])
+            def ssl_reload(self):
+                ...
+
+        """
+
+        # pylint: disable=invalid-name, too-few-public-methods
+
+        def __init__(self, tomcats):
+            # self is the instance of _implemented_by
+            # these are the arguments passed to the decorator
+            self.tomcats = tomcats
+
+        def __call__(self, method):
+            # this ensures that the wrapper has the dunder attributes
+            # of the method we are wrapping
+            @functools.wraps(method)
+            def wrapper(celff, *args, **kwargs):
+                # this is the function wrapper around the decorated method
+                # celff is the instance of TomcatManager
+                # these are the arguments passed to the decorated function
+                if celff.is_connected:
+                    if celff.tomcat_major in self.tomcats:
+                        return method(celff, *args, **kwargs)
+                    raise TomcatNotImplementedError(
+                        "'{}' not implemented on Tomcat {}".format(
+                            method.__name__, celff.tomcat_major.value
+                        )
+                    )
+                raise TomcatNotConnected("not connected")
+
+            return wrapper
 
     @classmethod
     def _is_stream(cls, obj) -> bool:
@@ -219,7 +246,7 @@ class TomcatManager:
 
     ###
     #
-    # convenience and utility methods
+    # connection property and method
     #
     ###
     @property
@@ -314,7 +341,10 @@ class TomcatManager:
         self._url = url
         self._user = user
         self._password = password
-        r = self.server_info()
+        # don't use server_info() because it will fail because it won't
+        # think we are connected to the server yet
+        r = self._get("serverinfo")
+        r.server_info = ServerInfo(result=r.result)
 
         if r.ok:
             self._set_server_attrs(r)
@@ -328,6 +358,7 @@ class TomcatManager:
     # managing applications
     #
     ###
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def deploy_localwar(
         self, path: str, warfile: str, version: str = None, update: bool = False
     ) -> TomcatManagerResponse:
@@ -385,6 +416,7 @@ class TomcatManager:
                 )
         return r
 
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def deploy_serverwar(
         self, path: str, warfile: str, version: str = None, update: bool = False
     ) -> TomcatManagerResponse:
@@ -420,7 +452,7 @@ class TomcatManager:
         r = self._get("deploy", params)
         return r
 
-    # pylint: disable=too-many-arguments
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def deploy_servercontext(
         self,
         path: str,
@@ -448,6 +480,8 @@ class TomcatManager:
         :raises ValueError:  if no path is given;
                              if no contextfile is given
         """
+        # pylint: disable=too-many-arguments
+
         params = {}
         if path:
             params["path"] = path
@@ -466,6 +500,7 @@ class TomcatManager:
         r = self._get("deploy", params)
         return r
 
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def undeploy(self, path: str, version: str = None) -> TomcatManagerResponse:
         """Undeploy the application at a given path.
 
@@ -487,6 +522,7 @@ class TomcatManager:
             params["version"] = version
         return self._get("undeploy", params)
 
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def start(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Start the application at a given path.
@@ -508,6 +544,7 @@ class TomcatManager:
             params["version"] = version
         return self._get("start", params)
 
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def stop(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Stop the application at a given path.
@@ -529,6 +566,7 @@ class TomcatManager:
             params["version"] = version
         return self._get("stop", params)
 
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def reload(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Reload (stop and start) the application at a given path.
@@ -550,7 +588,7 @@ class TomcatManager:
             params["version"] = version
         return self._get("reload", params)
 
-    @_supported_by([TomcatMajor.V7, TomcatMajor.V8, TomcatMajor.V9, TomcatMajor.V10])
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def sessions(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
         Get the age of the sessions in an application.
@@ -584,6 +622,7 @@ class TomcatManager:
             r.sessions = r.result
         return r
 
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def expire(
         self, path: str, version: str = None, idle: Any = None
     ) -> TomcatManagerResponse:
@@ -621,6 +660,7 @@ class TomcatManager:
             r.sessions = r.result
         return r
 
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def list(self) -> TomcatManagerResponse:
         """
         Get a list of all applications currently installed.
@@ -648,9 +688,68 @@ class TomcatManager:
 
     ###
     #
+    # ssl related commands
+    #
+    ###
+    @_implemented_by(
+        [TomcatMajor.V8, TomcatMajor.V9, TomcatMajor.V10, TomcatMajor.VNEXT]
+    )
+    def ssl_connector_ciphers(self) -> TomcatManagerResponse:
+        """
+        Get SSL/TLS ciphers configured for each connector.
+
+        :return: :class:`.TomcatManagerResponse` object with an additional
+                 ``ssl_connector_ciphers`` attribute
+        """
+        r = self._get("sslConnectorCiphers")
+        r.ssl_connector_ciphers = r.result
+        return r
+
+    @_implemented_by([TomcatMajor.V9, TomcatMajor.V10, TomcatMajor.VNEXT])
+    def ssl_connector_certs(self) -> TomcatManagerResponse:
+        """
+        Get the SSL certificate chain currently configured for each virtual host
+
+        :return: :class:`.TomcatManagerResponse` object with an additional
+                 ``ssl_connector_certs`` attribute
+        """
+        r = self._get("sslConnectorCerts")
+        r.ssl_connector_certs = r.result
+        return r
+
+    @_implemented_by([TomcatMajor.V9, TomcatMajor.V10, TomcatMajor.VNEXT])
+    def ssl_connector_trusted_certs(self) -> TomcatManagerResponse:
+        """
+        Get the trusted certificates currently configured for each virtual host
+
+        :return: :class:`.TomcatManagerResponse` object with an additional
+                 ``ssl_connector_trusted_certs`` attribute
+        """
+        r = self._get("sslConnectorTrustedCerts")
+        r.ssl_connector_trusted_certs = r.result
+        return r
+
+    @_implemented_by([TomcatMajor.V9, TomcatMajor.V10, TomcatMajor.VNEXT])
+    def ssl_reload(self, host: str = None) -> TomcatManagerResponse:
+        """
+        Reload TLS certificates and keys (but not server.xml) for a specified or all virtual hosts
+
+        :param host: (optional) Host name to reload, if omitted, reload all virtual hosts
+
+        :return: :class:`.TomcatManagerResponse` object
+        """
+        if host:
+            r = self._get("sslReload", {"tlsHostName": str(host)})
+        else:
+            r = self._get("sslReload")
+        return r
+
+    ###
+    #
     # These commands return info about the server
     #
     ###
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def server_info(self) -> TomcatManagerResponse:
         """
         Get information about the Tomcat server.
@@ -675,6 +774,7 @@ class TomcatManager:
         r.server_info = ServerInfo(result=r.result)
         return r
 
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def status_xml(self) -> TomcatManagerResponse:
         """
         Get server status information in XML format.
@@ -719,6 +819,7 @@ class TomcatManager:
             r.status_message = StatusCode.FAIL.value
         return r
 
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def vm_info(self) -> TomcatManagerResponse:
         """
         Get diagnostic information about the JVM.
@@ -730,53 +831,7 @@ class TomcatManager:
         r.vm_info = r.result
         return r
 
-    def ssl_connector_ciphers(self) -> TomcatManagerResponse:
-        """
-        Get SSL/TLS ciphers configured for each connector.
-
-        :return: :class:`.TomcatManagerResponse` object with an additional
-                 ``ssl_connector_ciphers`` attribute
-        """
-        r = self._get("sslConnectorCiphers")
-        r.ssl_connector_ciphers = r.result
-        return r
-
-    def ssl_connector_certs(self) -> TomcatManagerResponse:
-        """
-        Get the SSL certificate chain currently configured for each virtual host
-
-        :return: :class:`.TomcatManagerResponse` object with an additional
-                 ``ssl_connector_certs`` attribute
-        """
-        r = self._get("sslConnectorCerts")
-        r.ssl_connector_certs = r.result
-        return r
-
-    def ssl_connector_trusted_certs(self) -> TomcatManagerResponse:
-        """
-        Get the trusted certificates currently configured for each virtual host
-
-        :return: :class:`.TomcatManagerResponse` object with an additional
-                 ``ssl_connector_trusted_certs`` attribute
-        """
-        r = self._get("sslConnectorTrustedCerts")
-        r.ssl_connector_trusted_certs = r.result
-        return r
-
-    def ssl_reload(self, host: str = None) -> TomcatManagerResponse:
-        """
-        Reload TLS certificates and keys (but not server.xml) for a specified or all virtual hosts
-
-        :param host: (optional) Host name to reload, if omitted, reload all virtual hosts
-
-        :return: :class:`.TomcatManagerResponse` object
-        """
-        if host:
-            r = self._get("sslReload", {"tlsHostName": str(host)})
-        else:
-            r = self._get("sslReload")
-        return r
-
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def thread_dump(self) -> TomcatManagerResponse:
         """
         Get a jvm thread dump.
@@ -788,6 +843,7 @@ class TomcatManager:
         r.thread_dump = r.result
         return r
 
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def resources(self, type_: str = None) -> TomcatManagerResponse:
         """
         Get the global JNDI resources available for use in resource links for context config files
@@ -825,6 +881,7 @@ class TomcatManager:
         r.resources = resources
         return r
 
+    @_implemented_by(TomcatMajor.supported() + [TomcatMajor.VNEXT])
     def find_leakers(self) -> TomcatManagerResponse:
         """
         Get apps that leak memory.
@@ -867,7 +924,7 @@ class TomcatManager:
         """
         Parse a list of leaking apps from the text returned by tomcat.
 
-        We use this as a separate method so that we can test it against
+        We use this as a separate method for ease of testing against
         several data sets to ensure proper behavior.
         """
         leakers = []

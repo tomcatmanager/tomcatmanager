@@ -44,10 +44,14 @@ except ImportError:  # pragma: nocover
     import importlib_metadata
 
 from .tomcat_manager import TomcatManager
-from .models import TomcatError
-from .models import StatusCode
-from .models import ApplicationState
-from .models import TomcatMajor
+from .models import (
+    TomcatError,
+    TomcatNotConnected,
+    TomcatNotImplementedError,
+    StatusCode,
+    ApplicationState,
+    TomcatMajor,
+)
 from .interactive_tomcat_manager import InteractiveTomcatManager
 
 try:
