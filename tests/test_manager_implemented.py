@@ -212,7 +212,9 @@ METHOD_MATRIX = [
 
 @pytest.mark.parametrize("tomcat_major_minor", TOMCAT_MAJORS)
 @pytest.mark.parametrize("method, arg_count, exc", METHOD_MATRIX)
-def test_implemented_by_decorations_short(mocker, tomcat_major_minor, arg_count, method, exc):
+def test_implemented_by_decorations_short(
+    mocker, tomcat_major_minor, arg_count, method, exc
+):
     tomcat = tm.TomcatManager()
     cmock = mocker.patch(
         "tomcatmanager.tomcat_manager.TomcatManager.is_connected",

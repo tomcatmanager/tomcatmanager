@@ -440,13 +440,13 @@ class TomcatMajorMinor(enum.Enum):
     UNSUPPORTED = "unsupported"
 
     @classmethod
-    def parse(cls, version_string: str) -> "TomcatMajor":
+    def parse(cls, version_string: str) -> "TomcatMajorMinor":
         """Return one of the enums from a string sent by the Tomcat Manager
         web application.
 
         :param version_string: the string value of the application state from the
             tomcat server
-        :return: :class:`.TomcatMajor` instance
+        :return: :class:`.TomcatMajorMinor` instance
         :raises ValueError: if the version string does not represent a known app
         """
         version_re = re.compile(r"(\d+)\.(\d+)\.(\d+)")
@@ -488,14 +488,14 @@ class TomcatMajorMinor(enum.Enum):
         ]
 
     @classmethod
-    def lowest_supported(cls) -> "TomcatMajor":
+    def lowest_supported(cls) -> "TomcatMajorMinor":
         """
         Return the lowest officially supported Tomcat major version
         """
         return TomcatMajorMinor.supported()[0]
 
     @classmethod
-    def highest_supported(cls) -> "TomcatMajor":
+    def highest_supported(cls) -> "TomcatMajorMinor":
         """
         Return the highest officially supported Tomcat major version
 
@@ -557,7 +557,7 @@ class ServerInfo(dict):
 
     @property
     def tomcat_major_minor(self) -> TomcatMajorMinor:
-        """An instance of TomcatMajor indicating which major version of Tomcat
+        """An instance of TomcatMajorMinor indicating which major version of Tomcat
         is running on the server.
 
         This value is computed, not received from the server, and therefore does not

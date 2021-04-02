@@ -1,6 +1,6 @@
 TomcatMajor
 ===========
 
-.. autoclass:: tomcatmanager.models.TomcatMajor
+.. autoclass:: tomcatmanager.models.TomcatMajorMinor
     :members:
     :undoc-members:

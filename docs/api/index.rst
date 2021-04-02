@@ -14,7 +14,7 @@ Python API documentation for tomcatmanager |release|
    ApplicationState
    StatusCode
    ServerInfo
-   TomcatMajor
+   TomcatMajorMinor
    TomcatError
    migrating2
    migrating3

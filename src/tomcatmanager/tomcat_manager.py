@@ -92,7 +92,14 @@ class TomcatManager:
         If a method is known to only work in certain versions of Tomcat, use
         the decorator like this:
 
-            @_implemented_by([TomcatMajorMinor.V8, TomcatMajorMinor.V9, TomcatMajorMinor.V10, TomcatMajorMinor.VNEXT])
+            @_implemented_by(
+                [
+                    TomcatMajorMinor.V8_5,
+                    TomcatMajorMinor.V9_0,
+                    TomcatMajorMinor.V10_0,
+                    TomcatMajorMinor.VNEXT,
+                ]
+            )
             def ssl_reload(self):
                 ...
 
@@ -100,14 +107,19 @@ class TomcatManager:
 
         # pylint: disable=invalid-name, too-few-public-methods
 
+        matrix = {}
+
         def __init__(self, tomcats):
             # self is the instance of _implemented_by
             # these are the arguments passed to the decorator
+            # we assume tomcats is a list
             self.tomcats = tomcats
 
         def __call__(self, method):
             # this ensures that the wrapper has the dunder attributes
             # of the method we are wrapping
+            self.matrix[method.__name__] = self.tomcats
+
             @functools.wraps(method)
             def wrapper(celff, *args, **kwargs):
                 # this is the function wrapper around the decorated method
@@ -692,7 +704,13 @@ class TomcatManager:
     #
     ###
     @_implemented_by(
-        [TomcatMajorMinor.V8_0, TomcatMajorMinor.V8_5, TomcatMajorMinor.V9_0, TomcatMajorMinor.V10_0, TomcatMajorMinor.VNEXT]
+        [
+            TomcatMajorMinor.V8_0,
+            TomcatMajorMinor.V8_5,
+            TomcatMajorMinor.V9_0,
+            TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.VNEXT,
+        ]
     )
     def ssl_connector_ciphers(self) -> TomcatManagerResponse:
         """
@@ -705,7 +723,14 @@ class TomcatManager:
         r.ssl_connector_ciphers = r.result
         return r
 
-    @_implemented_by([TomcatMajorMinor.V8_5, TomcatMajorMinor.V9_0, TomcatMajorMinor.V10_0, TomcatMajorMinor.VNEXT])
+    @_implemented_by(
+        [
+            TomcatMajorMinor.V8_5,
+            TomcatMajorMinor.V9_0,
+            TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.VNEXT,
+        ]
+    )
     def ssl_connector_certs(self) -> TomcatManagerResponse:
         """
         Get the SSL certificate chain currently configured for each virtual host
@@ -717,7 +742,14 @@ class TomcatManager:
         r.ssl_connector_certs = r.result
         return r
 
-    @_implemented_by([TomcatMajorMinor.V8_5, TomcatMajorMinor.V9_0, TomcatMajorMinor.V10_0, TomcatMajorMinor.VNEXT])
+    @_implemented_by(
+        [
+            TomcatMajorMinor.V8_5,
+            TomcatMajorMinor.V9_0,
+            TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.VNEXT,
+        ]
+    )
     def ssl_connector_trusted_certs(self) -> TomcatManagerResponse:
         """
         Get the trusted certificates currently configured for each virtual host
@@ -729,7 +761,14 @@ class TomcatManager:
         r.ssl_connector_trusted_certs = r.result
         return r
 
-    @_implemented_by([TomcatMajorMinor.V8_5, TomcatMajorMinor.V9_0, TomcatMajorMinor.V10_0, TomcatMajorMinor.VNEXT])
+    @_implemented_by(
+        [
+            TomcatMajorMinor.V8_5,
+            TomcatMajorMinor.V9_0,
+            TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.VNEXT,
+        ]
+    )
     def ssl_reload(self, host: str = None) -> TomcatManagerResponse:
         """
         Reload TLS certificates and keys (but not server.xml) for a specified or all virtual hosts
