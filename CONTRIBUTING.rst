@@ -6,7 +6,7 @@ Get Source Code
 
 Clone the repo from github::
 
-  $ git clone git@github.com:tomcatmanager/tomcatmanager.git
+   $ git clone git@github.com:tomcatmanager/tomcatmanager.git
 
 
 Create Python Environments
@@ -26,20 +26,20 @@ creation of these environments.
 
 If you prefer to create these virtual envs by hand, do the following::
 
-  $ cd tomcatmanager
-  $ pyenv install 3.9.1
-  $ pyenv virtualenv -p python3.9 3.9.1 tomcatmanager-3.9
-  $ pyenv install 3.8.7
-  $ pyenv virtualenv -p python3.8 3.8.7 tomcatmanager-3.8
-  $ pyenv install 3.7.10
-  $ pyenv virtualenv -p python3.7 3.7.10 tomcatmanager-3.7
-  $ pyenv install 3.6.13
-  $ pyenv virtualenv -p python3.6 3.6.13 tomcatmanager-3.6
+   $ cd tomcatmanager
+   $ pyenv install 3.9.1
+   $ pyenv virtualenv -p python3.9 3.9.1 tomcatmanager-3.9
+   $ pyenv install 3.8.7
+   $ pyenv virtualenv -p python3.8 3.8.7 tomcatmanager-3.8
+   $ pyenv install 3.7.10
+   $ pyenv virtualenv -p python3.7 3.7.10 tomcatmanager-3.7
+   $ pyenv install 3.6.13
+   $ pyenv virtualenv -p python3.6 3.6.13 tomcatmanager-3.6
 
 
 Now set pyenv to make all four of those available at the same time::
 
-  $ pyenv local tomcatmanager-3.8 tomcatmanager-3.7 tomcatmanager-3.6 tomcatmanager-3.5
+   $ pyenv local tomcatmanager-3.8 tomcatmanager-3.7 tomcatmanager-3.6 tomcatmanager-3.5
 
 Whether you ran the script, or did it by hand, you now have isolated virtualenvs for
 each of the minor python versions. This table shows various python commands, the
@@ -68,7 +68,7 @@ Install Dependencies
 
 Now install all the development dependencies::
 
-  $ pip install -e .[dev]
+   $ pip install -e .[dev]
 
 This installs the tomcatmanager package "in-place", so the package points to the
 source code instead of copying files to the python ``site-packages`` folder.
@@ -77,8 +77,8 @@ All the dependencies now have been installed in the ``tomcatmanager-3.9`` virtua
 If you want to work in other virtualenvs, you'll need to manually select it, and
 install again::
 
-  $ pyenv shell tomcatmanager-3.8
-  $ pip install -e .[dev]
+   $ pyenv shell tomcatmanager-3.8
+   $ pip install -e .[dev]
 
 
 Branches, Tags, and Versions
@@ -107,21 +107,21 @@ the specific incantations required for each project you are familiar with.
 This project uses `invoke <http://www.pyinvoke.org>`_ to provide a clean, high level
 interface for these development tasks. To see the full list of functions available::
 
-  $ invoke -l
+   $ invoke -l
 
 You can run multiple tasks in a single invocation, for example::
 
-  $ invoke clean docs sdist wheel
+   $ invoke clean docs sdist wheel
 
 That one command will remove all superflous cache, testing, and build files, render
 the documentation, and build a source distribution and a wheel distribution.
 
 To make it easy to check everything before you commit, you can just type:
 
-  $ invoke check
-  ...
-  $ echo $?
-  0
+   $ invoke check
+   ...
+   $ echo $?
+   0
 
 and it will test, lint, and format all the code and all the documentation. If this
 doesn't complete everything successfully then you still need to fix some stuff before
@@ -150,14 +150,14 @@ and it allows you to parallelize the test suite using ``python-xdist``.
 
 You can run the tests against all the supported versions of python using tox::
 
-  $ tox
+   $ tox
 
 tox expects that when it runs ``python3.7`` it will actually get a python from the
 3.7.x series. That's why we set up the various python environments earlier.
 
 If you just want to run the tests in your current python environment, use pytest::
 
-  $ pytest
+   $ pytest
 
 This runs all the test in ``tests/`` and also runs doctests in ``tomcatmanager/`` and
 ``docs/``.
@@ -165,12 +165,12 @@ This runs all the test in ``tests/`` and also runs doctests in ``tomcatmanager/`
 You can speed up the test suite by using ``pytest-xdist`` to parallelize the tests
 across the number of cores you have::
 
-  $ pip install pytest-xdist
-  $ pytest -n8
+   $ pip install pytest-xdist
+   $ pytest -n8
 
-In many of the doctests you'll see something like:
+In many of the doctests you'll see something like::
 
-  >>> tomcat = getfixture('tomcat')
+   >>> tomcat = getfixture('tomcat')
 
 This ``getfixture()`` helper imports fixtures defined in ``conftest.py``, which has
 several benefits:
@@ -206,10 +206,10 @@ of such a context file in ``tomcatmanager/tests/war/context.xml``:
 
 .. code-block:: xml
 
-  <?xml version="1.0" encoding="UTF-8"?>
-  <!-- Context configuration file for my web application -->
-  <Context path='/ignored' docBase='/tmp/sample.war'>
-  </Context>
+   <?xml version="1.0" encoding="UTF-8"?>
+   <!-- Context configuration file for my web application -->
+   <Context path='/ignored' docBase='/tmp/sample.war'>
+   </Context>
 
 The ``docBase`` attribute must point to a valid war file or the tests will fail. It
 can be the same minimal war file you already put on the server. The ``path`` attribute
@@ -227,17 +227,17 @@ With all these prerequisites ready, you can feed them to ``pytest`` as shown:
 
 .. code-block:: shell
 
-  $ pytest --url=http://localhost:8080/manager --user=ace \
-  --password=newenglandclamchowder --warfile=/tmp/sample.war \
-  --contextfile=/tmp/context.xml
+   $ pytest --url=http://localhost:8080/manager --user=ace \
+   --password=newenglandclamchowder --warfile=/tmp/sample.war \
+   --contextfile=/tmp/context.xml
 
 .. warning::
 
-  If you test against a real Tomcat server, you should not use the ``pytest-xdist``
-  plugin to parallelize testing across multiple CPUs or many platforms. Many of the
-  tests depend on deploying and undeploying an app at a specific path, and that path
-  is shared across the entire test suite. It wouldn't help much anyway because the
-  testing is constrained by the speed of the Tomcat server.
+   If you test against a real Tomcat server, you should not use the ``pytest-xdist``
+   plugin to parallelize testing across multiple CPUs or many platforms. Many of the
+   tests depend on deploying and undeploying an app at a specific path, and that path
+   is shared across the entire test suite. It wouldn't help much anyway because the
+   testing is constrained by the speed of the Tomcat server.
 
 If you kill the test suite in the middle of a run, you may leave the test application
 deployed in your tomcat server. If this happens, you must undeploy it before rerunning
@@ -254,8 +254,8 @@ Code Quality
 Use ``pylint`` to check code quality. There is a pylint config file for the tests and
 for the main module::
 
-  $ pylint --rcfile=tests/pylintrc tests
-  $ pylint --rcfile=tomcatmanager/pylintrc src
+   $ pylint --rcfile=tests/pylintrc tests
+   $ pylint --rcfile=tomcatmanager/pylintrc src
 
 You are welcome to use the pylint comment directives to disable certain messages in
 the code, but pull requests containing these directives will be carefully scrutinized.
@@ -269,11 +269,11 @@ We use the default configuration, including a line length of 88 characters.
 
 To format all the code in the project using ``black``, do::
 
-  $ invoke black
+   $ invoke black
 
 You can check whether ``black`` would make any changes to the source code by::
 
-  $ invoke black-check
+   $ invoke black-check
 
 Black integrates with many common editors and IDE's, that's the easiest way to ensure
 that your code is always formatted.
@@ -303,8 +303,8 @@ annotations of expected types can be helpful for documentation purposes.
 `Sphinx <http://www.sphinx-doc.org>`_ transforms the documentation source files
 into html::
 
-  $ cd docs
-  $ make html
+   $ cd docs
+   $ make html
 
 The output will be in ``docs/build/html``. We treat warnings as errors, and the
 documentation has none. Pull requests which generate errors when the documentation is
@@ -314,15 +314,15 @@ If you are doing a lot of documentation work, the `sphinx-autobuild
 <https://github.com/GaretJax/sphinx-autobuild>`_ module has been integrated.
 Type::
 
-  $ cd docs
-  $ make livehtml
+   $ cd docs
+   $ make livehtml
 
 Then point your browser at `<http://localhost:8000>`_ to see the
 documentation automatically rebuilt as you save your changes.
 
 Use ``doc8`` to check documentation quality::
 
-  $ invoke doc8
+   $ invoke doc8
 
 This project is configured to prevent merges to the main or develop branch if
 doc8 returns any errors.
@@ -366,11 +366,11 @@ following:
 
 10. Build source distribution, wheel distribution, and upload them to pypi staging::
 
-    $ invoke pypi-test
+       $ invoke pypi-test
 
 11. Build source distribution, wheel distribution, and upload them to pypi::
 
-    $ invoke pypi
+       $ invoke pypi
 
 12. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
     Make sure they look good. Add a "Version" in readthedocs which points to the tag
