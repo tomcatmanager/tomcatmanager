@@ -1,5 +1,7 @@
 #
 # -*- coding: utf-8 -*-
+# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-class-docstring, redefined-outer-name
 
 import os
 
@@ -14,6 +16,7 @@ from tests.mock_server80 import start_mock_server80
 #
 ###
 class TomcatServer:
+    # pylint: disable=too-few-public-methods
     def __init__(self):
         self.url = None
         self.user = None
@@ -119,13 +122,13 @@ def tomcat_manager_server(request):
 
 @pytest.fixture
 def tomcat(tomcat_manager_server):
-    tc = tm.TomcatManager()
-    tc.connect(
+    tmcat = tm.TomcatManager()
+    tmcat.connect(
         tomcat_manager_server.url,
         tomcat_manager_server.user,
         tomcat_manager_server.password,
     )
-    return tc
+    return tmcat
 
 
 @pytest.fixture
