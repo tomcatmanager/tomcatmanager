@@ -240,3 +240,40 @@ def test_implemented_by_decorations_short(
             method(None)
         else:
             method()
+
+
+###
+#
+# validate the implements() and implemented_by() methods
+#
+###
+def test_implements(tomcat):
+    assert tomcat.implements(tomcat.list)
+    assert tomcat.implements("list")
+
+
+def test_implements_not_decorated(tomcat):
+    # see what happens if we passed an undecorated method
+    assert not tomcat.implements("connect")
+
+
+def test_implements_not_connected(tomcat, mocker):
+    cmock = mocker.patch(
+        "tomcatmanager.tomcat_manager.TomcatManager.is_connected",
+        new_callable=mock.PropertyMock,
+    )
+    cmock.return_value = False
+    with pytest.raises(tm.TomcatNotConnected):
+        assert tomcat.implements(tomcat.list)
+
+
+def test_implemented_by_method():
+    tomcat = tm.TomcatManager()
+    assert tomcat.implemented_by(tomcat.list, tm.TomcatMajorMinor.V9_0)
+    assert tomcat.implemented_by("list", tm.TomcatMajorMinor.VNEXT)
+
+
+def test_implemented_by_method_invalid():
+    tomcat = tm.TomcatManager()
+    assert not tomcat.implemented_by("ssl_reload", tm.TomcatMajorMinor.V7_0)
+    assert not tomcat.implemented_by("notamethod", tm.TomcatMajorMinor.V9_0)

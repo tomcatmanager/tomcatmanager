@@ -21,6 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+# pylint: disable=too-many-lines
 """
 tomcatmanager
 -------------
@@ -31,13 +32,13 @@ A python wrapper for interacting with the Tomcat Manager web application.
 import functools
 import collections
 import re
-from typing import List, Any
+from typing import Any, Callable, List, Union
 
 import requests
 
 from .models import (
-    StatusCode,
     TomcatManagerResponse,
+    StatusCode,
     ServerInfo,
     TomcatApplication,
     TomcatMajorMinor,
@@ -69,17 +70,17 @@ class TomcatManager:
     ...         else:
     ...             print('Error: {}'.format(r.status_message))
     ...     else:
-    ...         print('Error: not connected')
+    ...         print('not connected')
     ... except Exception as err:
     ...     # handle exception
-    ...     print('Error: not connected')
-    Error: not connected
+    ...     print('not connected')
+    not connected
     """
 
     # pylint: disable=too-many-public-methods
 
     class _implemented_by:
-        """Decorator to show which versions of tomcat implement this method
+        """Decorator to show which versions of tomcat implement this method.
 
         Most methods in TomcatManager work in all versions of Tomcat, and we
         expect they will work in future versions of Tomcat too. Use the
@@ -137,16 +138,6 @@ class TomcatManager:
 
             return wrapper
 
-    @classmethod
-    def _is_stream(cls, obj) -> bool:
-        """return True if passed a stream type object"""
-        return all(
-            [
-                hasattr(obj, "__iter__"),
-                not isinstance(obj, (str, bytes, list, tuple, collections.abc.Mapping)),
-            ]
-        )
-
     def __init__(self):
         """
         Initialize a new TomcatManager object.
@@ -161,34 +152,30 @@ class TomcatManager:
 
         self.timeout = 10.0
         """Seconds to wait before giving up on network operations. Can be a
-        float or an int. Default is ``10``. I surely don't want to wait forever,
+        ``float`` or an ``int``. Default is ``10``. I surely don't want to wait forever,
         but if you do, set to ``0``.
 
         Usage::
 
-            >>> import tomcatmanager as tm
-            >>> tomcat = tm.TomcatManager()
-            >>> tomcat.timeout = 3.5
+        >>> import tomcatmanager as tm
+        >>> tomcat = tm.TomcatManager()
+        >>> tomcat.timeout = 3.5
         """
 
     @property
     def url(self) -> str:
         """Url of the Tomcat Manager web application we are connected to.
 
-        This attribute is set by the
-        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method. Look there
-        for more info.
+        This attribute is set by the :meth:`.connect` method. Look there for more info.
         """
         return self._url
 
     @property
     def user(self) -> str:
         """User we successfully authenticated to the Tomcat Manager web application
-        with
+        with.
 
-        This attribute is set by the
-        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method. Look there
-        for more info.
+        This attribute is set by the :meth:`.connect` method. Look there for more info.
         """
         return self._user
 
@@ -198,68 +185,65 @@ class TomcatManager:
         :class:`.TomcatMajorMinor` describing the major version of
         Tomcat we are connected to.
 
-        This attribute is set by the
-        :meth:`~tomcatmanager.tomcat_manager.TomcatManager.connect` method. Look there
-        for more info.
+        This attribute is set by the :meth:`.connect` method. Look there for more info.
         """
         return self._tomcat_major_minor
 
-    def _get(self, cmd: str, payload: dict = None) -> TomcatManagerResponse:
-        """
-        Make an HTTP get request to the tomcat manager web app.
+    def implements(self, method: Union[Callable, str]) -> bool:
+        """Is a method implemented on the tomcat server we are connected to?
 
-        :param cmd:     name of the command from the tomcat server url
-                        i.e. 'http://localhost:8080/manager/text/{cmd}
-        :type cmd: str
-        :param payload: dict of params for `requests.get()`
-        :type payload: dict, optional
-        :return:        `TomcatManagerResponse` object
+        :param method:      a method on :class:`.TomcatManager` to check if is
+                            implemented
+        :return:            ``True`` if the method is implemented, ``False`` otherwise
+        :raises TomcatNotConnected: if we are not currently connected to a tomcat server
+
+        Not all versions of Tomcat implement all of the methods of
+        :class:`.TomcatManager`. Use this to check whether a method on this class
+        is implemented by the version of the Tomcat server we are connected to.
+        The method parameter accepts a string containing the method name or the
+        method itself.
+
+        Usage:
+
+        >>> tomcat = getfixture('tomcat')
+        >>> print(tomcat.implements(tomcat.ssl_reload))
+        True
         """
-        base = self._url or ""
-        # if we have no url, don't add other stuff to it because it makes
-        # the exceptions hard to understand
-        if base:
-            url = base + "/text/" + cmd
+        if callable(method):
+            mname = method.__name__
         else:
-            url = ""
-        r = TomcatManagerResponse()
-        r.response = requests.get(
-            url,
-            auth=(self._user, self._password),
-            params=payload,
-            timeout=self.timeout,
-        )
-        return r
+            mname = method
+        if self.is_connected:
+            try:
+                return self.tomcat_major_minor in self._implemented_by.matrix[mname]
+            except KeyError:
+                return False
+        raise TomcatNotConnected("not connected")
 
-    def _clear_server_attrs(self):
-        """
-        Clear the private attributes describing the server.
+    @classmethod
+    def implemented_by(
+        cls, method: Union[Callable, str], tomcat_major_minor: TomcatMajorMinor
+    ) -> bool:
+        """Check whether a method is implemented by any version of Tomcat.
 
-        Intended to be called from connect() and is_connected()
-        """
-        self._user = None
-        self._password = None
-        self._url = None
-        self._tomcat_major_minor = None
+        :param method:              a method on :class:`.TomcatManager` to check
+        :param tomcat_major_minor:  the version of Tomcat to check
+        :return:                   ``True`` if the method is implemented on the
+                                    given tomcat version.
 
-    def _set_server_attrs(self, response: TomcatManagerResponse):
+        This method does not require prior connection to a Tomcat server.
         """
-        Set private attributes based on whether we connected to the url.
-
-        Intended to be called from connect() and is_connected()
-        """
-        self._tomcat_major_minor = response.server_info.tomcat_major_minor
-        # _get added /text/serverinfo onto the end of the passed in url
-        # we may have been redirected, and we want to store the new
-        # url, not the one passed in
-        match = re.search(r"(.*)/text/serverinfo$", response.response.url)
-        if match:
-            self._url = match.group(1)
+        if callable(method):
+            mname = method.__name__
+        else:
+            mname = method
+        try:
+            return tomcat_major_minor in cls._implemented_by.matrix[mname]
+        except KeyError:
+            return False
 
     ###
-    #
     # connection property and method
-    #
     ###
     @property
     def is_connected(self) -> bool:
@@ -273,15 +257,14 @@ class TomcatManager:
     def connect(
         self, url: str, user: str = "", password: str = "", timeout: float = None
     ) -> TomcatManagerResponse:
-        """
-        Connect to a Tomcat Manager server.
+        """Connect to a Tomcat Manager server.
 
         :param url:      url where the Tomcat Manager web application is deployed
-                         :param user:     (optional) user to authenticate with :param
-                         password: (optional) password to authenticate with :param
-                         timeout: timeout in seconds for network operations :return:
-                         :meth:`~tomcatmanager.models.TomcatManagerResponse` object
-                         with an additional ``server_info`` attribute
+        :param user:     (optional) user to authenticate with
+        :param password: (optional) password to authenticate with
+        :param timeout:  timeout in seconds for network operations
+        :return:        :meth:`~tomcatmanager.models.TomcatManagerResponse`
+                         object with an additional ``server_info`` attribute
 
         The ``server_info`` attribute contains a :class:`.ServerInfo` object, which is
         a dictionary with some added properties for well-known values returned from
@@ -296,23 +279,23 @@ class TomcatManager:
           connected to
         - allow you to inspect the response so you can see why you can't connect
 
-        Usage::
+        Usage:
 
-            >>> import tomcatmanager as tm
-            >>> url = 'http://localhost:8080/manager'
-            >>> user = 'ace'
-            >>> password = 'newenglandclamchowder'
-            >>> tomcat = tm.TomcatManager()
-            >>> try:
-            ...     r = tomcat.connect(url, user, password)
-            ...     if r.ok:
-            ...         print('connected')
-            ...     else:
-            ...         print('not connected')
-            ... except Exception as err:
-            ...    # handle exception
-            ...    print('not connected')
-            not connected
+        >>> import tomcatmanager as tm
+        >>> url = 'http://localhost:808099/manager'
+        >>> user = 'ace'
+        >>> password = 'newenglandclamchowder'
+        >>> tomcat = tm.TomcatManager()
+        >>> try:
+        ...     r = tomcat.connect(url, user, password)
+        ...     if r.ok:
+        ...         print('connected')
+        ...     else:
+        ...         print('not connected')
+        ... except Exception as err:
+        ...    # handle exception
+        ...    print('not connected')
+        not connected
 
         The only way to validate whether we are connected is to make an HTTP request
         to the server and see if it returns successfully. Internally this method tries
@@ -366,9 +349,7 @@ class TomcatManager:
         return r
 
     ###
-    #
     # managing applications
-    #
     ###
     @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def deploy_localwar(
@@ -389,8 +370,7 @@ class TomcatManager:
         :param update:       (optional) Whether to undeploy the existing path
                              first (default False)
         :return:             :class:`.TomcatManagerResponse` object
-        :raises ValueError:  if no path is specified;
-                             if no warfile is specified
+        :raises ValueError:  if no path is specified or if no warfile is specified
         """
         params = {}
         if path:
@@ -445,8 +425,7 @@ class TomcatManager:
         :param update:       (optional) Whether to undeploy the existing path
                              first (default False)
         :return:             :class:`.TomcatManagerResponse` object
-        :raises ValueError:  if no path is given;
-                             if no warfile is given
+        :raises ValueError:  if no path is given or if no warfile is given
         """
         params = {}
         if path:
@@ -489,8 +468,7 @@ class TomcatManager:
         :param update:       (optional) Whether to undeploy the existing path
                              first (default False)
         :return:             :class:`.TomcatManagerResponse` object
-        :raises ValueError:  if no path is given;
-                             if no contextfile is given
+        :raises ValueError:  if no path is given or if no contextfile is given
         """
         # pylint: disable=too-many-arguments
 
@@ -958,6 +936,11 @@ class TomcatManager:
         r.leakers = self._parse_leakers(r.result)
         return r
 
+    ###
+    #
+    # private methods
+    #
+    ###
     @staticmethod
     def _parse_leakers(text: str) -> List:
         """
@@ -973,3 +956,63 @@ class TomcatManager:
                 if not line in leakers:
                     leakers.append(line)
         return leakers
+
+    @classmethod
+    def _is_stream(cls, obj) -> bool:
+        """return True if passed a stream type object"""
+        return all(
+            [
+                hasattr(obj, "__iter__"),
+                not isinstance(obj, (str, bytes, list, tuple, collections.abc.Mapping)),
+            ]
+        )
+
+    def _clear_server_attrs(self):
+        """
+        Clear the private attributes describing the server.
+
+        Intended to be called from connect() and is_connected()
+        """
+        self._user = None
+        self._password = None
+        self._url = None
+        self._tomcat_major_minor = None
+
+    def _set_server_attrs(self, response: TomcatManagerResponse):
+        """
+        Set private attributes based on whether we connected to the url.
+
+        Intended to be called from connect() and is_connected()
+        """
+        self._tomcat_major_minor = response.server_info.tomcat_major_minor
+        # _get added /text/serverinfo onto the end of the passed in url
+        # we may have been redirected, and we want to store the new
+        # url, not the one passed in
+        match = re.search(r"(.*)/text/serverinfo$", response.response.url)
+        if match:
+            self._url = match.group(1)
+
+    def _get(self, cmd: str, payload: dict = None) -> TomcatManagerResponse:
+        """
+        Make an HTTP get request to the tomcat manager web app.
+
+        :param cmd:     name of the command from the tomcat server url
+                        i.e. 'http://localhost:8080/manager/text/{cmd}
+        :param payload: dict of params for `requests.get()`
+        :return:        `TomcatManagerResponse` object
+        """
+        base = self._url or ""
+        # if we have no url, don't add other stuff to it because it makes
+        # the exceptions hard to understand
+        if base:
+            url = base + "/text/" + cmd
+        else:
+            url = ""
+        r = TomcatManagerResponse()
+        r.response = requests.get(
+            url,
+            auth=(self._user, self._password),
+            params=payload,
+            timeout=self.timeout,
+        )
+        return r

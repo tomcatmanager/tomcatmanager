@@ -53,7 +53,8 @@ class TomcatNotImplementedError(Exception):
 
 class TomcatNotConnected(Exception):
     """
-    Raised when a method is called on TomcatManager without the connect() method being called first.
+    Raised when a method is called on :class:`.TomcatManager` without the
+    :meth:`~.TomcatManager.connect()` method being called first.
     """
 
 

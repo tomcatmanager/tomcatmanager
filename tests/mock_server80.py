@@ -1045,7 +1045,7 @@ Default maximum session inactive interval 30 minutes
 def start_mock_server80(tms):
     """Start a mock Tomcat Manager application
 
-    :returns: a tuple: (url, user, password) where the server is accessible
+    :return: a tuple: (url, user, password) where the server is accessible
     """
     # pylint: disable=unused-variable
     # go find an unused port
