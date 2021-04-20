@@ -27,7 +27,7 @@ Built In Help
 
 The interactive shell has a built-in list of all available commands:
 
-.. code-block::
+.. code-block:: text
 
    tomcat-manager> help
    tomcat-manager is a command line tool for managing a Tomcat server
@@ -39,28 +39,32 @@ The interactive shell has a built-in list of all available commands:
 
    Managing applications
    ============================================================
-   list            Show all installed applications.
-   deploy local    Deploy a local war file to the tomcat server.
-   deploy server   Deploy a war file to the tomcat server.
-   deploy context  Deploy a context xml file to the tomcat server.
-   redeploy        Undeploy an existing app and deploy a new one in its place.
-   undeploy        Remove an application at a given path from the tomcat server.
-   start           Start a deployed tomcat application that isn't running.
-   stop            Stop a tomcat application and leave it deployed on the server.
-   restart         Start and stop a tomcat application. Synonym for reload.
-     reload        Synonym for 'restart'.
-   sessions        Show active sessions for a tomcat application.
-   expire          Expire idle sessions.
+   list      Show all installed applications.
+   deploy    Deploy an application to the tomcat server.
+   redeploy  Redeploy an application to the tomcat server.
+   undeploy  Remove an application from the tomcat server.
+   start     Start a deployed tomcat application that isn't running.
+   stop      Stop a tomcat application and leave it deployed on the server.
+   restart   Start and stop a tomcat application.
+     reload  Synonym for 'restart'.
+   sessions  Show active sessions for a tomcat application.
+   expire    Expire idle sessions.
 
    Server information
    ============================================================
    findleakers          Show tomcat applications that leak memory.
    resources            Show global JNDI resources configured in Tomcat.
    serverinfo           Show information about the tomcat server.
-   sslconnectorciphers  Show SSL/TLS ciphers configured for each connector.
    status               Show server status information in xml format.
    threaddump           Show a jvm thread dump.
    vminfo               Show diagnostic information about the jvm.
+
+   TLS configuration
+   ============================================================
+   sslconnectorciphers       Show SSL/TLS ciphers configured for each connector.
+   sslconnectorcerts         Show SSL/TLS certificate chain for each connector.
+   sslconnectortrustedcerts  Show SSL/TLS trusted certificates for each connector.
+   sslreload                 Reload SSL/TLS certificates and keys.
 
    Settings, configuration, and tools
    ============================================================
@@ -82,12 +86,12 @@ The interactive shell has a built-in list of all available commands:
      quit   Synonym for 'exit'.
    help     Show available commands, or help on a specific command.
    version  Show the version number of this program.
-   license  Show the MIT license.
+   license  Show the software license for this program.
 
 
 As well as help for each command:
 
-.. code-block::
+.. code-block:: text
 
    tomcat-manager> help stop
    usage: stop [-h] [-v VERSION] path
@@ -224,7 +228,7 @@ string uniquely identify the application.
 Let's revisit our ``shiny`` app. This time we will deploy with a version
 string:
 
-.. code-block::
+.. code-block:: text
 
   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny -v v2.0.5
   tomcat-manager>list
@@ -239,7 +243,7 @@ Parallel deployment allows me to deploy two versions of that app at the same
 path, and Tomcat will migrate users to the new version over time as their
 sessions expire in version 2.0.5.
 
-.. code-block::
+.. code-block:: text
 
   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.6.war /shiny -v v2.0.6
   tomcat-manager>list
@@ -253,7 +257,7 @@ sessions expire in version 2.0.5.
 Once all the sessions have been migrated to version 2.0.6, I can undeploy
 version 2.0.5:
 
-.. code-block::
+.. code-block:: text
 
   tomcat-manager>undeploy /shiny --version v2.0.5
   tomcat-manager>list
@@ -322,7 +326,7 @@ Settings
 The ``show`` or ``settings`` (they do exactly the same thing) commands display
 a list of settings which control the behavior of ``tomcat-manager``:
 
-.. code-block::
+.. code-block:: text
 
   tomcat-manager> show
   autorun_on_edit=False       # Automatically run files after editing
@@ -340,7 +344,7 @@ a list of settings which control the behavior of ``tomcat-manager``:
 
 You can change any of these settings using the ``set`` command:
 
-.. code-block::
+.. code-block:: text
 
   tomcat-manager> set prompt='tm> '
   tm>
@@ -420,20 +424,20 @@ Shell-style Output Redirection
 
 Save the output of the ``list`` command to a file:
 
-.. code-block::
+.. code-block:: text
 
   tomcat-manager> list > /tmp/tomcat-apps.txt
 
 Search the output of the ``vminfo`` command:
 
-.. code-block::
+.. code-block:: text
 
   tomcat-manager> vminfo | grep user.timezone
     user.timezone: US/Mountain
 
 Or the particularly useful:
 
-.. code-block::
+.. code-block:: text
 
   tomcat-manager> threaddump | less
 
@@ -443,13 +447,13 @@ Clipboard Integration
 
 You can copy output to the clipboard by redirecting but not giving a filename:
 
-.. code-block::
+.. code-block:: text
 
   tomcat-manager> list >
 
 You can also append output to the clipboard using a similar method:
 
-.. code-block::
+.. code-block:: text
 
   tomcat-manager> serverinfo >>
 
