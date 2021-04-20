@@ -186,6 +186,8 @@ class TomcatManager:
         Tomcat we are connected to.
 
         This attribute is set by the :meth:`.connect` method. Look there for more info.
+
+        .. versionadded:: 3.0.0
         """
         return self._tomcat_major_minor
 
@@ -208,6 +210,8 @@ class TomcatManager:
         >>> tomcat = getfixture('tomcat')
         >>> print(tomcat.implements(tomcat.ssl_reload))
         True
+
+        .. versionadded:: 3.0.0
         """
         if callable(method):
             mname = method.__name__
@@ -232,6 +236,8 @@ class TomcatManager:
                                     given tomcat version.
 
         This method does not require prior connection to a Tomcat server.
+
+        .. versionadded:: 3.0.0
         """
         if callable(method):
             mname = method.__name__
@@ -318,8 +324,8 @@ class TomcatManager:
         user will be stored in the :attr:`user` attribute.
 
         Upon successful connection, an instance of :class:`.TomcatMajorMinor` will be
-        stored in :attr:`tomcat_major_minor` indicating the major version of Tomcat running
-        on the server. Further details about the server are available in the
+        stored in :attr:`tomcat_major_minor` indicating the major version of Tomcat
+        running on the server. Further details about the server are available in the
         `server_info` attribute of the returned response.
 
         If you discard or don't save the return object from this method, you can call

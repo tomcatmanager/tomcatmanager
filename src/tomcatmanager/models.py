@@ -67,7 +67,7 @@ class StatusCode(enum.Enum):
     """An enumeration of the various Tomcat Manager web application status codes
 
     ``tomcatmanager`` uses the excellent `requests <https://github.com/psf/requests>`_
-    library, which uses a custom LookupDict class to store HTTP status codes in a
+    library, which uses a custom ``LookupDict`` class to store HTTP status codes in a
     dictionary. After much debate on whether we should do it the requests way, or
     a more pythonic way, I chose to use a native Enum class instead.
 
