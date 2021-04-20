@@ -10,9 +10,26 @@ The following Tomcat versions are supported:
 - 8.0.x
 - 8.5.x
 - 9.0.x
+- 10.0.x
 
 The operating system and Java Virtual Machine don't matter as long as Tomcat
 runs on it.
+
+You can double check the list of versions supported by:
+
+.. code-block:: text
+
+   $ tomcat-manager -v
+   3.0.0 (works with Tomcat >= 7.0 and <= 10.0)
+
+or:
+
+.. code-block:: text
+
+   $ tomcat-manager
+   tomcat-manager> version
+   3.0.0 (works with Tomcat >= 7.0 and <= 10.0)
+
 
 Authentication
 --------------
