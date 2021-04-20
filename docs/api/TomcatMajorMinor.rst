@@ -1,5 +1,5 @@
-TomcatMajor
-===========
+TomcatMajorMinor
+================
 
 .. autoclass:: tomcatmanager.models.TomcatMajorMinor
     :members:
