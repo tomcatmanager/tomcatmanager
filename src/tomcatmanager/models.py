@@ -49,7 +49,7 @@ class TomcatNotImplementedError(Exception):
     Raised when a Tomcat Manager web application does not support a python
     API call.
 
-    .. versionadded:: 3.0
+    .. versionadded:: 3.0.0
     """
 
 
@@ -57,6 +57,8 @@ class TomcatNotConnected(Exception):
     """
     Raised when a method is called on :class:`.TomcatManager` without the
     :meth:`~.TomcatManager.connect()` method being called first.
+
+    .. versionadded:: 3.0.0
     """
 
 
@@ -68,6 +70,8 @@ class StatusCode(enum.Enum):
     library, which uses a custom LookupDict class to store HTTP status codes in a
     dictionary. After much debate on whether we should do it the requests way, or
     a more pythonic way, I chose to use a native Enum class instead.
+
+    .. versionadded:: 2.0.0
     """
 
     OK = "OK"
@@ -239,7 +243,10 @@ class TomcatManagerResponse:
 
 @enum.unique
 class ApplicationState(enum.Enum):
-    """An enumeration of the various tomcat application states"""
+    """An enumeration of the various tomcat application states.
+
+    .. versionadded:: 2.0.0
+    """
 
     RUNNING = "running"
     STOPPED = "stopped"
@@ -432,6 +439,9 @@ class TomcatMajorMinor(enum.Enum):
 
     It also includes a value UNSUPPORTED, for older versions of Tomcat that are unknown
     to this module.
+
+    .. versionadded:: 3.0.0
+
     """
 
     V7_0 = "7.0"
@@ -560,11 +570,14 @@ class ServerInfo(dict):
 
     @property
     def tomcat_major_minor(self) -> TomcatMajorMinor:
-        """An instance of TomcatMajorMinor indicating which major version of Tomcat
-        is running on the server.
+        """An instance of :class:`~.models.TomcatMajorMinor` indicating which
+        major and minor version of Tomcat is running on the server.
 
         This value is computed, not received from the server, and therefore does not
-        show up in the dictionary, ie server_info["tomcat_major_minor"] does not exist.
+        show up in the dictionary, ie ``server_info["tomcat_major_minor"]`` does
+        not exist.
+
+        .. versionadded:: 3.0.0
         """
         return self._tomcat_major_minor
 
