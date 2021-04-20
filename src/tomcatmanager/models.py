@@ -48,6 +48,8 @@ class TomcatNotImplementedError(Exception):
     """
     Raised when a Tomcat Manager web application does not support a python
     API call.
+
+    .. versionadded:: 3.0
     """
 
 

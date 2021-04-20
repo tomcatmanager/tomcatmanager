@@ -17,5 +17,6 @@ Python API documentation for tomcatmanager |release|
    TomcatMajorMinor
    TomcatError
    TomcatNotConnected
+   TomcatNotImplementedError
    migrating2
    migrating3
