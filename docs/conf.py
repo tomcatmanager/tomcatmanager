@@ -6,6 +6,7 @@
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
+    "autodocsumm",
 ]
 templates_path = ["_templates"]
 source_suffix = ".rst"
