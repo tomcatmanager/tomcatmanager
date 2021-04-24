@@ -269,21 +269,21 @@ class TomcatManager:
         :param user:     (optional) user to authenticate with
         :param password: (optional) password to authenticate with
         :param timeout:  timeout in seconds for network operations
-        :return:        :meth:`~tomcatmanager.models.TomcatManagerResponse`
+        :return:        :class:`~tomcatmanager.models.TomcatManagerResponse`
                          object with an additional ``server_info`` attribute
 
-        The ``server_info`` attribute contains a :class:`.ServerInfo` object, which is
-        a dictionary with some added properties for well-known values returned from
-        the Tomcat server.
+        The ``server_info`` attribute of the returned object contains a
+        :class:`.ServerInfo` object, which is a dictionary with some added
+        properties for well-known values returned from the Tomcat server.
 
         This method:
 
-        - gives you a way to change the credentials on an existing object
+        - sets or changes the url and credentials on an existing object
         - provides a convenient mechanism to validate you can actually connect to the
           server
         - returns a response object that includes information about the server you are
           connected to
-        - allow you to inspect the response so you can see why you can't connect
+        - allows you to inspect the response so you can see why you can't connect
 
         Usage:
 
@@ -303,15 +303,40 @@ class TomcatManager:
         ...    print('not connected')
         not connected
 
-        The only way to validate whether we are connected is to make an HTTP request
-        to the server and see if it returns successfully. Internally this method tries
-        to retrieve ``/manager/text/serverinfo``.
+        Many things can go wrong when requesting url's via http. tomcatmanager
+        uses the `requests <https://docs.python-requests.org/en/master/>`_ library
+        for all network communication, and follows that library's approach for
+        raising exceptions and checking the response to your request. Therefore:
 
-        Requesting url's via http can raise all kinds of exceptions. For example, if
-        you give a URL where no web server is listening, you'll get a
-        ``requests.connections.ConnectionError``. However, this method won't raise
-        exceptions for everything. If the credentials are incorrect, you won't get an
-        exception unless you ask for it.
+        - Some exceptions will always be raised by this method. If you give a URL
+          where no web server is listening, ``requests.connections.ConnectionError``
+          will be raised.
+        - Other exceptions will only be raised if you call
+          :meth:`.TomcatManagerResponse.raise_for_status()`. For example, if the
+          credentials are incorrect, you won't get an exception unless you ask for
+          it.
+        - The :attr:`.TomcatManagerResponse.ok` attribute is the easiest and most
+          rigerous way to check whether you connected successfully. However, as the
+          example usage above shows, you still have to catch exceptions because
+          `requests <https://docs.python-requests.org/en/master/>`_ can raise
+          exceptions from inside the :meth:`.connect` method and this library
+          doesn't attempt to catch them so that you can do specific error
+          handling if you want to.
+
+        All communications between this library and a Tomcat server happen over HTTP,
+        which means there isn't a persistent connection. A new HTTP GET request is
+        issued for each method call on this object (i.e. :meth:`~.deploy_localwar`,
+        :meth:`~.stop`). However, the mental model for this library is connection
+        based: use the :meth:`~.connect` method to establish the URL and authentication
+        credentials, then call other methods to perform actions on the server you are
+        connected to. If you try and call other methods before you call
+        :meth:`~.connect`, :exc:`.TomcatNotConnected` will be raised. Because there
+        is no persistent connection of any kind, there is no disconnect method and
+        no cleanup to perform when you are done using a server.
+
+        The only way to validate the URL and authentication credentials is to
+        make an HTTP request to the server and see if it returns successfully.
+        Internally this method tries to retrieve ``/manager/text/serverinfo``.
 
         Passing a timeout parameter to this method has the side effect of setting the
         :attr:`timeout` attribute on this object.
