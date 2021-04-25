@@ -208,7 +208,13 @@ class TomcatManager:
         Usage:
 
         >>> tomcat = getfixture('tomcat')
-        >>> print(tomcat.implements(tomcat.ssl_reload))
+        >>> print(tomcat.implements(tomcat.deploy_localwar))
+        True
+
+        or:
+
+        >>> tomcat = getfixture('tomcat')
+        >>> print(tomcat.implements("deploy_localwar"))
         True
 
         .. versionadded:: 3.0.0
