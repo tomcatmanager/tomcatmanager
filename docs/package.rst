@@ -124,7 +124,7 @@ The :meth:`TomcatManager.ssl_reload` is the only one of these methods that
 causes the server to take any action, the rest are informational only.
 
 
-Differences in Server Versions
+Differences in Tomcat Versions
 ------------------------------
 
 Not every version of Tomcat supports all of the methods in this library. If
