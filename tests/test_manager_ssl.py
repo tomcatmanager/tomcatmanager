@@ -25,7 +25,8 @@
 # pylint: disable=missing-module-docstring, unused-variable
 
 import unittest.mock as mock
-
+import pytest
+import tomcatmanager as tm
 
 def test_ssl_connector_ciphers(tomcat, assert_tomcatresponse):
     r = tomcat.ssl_connector_ciphers()
@@ -34,36 +35,51 @@ def test_ssl_connector_ciphers(tomcat, assert_tomcatresponse):
 
 
 def test_ssl_connector_certs(tomcat, assert_tomcatresponse):
-    r = tomcat.ssl_connector_certs()
-    assert_tomcatresponse.info(r)
-    assert r.result == r.ssl_connector_certs
+    if tomcat.implements(tomcat.ssl_connector_certs):
+        r = tomcat.ssl_connector_certs()
+        assert_tomcatresponse.info(r)
+        assert r.result == r.ssl_connector_certs
+    else:
+        with pytest.raises(tm.TomcatNotImplementedError):
+            r = tomcat.ssl_connector_certs()
 
 
 def test_ssl_connector_trusted_certs(tomcat, assert_tomcatresponse):
-    r = tomcat.ssl_connector_trusted_certs()
-    assert_tomcatresponse.info(r)
-    assert r.result == r.ssl_connector_trusted_certs
+    if tomcat.implements(tomcat.ssl_connector_trusted_certs):
+        r = tomcat.ssl_connector_trusted_certs()
+        assert_tomcatresponse.info(r)
+        assert r.result == r.ssl_connector_trusted_certs
+    else:
+        with pytest.raises(tm.TomcatNotImplementedError):
+            r = tomcat.ssl_connector_trusted_certs()
 
 
 def test_ssl_reload_success(tomcat, mocker, assert_tomcatresponse):
     # the command on the tomcat manager web app fails if SSL is not configured
     # we'll force it to be successful
-    mock_result = mocker.patch(
-        "requests.Response.text", create=True, new_callable=mock.PropertyMock
-    )
-    mock_result.return_value = "OK - Reloaded TLS configuration for [www.example.com]"
-    r = tomcat.ssl_reload("www.example.com")
-    assert_tomcatresponse.success(r)
-    assert r.status_message == "Reloaded TLS configuration for [www.example.com]"
-
+    if tomcat.implements(tomcat.ssl_reload):
+        mock_result = mocker.patch(
+            "requests.Response.text", create=True, new_callable=mock.PropertyMock
+        )
+        mock_result.return_value = "OK - Reloaded TLS configuration for [www.example.com]"
+        r = tomcat.ssl_reload("www.example.com")
+        assert_tomcatresponse.success(r)
+        assert r.status_message == "Reloaded TLS configuration for [www.example.com]"
+    else:
+        with pytest.raises(tm.TomcatNotImplementedError):
+            r = tomcat.ssl_reload("www.example.com")
 
 def test_ssl_reload_fail(tomcat, mocker, assert_tomcatresponse):
     # the command on the tomcat manager web app fails if SSL is not configured
     # we'll force it to fail
-    mock_result = mocker.patch(
-        "requests.Response.text", create=True, new_callable=mock.PropertyMock
-    )
-    mock_result.return_value = "FAIL - Failed to reload TLS configuration"
-    r = tomcat.ssl_reload()
-    assert_tomcatresponse.failure(r)
-    assert r.status_message == "Failed to reload TLS configuration"
+    if tomcat.implements(tomcat.ssl_reload):
+        mock_result = mocker.patch(
+            "requests.Response.text", create=True, new_callable=mock.PropertyMock
+        )
+        mock_result.return_value = "FAIL - Failed to reload TLS configuration"
+        r = tomcat.ssl_reload()
+        assert_tomcatresponse.failure(r)
+        assert r.status_message == "Failed to reload TLS configuration"
+    else:
+        with pytest.raises(tm.TomcatNotImplementedError):
+            r = tomcat.ssl_reload("www.example.com")
