@@ -24,28 +24,29 @@
 # pylint: disable=too-many-lines, too-many-public-methods
 
 """
-Mock up a Tomcat Manager application that behaves like tomcat version 10.0.x
+Mock up a Tomcat Manager application that behaves like tomcat version 7.0.x
 """
 
-from http.server import HTTPServer
 import socket
 import threading
 
-from tests.mock_server_ssl import MockRequestHandlerSSL
+from http.server import HTTPServer
+
+from tests.mock_server_nossl import MockRequestHandlerNoSSL
 
 
-class MockRequestHandler100(MockRequestHandlerSSL):
-    """Handle HTTP Requests like Tomcat Manager 10.0.x"""
+class MockRequestHandler70(MockRequestHandlerNoSSL):
+    """Handle HTTP Requests like Tomcat Manager 7.0.x"""
 
     def get_server_info(self):
         """Send the server information."""
         self.send_text(
             """OK - Server info
-Tomcat Version: [Apache Tomcat/10.0.4]
+Tomcat Version: [Apache Tomcat/7.0.108]
 OS Name: [Linux]
-OS Version: [5.4.0-67-generic]
+OS Version: [5.4.0-72-generic]
 OS Architecture: [amd64]
-JVM Version: [1.8.0_282-8u282-b08-0ubuntu1~20.04-b08]
+JVM Version: [14.0.2+12-Ubuntu-120.04]
 JVM Vendor: [Private Build]"""
         )
 
@@ -54,7 +55,7 @@ JVM Vendor: [Private Build]"""
 #
 #
 ###
-def start_mock_server_10_0(tms):
+def start_mock_server_7_0(tms):
     """Start a mock Tomcat Manager application
 
     :return: a tuple: (url, user, password) where the server is accessible
@@ -67,13 +68,13 @@ def start_mock_server_10_0(tms):
     sock.close()
 
     tms.url = "http://localhost:{}/manager".format(port)
-    tms.user = MockRequestHandler100.USER
-    tms.password = MockRequestHandler100.PASSWORD
+    tms.user = MockRequestHandler70.USER
+    tms.password = MockRequestHandler70.PASSWORD
     tms.warfile = "/path/to/server.war"
     tms.contextfile = "path/to/context.xml"
     tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
 
-    mock_server = HTTPServer(("localhost", port), MockRequestHandler100)
+    mock_server = HTTPServer(("localhost", port), MockRequestHandler70)
     mock_server_thread = threading.Thread(target=mock_server.serve_forever)
     mock_server_thread.daemon = True
     mock_server_thread.start()
