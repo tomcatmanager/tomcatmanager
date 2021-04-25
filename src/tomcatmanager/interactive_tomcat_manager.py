@@ -1023,12 +1023,12 @@ change the value of one of this program's settings
 
     reload_parser = _path_version_parser(
         "reload",
-        "Start and stop a tomcat application. Synonym for 'restart'.",
+        "Stop and start a tomcat application. Synonym for 'restart'.",
     )
 
     @requires_connection
     def do_reload(self, cmdline: cmd2.Statement):
-        """Start and stop a tomcat application."""
+        """Stop and start a tomcat application."""
         args = self.parse_args(self.reload_parser, cmdline.argv)
         self.docmd(self.tomcat.reload, args.path, args.version)
 
@@ -1038,12 +1038,12 @@ change the value of one of this program's settings
 
     restart_parser = _path_version_parser(
         "restart",
-        "Start and stop a tomcat application.",
+        "Stop and start a tomcat application.",
     )
 
     @requires_connection
     def do_restart(self, cmdline: cmd2.Statement):
-        """Start and stop a tomcat application."""
+        """Stop and start a tomcat application."""
         args = self.parse_args(self.reload_parser, cmdline.argv)
         self.docmd(self.tomcat.reload, args.path, args.version)
 
