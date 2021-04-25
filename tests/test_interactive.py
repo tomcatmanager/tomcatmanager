@@ -831,30 +831,45 @@ def test_sslconnectorciphers(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
     itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslconnectorciphers")
-    out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_SUCCESS
-    assert "Connector" in out
-    assert "SSL" in out
+    out, err = capsys.readouterr()
+    if "command not implemented by server" in err:
+        # the particular version of the server we are testing against
+        # doesn't support this command. Silently skip
+        assert itm.exit_code == itm.EXIT_ERROR
+    else:
+        assert itm.exit_code == itm.EXIT_SUCCESS
+        assert "Connector" in out
+        assert "SSL" in out
 
 
 def test_sslconnectorcerts(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
     itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslconnectorcerts")
-    out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_SUCCESS
-    assert "Connector" in out
-    assert "SSL" in out
+    out, err = capsys.readouterr()
+    if "command not implemented by server" in err:
+        # the particular version of the server we are testing against
+        # doesn't support this command. Silently skip
+        assert itm.exit_code == itm.EXIT_ERROR
+    else:
+        assert itm.exit_code == itm.EXIT_SUCCESS
+        assert "Connector" in out
+        assert "SSL" in out
 
 
 def test_sslconnectortrustedcerts(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
     itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslconnectortrustedcerts")
-    out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_SUCCESS
-    assert "Connector" in out
-    assert "SSL" in out
+    out, err = capsys.readouterr()
+    if "command not implemented by server" in err:
+        # the particular version of the server we are testing against
+        # doesn't support this command. Silently skip
+        assert itm.exit_code == itm.EXIT_ERROR
+    else:
+        assert itm.exit_code == itm.EXIT_SUCCESS
+        assert "Connector" in out
+        assert "SSL" in out
 
 
 def test_sslreload(tomcat_manager_server, capsys):
@@ -862,8 +877,18 @@ def test_sslreload(tomcat_manager_server, capsys):
     itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslreload")
     out, err = capsys.readouterr()
-    assert "load" in out or "load" in err
-    assert "TLS" in out or "TLS" in err
+    if "command not implemented by server" in err:
+        # the particular version of the server we are testing against
+        # doesn't support this command
+        assert itm.exit_code == itm.EXIT_ERROR
+    else:
+        # check for something in both out and err, if the server can't
+        # reload the SSL/TLS certificates, the output will be in err
+        # when testing against a real tomcat server we don't know
+        # whether they will successfully reload or not
+        # we don't check itm.exit_code here either for the same reason
+        assert "load" in out or "load" in err
+        assert "TLS" in out or "TLS" in err
 
 
 def test_sslreload_host(tomcat_manager_server, capsys):
@@ -871,9 +896,19 @@ def test_sslreload_host(tomcat_manager_server, capsys):
     itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslreload www.example.com")
     out, err = capsys.readouterr()
-    assert "load" in out or "load" in err
-    assert "TLS" in out or "TLS" in err
-    assert "www.example.com" in out or "www.example.com" in err
+    if "command not implemented by server" in err:
+        # the particular version of the server we are testing against
+        # doesn't support this command. Silently skip
+        assert itm.exit_code == itm.EXIT_ERROR
+    else:
+        # check for something in both out and err, if the server can't
+        # reload the SSL/TLS certificates, the output will be in err
+        # when testing against a real tomcat server we don't know
+        # whether they will successfully reload or not
+        # we don't check itm.exit_code here either for the same reason
+        assert "load" in out or "load" in err
+        assert "TLS" in out or "TLS" in err
+        assert "www.example.com" in out or "www.example.com" in err
 
 
 def test_threaddump(tomcat_manager_server, capsys):

@@ -359,13 +359,16 @@ class InteractiveTomcatManager(cmd2.Cmd):
         set exit_code to 1 and print the exception
         """
         self.exit_code = self.EXIT_SUCCESS
-        r = func(*args, **kwargs)
         try:
+            r = func(*args, **kwargs)
             r.raise_for_status()
+            return r
+        except tm.TomcatNotImplementedError as err:
+            self.exit_code = self.EXIT_ERROR
+            self.perror("command not implemented by server")
         except tm.TomcatError as err:
             self.exit_code = self.EXIT_ERROR
             self.perror(str(err))
-        return r
 
     def show_help_from(self, argparser: argparse.ArgumentParser):
         """Set exit code and output help from an argparser."""
@@ -1313,7 +1316,7 @@ change the value of one of this program's settings
         """Reload SSL/TLS certificates and keys."""
         args = self.parse_args(self.sslreload_parser, cmdline.argv)
         r = self.docmd(self.tomcat.ssl_reload, args.host_name)
-        if r.ok:
+        if r and r.ok:
             self.pfeedback(r.status_message)
 
     def help_sslreload(self):
