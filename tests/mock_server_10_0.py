@@ -51,8 +51,8 @@ def requires_authorization(func):
     return _requires_authorization
 
 
-class MockRequestHandler80(BaseHTTPRequestHandler):
-    """Handle HTTP Requests like Tomcat Manager 8.0.x"""
+class MockRequestHandler100(BaseHTTPRequestHandler):
+    """Handle HTTP Requests like Tomcat Manager 10.0.x"""
 
     AUTH_KEY = base64.b64encode("{}:{}".format(USER, PASSWORD).encode("utf-8")).decode(
         "utf-8"
@@ -1042,7 +1042,7 @@ Default maximum session inactive interval 30 minutes
 #
 #
 ###
-def start_mock_server80(tms):
+def start_mock_server_10_0(tms):
     """Start a mock Tomcat Manager application
 
     :return: a tuple: (url, user, password) where the server is accessible
@@ -1061,7 +1061,7 @@ def start_mock_server80(tms):
     tms.contextfile = "path/to/context.xml"
     tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
 
-    mock_server = HTTPServer(("localhost", port), MockRequestHandler80)
+    mock_server = HTTPServer(("localhost", port), MockRequestHandler100)
     mock_server_thread = threading.Thread(target=mock_server.serve_forever)
     mock_server_thread.daemon = True
     mock_server_thread.start()

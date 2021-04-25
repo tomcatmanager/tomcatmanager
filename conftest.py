@@ -8,7 +8,7 @@ import os
 import pytest
 
 import tomcatmanager as tm
-from tests.mock_server80 import start_mock_server80
+from tests.mock_server_10_0 import start_mock_server_10_0
 
 ###
 #
@@ -117,7 +117,7 @@ def tomcat_manager_server(request):
         return tms
     else:
         # go start up a fake server
-        return start_mock_server80(tms)
+        return start_mock_server_10_0(tms)
 
 
 @pytest.fixture
