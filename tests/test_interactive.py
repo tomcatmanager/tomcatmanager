@@ -829,7 +829,6 @@ def test_vminfo(tomcat_manager_server, capsys):
 
 def test_sslconnectorciphers(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslconnectorciphers")
     out, err = capsys.readouterr()
     if "command not implemented by server" in err:
@@ -844,7 +843,6 @@ def test_sslconnectorciphers(tomcat_manager_server, capsys):
 
 def test_sslconnectorcerts(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslconnectorcerts")
     out, err = capsys.readouterr()
     if "command not implemented by server" in err:
@@ -859,7 +857,6 @@ def test_sslconnectorcerts(tomcat_manager_server, capsys):
 
 def test_sslconnectortrustedcerts(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslconnectortrustedcerts")
     out, err = capsys.readouterr()
     if "command not implemented by server" in err:
@@ -874,7 +871,6 @@ def test_sslconnectortrustedcerts(tomcat_manager_server, capsys):
 
 def test_sslreload(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslreload")
     out, err = capsys.readouterr()
     if "command not implemented by server" in err:
@@ -893,7 +889,6 @@ def test_sslreload(tomcat_manager_server, capsys):
 
 def test_sslreload_host(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslreload www.example.com")
     out, err = capsys.readouterr()
     if "command not implemented by server" in err:
@@ -909,6 +904,18 @@ def test_sslreload_host(tomcat_manager_server, capsys):
         assert "load" in out or "load" in err
         assert "TLS" in out or "TLS" in err
         assert "www.example.com" in out or "www.example.com" in err
+
+
+def test_notimplemented(tomcat_manager_server, capsys, mocker):
+    # if the server doesn't implement a command, make sure
+    # we get the error message
+    connect_mock = mocker.patch("tomcatmanager.TomcatManager.list")
+    connect_mock.side_effect = tm.TomcatNotImplementedError
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks("list")
+    _, err = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_ERROR
+    assert "command not implemented by server" in err
 
 
 def test_threaddump(tomcat_manager_server, capsys):

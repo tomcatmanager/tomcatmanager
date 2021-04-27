@@ -133,20 +133,13 @@ Testing
 -------
 
 Unit testing provides reliability and consistency in released software. This project
-strives for 100% unit test coverage. We aren't quite there on the interactive program,
-but the API has 100% coverage.
+has 100% unit test coverage. Pull requests which reduce test coverage will not
+be merged.
 
 This repository has Github Actions configured to run tests when you push or merge a
 pull request. Any push triggers a test run against all supported versions of python in
 a linux environment. Any pull request triggers a test run against all supported
 versions of python on all supported operating systems.
-
-To ensure the tests can run without an external dependencies,
-``tests/mock_server80.py`` contains a HTTP server which emulates the behavior of
-Tomcat Manager 8.0. There is a test fixture to start this server, and all the tests
-run against this fixture. I created this fixture to speed up testing time. It doesn't
-do everything a real Tomcat server does, but it's close enough for the tests to run,
-and it allows you to parallelize the test suite using ``python-xdist``.
 
 You can run the tests against all the supported versions of python using tox::
 
@@ -167,6 +160,22 @@ across the number of cores you have::
 
    $ pip install pytest-xdist
    $ pytest -n8
+
+
+To ensure the tests can run without an external dependencies, this project includes a
+mock server for each supported version of Tomcat. This speeds up testing considerably
+and also allows you to parallelize tests using ``python-xdist``.
+
+By default, ``pytest`` runs the mock server corresponding to the latest supported
+version of Tomcat. If you want to test against a different mock server, do something
+like::
+
+   $ pytest --mocktomcat 8.5
+
+Look in ``conftest.py`` to see how these servers are implemented and launched.
+
+When you run the tests with ``tox``, the test suite runs against each supported
+version of Tomcat using each supported version of Python.
 
 In many of the doctests you'll see something like::
 

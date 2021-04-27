@@ -358,16 +358,15 @@ class InteractiveTomcatManager(cmd2.Cmd):
         Sets exit_code to 0 and calls {func}. If func throws a TomcatError,
         set exit_code to 1 and print the exception
         """
-        self.exit_code = self.EXIT_SUCCESS
+        self.exit_code = self.EXIT_ERROR
         try:
             r = func(*args, **kwargs)
             r.raise_for_status()
+            self.exit_code = self.EXIT_SUCCESS
             return r
         except tm.TomcatNotImplementedError as err:
-            self.exit_code = self.EXIT_ERROR
             self.perror("command not implemented by server")
         except tm.TomcatError as err:
-            self.exit_code = self.EXIT_ERROR
             self.perror(str(err))
 
     def show_help_from(self, argparser: argparse.ArgumentParser):

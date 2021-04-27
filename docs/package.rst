@@ -32,14 +32,19 @@ This library provides a robust API to manage applications in a tomcat server.
 The following methods are available:
 
 - :meth:`.TomcatManager.list` - return a list of all installed applications
-- :meth:`.TomcatManager.deploy_localwar` - deploy a local war file to the server
-- :meth:`.TomcatManager.deploy_serverwar` - deploy a war file already on the tomcat server
-- :meth:`.TomcatManager.deploy_servercontext` - deploy a tomcat application defined by a context file on the server
-- :meth:`.TomcatManager.undeploy` - remove a tomcat application installed on the server
-- :meth:`.TomcatManager.start` - start a deployed tomcat application that isn't running
-- :meth:`.TomcatManager.stop` - stop a running tomcat application and leave it installed
+- :meth:`.TomcatManager.deploy_localwar` - deploy a warfile on the local
+  filesystem to the Tomcat server
+- :meth:`.TomcatManager.deploy_serverwar` - deploy a war file from the server
+  filesystem to the Tomcat server
+- :meth:`.TomcatManager.deploy_servercontext` - deploy an application defined by a
+  context file from the server filesystem to the Tomcat server
+- :meth:`.TomcatManager.undeploy` - undeploy an application in the Tomcat server
+- :meth:`.TomcatManager.start` - start an application already deployed in the
+  Tomcat server
+- :meth:`.TomcatManager.stop` - stop an application already deployed in the
+  Tomcat server
 - :meth:`.TomcatManager.reload` - stop and start a tomcat application
-- :meth:`.TomcatManager.sessions` - show active sessions for a tomcat application
+- :meth:`.TomcatManager.sessions` - get the age of the sessions for an application.
 - :meth:`.TomcatManager.expire` - expire idle sessions
 
 
@@ -97,16 +102,16 @@ Information about Tomcat
 ------------------------
 
 There are a number of methods which just return information about the Tomcat
-server. With the exception of :meth:`TomcatManager.find_leakers` (which
+server. With the exception of :meth:`.TomcatManager.find_leakers` (which
 triggers garbage collection), these methods don't effect any change on the
 server.
 
-- :meth:`TomcatManager.find_leakers` - find applications that are leaking memory
-- :meth:`TomcatManager.resources` - get global JNDI resources
-- :meth:`TomcatManager.server_info` - get information about the tomcat server
-- :meth:`TomcatManager.status_xml` - get server status information in xml format
-- :meth:`TomcatManager.thread_dump` - get a jvm thread dump
-- :meth:`TomcatManager.vm_info` - get diagnostic information about the jvm
+- :meth:`.TomcatManager.find_leakers` - find applications that are leaking memory
+- :meth:`.TomcatManager.resources` - get global JNDI resources
+- :meth:`.TomcatManager.server_info` - get information about the tomcat server
+- :meth:`.TomcatManager.status_xml` - get server status information in xml format
+- :meth:`.TomcatManager.thread_dump` - get a jvm thread dump
+- :meth:`.TomcatManager.vm_info` - get diagnostic information about the jvm
 
 
 SSL/TLS
@@ -115,12 +120,15 @@ SSL/TLS
 Tomcat servers can be configured to serve their applications over SSL/TLS.
 This library includes a few related methods:
 
-- :meth:`TomcatManager.ssl_connector_ciphers`
-- :meth:`TomcatManager.ssl_connector_certs`
-- :meth:`TomcatManager.ssl_connector_trusted_certs`
-- :meth:`TomcatManager.ssl_reload`
+- :meth:`.TomcatManager.ssl_connector_ciphers` - get SSL/TLS ciphers for eac
+  connector
+- :meth:`.TomcatManager.ssl_connector_certs` - get the certificate chain for
+  each virtual host
+- :meth:`.TomcatManager.ssl_connector_trusted_certs` - get the trusted certificates
+  for each virtual host
+- :meth:`.TomcatManager.ssl_reload` - reload certificates and keys
 
-The :meth:`TomcatManager.ssl_reload` is the only one of these methods that
+The :meth:`.TomcatManager.ssl_reload` is the only one of these methods that
 causes the server to take any action, the rest are informational only.
 
 

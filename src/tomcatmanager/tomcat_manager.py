@@ -269,7 +269,7 @@ class TomcatManager:
     def connect(
         self, url: str, user: str = "", password: str = "", timeout: float = None
     ) -> TomcatManagerResponse:
-        """Connect to a Tomcat Manager server.
+        """Connect to the manager application running in a Tomcat server.
 
         :param url:      url where the Tomcat Manager web application is deployed
         :param user:     (optional) user to authenticate with
@@ -393,7 +393,7 @@ class TomcatManager:
         self, path: str, warfile: str, version: str = None, update: bool = False
     ) -> TomcatManagerResponse:
         """
-        Deploy a warfile on the local file system to the Tomcat server.
+        Deploy a warfile from the local file system to the Tomcat server.
 
         :param path:         The path on the server to deploy this war to,
                              i.e. /sampleapp
@@ -450,7 +450,7 @@ class TomcatManager:
         self, path: str, warfile: str, version: str = None, update: bool = False
     ) -> TomcatManagerResponse:
         """
-        Deploy a warfile on the local file system to the Tomcat server.
+        Deploy a warfile from the server file system to the Tomcat server.
 
         :param path:         The path on the server to deploy this war to,
                              i.e. /sampleapp
@@ -490,7 +490,7 @@ class TomcatManager:
         update: bool = False,
     ) -> TomcatManagerResponse:
         """
-        Deploy a Tomcat application defined by a context file.
+        Deploy a Tomcat application defined by a context file from the server filesystem to the Tomcat server.
 
         :param path:         The path on the server to deploy this war to,
                              i.e. /sampleapp
@@ -529,7 +529,7 @@ class TomcatManager:
 
     @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def undeploy(self, path: str, version: str = None) -> TomcatManagerResponse:
-        """Undeploy the application at a given path.
+        """Undeploy an application in the Tomcat server.
 
         :param path:         The path of the application to undeploy
         :param version:      (optional) The version string of the app to
@@ -552,7 +552,7 @@ class TomcatManager:
     @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def start(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
-        Start the application at a given path.
+        Start an application already deployed in the Tomcat server.
 
         :param path:         The path of the application to start
         :param version:      (optional) The version string of the app to start
@@ -574,7 +574,7 @@ class TomcatManager:
     @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def stop(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
-        Stop the application at a given path.
+        Stop an application already deployed in the Tomcat server.
 
         :param path:         The path of the application to stop
         :param version:      (optional) The version string of the app to stop
@@ -596,7 +596,7 @@ class TomcatManager:
     @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def reload(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
-        Reload (stop and start) the application at a given path.
+        Stop and start a Tomcat application.
 
         :param path:         The path of the application to reload
         :param version:      (optional) The version string of the app to reload
@@ -618,7 +618,7 @@ class TomcatManager:
     @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def sessions(self, path: str, version: str = None) -> TomcatManagerResponse:
         """
-        Get the age of the sessions in an application.
+        Get the age of the sessions for an application.
 
         :param path:         The path of the application to get session
                              information about
@@ -654,7 +654,7 @@ class TomcatManager:
         self, path: str, version: str = None, idle: Any = None
     ) -> TomcatManagerResponse:
         """
-        Expire sessions idle for longer than idle minutes.
+        Expire idle sessions.
 
         :param path:         the path to the app on the server whose
                              sessions you want to expire
@@ -888,7 +888,7 @@ class TomcatManager:
     @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def thread_dump(self) -> TomcatManagerResponse:
         """
-        Get a jvm thread dump.
+        Get a JVM thread dump.
 
         :return: :class:`.TomcatManagerResponse` object with an additional
                  ``thread_dump`` attribute
@@ -900,7 +900,7 @@ class TomcatManager:
     @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def resources(self, type_: str = None) -> TomcatManagerResponse:
         """
-        Get the global JNDI resources available for use in resource links for context config files
+        Get the global JNDI resources
 
         :param type_: (optional) Fully qualified java class name of the
                       resource type you are interested in. For example,
