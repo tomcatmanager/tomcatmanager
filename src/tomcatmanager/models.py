@@ -49,7 +49,7 @@ class TomcatNotImplementedError(Exception):
     Raised when a Tomcat Manager web application does not support a python
     API call.
 
-    .. versionadded:: 3.0.0
+    .. versionadded:: 2.1.0
     """
 
 
@@ -58,7 +58,7 @@ class TomcatNotConnected(Exception):
     Raised when a method is called on :class:`.TomcatManager` without the
     :meth:`~.TomcatManager.connect()` method being called first.
 
-    .. versionadded:: 3.0.0
+    .. versionadded:: 2.1.0
     """
 
 
@@ -440,7 +440,7 @@ class TomcatMajorMinor(enum.Enum):
     It also includes a value UNSUPPORTED, for older versions of Tomcat that are unknown
     to this module.
 
-    .. versionadded:: 3.0.0
+    .. versionadded:: 2.1.0
 
     """
 
@@ -577,7 +577,7 @@ class ServerInfo(dict):
         show up in the dictionary, ie ``server_info["tomcat_major_minor"]`` does
         not exist.
 
-        .. versionadded:: 3.0.0
+        .. versionadded:: 2.1.0
         """
         return self._tomcat_major_minor
 

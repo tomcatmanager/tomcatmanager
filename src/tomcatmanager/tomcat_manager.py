@@ -187,7 +187,7 @@ class TomcatManager:
 
         This attribute is set by the :meth:`.connect` method. Look there for more info.
 
-        .. versionadded:: 3.0.0
+        .. versionadded:: 2.1.0
         """
         return self._tomcat_major_minor
 
@@ -217,7 +217,7 @@ class TomcatManager:
         >>> print(tomcat.implements("deploy_localwar"))
         True
 
-        .. versionadded:: 3.0.0
+        .. versionadded:: 2.1.0
         """
         if callable(method):
             mname = method.__name__
@@ -243,7 +243,7 @@ class TomcatManager:
 
         This method does not require prior connection to a Tomcat server.
 
-        .. versionadded:: 3.0.0
+        .. versionadded:: 2.1.0
         """
         if callable(method):
             mname = method.__name__
