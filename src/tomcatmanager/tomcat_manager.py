@@ -309,7 +309,7 @@ class TomcatManager:
         password: str = "",
         timeout: float = None,
         *,
-        cert: Union[str, Tuple[str, str]]=None,
+        cert: Union[str, Tuple[str, str]] = None,
     ) -> TomcatManagerResponse:
         """Connect to the manager application running in a Tomcat server.
 
@@ -397,7 +397,9 @@ class TomcatManager:
 
         .. warning::
 
-            The private key to your local certificate must be unencrypted. The Requests library used for network communication does not support using encrypted keys.
+            The private key to your local certificate must be unencrypted. The
+            Requests library used for network communication does not support using
+            encrypted keys.
 
         Passing a timeout parameter to this method has the side effect of setting the
         :attr:`timeout` attribute on this object.
@@ -545,7 +547,8 @@ class TomcatManager:
         update: bool = False,
     ) -> TomcatManagerResponse:
         """
-        Deploy a Tomcat application defined by a context file from the server filesystem to the Tomcat server.
+        Deploy a Tomcat application defined by a context file from the server
+        filesystem to the Tomcat server.
 
         :param path:         The path on the server to deploy this war to,
                              i.e. /sampleapp

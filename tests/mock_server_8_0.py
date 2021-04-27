@@ -34,8 +34,6 @@ import threading
 
 from tests.mock_server_nossl import MockRequestHandlerNoSSL
 
-import requests
-
 
 def requires_authorization(func):
     """Decorator for methods which require authorization."""

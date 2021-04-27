@@ -366,8 +366,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             return r
         except tm.TomcatNotImplementedError as err:
             self.perror("command not implemented by server")
+            return None
         except tm.TomcatError as err:
             self.perror(str(err))
+            return None
 
     def show_help_from(self, argparser: argparse.ArgumentParser):
         """Set exit code and output help from an argparser."""
