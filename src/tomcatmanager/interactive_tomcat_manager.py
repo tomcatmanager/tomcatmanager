@@ -132,7 +132,7 @@ def _deploy_parser(
     return deploy_parser
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-many-instance-attributes
 class InteractiveTomcatManager(cmd2.Cmd):
     """An interactive command line tool for the Tomcat Manager web application.
 
@@ -358,14 +358,16 @@ class InteractiveTomcatManager(cmd2.Cmd):
         Sets exit_code to 0 and calls {func}. If func throws a TomcatError,
         set exit_code to 1 and print the exception
         """
-        self.exit_code = self.EXIT_SUCCESS
-        r = func(*args, **kwargs)
+        self.exit_code = self.EXIT_ERROR
         try:
+            r = func(*args, **kwargs)
             r.raise_for_status()
+            self.exit_code = self.EXIT_SUCCESS
+            return r
+        except tm.TomcatNotImplementedError as err:
+            self.perror("command not implemented by server")
         except tm.TomcatError as err:
-            self.exit_code = self.EXIT_ERROR
             self.perror(str(err))
-        return r
 
     def show_help_from(self, argparser: argparse.ArgumentParser):
         """Set exit code and output help from an argparser."""
@@ -407,6 +409,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     def do_help(self, args: str):
         """Show available commands, or help on a specific command."""
+        # pylint: disable=too-many-statements
         if args:
             # they want help on a specific command, use cmd2 for that
             super().do_help(args)
@@ -797,6 +800,7 @@ change the value of one of this program's settings
 
     def do_connect(self, cmdline: cmd2.Statement):
         """Connect to a tomcat manager instance."""
+        # pylint: disable=too-many-branches, too-many-statements
         url = None
         user = None
         password = None
@@ -1021,12 +1025,12 @@ change the value of one of this program's settings
 
     reload_parser = _path_version_parser(
         "reload",
-        "Start and stop a tomcat application. Synonym for 'restart'.",
+        "Stop and start a tomcat application. Synonym for 'restart'.",
     )
 
     @requires_connection
     def do_reload(self, cmdline: cmd2.Statement):
-        """Start and stop a tomcat application."""
+        """Stop and start a tomcat application."""
         args = self.parse_args(self.reload_parser, cmdline.argv)
         self.docmd(self.tomcat.reload, args.path, args.version)
 
@@ -1036,12 +1040,12 @@ change the value of one of this program's settings
 
     restart_parser = _path_version_parser(
         "restart",
-        "Start and stop a tomcat application.",
+        "Stop and start a tomcat application.",
     )
 
     @requires_connection
     def do_restart(self, cmdline: cmd2.Statement):
-        """Start and stop a tomcat application."""
+        """Stop and start a tomcat application."""
         args = self.parse_args(self.reload_parser, cmdline.argv)
         self.docmd(self.tomcat.reload, args.path, args.version)
 
@@ -1311,7 +1315,7 @@ change the value of one of this program's settings
         """Reload SSL/TLS certificates and keys."""
         args = self.parse_args(self.sslreload_parser, cmdline.argv)
         r = self.docmd(self.tomcat.ssl_reload, args.host_name)
-        if r.ok:
+        if r and r.ok:
             self.pfeedback(r.status_message)
 
     def help_sslreload(self):

@@ -21,23 +21,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+# pylint: disable=too-many-lines, too-many-public-methods
 
 """
-Mock up a Tomcat Manager application that behaves like tomcat version 8.0.x
+Mock up a Tomcat Manager application that behaves like tomcat version 7.0.x
+
+Tomcat 7 has no manager commands for SSL
 """
 
 import re
 import base64
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import socket
-import threading
+from http.server import BaseHTTPRequestHandler
 
 import requests
-
-USER = "admin"
-PASSWORD = "admin"
 
 
 def requires_authorization(func):
@@ -50,9 +48,11 @@ def requires_authorization(func):
     return _requires_authorization
 
 
-class MockRequestHandler80(BaseHTTPRequestHandler):
-    """Handle HTTP Requests like Tomcat Manager 8.0.x"""
+class MockRequestHandlerNoSSL(BaseHTTPRequestHandler):
+    """Handle HTTP Requests like Tomcat Manager 7.0.x"""
 
+    USER = "admin"
+    PASSWORD = "admin"
     AUTH_KEY = base64.b64encode("{}:{}".format(USER, PASSWORD).encode("utf-8")).decode(
         "utf-8"
     )
@@ -62,12 +62,6 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
     SERVER_INFO_PATTERN = re.compile(r"^/manager/text/serverinfo($|\?.*$)")
     STATUS_PATTERN = re.compile(r"^/manager/status(/|/all)?($|\?.*$)")
     VM_INFO_PATTERN = re.compile(r"^/manager/text/vminfo($|\?.*$)")
-    SSL_CIPHERS_PATTERN = re.compile(r"^/manager/text/sslConnectorCiphers($|\?.*$)")
-    SSL_CERTS_PATTERN = re.compile(r"^/manager/text/sslConnectorCerts($|\?.*$)")
-    SSL_TRUSTED_CERTS_PATTERN = re.compile(
-        r"^/manager/text/sslConnectorTrustedCerts($|\?.*$)"
-    )
-    SSL_RELOAD_PATTERN = re.compile(r"^/manager/text/sslReload($|\?.*$)")
     THREAD_DUMP_PATTERN = re.compile(r"^/manager/text/threaddump($|\?.*$)")
     RESOURCES_PATTERN = re.compile(r"^/manager/text/resources($|\?.*$)")
     FIND_LEAKERS_PATTERN = re.compile(r"^/manager/text/findleaks($|\?.*$)")
@@ -85,7 +79,7 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         # pylint: disable=arguments-differ,unused-argument
         return
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches, invalid-name
     @requires_authorization
     def do_GET(self):
         """Handle all HTTP GET requests."""
@@ -102,14 +96,6 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
             self.get_status()
         elif re.search(self.VM_INFO_PATTERN, self.path):
             self.get_vm_info()
-        elif re.search(self.SSL_CIPHERS_PATTERN, self.path):
-            self.get_ssl_connector_ciphers()
-        elif re.search(self.SSL_CERTS_PATTERN, self.path):
-            self.get_ssl_connector_certs()
-        elif re.search(self.SSL_TRUSTED_CERTS_PATTERN, self.path):
-            self.get_ssl_connector_trusted_certs()
-        elif re.search(self.SSL_RELOAD_PATTERN, self.path):
-            self.get_ssl_reload()
         elif re.search(self.THREAD_DUMP_PATTERN, self.path):
             self.get_thread_dump()
         elif re.search(self.RESOURCES_PATTERN, self.path):
@@ -223,11 +209,11 @@ class MockRequestHandler80(BaseHTTPRequestHandler):
         """Send the server information."""
         self.send_text(
             """OK - Server info
-Tomcat Version: [Apache Tomcat/10.0.4]
+Tomcat Version: [Apache Tomcat/7.0.108]
 OS Name: [Linux]
-OS Version: [5.4.0-67-generic]
+OS Version: [5.4.0-72-generic]
 OS Architecture: [amd64]
-JVM Version: [1.8.0_282-8u282-b08-0ubuntu1~20.04-b08]
+JVM Version: [14.0.2+12-Ubuntu-120.04]
 JVM Vendor: [Private Build]"""
         )
 
@@ -607,41 +593,6 @@ Logger information:
   org.apache.tomcat.websocket.WsWebSocketContainer: level=, parent=org.apache.tomcat.websocket
 """
         )
-
-    def get_ssl_connector_ciphers(self):
-        """Send the SSL ciphers."""
-        self.send_text(
-            """OK - Connector / SSL Cipher information
-Connector[HTTP/1.1-8080]
-  SSL is not enabled for this connector"""
-        )
-
-    def get_ssl_connector_certs(self):
-        """Send the SSL certs."""
-        self.send_text(
-            """OK - Connector / Certificate Chain information
-Connector[HTTP/1.1-8080]
-SSL is not enabled for this connector"""
-        )
-
-    def get_ssl_connector_trusted_certs(self):
-        """Send the trusted SSL certs."""
-        self.send_text(
-            """OK - Connector / Trusted Certificate information
-Connector[HTTP/1.1-8080]
-SSL is not enabled for this connector"""
-        )
-
-    def get_ssl_reload(self):
-        """Reload the SSL certificates."""
-        url = urlparse(self.path)
-        query_string = parse_qs(url.query, keep_blank_values=True)
-        host_name = None
-        if "tlsHostName" in query_string:
-            host_name = query_string["tlsHostName"]
-            self.send_text("OK - Reloaded TLS configuration for [{}]".format(host_name))
-        else:
-            self.send_text("""OK - Reloaded TLS configuration for [_default_]""")
 
     def get_thread_dump(self):
         """Send a JVM thread dump"""
@@ -1035,34 +986,3 @@ Default maximum session inactive interval 30 minutes
             self.send_text(
                 "OK - Undeployed application at context path {}".format(path)
             )
-
-
-###
-#
-#
-###
-def start_mock_server80(tms):
-    """Start a mock Tomcat Manager application
-
-    :returns: a tuple: (url, user, password) where the server is accessible
-    """
-    # pylint: disable=unused-variable
-    # go find an unused port
-    sock = socket.socket(socket.AF_INET, type=socket.SOCK_STREAM)
-    sock.bind(("localhost", 0))
-    address, port = sock.getsockname()
-    sock.close()
-
-    tms.url = "http://localhost:{}/manager".format(port)
-    tms.user = USER
-    tms.password = PASSWORD
-    tms.warfile = "/path/to/server.war"
-    tms.contextfile = "path/to/context.xml"
-    tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
-
-    mock_server = HTTPServer(("localhost", port), MockRequestHandler80)
-    mock_server_thread = threading.Thread(target=mock_server.serve_forever)
-    mock_server_thread.daemon = True
-    mock_server_thread.start()
-
-    return tms

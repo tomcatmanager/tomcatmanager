@@ -30,6 +30,8 @@ This module contains the data objects created and used by tomcatmanager.
 
 import enum
 import typing
+import re
+from typing import List
 
 import requests
 
@@ -42,14 +44,34 @@ class TomcatError(Exception):
     """
 
 
+class TomcatNotImplementedError(Exception):
+    """
+    Raised when a Tomcat Manager web application does not support a python
+    API call.
+
+    .. versionadded:: 2.1.0
+    """
+
+
+class TomcatNotConnected(Exception):
+    """
+    Raised when a method is called on :class:`.TomcatManager` without the
+    :meth:`~.TomcatManager.connect()` method being called first.
+
+    .. versionadded:: 2.1.0
+    """
+
+
 @enum.unique
 class StatusCode(enum.Enum):
     """An enumeration of the various Tomcat Manager web application status codes
 
     ``tomcatmanager`` uses the excellent `requests <https://github.com/psf/requests>`_
-    library, which uses a custom LookupDict class to store HTTP status codes in a
+    library, which uses a custom ``LookupDict`` class to store HTTP status codes in a
     dictionary. After much debate on whether we should do it the requests way, or
     a more pythonic way, I chose to use a native Enum class instead.
+
+    .. versionadded:: 2.0.0
     """
 
     OK = "OK"
@@ -221,7 +243,10 @@ class TomcatManagerResponse:
 
 @enum.unique
 class ApplicationState(enum.Enum):
-    """An enumeration of the various tomcat application states"""
+    """An enumeration of the various tomcat application states.
+
+    .. versionadded:: 2.0.0
+    """
 
     RUNNING = "running"
     STOPPED = "stopped"
@@ -399,6 +424,101 @@ class TomcatApplication:
         return dandv
 
 
+# type annotations on some class methods reference itself, which generates an error
+# because the type has not yet been defined. Will be fixed in Python 3.10, see PEP 484
+# and PEP 563. Until this, we store the type annotations as strings
+@enum.unique
+class TomcatMajorMinor(enum.Enum):
+    """An enumeration of the supported Tomcat major and minor version numbers
+
+    Major and Minor have the meanings defined at `https://semver.org
+    <https://semver.org>`_.
+
+    This enumeration includes a value VNEXT, so that this module can mostly keep working
+    when accessing a version of Tomcat that the module doesn't officially support yet.
+
+    It also includes a value UNSUPPORTED, for older versions of Tomcat that are unknown
+    to this module.
+
+    .. versionadded:: 2.1.0
+
+    """
+
+    V7_0 = "7.0"
+    V8_0 = "8.0"
+    V8_5 = "8.5"
+    V9_0 = "9.0"
+    V10_0 = "10.0"
+    VNEXT = "next"
+    UNSUPPORTED = "unsupported"
+
+    @classmethod
+    def parse(cls, version_string: str) -> "TomcatMajorMinor":
+        """Return one of the enums from a string sent by the Tomcat Manager
+        web application.
+
+        :param version_string: the string value of the application state from the
+            tomcat server
+        :return: :class:`.TomcatMajorMinor` instance
+        :raises ValueError: if the version string does not represent a known app
+        """
+        version_re = re.compile(r"(\d+)\.(\d+)\.(\d+)")
+        match = version_re.search(version_string)
+        ver = TomcatMajorMinor.UNSUPPORTED
+        if match:
+            # shouldn't ever throw exceptions because of the regex
+            major_ver = int(match.group(1))
+            minor_ver = int(match.group(2))
+            if major_ver < 7:
+                ver = TomcatMajorMinor.UNSUPPORTED
+            if major_ver == 7 and minor_ver == 0:
+                ver = TomcatMajorMinor.V7_0
+            elif major_ver == 8 and minor_ver == 0:
+                ver = TomcatMajorMinor.V8_0
+            elif major_ver == 8 and minor_ver == 5:
+                ver = TomcatMajorMinor.V8_5
+            elif major_ver == 9 and minor_ver == 0:
+                ver = TomcatMajorMinor.V9_0
+            elif major_ver == 10 and minor_ver == 0:
+                ver = TomcatMajorMinor.V10_0
+            elif major_ver == 10 and minor_ver > 0:
+                ver = TomcatMajorMinor.VNEXT
+            elif major_ver > 10:
+                ver = TomcatMajorMinor.VNEXT
+        return ver
+
+    @staticmethod
+    def supported() -> List:
+        """
+        Return the list of officially supported Tomcat major versions
+        """
+        return [
+            TomcatMajorMinor.V7_0,
+            TomcatMajorMinor.V8_0,
+            TomcatMajorMinor.V8_5,
+            TomcatMajorMinor.V9_0,
+            TomcatMajorMinor.V10_0,
+        ]
+
+    @classmethod
+    def lowest_supported(cls) -> "TomcatMajorMinor":
+        """
+        Return the lowest officially supported Tomcat major version
+        """
+        return TomcatMajorMinor.supported()[0]
+
+    @classmethod
+    def highest_supported(cls) -> "TomcatMajorMinor":
+        """
+        Return the highest officially supported Tomcat major version
+
+        This does not include ``TomcatMajorMinor.VNEXT``, which exists to ensure this
+        module mostly works on future versions of tomcat before official support
+        is added.
+        """
+        return TomcatMajorMinor.supported()[-1]
+
+
 class ServerInfo(dict):
     """
     Discrete data about the Tomcat server.
@@ -424,6 +544,7 @@ class ServerInfo(dict):
         line with the status info
         """
         super().__init__(*args, **kwargs)
+        self._tomcat_major_minor = None
         self._tomcat_version = None
         self._os_name = None
         self._os_version = None
@@ -439,13 +560,26 @@ class ServerInfo(dict):
             for line in result.splitlines():
                 key, value = line.rstrip().split(":", 1)
                 self[key] = value.lstrip()
-
             self._tomcat_version = self["Tomcat Version"]
+            self._tomcat_major_minor = TomcatMajorMinor.parse(self._tomcat_version)
             self._os_name = self["OS Name"]
             self._os_version = self["OS Version"]
             self._os_architecture = self["OS Architecture"]
             self._jvm_version = self["JVM Version"]
             self._jvm_vendor = self["JVM Vendor"]
+
+    @property
+    def tomcat_major_minor(self) -> TomcatMajorMinor:
+        """An instance of :class:`~.models.TomcatMajorMinor` indicating which
+        major and minor version of Tomcat is running on the server.
+
+        This value is computed, not received from the server, and therefore does not
+        show up in the dictionary, ie ``server_info["tomcat_major_minor"]`` does
+        not exist.
+
+        .. versionadded:: 2.1.0
+        """
+        return self._tomcat_major_minor
 
     @property
     def tomcat_version(self):

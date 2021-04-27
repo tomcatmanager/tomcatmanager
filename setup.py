@@ -69,6 +69,7 @@ setup(
             "sphinx",
             "sphinx-autobuild",
             "sphinx_rtd_theme",
+            "autodocsumm",
             "doc8",
         ],
     },

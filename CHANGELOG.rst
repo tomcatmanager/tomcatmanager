@@ -13,10 +13,29 @@ and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`
 Unreleased
 ----------
 
+Added
+^^^^^
+
+- Support for discovering and exposing the version of the Tomcat server we
+  are connected to. See ``TomcatManager.connect()``, ``TomcatManager.implements()``
+  and ``TomcatManager.implemented_by()``.
+- ``TomcatMajorMinor`` enumeration of versions of Tomcat. Major and minor have the
+  meaning defined at `https://semver.org/ <https://semver.org>`_.
+- ``TomcatManager.tomcat_major_minor`` attribute which contains one of the
+  values from ``TomcatMajorMinor`` representing the version of the tomcat server
+  we are connected to.
+
+
 Changed
 ^^^^^^^
 
 - Allow float timeouts and timeout=0 from the command line
+- TomcatManager methods raise TomcatNotConnected if called before connect().
+  Previously you got a TomcatManagerResponse and had to ``raise_for_status()``
+  or r.ok in order to determine that you weren't connected.
+- TomcatManager methods raise TomcatNotImplementedError if the server does
+  not implement the associated command
+
 
 
 2.0.0 (2021-03-26)

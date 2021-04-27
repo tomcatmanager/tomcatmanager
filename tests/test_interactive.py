@@ -21,6 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
+# pylint: disable=protected-access, missing-function-docstring, too-many-lines
+# pylint: disable=missing-module-docstring, unused-variable, redefined-outer-name
 
 import os
 import tempfile
@@ -49,8 +51,8 @@ def get_itm(tms):
 def itm_with_config(mocker, configstring):
     """Return an InteractiveTomcatManager object with the config set from the passed string."""
     itm = tm.InteractiveTomcatManager()
-    fd, fname = tempfile.mkstemp(prefix="", suffix=".ini")
-    os.close(fd)
+    fdesc, fname = tempfile.mkstemp(prefix="", suffix=".ini")
+    os.close(fdesc)
     with open(fname, "w") as fobj:
         fobj.write(configstring)
 
@@ -318,7 +320,7 @@ def test_load_config(mocker):
     assert itm.prompt == prompt
 
 
-def test_load_config_file_not_found(mocker):
+def test_load_config_file_not_found():
     with mock.patch("builtins.open", mock.mock_open()) as mocked_open:
         mocked_open.side_effect = FileNotFoundError()
         itm = tm.InteractiveTomcatManager()
@@ -552,7 +554,10 @@ def test_connect_fail_debug(tomcat_manager_server, mocker):
     assert itm.exit_code == itm.EXIT_ERROR
 
 
+# pylint: disable=too-few-public-methods
 class MockResponse:
+    """Simple class to help mock.patch"""
+
     def __init__(self, code):
         self.status_code = code
 
@@ -824,51 +829,93 @@ def test_vminfo(tomcat_manager_server, capsys):
 
 def test_sslconnectorciphers(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslconnectorciphers")
-    out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_SUCCESS
-    assert "Connector" in out
-    assert "SSL" in out
+    out, err = capsys.readouterr()
+    if "command not implemented by server" in err:
+        # the particular version of the server we are testing against
+        # doesn't support this command. Silently skip
+        assert itm.exit_code == itm.EXIT_ERROR
+    else:
+        assert itm.exit_code == itm.EXIT_SUCCESS
+        assert "Connector" in out
+        assert "SSL" in out
 
 
 def test_sslconnectorcerts(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslconnectorcerts")
-    out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_SUCCESS
-    assert "Connector" in out
-    assert "SSL" in out
+    out, err = capsys.readouterr()
+    if "command not implemented by server" in err:
+        # the particular version of the server we are testing against
+        # doesn't support this command. Silently skip
+        assert itm.exit_code == itm.EXIT_ERROR
+    else:
+        assert itm.exit_code == itm.EXIT_SUCCESS
+        assert "Connector" in out
+        assert "SSL" in out
 
 
 def test_sslconnectortrustedcerts(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslconnectortrustedcerts")
-    out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_SUCCESS
-    assert "Connector" in out
-    assert "SSL" in out
+    out, err = capsys.readouterr()
+    if "command not implemented by server" in err:
+        # the particular version of the server we are testing against
+        # doesn't support this command. Silently skip
+        assert itm.exit_code == itm.EXIT_ERROR
+    else:
+        assert itm.exit_code == itm.EXIT_SUCCESS
+        assert "Connector" in out
+        assert "SSL" in out
 
 
 def test_sslreload(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslreload")
     out, err = capsys.readouterr()
-    assert "load" in out or "load" in err
-    assert "TLS" in out or "TLS" in err
+    if "command not implemented by server" in err:
+        # the particular version of the server we are testing against
+        # doesn't support this command
+        assert itm.exit_code == itm.EXIT_ERROR
+    else:
+        # check for something in both out and err, if the server can't
+        # reload the SSL/TLS certificates, the output will be in err
+        # when testing against a real tomcat server we don't know
+        # whether they will successfully reload or not
+        # we don't check itm.exit_code here either for the same reason
+        assert "load" in out or "load" in err
+        assert "TLS" in out or "TLS" in err
 
 
 def test_sslreload_host(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("sslreload www.example.com")
     out, err = capsys.readouterr()
-    assert "load" in out or "load" in err
-    assert "TLS" in out or "TLS" in err
-    assert "www.example.com" in out or "www.example.com" in err
+    if "command not implemented by server" in err:
+        # the particular version of the server we are testing against
+        # doesn't support this command. Silently skip
+        assert itm.exit_code == itm.EXIT_ERROR
+    else:
+        # check for something in both out and err, if the server can't
+        # reload the SSL/TLS certificates, the output will be in err
+        # when testing against a real tomcat server we don't know
+        # whether they will successfully reload or not
+        # we don't check itm.exit_code here either for the same reason
+        assert "load" in out or "load" in err
+        assert "TLS" in out or "TLS" in err
+        assert "www.example.com" in out or "www.example.com" in err
+
+
+def test_notimplemented(tomcat_manager_server, capsys, mocker):
+    # if the server doesn't implement a command, make sure
+    # we get the error message
+    connect_mock = mocker.patch("tomcatmanager.TomcatManager.list")
+    connect_mock.side_effect = tm.TomcatNotImplementedError
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks("list")
+    _, err = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_ERROR
+    assert "command not implemented by server" in err
 
 
 def test_threaddump(tomcat_manager_server, capsys):

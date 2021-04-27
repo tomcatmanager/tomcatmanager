@@ -1,12 +1,13 @@
 #
 # -*- coding: utf-8 -*-
+# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-class-docstring, redefined-outer-name
 
 import os
 
 import pytest
 
 import tomcatmanager as tm
-from tests.mock_server80 import start_mock_server80
 
 ###
 #
@@ -14,6 +15,7 @@ from tests.mock_server80 import start_mock_server80
 #
 ###
 class TomcatServer:
+    # pylint: disable=too-few-public-methods
     def __init__(self):
         self.url = None
         self.user = None
@@ -30,28 +32,35 @@ class TomcatServer:
 ###
 def pytest_addoption(parser):
     parser.addoption(
+        "--mocktomcat",
+        action="store",
+        default=tm.TomcatMajorMinor.highest_supported().value,
+        choices=list(map(lambda v: v.value, tm.TomcatMajorMinor.supported())),
+        help="test against a specific mock version of Tomcat",
+    )
+    parser.addoption(
         "--url",
         action="store",
         default=None,
-        help="url: url of tomcat manager to test against instead of mock",
+        help="url of tomcat manager to test against instead of mock server",
     )
     parser.addoption(
-        "--user", action="store", default=None, help="user: use to authenticate"
+        "--user", action="store", default=None, help="use to authenticate at url"
     )
     parser.addoption(
-        "--password", action="store", default=None, help="password: use to authenticate"
+        "--password", action="store", default=None, help="use to authenticate at url"
     )
     parser.addoption(
         "--warfile",
         action="store",
         default=None,
-        help="warfile: path to deployable war file on the tomcat server",
+        help="path to deployable war file on the tomcat server",
     )
     parser.addoption(
         "--contextfile",
         action="store",
         default=None,
-        help="contextfile: path to context.xml file on the tomcat server",
+        help="path to context.xml file on the tomcat server",
     )
 
 
@@ -114,18 +123,38 @@ def tomcat_manager_server(request):
         return tms
     else:
         # go start up a fake server
-        return start_mock_server80(tms)
+        mockver = request.config.getoption("--mocktomcat")
+        if mockver == tm.TomcatMajorMinor.V10_0.value:
+            from tests.mock_server_10_0 import start_mock_server_10_0
+
+            return start_mock_server_10_0(tms)
+        elif mockver == tm.TomcatMajorMinor.V9_0.value:
+            from tests.mock_server_9_0 import start_mock_server_9_0
+
+            return start_mock_server_9_0(tms)
+        elif mockver == tm.TomcatMajorMinor.V8_5.value:
+            from tests.mock_server_8_5 import start_mock_server_8_5
+
+            return start_mock_server_8_5(tms)
+        elif mockver == tm.TomcatMajorMinor.V8_0.value:
+            from tests.mock_server_8_0 import start_mock_server_8_0
+
+            return start_mock_server_8_0(tms)
+        elif mockver == tm.TomcatMajorMinor.V7_0.value:
+            from tests.mock_server_7_0 import start_mock_server_7_0
+
+            return start_mock_server_7_0(tms)
 
 
 @pytest.fixture
 def tomcat(tomcat_manager_server):
-    tc = tm.TomcatManager()
-    tc.connect(
+    tmcat = tm.TomcatManager()
+    tmcat.connect(
         tomcat_manager_server.url,
         tomcat_manager_server.user,
         tomcat_manager_server.password,
     )
-    return tc
+    return tmcat
 
 
 @pytest.fixture
