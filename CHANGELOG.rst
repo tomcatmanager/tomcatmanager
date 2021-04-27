@@ -24,6 +24,9 @@ Added
 - ``TomcatManager.tomcat_major_minor`` attribute which contains one of the
   values from ``TomcatMajorMinor`` representing the version of the tomcat server
   we are connected to.
+- Control server SSL/TLS certificate validation using the new ``verify`` attribute
+  on ``TomcatManager``
+- Client side SSL/TLS certificate authentication on ``TomcatManager.connect()``
 
 
 Changed

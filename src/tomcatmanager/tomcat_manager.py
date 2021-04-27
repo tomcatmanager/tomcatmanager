@@ -32,7 +32,7 @@ A python wrapper for interacting with the Tomcat Manager web application.
 import functools
 import collections
 import re
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import requests
 
@@ -144,11 +144,37 @@ class TomcatManager:
         """
         self._url = None
         self._user = None
+
         # ask nicely for people not to access the password attribute
         self._password = None
+
+        # same with the certificates
+        self._cert = None
+
         # where we keep track of the version of tomcat we are connected to
         # this is set by connect()
         self._tomcat_major_minor = None
+
+        self.verify = True
+        """Verify server SSL/TLS certificates using the given CA directory or file.
+
+        If the URL uses the ``https`` protocol, the default behavior is to validate
+        the SSL/TLS certificate chain.
+
+        To validate with your own certificate authority bundle, set this to the
+        path to a certificate authority bundle file or a directory of certificates
+        of trusted certificate authorities.
+
+        For testing purposes server certificate validation can occasionally be
+        undesirable. You can turn off the validation by setting this to ``False``.
+        If you find yourself in this situation, rather than disabling certificate
+        verification, I suggest you see if the free certificates issued by
+        `Let's Encrypt <https://letsencrypt>`_ can meet your needs.
+
+        See `SSL Certificate Verification
+        <https://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_
+        in the Requests documentation for more information.
+        """
 
         self.timeout = 10.0
         """Seconds to wait before giving up on network operations. Can be a
@@ -178,6 +204,16 @@ class TomcatManager:
         This attribute is set by the :meth:`.connect` method. Look there for more info.
         """
         return self._user
+
+    @property
+    def cert(self) -> Union[str, Tuple[str, str]]:
+        """Path to file containing client certificate and private key to use for
+        SSL/TLS authentication. Alternatively, use a tuple containing the path to
+        the certificate and the path to the private key. See `Client Side Certificates
+        <https://docs.python-requests.org/en/master/user/advanced/#client-side-certificates>`_
+        in the Requests documentation for more information.
+        """
+        return self._cert
 
     @property
     def tomcat_major_minor(self) -> TomcatMajorMinor:
@@ -267,7 +303,13 @@ class TomcatManager:
         return self._url and self._tomcat_major_minor
 
     def connect(
-        self, url: str, user: str = "", password: str = "", timeout: float = None
+        self,
+        url: str,
+        user: str = "",
+        password: str = "",
+        timeout: float = None,
+        *,
+        cert: Union[str, Tuple[str, str]]=None,
     ) -> TomcatManagerResponse:
         """Connect to the manager application running in a Tomcat server.
 
@@ -275,7 +317,8 @@ class TomcatManager:
         :param user:     (optional) user to authenticate with
         :param password: (optional) password to authenticate with
         :param timeout:  timeout in seconds for network operations
-        :return:        :class:`~tomcatmanager.models.TomcatManagerResponse`
+        :param cert:     client side certificates to use for SSL/TLS authentication
+        :return:         :class:`~tomcatmanager.models.TomcatManagerResponse`
                          object with an additional ``server_info`` attribute
 
         The ``server_info`` attribute of the returned object contains a
@@ -284,11 +327,12 @@ class TomcatManager:
 
         This method:
 
-        - sets or changes the url and credentials on an existing object
-        - provides a convenient mechanism to validate you can actually connect to the
-          server
-        - returns a response object that includes information about the server you are
-          connected to
+        - sets or changes the url, credentials, and certificates on an existing
+          object
+        - provides a convenient mechanism to validate you can actually connect
+          to the server
+        - returns a response object that includes information about the server
+          you are connected to
         - allows you to inspect the response so you can see why you can't connect
 
         Usage:
@@ -344,6 +388,17 @@ class TomcatManager:
         make an HTTP request to the server and see if it returns successfully.
         Internally this method tries to retrieve ``/manager/text/serverinfo``.
 
+        To authenticate with a SSL/TLS server using a client certificate and key, pass
+        the path to a single file containing the private key and certificate in the
+        ``cert`` parameter. As an alternative, you can pass a tuple of both files'
+        paths. See `Client Side Certificates
+        <https://docs.python-requests.org/en/master/user/advanced/#client-side-certificates>`_
+        in the Requests documentation for additional details.
+
+        .. warning::
+
+            The private key to your local certificate must be unencrypted. The Requests library used for network communication does not support using encrypted keys.
+
         Passing a timeout parameter to this method has the side effect of setting the
         :attr:`timeout` attribute on this object.
 
@@ -364,7 +419,6 @@ class TomcatManager:
 
         If you want to raise more exceptions see
         :meth:`.TomcatManagerResponse.raise_for_status`.
-
         """
         if timeout:
             self.timeout = timeout
@@ -373,6 +427,7 @@ class TomcatManager:
         self._url = url
         self._user = user
         self._password = password
+        self._cert = cert
         # don't use server_info() because it will fail because it won't
         # think we are connected to the server yet
         r = self._get("serverinfo")
@@ -859,6 +914,8 @@ class TomcatManager:
             auth=(self._user, self._password),
             params={"XML": "true"},
             timeout=self.timeout,
+            verify=self.verify,
+            cert=self._cert,
         )
         r.result = r.response.text
         r.status_xml = r.result
@@ -1051,5 +1108,7 @@ class TomcatManager:
             auth=(self._user, self._password),
             params=payload,
             timeout=self.timeout,
+            verify=self.verify,
+            cert=self._cert,
         )
         return r
