@@ -20,6 +20,7 @@ class TomcatServer:
         self.url = None
         self.user = None
         self.password = None
+        self.cert = None
         self.warfile = None
         self.contextfile = None
         self.connect_command = None
@@ -49,6 +50,18 @@ def pytest_addoption(parser):
     )
     parser.addoption(
         "--password", action="store", default=None, help="use to authenticate at url"
+    )
+    parser.addoption(
+        "--cert",
+        action="store",
+        default=None,
+        help="certificate for client side authentication",
+    )
+    parser.addoption(
+        "--key",
+        action="store",
+        default=None,
+        help="private key file for client side authentication",
     )
     parser.addoption(
         "--warfile",
@@ -117,33 +130,42 @@ def tomcat_manager_server(request):
         tms.url = url
         tms.user = request.config.getoption("--user")
         tms.password = request.config.getoption("--password")
+        cert = request.config.getoption("--cert")
+        key = request.config.getoption("--key")
+        if cert and key:
+            cert = (cert, key)
+        tms.cert = cert
         tms.warfile = request.config.getoption("--warfile")
         tms.contextfile = request.config.getoption("--contextfile")
         tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
         return tms
-    else:
-        # go start up a fake server
-        mockver = request.config.getoption("--mocktomcat")
-        if mockver == tm.TomcatMajorMinor.V10_0.value:
-            from tests.mock_server_10_0 import start_mock_server_10_0
 
-            return start_mock_server_10_0(tms)
-        elif mockver == tm.TomcatMajorMinor.V9_0.value:
-            from tests.mock_server_9_0 import start_mock_server_9_0
+    # go start up a fake server
+    mockver = request.config.getoption("--mocktomcat")
+    if mockver == tm.TomcatMajorMinor.V10_0.value:
+        from tests.mock_server_10_0 import start_mock_server_10_0
 
-            return start_mock_server_9_0(tms)
-        elif mockver == tm.TomcatMajorMinor.V8_5.value:
-            from tests.mock_server_8_5 import start_mock_server_8_5
+        return start_mock_server_10_0(tms)
 
-            return start_mock_server_8_5(tms)
-        elif mockver == tm.TomcatMajorMinor.V8_0.value:
-            from tests.mock_server_8_0 import start_mock_server_8_0
+    if mockver == tm.TomcatMajorMinor.V9_0.value:
+        from tests.mock_server_9_0 import start_mock_server_9_0
 
-            return start_mock_server_8_0(tms)
-        elif mockver == tm.TomcatMajorMinor.V7_0.value:
-            from tests.mock_server_7_0 import start_mock_server_7_0
+        return start_mock_server_9_0(tms)
 
-            return start_mock_server_7_0(tms)
+    if mockver == tm.TomcatMajorMinor.V8_5.value:
+        from tests.mock_server_8_5 import start_mock_server_8_5
+
+        return start_mock_server_8_5(tms)
+
+    if mockver == tm.TomcatMajorMinor.V8_0.value:
+        from tests.mock_server_8_0 import start_mock_server_8_0
+
+        return start_mock_server_8_0(tms)
+
+    if mockver == tm.TomcatMajorMinor.V7_0.value:
+        from tests.mock_server_7_0 import start_mock_server_7_0
+
+        return start_mock_server_7_0(tms)
 
 
 @pytest.fixture
@@ -153,6 +175,7 @@ def tomcat(tomcat_manager_server):
         tomcat_manager_server.url,
         tomcat_manager_server.user,
         tomcat_manager_server.password,
+        cert=tomcat_manager_server.cert,
     )
     return tmcat
 

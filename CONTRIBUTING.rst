@@ -240,6 +240,23 @@ With all these prerequisites ready, you can feed them to ``pytest`` as shown:
    --password=newenglandclamchowder --warfile=/tmp/sample.war \
    --contextfile=/tmp/context.xml
 
+If your tomcat server uses SSL/TLS client certificates for authentication, you
+can specify those certificates instead of a user and password:
+
+.. code-block:: shell
+
+   $ pytest --url=https://localhost:8088/manager --cert=/path/to/cert.file \
+   --key=/path/to/key.file --warfile=/tmp/sample.war --contextfile=/tmp/context.xml
+
+If your certificate and key are in the same file, pass that file using the ``--cert``
+command line option.
+
+.. warning::
+
+   The private key to your local certificate must be unencrypted. The
+   Requests library used for network communication does not support using
+   encrypted keys.
+
 .. warning::
 
    If you test against a real Tomcat server, you should not use the ``pytest-xdist``

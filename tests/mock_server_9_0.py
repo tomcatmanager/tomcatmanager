@@ -69,6 +69,7 @@ def start_mock_server_9_0(tms):
     tms.url = "http://localhost:{}/manager".format(port)
     tms.user = MockRequestHandler90.USER
     tms.password = MockRequestHandler90.PASSWORD
+    tms.cert = None
     tms.warfile = "/path/to/server.war"
     tms.contextfile = "path/to/context.xml"
     tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)

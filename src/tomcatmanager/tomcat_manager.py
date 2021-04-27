@@ -391,7 +391,8 @@ class TomcatManager:
         To authenticate with a SSL/TLS server using a client certificate and key, pass
         the path to a single file containing the private key and certificate in the
         ``cert`` parameter. As an alternative, you can pass a tuple of both files'
-        paths. See `Client Side Certificates
+        paths. If you use this, you shouldn't also pass a username and password.
+        See `Client Side Certificates
         <https://docs.python-requests.org/en/master/user/advanced/#client-side-certificates>`_
         in the Requests documentation for additional details.
 

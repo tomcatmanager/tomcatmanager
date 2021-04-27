@@ -82,6 +82,7 @@ def test_connect_auth(tomcat_manager_server):
         tomcat_manager_server.url,
         tomcat_manager_server.user,
         tomcat_manager_server.password,
+        cert=tomcat_manager_server.cert,
     )
     assert isinstance(r, tm.models.TomcatManagerResponse)
     assert r.status_code == tm.StatusCode.OK
@@ -102,6 +103,7 @@ def test_connect_connection_error(tomcat_manager_server, mocker):
             tomcat_manager_server.url,
             tomcat_manager_server.user,
             tomcat_manager_server.password,
+            cert=tomcat_manager_server.cert,
         )
 
 
@@ -116,6 +118,7 @@ def test_connect_timeout(tomcat_manager_server, mocker):
             tomcat_manager_server.url,
             tomcat_manager_server.user,
             tomcat_manager_server.password,
+            cert=tomcat_manager_server.cert,
         )
 
 
@@ -128,6 +131,7 @@ def test_connect_sets_timeout(tomcat_manager_server):
         tomcat_manager_server.url,
         tomcat_manager_server.user,
         tomcat_manager_server.password,
+        cert=tomcat_manager_server.cert,
         timeout=5,
     )
     assert isinstance(r, tm.models.TomcatManagerResponse)
