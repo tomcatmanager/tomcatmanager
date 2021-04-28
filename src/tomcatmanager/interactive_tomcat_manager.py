@@ -776,8 +776,8 @@ change the value of one of this program's settings
         description="connect to a tomcat manager instance",
         usage="%(prog)s [-h] config_name\n       %(prog)s [-h] url [user] [password]",
         epilog=""""If you specify a user and no password, you will be prompted for the
-               password. If you don't specify a user or password, attempt to connect with
-               no authentication.""",
+               password. If you don't specify a user or password, attempt to connect
+               with no authentication.""",
     )
     connect_parser.add_argument(
         "config_name",
@@ -798,6 +798,30 @@ change the value of one of this program's settings
         "password",
         nargs="?",
         help="optional password to use for authentication",
+    )
+    connect_parser.add_argument(
+        "--cert",
+        action="store",
+        help="""path to certificate for client side authentication;
+        file can include private key, in which case --key is unnecessary""",
+    )
+    connect_parser.add_argument(
+        "--key",
+        action="store",
+        help="path to private key for client side authentication",
+    )
+    connect_parser.add_argument(
+        "--cacert",
+        action="store",
+        help="""path to certificate authority bundle or directory used to
+        validate server SSL/TLS certificate""",
+    )
+    connect_parser.add_argument(
+        "--noverify",
+        # store_true makes the default False, aka default is to verify
+        # server certificates
+        action="store_true",
+        help="don't validate server SSL certificates, overrides --cacert",
     )
 
     def do_connect(self, cmdline: cmd2.Statement):
@@ -829,8 +853,23 @@ change the value of one of this program's settings
         if url and user and not password:
             password = getpass.getpass()
 
+        # set ssl client validation
+        cert = None
+        if args.cert:
+            cert = args.cert
+            if args.key:
+                cert = (args.cert, args.key)
+
+        # set ssl server certificate validation
+        verify = True
+        if args.noverify:
+            # if you say not to verify SSL certs, this overrides --cacert
+            verify = False
+        elif args.cacert:
+            verify = args.cacert
+
         try:
-            r = self.tomcat.connect(url, user, password)
+            r = self.tomcat.connect(url, user, password, verify=verify, cert=cert)
 
             if r.ok:
                 self.pfeedback(self._which_server())

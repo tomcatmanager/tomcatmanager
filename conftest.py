@@ -21,6 +21,7 @@ class TomcatServer:
         self.user = None
         self.password = None
         self.cert = None
+        self.verify = True
         self.warfile = None
         self.contextfile = None
         self.connect_command = None
@@ -42,38 +43,41 @@ def pytest_addoption(parser):
     parser.addoption(
         "--url",
         action="store",
-        default=None,
         help="url of tomcat manager to test against instead of mock server",
     )
-    parser.addoption(
-        "--user", action="store", default=None, help="use to authenticate at url"
-    )
-    parser.addoption(
-        "--password", action="store", default=None, help="use to authenticate at url"
-    )
+    parser.addoption("--user", action="store", help="use to authenticate at url")
+    parser.addoption("--password", action="store", help="use to authenticate at url")
     parser.addoption(
         "--cert",
         action="store",
-        default=None,
         help="certificate for client side authentication",
     )
     parser.addoption(
         "--key",
         action="store",
-        default=None,
         help="private key file for client side authentication",
     )
     parser.addoption(
         "--warfile",
         action="store",
-        default=None,
         help="path to deployable war file on the tomcat server",
     )
     parser.addoption(
         "--contextfile",
         action="store",
-        default=None,
         help="path to context.xml file on the tomcat server",
+    )
+    parser.addoption(
+        "--cacert",
+        action="store",
+        help="path to certificate authority bundle or directory",
+    )
+    parser.addoption(
+        "--noverify",
+        # store_true makes the default False, aka default is to verify
+        # server certificates
+        action="store_true",
+        help="don't validate server SSL certificates",
     )
 
 
@@ -135,6 +139,13 @@ def tomcat_manager_server(request):
         if cert and key:
             cert = (cert, key)
         tms.cert = cert
+        cacert = request.config.getoption("--cacert")
+        # the command line option is negative, so this flips it
+        verify = not request.config.getoption("--noverify")
+        if verify and cacert:
+            tms.verify = cacert
+        else:
+            tms.verify = verify
         tms.warfile = request.config.getoption("--warfile")
         tms.contextfile = request.config.getoption("--contextfile")
         tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)

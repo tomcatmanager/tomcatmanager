@@ -17,16 +17,20 @@ Added
 ^^^^^
 
 - Support for discovering and exposing the version of the Tomcat server we
-  are connected to. See ``TomcatManager.connect()``, ``TomcatManager.implements()``
-  and ``TomcatManager.implemented_by()``.
+  are connected to in the API. See ``TomcatManager.connect()``,
+  ``TomcatManager.implements()`` and ``TomcatManager.implemented_by()``.
 - ``TomcatMajorMinor`` enumeration of versions of Tomcat. Major and minor have the
   meaning defined at `https://semver.org/ <https://semver.org>`_.
 - ``TomcatManager.tomcat_major_minor`` attribute which contains one of the
   values from ``TomcatMajorMinor`` representing the version of the tomcat server
   we are connected to.
-- Control server SSL/TLS certificate validation using the new ``verify`` attribute
-  on ``TomcatManager``
-- Client side SSL/TLS certificate authentication on ``TomcatManager.connect()``
+- Control server SSL/TLS certificate validation using the new ``verify`` parameter
+  to ``TomcatManager.connect()``. Also available from the
+  command-line and interactive mode using the ``--cacert`` and ``--noverify``
+  options.
+- Client side SSL/TLS certificate authentication added to ``TomcatManager.connect()``
+  via the ``cert`` parameter. Also available from the command line and interactive
+  mode using the ``--cert`` and ``--key`` options.
 
 
 Changed
@@ -38,7 +42,14 @@ Changed
   or r.ok in order to determine that you weren't connected.
 - TomcatManager methods raise TomcatNotImplementedError if the server does
   not implement the associated command
+- The ``timeout`` parameter to ``TomcatManager.connect()`` is now keyword only
 
+
+Fixed
+^^^^^
+
+- TomcatManager.connect() no longer erroneously sets attributes like url
+  if an exception is raised
 
 
 2.0.0 (2021-03-26)

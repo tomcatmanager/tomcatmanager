@@ -74,7 +74,7 @@ def test_connect_noauth(tomcat_manager_server):
         r.raise_for_status()
 
 
-def test_connect_auth(tomcat_manager_server):
+def test_connect_passwdauth(tomcat_manager_server):
     tomcat = tm.TomcatManager()
     assert not tomcat.is_connected
     assert not tomcat.tomcat_major_minor
@@ -89,7 +89,96 @@ def test_connect_auth(tomcat_manager_server):
     assert r.server_info
     assert tomcat.is_connected
     assert tomcat.tomcat_major_minor
+    assert tomcat.url
     r.raise_for_status()
+
+
+def test_connect_certauth(tomcat_manager_server, mocker):
+    get_mock = mocker.patch("requests.get")
+    tomcat = tm.TomcatManager()
+    assert not tomcat.is_connected
+    assert not tomcat.tomcat_major_minor
+    r = tomcat.connect(
+        tomcat_manager_server.url,
+        "",
+        "",
+        cert="/f1",
+    )
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=None,
+        params=None,
+        timeout=tomcat.timeout,
+        verify=True,
+        cert="/f1",
+    )
+
+
+def test_connect_certkeyauth(tomcat_manager_server, mocker):
+    get_mock = mocker.patch("requests.get")
+    tomcat = tm.TomcatManager()
+    assert not tomcat.is_connected
+    assert not tomcat.tomcat_major_minor
+    r = tomcat.connect(
+        tomcat_manager_server.url,
+        "",
+        "",
+        cert=("/f1", "/f2"),
+    )
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=None,
+        params=None,
+        timeout=tomcat.timeout,
+        verify=True,
+        cert=("/f1", "/f2"),
+    )
+
+
+def test_connect_verifybundle(tomcat_manager_server, mocker):
+    get_mock = mocker.patch("requests.get")
+    tomcat = tm.TomcatManager()
+    assert not tomcat.is_connected
+    assert not tomcat.tomcat_major_minor
+    r = tomcat.connect(
+        tomcat_manager_server.url,
+        "",
+        "",
+        verify="/tmp/cabundle",
+    )
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=None,
+        params=None,
+        timeout=tomcat.timeout,
+        verify="/tmp/cabundle",
+        cert=None,
+    )
+
+
+def test_connect_noverify(tomcat_manager_server, mocker):
+    get_mock = mocker.patch("requests.get")
+    tomcat = tm.TomcatManager()
+    assert not tomcat.is_connected
+    assert not tomcat.tomcat_major_minor
+    r = tomcat.connect(
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+        verify=False,
+    )
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=tomcat.timeout,
+        verify=False,
+        cert=None,
+    )
 
 
 def test_connect_connection_error(tomcat_manager_server, mocker):
@@ -104,7 +193,14 @@ def test_connect_connection_error(tomcat_manager_server, mocker):
             tomcat_manager_server.user,
             tomcat_manager_server.password,
             cert=tomcat_manager_server.cert,
+            verify=tomcat_manager_server.verify,
         )
+    assert not tomcat.is_connected
+    assert not tomcat.tomcat_major_minor
+    assert not tomcat.url
+    assert not tomcat.user
+    assert not tomcat.cert
+    assert not tomcat.verify
 
 
 def test_connect_timeout(tomcat_manager_server, mocker):
@@ -119,7 +215,14 @@ def test_connect_timeout(tomcat_manager_server, mocker):
             tomcat_manager_server.user,
             tomcat_manager_server.password,
             cert=tomcat_manager_server.cert,
+            verify=tomcat_manager_server.verify,
         )
+    assert not tomcat.is_connected
+    assert not tomcat.tomcat_major_minor
+    assert not tomcat.url
+    assert not tomcat.user
+    assert not tomcat.cert
+    assert not tomcat.verify
 
 
 def test_connect_sets_timeout(tomcat_manager_server):
@@ -131,7 +234,6 @@ def test_connect_sets_timeout(tomcat_manager_server):
         tomcat_manager_server.url,
         tomcat_manager_server.user,
         tomcat_manager_server.password,
-        cert=tomcat_manager_server.cert,
         timeout=5,
     )
     assert isinstance(r, tm.models.TomcatManagerResponse)
