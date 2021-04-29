@@ -775,9 +775,8 @@ change the value of one of this program's settings
         prog="connect",
         description="connect to a tomcat manager instance",
         usage="%(prog)s [-h] config_name\n       %(prog)s [-h] url [user] [password]",
-        epilog=""""If you specify a user and no password, you will be prompted for the
-               password. If you don't specify a user or password, attempt to connect
-               with no authentication.""",
+        epilog="""If you specify a user and no password, you will be prompted for the
+               password.""",
     )
     connect_parser.add_argument(
         "config_name",
