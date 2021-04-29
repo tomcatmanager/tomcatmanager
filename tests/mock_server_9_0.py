@@ -79,4 +79,4 @@ def start_mock_server_9_0(tms):
     mock_server_thread.daemon = True
     mock_server_thread.start()
 
-    return tms
+    return (mock_server, tms)

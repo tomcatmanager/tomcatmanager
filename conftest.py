@@ -4,10 +4,16 @@
 # pylint: disable=missing-class-docstring, redefined-outer-name
 
 import os
-
 import pytest
 
 import tomcatmanager as tm
+
+from tests.mock_server_10_0 import start_mock_server_10_0
+from tests.mock_server_9_0 import start_mock_server_9_0
+from tests.mock_server_8_5 import start_mock_server_8_5
+from tests.mock_server_8_0 import start_mock_server_8_0
+from tests.mock_server_7_0 import start_mock_server_7_0
+
 
 ###
 #
@@ -154,29 +160,18 @@ def tomcat_manager_server(request):
     # go start up a fake server
     mockver = request.config.getoption("--mocktomcat")
     if mockver == tm.TomcatMajorMinor.V10_0.value:
-        from tests.mock_server_10_0 import start_mock_server_10_0
-
-        return start_mock_server_10_0(tms)
-
+        (mock_server, tms) = start_mock_server_10_0(tms)
     if mockver == tm.TomcatMajorMinor.V9_0.value:
-        from tests.mock_server_9_0 import start_mock_server_9_0
-
-        return start_mock_server_9_0(tms)
-
+        (mock_server, tms) = start_mock_server_9_0(tms)
     if mockver == tm.TomcatMajorMinor.V8_5.value:
-        from tests.mock_server_8_5 import start_mock_server_8_5
-
-        return start_mock_server_8_5(tms)
-
+        (mock_server, tms) = start_mock_server_8_5(tms)
     if mockver == tm.TomcatMajorMinor.V8_0.value:
-        from tests.mock_server_8_0 import start_mock_server_8_0
-
-        return start_mock_server_8_0(tms)
-
+        (mock_server, tms) = start_mock_server_8_0(tms)
     if mockver == tm.TomcatMajorMinor.V7_0.value:
-        from tests.mock_server_7_0 import start_mock_server_7_0
+        (mock_server, tms) = start_mock_server_7_0(tms)
 
-        return start_mock_server_7_0(tms)
+    yield tms
+    mock_server.shutdown()
 
 
 @pytest.fixture
