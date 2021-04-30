@@ -400,13 +400,21 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         What url are we connected to and who are we connected as.
 
-        Returns None if '.url` is None.
+        Returns None if not connected to a server.
         """
         out = None
-        if self.tomcat.url:
+        if self.tomcat.is_connected:
             out = "connected to {}".format(self.tomcat.url)
             if self.tomcat.user:
                 out += " as {}".format(self.tomcat.user)
+            if self.tomcat.cert:
+                if isinstance(self.tomcat.cert, tuple):
+                    # get the key
+                    _, authby = self.tomcat.cert
+                else:
+                    authby = self.tomcat.cert
+                out += " authenticated by {}".format(authby)
+
         return out
 
     def do_help(self, args: str):

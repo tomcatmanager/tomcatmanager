@@ -1068,11 +1068,43 @@ def test_connect_with_timeout_debug(tomcat_manager_server, capsys, mocker):
 
 def test_which(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
+    # force this to ensure `which` sets it to SUCCESS
     itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("which")
     out, _ = capsys.readouterr()
     assert itm.exit_code == itm.EXIT_SUCCESS
     assert tomcat_manager_server.url in out
+    assert tomcat_manager_server.user in out
+
+
+def test_which_cert(tomcat_manager_server, capsys, mocker):
+    # the mock tomcat erver can't authenticate using a certificate
+    # so we connect as normal, then mock it so it appears
+    # like we authenticated with a certificate
+    itm = get_itm(tomcat_manager_server)
+    cert_mock = mocker.patch(
+        "tomcatmanager.TomcatManager.cert",
+        new_callable=mock.PropertyMock,
+    )
+    cert_mock.return_value = "/tmp/mycert"
+    itm.onecmd_plus_hooks("which")
+    out, err = capsys.readouterr()
+    assert "/tmp/mycert" in out
+
+
+def test_which_cert_key(tomcat_manager_server, capsys, mocker):
+    # the mock tomcat erver can't authenticate using a certificate
+    # so we connect as normal, then mock it so it appears
+    # like we authenticated with a certificate
+    itm = get_itm(tomcat_manager_server)
+    cert_mock = mocker.patch(
+        "tomcatmanager.TomcatManager.cert",
+        new_callable=mock.PropertyMock,
+    )
+    cert_mock.return_value = ("/tmp/mycert", "/tmp/mykey")
+    itm.onecmd_plus_hooks("which")
+    out, err = capsys.readouterr()
+    assert "/tmp/mykey" in out
 
 
 REQUIRES_CONNECTION = [
