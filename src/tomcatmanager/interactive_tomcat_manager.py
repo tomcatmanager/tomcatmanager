@@ -826,9 +826,16 @@ change the value of one of this program's settings
     def do_connect(self, cmdline: cmd2.Statement):
         """Connect to a tomcat manager instance."""
         # pylint: disable=too-many-branches, too-many-statements
+        # define some variables that we will either fill from a server shortcut
+        # or from arguments
         url = None
         user = None
         password = None
+        cert = None
+        key = None
+        cacert = None
+        verify = True
+
         args = self.parse_args(self.connect_parser, cmdline.argv)
         server = args.config_name
         if self.config.has_section(server):
@@ -838,6 +845,15 @@ change the value of one of this program's settings
                 user = self.config[server]["user"]
             if self.config.has_option(server, "password"):
                 password = self.config[server]["password"]
+            if self.config.has_option(server, "cert"):
+                cert = self.config[server]["cert"]
+            if self.config.has_option(server, "key"):
+                key = self.config[server]["key"]
+            if self.config.has_option(server, "cacert"):
+                cacert = self.config[server]["cacert"]
+            if self.config.has_option(server, "verify"):
+                verify = self.config[server]["verify"]
+            # check for user and password overrides on the command line
         else:
             # This is an ugly hack required to get argparse to show the help properly.
             # the argparser has both a config_name and a url positional argument.
@@ -845,27 +861,41 @@ change the value of one of this program's settings
             # the configuration file, then it must be a url, so we have to
             # 'shift' the positional arguments to the left.
             url = args.config_name
+
+        if args.url:
             user = args.url
-            password = args.user
+            # can't set the password if you don't set the user because
+            # these arguments are positional
+            if args.user:
+                password = args.user
+        # end of ugly hack
 
         # prompt for password if necessary
         if url and user and not password:
             password = getpass.getpass()
 
+        # allow command line arguments to override server options
+        # that's why this code isn't in the big if statement above
+
         # set ssl client validation
-        cert = None
         if args.cert:
             cert = args.cert
-            if args.key:
-                cert = (args.cert, args.key)
+        if args.key:
+            key = args.key
+        if cert and key:
+            cert = (cert, key)
 
         # set ssl server certificate validation
-        verify = True
         if args.noverify:
             # if you say not to verify SSL certs, this overrides --cacert
             verify = False
-        elif args.cacert:
-            verify = args.cacert
+        if args.cacert:
+            cacert = args.cacert
+
+        if verify and cacert:
+            # when verify is false, cacert doesn't matter
+            # when it's true, then we can override with cacert
+            verify = cacert
 
         try:
             r = self.tomcat.connect(url, user, password, verify=verify, cert=cert)

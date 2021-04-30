@@ -732,6 +732,269 @@ def test_connect_config(tomcat_manager_server, capsys, mocker):
     assert_connected_to(itm, tomcat_manager_server.url, capsys)
 
 
+def test_connect_config_user_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} someotheruser".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=("someotheruser", tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert=None,
+    )
+
+
+def test_connect_config_user_password_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} someotheruser someotherpassword".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=("someotheruser", "someotherpassword"),
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert=None,
+    )
+
+
+def test_connect_config_cert(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    cert=/tmp/mycert"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {}".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=None,
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert="/tmp/mycert",
+    )
+
+
+def test_connect_config_cert_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    cert=/tmp/mycert"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} --cert /tmp/yourcert".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=None,
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert="/tmp/yourcert",
+    )
+
+
+def test_connect_config_cert_key(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    cert=/tmp/mycert
+    key=/tmp/mykey"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {}".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=None,
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert=("/tmp/mycert", "/tmp/mykey"),
+    )
+
+
+def test_connect_config_cert_key_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    cert=/tmp/mycert
+    key=/tmp/mykey"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} --cert /tmp/yourcert --key /tmp/yourkey".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=None,
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert=("/tmp/yourcert", "/tmp/yourkey"),
+    )
+
+
+def test_connect_config_cacert(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}
+    cacert=/tmp/cabundle"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {}".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify="/tmp/cabundle",
+        cert=None,
+    )
+
+
+def test_connect_config_cacert_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}
+    cacert=/tmp/cabundle"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} --cacert /tmp/other".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify="/tmp/other",
+        cert=None,
+    )
+
+
+def test_connect_config_noverify_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} --noverify".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify=False,
+        cert=None,
+    )
+
+
+def test_connect_config_noverify_override_cacert(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}
+    cacert=/tmp/cabundle"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} --noverify".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify=False,
+        cert=None,
+    )
+
+
 def test_connect_config_password_prompt(tomcat_manager_server, capsys, mocker):
     configname = str(uuid.uuid1())
     config = """[{}]

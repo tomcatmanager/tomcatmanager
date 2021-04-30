@@ -102,8 +102,8 @@ This command line option is the same as the ``timeout`` :ref:`Setting
 <settings>`.
 
 
-Credentials
------------
+Authentication
+--------------
 
 If your server requires authentication, you can add the user name on the
 command line:
@@ -120,6 +120,9 @@ the command line, but this is not secure:
 
   $ tomcat-manager --user=ace --password=newenglandclamchowder http://localhost:8080/manager list
   Password:
+
+See :doc:`clientauthentication` for complete details of all supported authentication
+mechanisms.
 
 If you want unattended authenticated access, server shortcuts are a better
 option.
