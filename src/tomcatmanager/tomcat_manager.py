@@ -169,6 +169,9 @@ class TomcatManager:
         >>> import tomcatmanager as tm
         >>> tomcat = tm.TomcatManager()
         >>> tomcat.timeout = 3.5
+
+        .. versionchanged:: 3.0.0
+           Can be a ``float`` or ``int`` instead of just an ``int``
         """
 
     @property
@@ -177,6 +180,9 @@ class TomcatManager:
 
         This attribute is set by the :meth:`.connect` method. Look there for
         more info.
+
+        .. versionchanged:: 3.0.0
+           Now a read-only property instead of a read-write attribute.
         """
         return self._url
 
@@ -187,6 +193,9 @@ class TomcatManager:
 
         This attribute is set by the :meth:`.connect` method. Look there for
         more info.
+
+        .. versionchanged:: 3.0.0
+           Now a read-only property instead of a read-write attribute.
         """
         return self._user
 
@@ -198,7 +207,7 @@ class TomcatManager:
         This attribute is set by the :meth:`.connect` method. Look there for
         more info.
 
-        .. versionadded:: 2.1.0
+        .. versionadded:: 3.0.0
         """
         return self._cert
 
@@ -209,7 +218,7 @@ class TomcatManager:
 
         This attribute is set by the :meth:`.connect` method. Look there for more info.
 
-        .. versionadded:: 2.1.0
+        .. versionadded:: 3.0.0
         """
         return self._verify
 
@@ -221,7 +230,7 @@ class TomcatManager:
 
         This attribute is set by the :meth:`.connect` method. Look there for more info.
 
-        .. versionadded:: 2.1.0
+        .. versionadded:: 3.0.0
         """
         return self._tomcat_major_minor
 
@@ -251,7 +260,7 @@ class TomcatManager:
         >>> print(tomcat.implements("deploy_localwar"))
         True
 
-        .. versionadded:: 2.1.0
+        .. versionadded:: 3.0.0
         """
         if callable(method):
             mname = method.__name__
@@ -277,7 +286,7 @@ class TomcatManager:
 
         This method does not require prior connection to a Tomcat server.
 
-        .. versionadded:: 2.1.0
+        .. versionadded:: 3.0.0
         """
         if callable(method):
             mname = method.__name__
@@ -448,6 +457,12 @@ class TomcatManager:
         running on the server. Further details about the server are available in the
         `server_info` attribute of the returned response.
 
+        .. versionchanged:: 3.0.0
+
+           - Returned :class:`TomcatManagerResponse` now includes a ``server_info``
+             attribute containing a :class:`.ServerInfo` object describing the
+             server we are connected to
+           - Sets :attr:`tomcat_major_minor` attribute
         """
         if timeout:
             self.timeout = timeout
