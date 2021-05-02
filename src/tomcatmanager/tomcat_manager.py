@@ -57,9 +57,9 @@ class TomcatManager:
     `server_info()` method.
 
     >>> import tomcatmanager as tm
-    >>> url = 'http://localhost:808099/manager'
-    >>> user = 'ace'
-    >>> password = 'newenglandclamchowder'
+    >>> url = "http://localhost:808099/manager"
+    >>> user = "ace"
+    >>> password = "newenglandclamchowder"
     >>> tomcat = tm.TomcatManager()
     >>> try:
     ...     r = tomcat.connect(url, user, password)
@@ -68,12 +68,12 @@ class TomcatManager:
     ...         if r.ok:
     ...             print(r.server_info)
     ...         else:
-    ...             print('Error: {}'.format(r.status_message))
+    ...             print("Error: {}".format(r.status_message))
     ...     else:
-    ...         print('not connected')
+    ...         print("not connected")
     ... except Exception as err:
     ...     # handle exception
-    ...     print('not connected')
+    ...     print("not connected")
     not connected
     """
 
@@ -250,13 +250,13 @@ class TomcatManager:
 
         Usage:
 
-        >>> tomcat = getfixture('tomcat')
+        >>> tomcat = getfixture("tomcat")
         >>> print(tomcat.implements(tomcat.deploy_localwar))
         True
 
         or:
 
-        >>> tomcat = getfixture('tomcat')
+        >>> tomcat = getfixture("tomcat")
         >>> print(tomcat.implements("deploy_localwar"))
         True
 
@@ -347,19 +347,19 @@ class TomcatManager:
         **Usage**
 
         >>> import tomcatmanager as tm
-        >>> url = 'http://localhost:808099/manager'
-        >>> user = 'ace'
-        >>> password = 'newenglandclamchowder'
+        >>> url = "http://localhost:808099/manager"
+        >>> user = "ace"
+        >>> password = "newenglandclamchowder"
         >>> tomcat = tm.TomcatManager()
         >>> try:
         ...     r = tomcat.connect(url, user, password)
         ...     if r.ok:
-        ...         print('connected')
+        ...         print("connected")
         ...     else:
-        ...         print('not connected')
+        ...         print("not connected")
         ... except Exception as err:
         ...    # handle exception
-        ...    print('not connected')
+        ...    print("not connected")
         not connected
 
         Many things can go wrong when requesting url's via http. tomcatmanager
@@ -407,15 +407,11 @@ class TomcatManager:
 
         To authenticate with a SSL/TLS server using a client certificate and key, pass
         the path to a single file containing the private key and certificate in the
-        ``cert`` parameter. As an alternative, you can pass a tuple of both files'
-        paths. If you use this, you should probably use a null username and password.
-        See `Client Side Certificates
-        <https://docs.python-requests.org/en/master/user/advanced/#client-side-certificates>`_
-        in the Requests documentation for additional details.
+        ``cert`` parameter. As an alternative, you can pass a tuple containing the path the the certificate, and the path to the key.
 
         .. warning::
 
-            The private key to your local certificate must be unencrypted. The
+            The private key for your local certificate must be unencrypted. The
             Requests library used for network communication does not support using
             encrypted keys.
 
@@ -424,17 +420,8 @@ class TomcatManager:
 
         To validate with your own certificate authority bundle, set the
         ``verify`` parameter to the path to a certificate authority bundle file
-        or a directory of certificates of trusted certificate authorities.
-
-        For testing purposes server certificate validation can occasionally be
-        undesirable. You can turn off the validation by setting ``verify`` to
-        ``False``. If you find yourself in this situation, rather than disabling
-        certificate verification, I suggest you see if the free certificates issued
-        by `Let's Encrypt <https://letsencrypt>`_ can meet your needs.
-
-        See `SSL Certificate Verification
-        <https://docs.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_
-        in the Requests documentation for more information.
+        or a directory of certificates of trusted certificate authorities. You can
+        disable server certificate validation by setting ``verify`` to ``False``.
 
         **Side Effects**
 
@@ -445,7 +432,7 @@ class TomcatManager:
         that occurs, the new url, not the one you passed, will be stored in the
         :attr:`url` attribute.
 
-        If you pass authentication credentials and the connection is successful, the
+        If you pass user and password credentials and the connection is successful, the
         user will be stored in the :attr:`user` attribute.
 
         If you pass an authentication key and certificate in the ``cert`` parameter
@@ -459,7 +446,7 @@ class TomcatManager:
 
         .. versionchanged:: 3.0.0
 
-           - Returned :class:`TomcatManagerResponse` now includes a ``server_info``
+           - Returned :class:`.TomcatManagerResponse` now includes a ``server_info``
              attribute containing a :class:`.ServerInfo` object describing the
              server we are connected to
            - Sets :attr:`tomcat_major_minor` attribute
@@ -741,8 +728,8 @@ class TomcatManager:
 
         Usage::
 
-            >>> tomcat = getfixture('tomcat')
-            >>> r = tomcat.sessions('/manager')
+            >>> tomcat = getfixture("tomcat")
+            >>> r = tomcat.sessions("/manager")
             >>> if r.ok:
             ...     session_data = r.sessions
 
@@ -778,8 +765,8 @@ class TomcatManager:
 
         Usage::
 
-            >>> tomcat = getfixture('tomcat')
-            >>> r = tomcat.expire('/manager', idle=15)
+            >>> tomcat = getfixture("tomcat")
+            >>> r = tomcat.expire("/manager", idle=15)
             >>> if r.ok:
             ...     expiration_data = r.sessions
         """
@@ -809,7 +796,7 @@ class TomcatManager:
         Usage::
 
             >>> import tomcatmanager as tm
-            >>> tomcat = getfixture('tomcat')
+            >>> tomcat = getfixture("tomcat")
             >>> r = tomcat.list()
             >>> if r.ok:
             ...     running = filter(lambda app: app.state == tm.ApplicationState.RUNNING, r.apps)
@@ -927,10 +914,10 @@ class TomcatManager:
 
         Usage::
 
-            >>> tomcat = getfixture('tomcat')
+            >>> tomcat = getfixture("tomcat")
             >>> r = tomcat.server_info()
             >>> if r.ok:
-            ...     r.server_info['OS Name'] == r.server_info.os_name
+            ...     r.server_info["OS Name"] == r.server_info.os_name
             True
 
         """
@@ -949,12 +936,12 @@ class TomcatManager:
         Usage::
 
             >>> import xml.etree.ElementTree as ET
-            >>> tomcat = getfixture('tomcat')
+            >>> tomcat = getfixture("tomcat")
             >>> r = tomcat.status_xml()
             >>> if r.ok:
             ...     root = ET.fromstring(r.status_xml)
-            ...     mem = root.find('jvm/memory')
-            ...     print('Free Memory = {}'.format(mem.attrib['free'])) #doctest: +ELLIPSIS
+            ...     mem = root.find("jvm/memory")
+            ...     print("Free Memory = {}".format(mem.attrib["free"])) #doctest: +ELLIPSIS
             Free Memory ...
 
         Tomcat 8.0 doesn't include application info in the XML, even though the docs
@@ -1024,7 +1011,7 @@ class TomcatManager:
 
         Usage::
 
-            >>> tomcat = getfixture('tomcat')
+            >>> tomcat = getfixture("tomcat")
             >>> r = tomcat.resources()
             >>> if r.ok:
             ...     print(r.resources)
@@ -1074,7 +1061,7 @@ class TomcatManager:
 
         Usage::
 
-            >>> tomcat = getfixture('tomcat')
+            >>> tomcat = getfixture("tomcat")
             >>> r = tomcat.find_leakers()
             >>> if r.ok:
             ...     cnt = len(r.leakers)

@@ -42,7 +42,7 @@ This library and associated tools do their work via the `Tomcat Manager
 <https://tomcat.apache.org/tomcat-10.0-doc/manager-howto.html>`_ web application
 included in the Tomcat distribution. This section describes a simple, minimal server
 configuration to provide authentication, but does not cover the many other ways to
-deploy and configure Tomcat. See :doc:`clientauthentication` for a full description
+deploy and configure Tomcat. See :doc:`authentication` for a full description
 of the many ways this library and associated tools can be used to authenticate
 to Tomcat, no matter how it is configured.
 

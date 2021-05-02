@@ -58,15 +58,15 @@ simultaneously at the same URL. To utilize this feature, you need to deploy an
 application with a version string. The combination of path and version string
 uniquely identify the application::
 
-   >>> tomcat = getfixture('tomcat')
-   >>> safe_path = getfixture('safe_path')
-   >>> localwar_file = getfixture('localwar_file')
-   >>> with open(localwar_file, 'rb') as localwar_fileobj:
-   ...     r = tomcat.deploy_localwar(safe_path, localwar_fileobj, version='42')
+   >>> tomcat = getfixture("tomcat")
+   >>> safe_path = getfixture("safe_path")
+   >>> localwar_file = getfixture("localwar_file")
+   >>> with open(localwar_file, "rb") as localwar_fileobj:
+   ...     r = tomcat.deploy_localwar(safe_path, localwar_fileobj, version="42")
    ...     r.ok
    True
-   >>> with open(localwar_file, 'rb') as localwar_fileobj:
-   ...     r = tomcat.deploy_localwar(safe_path, localwar_fileobj, version='43')
+   >>> with open(localwar_file, "rb") as localwar_fileobj:
+   ...     r = tomcat.deploy_localwar(safe_path, localwar_fileobj, version="43")
    ...     r.ok
    True
 
@@ -74,13 +74,13 @@ We now have two instances of the same application, deployed at the same
 location, but with different version strings. To do anything to either of those
 applications, you must supply both the path and the version string::
 
-   >>> r = tomcat.stop(path=safe_path, version='42')
+   >>> r = tomcat.stop(path=safe_path, version="42")
    >>> r.ok
    True
-   >>> r = tomcat.undeploy(path=safe_path, version='42')
+   >>> r = tomcat.undeploy(path=safe_path, version="42")
    >>> r.ok
    True
-   >>> r = tomcat.undeploy(path=safe_path, version='43')
+   >>> r = tomcat.undeploy(path=safe_path, version="43")
    >>> r.ok
    True
 
@@ -142,7 +142,7 @@ connected to, :exc:`~.models.TomcatNotImplementedError` will be raised.
 If you prefer to check whether a method is supported before calling it, you
 can do so using :meth:`.TomcatManager.implements`:
 
-   >>> tomcat = getfixture('tomcat')
+   >>> tomcat = getfixture("tomcat")
    >>> if tomcat.implements(tomcat.list):
    ...     print("list is implemented")
    ... else:

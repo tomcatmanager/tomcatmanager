@@ -150,7 +150,7 @@ Or:
    tomcat-manager> connect http://localhost:8080/manager ace
    Password: {type your password here}
 
-See :doc:`clientauthentication` for complete details on all supported authentication
+See :doc:`authentication` for complete details on all supported authentication
 mechanisms.
 
 
@@ -487,7 +487,7 @@ Some of these properties make no sense when combined together. For example, if y
 server authenticates with a certificate and key, it almost certainly doesn't use a
 user and password. If you don't want to verify server SSL/TLS certificates, then it
 makes no sense to provide a certificate authority bundle. See
-:doc:`clientauthentication` for complete details of all supported authentication
+:doc:`authentication` for complete details of all supported authentication
 mechanisms.
 
 

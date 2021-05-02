@@ -179,7 +179,7 @@ version of Tomcat using each supported version of Python.
 
 In many of the doctests you'll see something like::
 
-   >>> tomcat = getfixture('tomcat')
+   >>> tomcat = getfixture("tomcat")
 
 This ``getfixture()`` helper imports fixtures defined in ``conftest.py``, which has
 several benefits:

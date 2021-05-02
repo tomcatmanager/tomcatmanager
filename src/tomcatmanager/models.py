@@ -105,14 +105,14 @@ class TomcatManagerResponse:
     the command completed succesfully before relying on the results::
 
         >>> import tomcatmanager as tm
-        >>> tomcat = getfixture('tomcat')
+        >>> tomcat = getfixture("tomcat")
         >>> try:
         ...     r = tomcat.server_info()
         ...     r.raise_for_status()
         ...     if r.ok:
         ...         print("Operating System: {}".format(r.server_info.os_name))
         ...     else:
-        ...         print('Error: {}'.format(r.status_message))
+        ...         print("Error: {}".format(r.status_message))
         ... except Exception as err:
         ...     # handle exception
         ...     pass
@@ -134,7 +134,7 @@ class TomcatManagerResponse:
         The status codes are enumerated in :class:`StatusCode`.
 
             >>> import tomcatmanager as tm
-            >>> tomcat = getfixture('tomcat')
+            >>> tomcat = getfixture("tomcat")
             >>> r = tomcat.server_info()
             >>> r.status_code == tm.StatusCode.OK
             True

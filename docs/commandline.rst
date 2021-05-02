@@ -121,7 +121,7 @@ the command line, but this is not secure:
   $ tomcat-manager --user=ace --password=newenglandclamchowder http://localhost:8080/manager list
   Password:
 
-See :doc:`clientauthentication` for complete details of all supported authentication
+See :doc:`authentication` for complete details of all supported authentication
 mechanisms.
 
 If you want unattended authenticated access, server shortcuts are a better
