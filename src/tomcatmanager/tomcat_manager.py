@@ -402,12 +402,13 @@ class TomcatManager:
         make an HTTP request to the server and see if it returns successfully.
         Internally this method tries to retrieve ``/manager/text/serverinfo``.
 
-        Typically authentication is done via user and password, pass those
+        Typically authentication is done via user and password. Pass those
         parameters to utilize HTTP Basic authentication.
 
         To authenticate with a SSL/TLS server using a client certificate and key, pass
         the path to a single file containing the private key and certificate in the
-        ``cert`` parameter. As an alternative, you can pass a tuple containing the path the the certificate, and the path to the key.
+        ``cert`` parameter. As an alternative, you can pass a tuple containing the path
+        to the certificate, and the path to the key.
 
         .. warning::
 
@@ -422,6 +423,8 @@ class TomcatManager:
         ``verify`` parameter to the path to a certificate authority bundle file
         or a directory of certificates of trusted certificate authorities. You can
         disable server certificate validation by setting ``verify`` to ``False``.
+
+        See :ref:`authentication:Authentication` for more details.
 
         **Side Effects**
 

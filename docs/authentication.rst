@@ -20,7 +20,8 @@ proxy to terminate SSL/TLS and pass the unencrypted traffic to Tomcat.
   <https://docs.nginx.com/nginx/deployment-guides/load-balance-third-party/apache-tomcat/>`_.
 
 To use these encrypted connections with tomcatmanager, simply use the ``https``
-protocol in the url you specify for the server. The ``list`` command shown here can be replaced with any supported command. Here are examples from the command line,
+protocol in the url you specify for the server. The ``list`` command shown here can be
+replaced with any supported command. Here are examples from the command line,
 
 .. code-block::
 
@@ -90,7 +91,8 @@ Interactive mode is similar:
    tomcat-manager>connect --cacert=/etc/ssl/mycertbundle https://www.example.com/manager ace newenglandclamchowder
    --connected to https://www.example.com/manager as ace
 
-From Python use the :attr:`~.TomcatManager.verify` parameter to the :meth:`.TomcatManager.connect` method:
+From Python use the :attr:`~.TomcatManager.verify` parameter to the
+:meth:`.TomcatManager.connect` method:
 
 .. code-block:: python
 
@@ -129,7 +131,8 @@ from interactive mode:
    tomcat-manager>connect --noverify https://www.example.com/manager ace newenglandclamchowder
    --connected to https://www.example.com/manager as ace
 
-or pass ``False`` in the :attr:`~.TomcatManager.verify` parameter of the :meth:`.TomcatManager.connect` method:
+or pass ``False`` in the :attr:`~.TomcatManager.verify` parameter of the
+:meth:`.TomcatManager.connect` method:
 
 .. code-block:: python
 
@@ -194,7 +197,8 @@ or they can be combined into a single file.
 
 Use the ``--key`` and ``--cert`` options from the command line to specify the private
 key and associated certificate used to respond to the authentication requests from the
-server. If you have the key and the certificate in a single file, then omit the ``--key`` option and use the combined file with the ``--cert`` option:
+server. If you have the key and the certificate in a single file, then omit the
+``--key`` option and use the combined file with the ``--cert`` option:
 
 .. code-block::
 

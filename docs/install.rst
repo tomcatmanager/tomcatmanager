@@ -15,8 +15,8 @@ The following Tomcat versions are supported:
 - 10.0.x
 
 
-Installation
-------------
+Install using pip
+-----------------
 
 Install using ``pip``::
 
