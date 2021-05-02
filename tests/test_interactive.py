@@ -945,7 +945,8 @@ def test_connect_config_noverify_override(tomcat_manager_server, mocker):
     config = """[{}]
     url={}
     user={}
-    password={}"""
+    password={}
+    verify=True"""
     configstring = config.format(
         configname,
         tomcat_manager_server.url,
