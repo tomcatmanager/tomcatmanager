@@ -61,7 +61,7 @@ Table of Contents
    interactive
    commandline
    package
-   clientauthentication
+   authentication
    api/index.rst
    contributing
    changelog
