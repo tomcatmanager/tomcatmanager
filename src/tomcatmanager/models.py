@@ -252,21 +252,19 @@ class TomcatApplication:
     A list of these objects is returned by :meth:`.TomcatManager.list`.
     """
 
-    TA = typing.TypeVar("TA", bound="TomcatApplication")
-
     @classmethod
-    def sort_by_state_by_path_by_version(cls, app: TA):
+    def sort_by_state_by_path_by_version(cls, app: "TomcatApplication"):
         """
-        Function to create a key usable by ``sort`` to sort by state, by path, by version.
+        Create a key usable by ``sort`` to sort by state, by path, by version.
         """
         return "{}:{}:{}".format(
             app.state.value or "", app.path or "", app.version or ""
         )
 
     @classmethod
-    def sort_by_path_by_version_by_state(cls, app: TA):
+    def sort_by_path_by_version_by_state(cls, app: "TomcatApplication"):
         """
-        Function to create a key usable by ``sort`` to sort by path, by version, by state
+        Create a key usable by ``sort`` to sort by path, by version, by state
         """
         return "{}:{}:{}".format(
             app.path or "", app.version or "", app.state.value or ""
@@ -292,7 +290,7 @@ class TomcatApplication:
             self.directory_and_version or "",
         )
 
-    def __lt__(self, other: TA):
+    def __lt__(self, other: "TomcatApplication"):
         """
         Compare one object to another. Useful for sorting lists of apps.
 
