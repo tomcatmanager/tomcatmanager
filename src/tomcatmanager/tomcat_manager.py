@@ -424,7 +424,7 @@ class TomcatManager:
         or a directory of certificates of trusted certificate authorities. You can
         disable server certificate validation by setting ``verify`` to ``False``.
 
-        See :ref:`authentication:Authentication` for more details.
+        See :doc:`/authentication` for more details.
 
         **Side Effects**
 

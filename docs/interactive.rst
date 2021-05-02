@@ -395,8 +395,6 @@ config file contains:
   editor=/usr/local/bin/zile
 
 
-.. _server_shortcuts:
-
 Server Shortcuts
 ----------------
 
