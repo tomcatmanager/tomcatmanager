@@ -366,8 +366,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             return r
         except tm.TomcatNotImplementedError as err:
             self.perror("command not implemented by server")
+            return None
         except tm.TomcatError as err:
             self.perror(str(err))
+            return None
 
     def show_help_from(self, argparser: argparse.ArgumentParser):
         """Set exit code and output help from an argparser."""
@@ -398,13 +400,21 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         What url are we connected to and who are we connected as.
 
-        Returns None if '.url` is None.
+        Returns None if not connected to a server.
         """
         out = None
-        if self.tomcat.url:
+        if self.tomcat.is_connected:
             out = "connected to {}".format(self.tomcat.url)
             if self.tomcat.user:
                 out += " as {}".format(self.tomcat.user)
+            if self.tomcat.cert:
+                if isinstance(self.tomcat.cert, tuple):
+                    # get the key
+                    _, authby = self.tomcat.cert
+                else:
+                    authby = self.tomcat.cert
+                out += " authenticated by {}".format(authby)
+
         return out
 
     def do_help(self, args: str):
@@ -773,9 +783,8 @@ change the value of one of this program's settings
         prog="connect",
         description="connect to a tomcat manager instance",
         usage="%(prog)s [-h] config_name\n       %(prog)s [-h] url [user] [password]",
-        epilog=""""If you specify a user and no password, you will be prompted for the
-               password. If you don't specify a user or password, attempt to connect with
-               no authentication.""",
+        epilog="""If you specify a user and no password, you will be prompted for the
+               password.""",
     )
     connect_parser.add_argument(
         "config_name",
@@ -797,13 +806,44 @@ change the value of one of this program's settings
         nargs="?",
         help="optional password to use for authentication",
     )
+    connect_parser.add_argument(
+        "--cert",
+        action="store",
+        help="""path to certificate for client side authentication;
+        file can include private key, in which case --key is unnecessary""",
+    )
+    connect_parser.add_argument(
+        "--key",
+        action="store",
+        help="path to private key for client side authentication",
+    )
+    connect_parser.add_argument(
+        "--cacert",
+        action="store",
+        help="""path to certificate authority bundle or directory used to
+        validate server SSL/TLS certificate""",
+    )
+    connect_parser.add_argument(
+        "--noverify",
+        # store_true makes the default False, aka default is to verify
+        # server certificates
+        action="store_true",
+        help="don't validate server SSL certificates, overrides --cacert",
+    )
 
     def do_connect(self, cmdline: cmd2.Statement):
         """Connect to a tomcat manager instance."""
         # pylint: disable=too-many-branches, too-many-statements
+        # define some variables that we will either fill from a server shortcut
+        # or from arguments
         url = None
         user = None
         password = None
+        cert = None
+        key = None
+        cacert = None
+        verify = True
+
         args = self.parse_args(self.connect_parser, cmdline.argv)
         server = args.config_name
         if self.config.has_section(server):
@@ -813,6 +853,15 @@ change the value of one of this program's settings
                 user = self.config[server]["user"]
             if self.config.has_option(server, "password"):
                 password = self.config[server]["password"]
+            if self.config.has_option(server, "cert"):
+                cert = self.config[server]["cert"]
+            if self.config.has_option(server, "key"):
+                key = self.config[server]["key"]
+            if self.config.has_option(server, "cacert"):
+                cacert = self.config[server]["cacert"]
+            if self.config.has_option(server, "verify"):
+                verify = self.config[server]["verify"]
+            # check for user and password overrides on the command line
         else:
             # This is an ugly hack required to get argparse to show the help properly.
             # the argparser has both a config_name and a url positional argument.
@@ -820,15 +869,44 @@ change the value of one of this program's settings
             # the configuration file, then it must be a url, so we have to
             # 'shift' the positional arguments to the left.
             url = args.config_name
+
+        if args.url:
             user = args.url
-            password = args.user
+            # can't set the password if you don't set the user because
+            # these arguments are positional
+            if args.user:
+                password = args.user
+        # end of ugly hack
 
         # prompt for password if necessary
         if url and user and not password:
             password = getpass.getpass()
 
+        # allow command line arguments to override server options
+        # that's why this code isn't in the big if statement above
+
+        # set ssl client validation
+        if args.cert:
+            cert = args.cert
+        if args.key:
+            key = args.key
+        if cert and key:
+            cert = (cert, key)
+
+        # set ssl server certificate validation
+        if args.noverify:
+            # if you say not to verify SSL certs, this overrides --cacert
+            verify = False
+        if args.cacert:
+            cacert = args.cacert
+
+        if verify and cacert:
+            # when verify is false, cacert doesn't matter
+            # when it's true, then we can override with cacert
+            verify = cacert
+
         try:
-            r = self.tomcat.connect(url, user, password)
+            r = self.tomcat.connect(url, user, password, verify=verify, cert=cert)
 
             if r.ok:
                 self.pfeedback(self._which_server())

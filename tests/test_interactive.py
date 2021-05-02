@@ -538,6 +538,83 @@ def test_connect(tomcat_manager_server, capsys):
     assert_connected_to(itm, tomcat_manager_server.url, capsys)
 
 
+def test_connect_noverify(tomcat_manager_server, mocker):
+    itm = tm.InteractiveTomcatManager()
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command + " --noverify")
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify=False,
+        cert=None,
+    )
+
+
+def test_connect_cacert(tomcat_manager_server, mocker):
+    itm = tm.InteractiveTomcatManager()
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command + " --cacert /tmp/ca")
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify="/tmp/ca",
+        cert=None,
+    )
+
+
+def test_connect_cacert_noverify(tomcat_manager_server, mocker):
+    itm = tm.InteractiveTomcatManager()
+    get_mock = mocker.patch("requests.get")
+    cmd = tomcat_manager_server.connect_command + " --cacert /tmp/ca --noverify"
+    itm.onecmd_plus_hooks(cmd)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify=False,
+        cert=None,
+    )
+
+
+def test_connect_cert(tomcat_manager_server, mocker):
+    itm = tm.InteractiveTomcatManager()
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command + " --cert /tmp/cert")
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert="/tmp/cert",
+    )
+
+
+def test_connect_key_cert(tomcat_manager_server, mocker):
+    itm = tm.InteractiveTomcatManager()
+    get_mock = mocker.patch("requests.get")
+    cmd = tomcat_manager_server.connect_command + " --cert /tmp/cert --key /tmp/key"
+    itm.onecmd_plus_hooks(cmd)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert=("/tmp/cert", "/tmp/key"),
+    )
+
+
 def test_connect_fail_debug(tomcat_manager_server, mocker):
     itm = tm.InteractiveTomcatManager()
     itm.debug = True
@@ -587,38 +664,38 @@ def test_connect_fail_ok(tomcat_manager_server, mocker, code, errmsg, capsys):
     assert itm.exit_code == itm.EXIT_ERROR
 
 
-# def test_connect_fail_not_found(tomcat_manager_server, mocker, capsys):
-#     itm = tm.InteractiveTomcatManager()
-#     itm.debug = False
-#     mock_ok = mocker.patch(
-#         "tomcatmanager.models.TomcatManagerResponse.response",
-#         new_callable=mock.PropertyMock,
-#     )
-#     qmr = MockResponse(requests.codes.not_found)
-#     mock_ok.return_value = qmr
+def test_connect_fail_not_found(tomcat_manager_server, mocker, capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.debug = False
+    mock_ok = mocker.patch(
+        "tomcatmanager.models.TomcatManagerResponse.response",
+        new_callable=mock.PropertyMock,
+    )
+    qmr = MockResponse(requests.codes.not_found)
+    mock_ok.return_value = qmr
 
-#     itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
-#     out, err = capsys.readouterr()
-#     assert not out
-#     assert "tomcat manager not found" in err
-#     assert itm.exit_code == itm.EXIT_ERROR
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    out, err = capsys.readouterr()
+    assert not out
+    assert "tomcat manager not found" in err
+    assert itm.exit_code == itm.EXIT_ERROR
 
 
-# def test_connect_fail_other(tomcat_manager_server, mocker, capsys):
-#     itm = tm.InteractiveTomcatManager()
-#     itm.debug = False
-#     mock_ok = mocker.patch(
-#         "tomcatmanager.models.TomcatManagerResponse.response",
-#         new_callable=mock.PropertyMock,
-#     )
-#     qmr = MockResponse(requests.codes.server_error)
-#     mock_ok.return_value = qmr
+def test_connect_fail_other(tomcat_manager_server, mocker, capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.debug = False
+    mock_ok = mocker.patch(
+        "tomcatmanager.models.TomcatManagerResponse.response",
+        new_callable=mock.PropertyMock,
+    )
+    qmr = MockResponse(requests.codes.server_error)
+    mock_ok.return_value = qmr
 
-#     itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
-#     out, err = capsys.readouterr()
-#     assert not out
-#     assert "http error" in err
-#     assert itm.exit_code == itm.EXIT_ERROR
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    out, err = capsys.readouterr()
+    assert not out
+    assert "http error" in err
+    assert itm.exit_code == itm.EXIT_ERROR
 
 
 def test_connect_password_prompt(tomcat_manager_server, capsys, mocker):
@@ -653,6 +730,270 @@ def test_connect_config(tomcat_manager_server, capsys, mocker):
     itm.onecmd_plus_hooks(cmdline)
     assert itm.exit_code == itm.EXIT_SUCCESS
     assert_connected_to(itm, tomcat_manager_server.url, capsys)
+
+
+def test_connect_config_user_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} someotheruser".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=("someotheruser", tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert=None,
+    )
+
+
+def test_connect_config_user_password_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} someotheruser someotherpassword".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=("someotheruser", "someotherpassword"),
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert=None,
+    )
+
+
+def test_connect_config_cert(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    cert=/tmp/mycert"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {}".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=None,
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert="/tmp/mycert",
+    )
+
+
+def test_connect_config_cert_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    cert=/tmp/mycert"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} --cert /tmp/yourcert".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=None,
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert="/tmp/yourcert",
+    )
+
+
+def test_connect_config_cert_key(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    cert=/tmp/mycert
+    key=/tmp/mykey"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {}".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=None,
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert=("/tmp/mycert", "/tmp/mykey"),
+    )
+
+
+def test_connect_config_cert_key_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    cert=/tmp/mycert
+    key=/tmp/mykey"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} --cert /tmp/yourcert --key /tmp/yourkey".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=None,
+        params=None,
+        timeout=itm.timeout,
+        verify=True,
+        cert=("/tmp/yourcert", "/tmp/yourkey"),
+    )
+
+
+def test_connect_config_cacert(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}
+    cacert=/tmp/cabundle"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {}".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify="/tmp/cabundle",
+        cert=None,
+    )
+
+
+def test_connect_config_cacert_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}
+    cacert=/tmp/cabundle"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} --cacert /tmp/other".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify="/tmp/other",
+        cert=None,
+    )
+
+
+def test_connect_config_noverify_override(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}
+    verify=True"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} --noverify".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify=False,
+        cert=None,
+    )
+
+
+def test_connect_config_noverify_override_cacert(tomcat_manager_server, mocker):
+    configname = str(uuid.uuid1())
+    config = """[{}]
+    url={}
+    user={}
+    password={}
+    cacert=/tmp/cabundle"""
+    configstring = config.format(
+        configname,
+        tomcat_manager_server.url,
+        tomcat_manager_server.user,
+        tomcat_manager_server.password,
+    )
+    itm = itm_with_config(mocker, configstring)
+    cmdline = "connect {} --noverify".format(configname)
+    get_mock = mocker.patch("requests.get")
+    itm.onecmd_plus_hooks(cmdline)
+    url = tomcat_manager_server.url + "/text/serverinfo"
+    get_mock.assert_called_once_with(
+        url,
+        auth=(tomcat_manager_server.user, tomcat_manager_server.password),
+        params=None,
+        timeout=itm.timeout,
+        verify=False,
+        cert=None,
+    )
 
 
 def test_connect_config_password_prompt(tomcat_manager_server, capsys, mocker):
@@ -728,11 +1069,43 @@ def test_connect_with_timeout_debug(tomcat_manager_server, capsys, mocker):
 
 def test_which(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
+    # force this to ensure `which` sets it to SUCCESS
     itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("which")
     out, _ = capsys.readouterr()
     assert itm.exit_code == itm.EXIT_SUCCESS
     assert tomcat_manager_server.url in out
+    assert tomcat_manager_server.user in out
+
+
+def test_which_cert(tomcat_manager_server, capsys, mocker):
+    # the mock tomcat erver can't authenticate using a certificate
+    # so we connect as normal, then mock it so it appears
+    # like we authenticated with a certificate
+    itm = get_itm(tomcat_manager_server)
+    cert_mock = mocker.patch(
+        "tomcatmanager.TomcatManager.cert",
+        new_callable=mock.PropertyMock,
+    )
+    cert_mock.return_value = "/tmp/mycert"
+    itm.onecmd_plus_hooks("which")
+    out, err = capsys.readouterr()
+    assert "/tmp/mycert" in out
+
+
+def test_which_cert_key(tomcat_manager_server, capsys, mocker):
+    # the mock tomcat erver can't authenticate using a certificate
+    # so we connect as normal, then mock it so it appears
+    # like we authenticated with a certificate
+    itm = get_itm(tomcat_manager_server)
+    cert_mock = mocker.patch(
+        "tomcatmanager.TomcatManager.cert",
+        new_callable=mock.PropertyMock,
+    )
+    cert_mock.return_value = ("/tmp/mycert", "/tmp/mykey")
+    itm.onecmd_plus_hooks("which")
+    out, err = capsys.readouterr()
+    assert "/tmp/mykey" in out
 
 
 REQUIRES_CONNECTION = [

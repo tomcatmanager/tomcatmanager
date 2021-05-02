@@ -1,12 +1,25 @@
 Command Line
 ============
 
-You've already read about :doc:`Interactive Use <interactive>` right? If not,
+You've already read about :ref:`interactive:Interactive Use` right? If not,
 this part will feel kind of hollow.
 
-Say you want to find out how many active sessions there are in the oldest
-version of our ``shiny`` app (told you it would feel kind of hollow). You could
-use interactive mode:
+Any command described in :ref:`interactive:Interactive Use` can be run from the
+command line. The first argument of ``tomcat-manager`` is the url of the server. The
+rest of the arguments are any commands and their arguments from
+:ref:`interactive:Interactive Use`.
+
+.. code-block:: bash
+
+  $ tomcat-manager http://localhost:8080/manager deploy server /tmp/myfancyapp.war /fancy
+
+
+Using Shell Scripts
+-------------------
+
+Say you want to find out how many active sessions there are in the oldest version of
+our ``shiny`` app (told you it would feel kind of hollow). You could use interactive
+mode:
 
 .. code-block::
 
@@ -20,10 +33,6 @@ use interactive mode:
   /manager                 running        0 manager
   /shiny                   running       17 shiny##v2.0.6
   /shiny                   running        6 shiny##v2.0.5
-
-
-Using Shell Scripts
--------------------
 
 If you need to automate a more complex sequence of commands or parse the
 output, you might choose to use ``tomcat-manager`` from within a shell script:
@@ -76,18 +85,6 @@ shell exit code appropriately. The exit codes are:
   | **127** = unknown command
 
 
-Servers and Commands
---------------------
-
-The first argument of ``tomcat-manager`` is the url of the server. The rest
-of the arguments are any commands and their arguments from
-:doc:`Interactive Use <interactive>`.
-
-.. code-block:: bash
-
-  $ tomcat-manager http://localhost:8080/manager deploy server /tmp/myfancyapp.war /fancy
-
-
 Timeout
 -------
 
@@ -102,11 +99,11 @@ This command line option is the same as the ``timeout`` :ref:`Setting
 <settings>`.
 
 
-Credentials
------------
+Authentication
+--------------
 
-If your server requires authentication, you can add the user name on the
-command line:
+Authenticate with the user you defined when you :doc:`Configured Tomcat
+<configuretomcat>` on the command line:
 
 .. code-block:: bash
 
@@ -121,6 +118,9 @@ the command line, but this is not secure:
   $ tomcat-manager --user=ace --password=newenglandclamchowder http://localhost:8080/manager list
   Password:
 
+See :doc:`authentication` for complete details of all supported authentication
+mechanisms.
+
 If you want unattended authenticated access, server shortcuts are a better
 option.
 
@@ -128,7 +128,7 @@ option.
 Server Shortcuts
 ----------------
 
-You can use :ref:`server_shortcuts` from the command line with or without
+You can use :ref:`interactive:Server Shortcuts` from the command line with or without
 commands:
 
 .. code-block::
@@ -231,8 +231,8 @@ If ``status_to_stdout=True`` then status information is sent to ``stdout``, as
 long as ``quiet=False``.
 
 Here's a couple of examples to demonstrate, using a :ref:`server shortcut
-<server_shortcuts>` of ``localhost``, which we assume gets you authenticated to
-a Tomcat Server web application:
+<interactive:Server Shortcuts>` of ``localhost``, which we assume gets you
+authenticated to a Tomcat Server web application:
 
 These two commands yield the same output, but by different mechanisms: the
 first one uses the shell to redirect status messages to the bitbucket, the

@@ -6,12 +6,14 @@
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
+    "sphinx.ext.autosectionlabel",
     "autodocsumm",
 ]
 templates_path = ["_templates"]
 source_suffix = ".rst"
 master_doc = "index"
-
+autosectionlabel_prefix_document = True
+autosectionlabel_maxdepth = 2
 
 project = "tomcatmanager"
 copyright = ""

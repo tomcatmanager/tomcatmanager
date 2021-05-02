@@ -32,7 +32,7 @@ A python wrapper for interacting with the Tomcat Manager web application.
 import functools
 import collections
 import re
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import requests
 
@@ -57,9 +57,9 @@ class TomcatManager:
     `server_info()` method.
 
     >>> import tomcatmanager as tm
-    >>> url = 'http://localhost:808099/manager'
-    >>> user = 'ace'
-    >>> password = 'newenglandclamchowder'
+    >>> url = "http://localhost:808099/manager"
+    >>> user = "ace"
+    >>> password = "newenglandclamchowder"
     >>> tomcat = tm.TomcatManager()
     >>> try:
     ...     r = tomcat.connect(url, user, password)
@@ -68,12 +68,12 @@ class TomcatManager:
     ...         if r.ok:
     ...             print(r.server_info)
     ...         else:
-    ...             print('Error: {}'.format(r.status_message))
+    ...             print("Error: {}".format(r.status_message))
     ...     else:
-    ...         print('not connected')
+    ...         print("not connected")
     ... except Exception as err:
     ...     # handle exception
-    ...     print('not connected')
+    ...     print("not connected")
     not connected
     """
 
@@ -144,8 +144,17 @@ class TomcatManager:
         """
         self._url = None
         self._user = None
+
         # ask nicely for people not to access the password attribute
         self._password = None
+
+        # same with the certificates for client side authentication
+        self._cert = None
+
+        # and the CA bundle to verify server SSL/TLS certifications,
+        # or False to skip verification
+        self._verify = None
+
         # where we keep track of the version of tomcat we are connected to
         # this is set by connect()
         self._tomcat_major_minor = None
@@ -160,24 +169,58 @@ class TomcatManager:
         >>> import tomcatmanager as tm
         >>> tomcat = tm.TomcatManager()
         >>> tomcat.timeout = 3.5
+
+        .. versionchanged:: 3.0.0
+           Can be a ``float`` or ``int`` instead of just an ``int``
         """
 
     @property
     def url(self) -> str:
         """Url of the Tomcat Manager web application we are connected to.
 
-        This attribute is set by the :meth:`.connect` method. Look there for more info.
+        This attribute is set by the :meth:`.connect` method. Look there for
+        more info.
+
+        .. versionchanged:: 3.0.0
+           Now a read-only property instead of a read-write attribute.
         """
         return self._url
 
     @property
     def user(self) -> str:
-        """User we successfully authenticated to the Tomcat Manager web application
-        with.
+        """User we successfully authenticated to the Tomcat Manager web
+        application with.
 
-        This attribute is set by the :meth:`.connect` method. Look there for more info.
+        This attribute is set by the :meth:`.connect` method. Look there for
+        more info.
+
+        .. versionchanged:: 3.0.0
+           Now a read-only property instead of a read-write attribute.
         """
         return self._user
+
+    @property
+    def cert(self) -> Union[str, Tuple[str, str]]:
+        """Client side SSL/TLS certificates we authenticated to the Tomcat Manager
+        web application with.
+
+        This attribute is set by the :meth:`.connect` method. Look there for
+        more info.
+
+        .. versionadded:: 3.0.0
+        """
+        return self._cert
+
+    @property
+    def verify(self) -> Union[str, bool]:
+        """The certificate authority directory or bundle to use to verify
+        server SSL/TLS certificates. If ``False`` no verification is performed.
+
+        This attribute is set by the :meth:`.connect` method. Look there for more info.
+
+        .. versionadded:: 3.0.0
+        """
+        return self._verify
 
     @property
     def tomcat_major_minor(self) -> TomcatMajorMinor:
@@ -187,7 +230,7 @@ class TomcatManager:
 
         This attribute is set by the :meth:`.connect` method. Look there for more info.
 
-        .. versionadded:: 2.1.0
+        .. versionadded:: 3.0.0
         """
         return self._tomcat_major_minor
 
@@ -207,17 +250,17 @@ class TomcatManager:
 
         Usage:
 
-        >>> tomcat = getfixture('tomcat')
+        >>> tomcat = getfixture("tomcat")
         >>> print(tomcat.implements(tomcat.deploy_localwar))
         True
 
         or:
 
-        >>> tomcat = getfixture('tomcat')
+        >>> tomcat = getfixture("tomcat")
         >>> print(tomcat.implements("deploy_localwar"))
         True
 
-        .. versionadded:: 2.1.0
+        .. versionadded:: 3.0.0
         """
         if callable(method):
             mname = method.__name__
@@ -243,7 +286,7 @@ class TomcatManager:
 
         This method does not require prior connection to a Tomcat server.
 
-        .. versionadded:: 2.1.0
+        .. versionadded:: 3.0.0
         """
         if callable(method):
             mname = method.__name__
@@ -267,15 +310,24 @@ class TomcatManager:
         return self._url and self._tomcat_major_minor
 
     def connect(
-        self, url: str, user: str = "", password: str = "", timeout: float = None
+        self,
+        url: str,
+        user: str = "",
+        password: str = "",
+        *,
+        cert: Union[str, Tuple[str, str]] = None,
+        verify: Union[str, bool] = True,
+        timeout: float = None,
     ) -> TomcatManagerResponse:
         """Connect to the manager application running in a Tomcat server.
 
         :param url:      url where the Tomcat Manager web application is deployed
         :param user:     (optional) user to authenticate with
         :param password: (optional) password to authenticate with
+        :param cert:     client side certificates to use for SSL/TLS authentication
+        :param verify:   verify server SSL/TLS certificates
         :param timeout:  timeout in seconds for network operations
-        :return:        :class:`~tomcatmanager.models.TomcatManagerResponse`
+        :return:         :class:`~tomcatmanager.models.TomcatManagerResponse`
                          object with an additional ``server_info`` attribute
 
         The ``server_info`` attribute of the returned object contains a
@@ -284,29 +336,30 @@ class TomcatManager:
 
         This method:
 
-        - sets or changes the url and credentials on an existing object
-        - provides a convenient mechanism to validate you can actually connect to the
-          server
-        - returns a response object that includes information about the server you are
-          connected to
+        - sets or changes the url, credentials, and certificates on an existing
+          object
+        - provides a convenient mechanism to validate you can actually connect
+          to the server
+        - returns a response object that includes information about the server
+          you are connected to
         - allows you to inspect the response so you can see why you can't connect
 
-        Usage:
+        **Usage**
 
         >>> import tomcatmanager as tm
-        >>> url = 'http://localhost:808099/manager'
-        >>> user = 'ace'
-        >>> password = 'newenglandclamchowder'
+        >>> url = "http://localhost:808099/manager"
+        >>> user = "ace"
+        >>> password = "newenglandclamchowder"
         >>> tomcat = tm.TomcatManager()
         >>> try:
         ...     r = tomcat.connect(url, user, password)
         ...     if r.ok:
-        ...         print('connected')
+        ...         print("connected")
         ...     else:
-        ...         print('not connected')
+        ...         print("not connected")
         ... except Exception as err:
         ...    # handle exception
-        ...    print('not connected')
+        ...    print("not connected")
         not connected
 
         Many things can go wrong when requesting url's via http. tomcatmanager
@@ -340,31 +393,66 @@ class TomcatManager:
         is no persistent connection of any kind, there is no disconnect method and
         no cleanup to perform when you are done using a server.
 
+        If you discard or don't save the return object from this method, you can call
+        :meth:`is_connected` to check if you are connected.
+
+        **Authentication**
+
         The only way to validate the URL and authentication credentials is to
         make an HTTP request to the server and see if it returns successfully.
         Internally this method tries to retrieve ``/manager/text/serverinfo``.
 
-        Passing a timeout parameter to this method has the side effect of setting the
-        :attr:`timeout` attribute on this object.
+        Typically authentication is done via user and password. Pass those
+        parameters to utilize HTTP Basic authentication.
+
+        To authenticate with a SSL/TLS server using a client certificate and key, pass
+        the path to a single file containing the private key and certificate in the
+        ``cert`` parameter. As an alternative, you can pass a tuple containing the path
+        to the certificate, and the path to the key.
+
+        .. warning::
+
+            The private key for your local certificate must be unencrypted. The
+            Requests library used for network communication does not support using
+            encrypted keys.
+
+        If the URL uses the ``https`` protocol, the default behavior is to validate
+        the server SSL/TLS certificate chain.
+
+        To validate with your own certificate authority bundle, set the
+        ``verify`` parameter to the path to a certificate authority bundle file
+        or a directory of certificates of trusted certificate authorities. You can
+        disable server certificate validation by setting ``verify`` to ``False``.
+
+        See :doc:`/authentication` for more details.
+
+        **Side Effects**
+
+        Passing a ``timeout`` parameter to this method has the side effect of
+        setting the :attr:`timeout` attribute on this object.
 
         Requesting url's via http can also result in redirection to another url. If
         that occurs, the new url, not the one you passed, will be stored in the
         :attr:`url` attribute.
 
-        If you pass authentication credentials and the connection is successful, the
+        If you pass user and password credentials and the connection is successful, the
         user will be stored in the :attr:`user` attribute.
+
+        If you pass an authentication key and certificate in the ``cert`` parameter
+        and the connection is successful, the information will be stored in the
+        :attr:`cert` attribute.
 
         Upon successful connection, an instance of :class:`.TomcatMajorMinor` will be
         stored in :attr:`tomcat_major_minor` indicating the major version of Tomcat
         running on the server. Further details about the server are available in the
         `server_info` attribute of the returned response.
 
-        If you discard or don't save the return object from this method, you can call
-        :meth:`is_connected` to check if you are connected.
+        .. versionchanged:: 3.0.0
 
-        If you want to raise more exceptions see
-        :meth:`.TomcatManagerResponse.raise_for_status`.
-
+           - Returned :class:`.TomcatManagerResponse` now includes a ``server_info``
+             attribute containing a :class:`.ServerInfo` object describing the
+             server we are connected to
+           - Sets :attr:`tomcat_major_minor` attribute
         """
         if timeout:
             self.timeout = timeout
@@ -373,17 +461,28 @@ class TomcatManager:
         self._url = url
         self._user = user
         self._password = password
+        self._cert = cert
+        self._verify = verify
         # don't use server_info() because it will fail because it won't
         # think we are connected to the server yet
-        r = self._get("serverinfo")
-        r.server_info = ServerInfo(result=r.result)
-
-        if r.ok:
-            self._set_server_attrs(r)
-        else:
-            # don't save the parameters if we don't succeed
+        try:
+            r = self._get("serverinfo")
+            r.server_info = ServerInfo(result=r.result)
+            if r.ok:
+                self._tomcat_major_minor = r.server_info.tomcat_major_minor
+                # _get added /text/serverinfo onto the end of the passed in url
+                # we may have been redirected, and we want to store the new
+                # url, not the one passed in
+                match = re.search(r"(.*)/text/serverinfo$", r.response.url)
+                if match:
+                    self._url = match.group(1)
+            else:
+                # don't save the parameters if we don't succeed
+                self._clear_server_attrs()
+            return r
+        except Exception as exc:
             self._clear_server_attrs()
-        return r
+            raise exc
 
     ###
     # managing applications
@@ -490,7 +589,8 @@ class TomcatManager:
         update: bool = False,
     ) -> TomcatManagerResponse:
         """
-        Deploy a Tomcat application defined by a context file from the server filesystem to the Tomcat server.
+        Deploy a Tomcat application defined by a context file from the server
+        filesystem to the Tomcat server.
 
         :param path:         The path on the server to deploy this war to,
                              i.e. /sampleapp
@@ -631,8 +731,8 @@ class TomcatManager:
 
         Usage::
 
-            >>> tomcat = getfixture('tomcat')
-            >>> r = tomcat.sessions('/manager')
+            >>> tomcat = getfixture("tomcat")
+            >>> r = tomcat.sessions("/manager")
             >>> if r.ok:
             ...     session_data = r.sessions
 
@@ -668,8 +768,8 @@ class TomcatManager:
 
         Usage::
 
-            >>> tomcat = getfixture('tomcat')
-            >>> r = tomcat.expire('/manager', idle=15)
+            >>> tomcat = getfixture("tomcat")
+            >>> r = tomcat.expire("/manager", idle=15)
             >>> if r.ok:
             ...     expiration_data = r.sessions
         """
@@ -699,7 +799,7 @@ class TomcatManager:
         Usage::
 
             >>> import tomcatmanager as tm
-            >>> tomcat = getfixture('tomcat')
+            >>> tomcat = getfixture("tomcat")
             >>> r = tomcat.list()
             >>> if r.ok:
             ...     running = filter(lambda app: app.state == tm.ApplicationState.RUNNING, r.apps)
@@ -817,10 +917,10 @@ class TomcatManager:
 
         Usage::
 
-            >>> tomcat = getfixture('tomcat')
+            >>> tomcat = getfixture("tomcat")
             >>> r = tomcat.server_info()
             >>> if r.ok:
-            ...     r.server_info['OS Name'] == r.server_info.os_name
+            ...     r.server_info["OS Name"] == r.server_info.os_name
             True
 
         """
@@ -839,12 +939,12 @@ class TomcatManager:
         Usage::
 
             >>> import xml.etree.ElementTree as ET
-            >>> tomcat = getfixture('tomcat')
+            >>> tomcat = getfixture("tomcat")
             >>> r = tomcat.status_xml()
             >>> if r.ok:
             ...     root = ET.fromstring(r.status_xml)
-            ...     mem = root.find('jvm/memory')
-            ...     print('Free Memory = {}'.format(mem.attrib['free'])) #doctest: +ELLIPSIS
+            ...     mem = root.find("jvm/memory")
+            ...     print("Free Memory = {}".format(mem.attrib["free"])) #doctest: +ELLIPSIS
             Free Memory ...
 
         Tomcat 8.0 doesn't include application info in the XML, even though the docs
@@ -859,6 +959,8 @@ class TomcatManager:
             auth=(self._user, self._password),
             params={"XML": "true"},
             timeout=self.timeout,
+            verify=self.verify,
+            cert=self.cert,
         )
         r.result = r.response.text
         r.status_xml = r.result
@@ -912,7 +1014,7 @@ class TomcatManager:
 
         Usage::
 
-            >>> tomcat = getfixture('tomcat')
+            >>> tomcat = getfixture("tomcat")
             >>> r = tomcat.resources()
             >>> if r.ok:
             ...     print(r.resources)
@@ -962,7 +1064,7 @@ class TomcatManager:
 
         Usage::
 
-            >>> tomcat = getfixture('tomcat')
+            >>> tomcat = getfixture("tomcat")
             >>> r = tomcat.find_leakers()
             >>> if r.ok:
             ...     cnt = len(r.leakers)
@@ -1013,21 +1115,9 @@ class TomcatManager:
         self._user = None
         self._password = None
         self._url = None
+        self._cert = None
+        self._verify = None
         self._tomcat_major_minor = None
-
-    def _set_server_attrs(self, response: TomcatManagerResponse):
-        """
-        Set private attributes based on whether we connected to the url.
-
-        Intended to be called from connect() and is_connected()
-        """
-        self._tomcat_major_minor = response.server_info.tomcat_major_minor
-        # _get added /text/serverinfo onto the end of the passed in url
-        # we may have been redirected, and we want to store the new
-        # url, not the one passed in
-        match = re.search(r"(.*)/text/serverinfo$", response.response.url)
-        if match:
-            self._url = match.group(1)
 
     def _get(self, cmd: str, payload: dict = None) -> TomcatManagerResponse:
         """
@@ -1045,11 +1135,17 @@ class TomcatManager:
             url = base + "/text/" + cmd
         else:
             url = ""
+        authinfo = None
+        if self._user and self._password:
+            authinfo = (self._user, self._password)
+
         r = TomcatManagerResponse()
         r.response = requests.get(
             url,
-            auth=(self._user, self._password),
+            auth=authinfo,
             params=payload,
             timeout=self.timeout,
+            verify=self.verify,
+            cert=self.cert,
         )
         return r

@@ -70,6 +70,7 @@ def start_mock_server_7_0(tms):
     tms.url = "http://localhost:{}/manager".format(port)
     tms.user = MockRequestHandler70.USER
     tms.password = MockRequestHandler70.PASSWORD
+    tms.cert = None
     tms.warfile = "/path/to/server.war"
     tms.contextfile = "path/to/context.xml"
     tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
@@ -79,4 +80,4 @@ def start_mock_server_7_0(tms):
     mock_server_thread.daemon = True
     mock_server_thread.start()
 
-    return tms
+    return (mock_server, tms)

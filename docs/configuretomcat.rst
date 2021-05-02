@@ -1,46 +1,13 @@
 Configure Tomcat
 ================
 
-Supported Tomcat Versions
--------------------------
-
-The following Tomcat versions are supported:
-
-- 7.0.x
-- 8.0.x
-- 8.5.x
-- 9.0.x
-- 10.0.x
-
-The operating system and Java Virtual Machine don't matter as long as Tomcat
-runs on it.
-
-You can double check the list of versions supported by:
-
-.. code-block:: text
-
-   $ tomcat-manager -v
-   2.1.0 (works with Tomcat >= 7.0 and <= 10.0)
-
-or:
-
-.. code-block:: text
-
-   $ tomcat-manager
-   tomcat-manager> version
-   2.1.0 (works with Tomcat >= 7.0 and <= 10.0)
-
-These tools should work with newer versions of Tomcat than the ones officially
-supported. The Tomcat Manager web application that is part of Tomcat has been
-remarkably stable over many versions, with only a few additions.
-
-
-Authentication
---------------
-
 This library and associated tools do their work via the `Tomcat Manager
 <https://tomcat.apache.org/tomcat-10.0-doc/manager-howto.html>`_ web application
-included in the Tomcat distribution.
+included in the Tomcat distribution. This section describes a simple, minimal server
+configuration to provide authentication, but does not cover the many other ways to
+deploy and configure Tomcat. See :doc:`authentication` for a full description
+of the many ways this library and associated tools can be used to authenticate
+to Tomcat, no matter how it is configured.
 
 You will need the URL where the Tomcat Manager application is available. You
 can use the URL that points directly to the container, or the URL of a proxy

@@ -49,7 +49,7 @@ class TomcatNotImplementedError(Exception):
     Raised when a Tomcat Manager web application does not support a python
     API call.
 
-    .. versionadded:: 2.1.0
+    .. versionadded:: 3.0.0
     """
 
 
@@ -58,7 +58,7 @@ class TomcatNotConnected(Exception):
     Raised when a method is called on :class:`.TomcatManager` without the
     :meth:`~.TomcatManager.connect()` method being called first.
 
-    .. versionadded:: 2.1.0
+    .. versionadded:: 3.0.0
     """
 
 
@@ -105,14 +105,14 @@ class TomcatManagerResponse:
     the command completed succesfully before relying on the results::
 
         >>> import tomcatmanager as tm
-        >>> tomcat = getfixture('tomcat')
+        >>> tomcat = getfixture("tomcat")
         >>> try:
         ...     r = tomcat.server_info()
         ...     r.raise_for_status()
         ...     if r.ok:
         ...         print("Operating System: {}".format(r.server_info.os_name))
         ...     else:
-        ...         print('Error: {}'.format(r.status_message))
+        ...         print("Error: {}".format(r.status_message))
         ... except Exception as err:
         ...     # handle exception
         ...     pass
@@ -122,9 +122,32 @@ class TomcatManagerResponse:
 
     def __init__(self, response=None):
         self._response = response
-        self._status_code = None
-        self._status_message = None
-        self._result = None
+
+        self.status_code = None
+        """Status of the Tomcat Manager command from the first line of text.
+
+        The preferred way to check for success is to use the
+        :meth:`~.TomcatManagerResponse.ok` method, because it checks for http
+        errors as well as tomcat errors. However, if you want specific access
+        to the status of the tomcat command, use this method.
+
+        The status codes are enumerated in :class:`StatusCode`.
+
+            >>> import tomcatmanager as tm
+            >>> tomcat = getfixture("tomcat")
+            >>> r = tomcat.server_info()
+            >>> r.status_code == tm.StatusCode.OK
+            True
+        """
+
+        self.status_message = None
+        """The message on the first line of the response from the Tomcat Server.
+        """
+
+        self.result = None
+        """The text of the response from the Tomcat server, without the first line
+        (which contains the status code and message).
+        """
 
     @property
     def ok(self):
@@ -159,53 +182,6 @@ class TomcatManagerResponse:
         self.response.raise_for_status()
         if self.status_code != tm.StatusCode.OK:
             raise TomcatError(self.status_message)
-
-    @property
-    def status_code(self):
-        """
-        Status of the Tomcat Manager command from the first line of text.
-
-        The preferred way to check for success is to use the
-        :meth:`~.TomcatManagerResponse.ok` method, because it checks for http
-        errors as well as tomcat errors. However, if you want specific access
-        to the status of the tomcat command, use this method.
-
-        The status codes are enumerated in :class:`StatusCode`.
-
-            >>> import tomcatmanager as tm
-            >>> tomcat = getfixture('tomcat')
-            >>> r = tomcat.server_info()
-            >>> r.status_code == tm.StatusCode.OK
-            True
-        """
-        return self._status_code
-
-    @status_code.setter
-    def status_code(self, value: str):
-        self._status_code = value
-
-    @property
-    def status_message(self):
-        """
-        The message on the first line of the response from the Tomcat Server.
-        """
-        return self._status_message
-
-    @status_message.setter
-    def status_message(self, value: str):
-        self._status_message = value
-
-    @property
-    def result(self):
-        """
-        The text of the response from the Tomcat server, without the first
-        line (which contains the status code and message).
-        """
-        return self._result
-
-    @result.setter
-    def result(self, value: str):
-        self._result = value
 
     @property
     def response(self) -> requests.models.Response:
@@ -440,7 +416,7 @@ class TomcatMajorMinor(enum.Enum):
     It also includes a value UNSUPPORTED, for older versions of Tomcat that are unknown
     to this module.
 
-    .. versionadded:: 2.1.0
+    .. versionadded:: 3.0.0
 
     """
 
@@ -577,7 +553,7 @@ class ServerInfo(dict):
         show up in the dictionary, ie ``server_info["tomcat_major_minor"]`` does
         not exist.
 
-        .. versionadded:: 2.1.0
+        .. versionadded:: 3.0.0
         """
         return self._tomcat_major_minor
 

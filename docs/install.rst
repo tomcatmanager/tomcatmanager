@@ -14,9 +14,31 @@ The following Tomcat versions are supported:
 - 9.0.x
 - 10.0.x
 
+The operating system and Java Virtual Machine don't matter as long as Tomcat
+runs on it.
 
-Installation
-------------
+You can double check the list of versions supported by:
+
+.. code-block:: text
+
+   $ tomcat-manager -v
+   3.0.0 (works with Tomcat >= 7.0 and <= 10.0)
+
+or:
+
+.. code-block:: text
+
+   $ tomcat-manager
+   tomcat-manager> version
+   3.0.0 (works with Tomcat >= 7.0 and <= 10.0)
+
+These tools should work with newer versions of Tomcat than the ones officially
+supported. The Tomcat Manager web application that is part of Tomcat has been
+remarkably stable over many versions, with only a few additions.
+
+
+Install using pip
+-----------------
 
 Install using ``pip``::
 

@@ -34,8 +34,6 @@ import threading
 
 from tests.mock_server_nossl import MockRequestHandlerNoSSL
 
-import requests
-
 
 def requires_authorization(func):
     """Decorator for methods which require authorization."""
@@ -138,6 +136,7 @@ def start_mock_server_8_0(tms):
     tms.url = "http://localhost:{}/manager".format(port)
     tms.user = MockRequestHandler80.USER
     tms.password = MockRequestHandler80.PASSWORD
+    tms.cert = None
     tms.warfile = "/path/to/server.war"
     tms.contextfile = "path/to/context.xml"
     tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
@@ -147,4 +146,4 @@ def start_mock_server_8_0(tms):
     mock_server_thread.daemon = True
     mock_server_thread.start()
 
-    return tms
+    return (mock_server, tms)
