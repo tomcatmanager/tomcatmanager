@@ -294,11 +294,11 @@ We use the default configuration, including a line length of 88 characters.
 
 To format all the code in the project using ``black``, do::
 
-   $ invoke black
+   $ black *.py tests src docs
 
 You can check whether ``black`` would make any changes to the source code by::
 
-   $ invoke black-check
+   $ black --check *.py tests src docs
 
 Black integrates with many common editors and IDE's, that's the easiest way to ensure
 that your code is always formatted.
@@ -347,10 +347,10 @@ documentation automatically rebuilt as you save your changes.
 
 Use ``doc8`` to check documentation quality::
 
-   $ invoke doc8
+   $ doc8 docs README.rst CONTRIBUTING.rst CHANGELOG.rst
 
 This project is configured to prevent merges to the main or develop branch if
-doc8 returns any errors.
+``doc8`` returns any errors.
 
 When code is pushed to the **main** branch, which only happens when we cut a
 new release, the documentation is automatically built and deployed to
