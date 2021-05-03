@@ -29,7 +29,6 @@ This module contains the data objects created and used by tomcatmanager.
 """
 
 import enum
-import typing
 import re
 from typing import List
 
