@@ -116,7 +116,7 @@ You can run multiple tasks in a single invocation, for example::
 That one command will remove all superflous cache, testing, and build files, render
 the documentation, and build a source distribution and a wheel distribution.
 
-To make it easy to check everything before you commit, you can just type:
+To make it easy to check everything before you commit, you can just type::
 
    $ invoke check
    ...
@@ -126,7 +126,7 @@ To make it easy to check everything before you commit, you can just type:
 and it will test, lint, and format all the code and all the documentation. If this
 doesn't complete everything successfully then you still need to fix some stuff before
 you commit or submit a pull request. In this context, complete everything successfully
-means all tests pass, lint returns a perfect score, doc8 returns a perfect score, etc.
+means: all tests pass, lint returns a perfect score, doc8 finds no errors, etc.
 
 
 Testing
@@ -277,11 +277,10 @@ reason you need to deploy at a different path.
 Code Quality
 ------------
 
-Use ``pylint`` to check code quality. There is a pylint config file for the tests and
-for the main module::
+Use ``pylint`` to check code quality. The default pylint config file ``pylintrc``
+can be used for both the tests and package::
 
-   $ pylint --rcfile=tests/pylintrc tests
-   $ pylint --rcfile=tomcatmanager/pylintrc src
+   $ pylint src tests
 
 You are welcome to use the pylint comment directives to disable certain messages in
 the code, but pull requests containing these directives will be carefully scrutinized.
@@ -353,11 +352,11 @@ Use ``doc8`` to check documentation quality::
 This project is configured to prevent merges to the main or develop branch if
 doc8 returns any errors.
 
-When code is pushed to the main branch, which only happens when we cut a new release,
-the documentation is automatically built and deployed to
+When code is pushed to the **main** branch, which only happens when we cut a
+new release, the documentation is automatically built and deployed to
 `https://tomcatmanager.readthedocs.io/en/stable/
 <https://tomcatmanager.readthedocs.io/en/stable/>`_. When code is pushed to the
-develop branch, the documentation is automatically built and deployed to
+**develop** branch, the documentation is automatically built and deployed to
 `https://tomcatmanager.readthedocs.io/en/develop/
 <https://tomcatmanager.readthedocs.io/en/develop/>`_.
 
@@ -381,12 +380,12 @@ following:
 5. Push the **develop** branch to github.
 
 6. Create a pull request on github to merge the **develop** branch into
-   **master**. Wait for the checks to pass.
+   **main**. Wait for the checks to pass.
 
-7. Merge the **develop** branch into the **master** branch and close the pull
+7. Merge the **develop** branch into the **main** branch and close the pull
    request.
 
-8. Tag the **master** branch with the new version number, and push the tag.
+8. Tag the **main** branch with the new version number, and push the tag.
 
 9. Create a new release on Github.
 
@@ -402,7 +401,7 @@ following:
     Make sure they look good. Add a "Version" in readthedocs which points to the tag
     you just created. Prune old versions as necessary.
 
-13. Switch back to the **develop** branch. Merge changes in from **master**.
+13. Switch back to the **develop** branch. Merge changes in from **main**.
 
 14. Add an **Unreleased** section to the top of ``CHANGELOG.rst``. Push the
     change to github.

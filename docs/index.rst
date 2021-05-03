@@ -49,6 +49,31 @@ And for the ultimate in flexibility, you can use the python package directly:
    >>> r.status_message
    'No context exists named /someapp'
 
+The following capabilites are supported from :doc:`interactive`, the :doc:`commandline`,
+and from :doc:`python <api/index>`:
+
+   - **deploy** - deploy a war file containing a tomcat application in the tomcat server
+   - **redeploy** - remove the application currently installed at a given path and
+     install a new war file there
+   - **undeploy** - remove an application from the tomcat server
+   - **start** - start a tomcat application that has been deployed but isn't running
+   - **stop** - stop a tomcat application and leave it deployed on the server
+   - **reload** - stop and start a tomcat application
+   - **sessions** - show active sessions for a particular tomcat application
+   - **expire** - expire idle sessions
+   - **list** - show all installed applications
+   - **serverinfo** - show information about the server, including tomcat version, OS
+     version and architecture, and jvm version
+   - **status** - show server status information in xml format
+   - **vminfo** - show diagnostic information about the jvm
+   - **threaddump** - show a jvm thread dump
+   - **resources** - show the global jdni resources configured in tomcat
+   - **findleakers** - show tomcat applications that leak memory
+   - **sslconnectorciphers** - show tls ciphers configured for each connector
+   - **sslconnectorcerts** - show tls certificate chain for each virtual host
+   - **sslconnectortrustedcerts** - show trusted certificates for each virtual host
+   - **sslreload** - reload tls certificate and key files
+
 
 Table of Contents
 -----------------

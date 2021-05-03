@@ -250,15 +250,21 @@ class TomcatManager:
 
         Usage:
 
-        >>> tomcat = getfixture("tomcat")
-        >>> print(tomcat.implements(tomcat.deploy_localwar))
-        True
+        .. code-block:: python
+
+           import tomcatmanager as tm
+           tomcat = tm.TomcatManager()
+           tomcat.connect("http://localhost:8080", "ace", "newenglandclamchowder")
+           print(tomcat.implements(tomcat.deploy_localwar))
 
         or:
 
-        >>> tomcat = getfixture("tomcat")
-        >>> print(tomcat.implements("deploy_localwar"))
-        True
+        .. code-block:: python
+
+           import tomcatmanager as tm
+           tomcat = tm.TomcatManager()
+           tomcat.connect("http://localhost:8080", "ace", "newenglandclamchowder")
+           print(tomcat.implements(tomcat.deploy_localwar))
 
         .. versionadded:: 3.0.0
         """
@@ -453,6 +459,7 @@ class TomcatManager:
              attribute containing a :class:`.ServerInfo` object describing the
              server we are connected to
            - Sets :attr:`tomcat_major_minor` attribute
+           - ``timeout`` is now a keyword only argument
         """
         if timeout:
             self.timeout = timeout
@@ -815,91 +822,6 @@ class TomcatManager:
 
     ###
     #
-    # ssl related commands
-    #
-    ###
-    @_implemented_by(
-        [
-            TomcatMajorMinor.V8_0,
-            TomcatMajorMinor.V8_5,
-            TomcatMajorMinor.V9_0,
-            TomcatMajorMinor.V10_0,
-            TomcatMajorMinor.VNEXT,
-        ]
-    )
-    def ssl_connector_ciphers(self) -> TomcatManagerResponse:
-        """
-        Get SSL/TLS ciphers configured for each connector.
-
-        :return: :class:`.TomcatManagerResponse` object with an additional
-                 ``ssl_connector_ciphers`` attribute
-        """
-        r = self._get("sslConnectorCiphers")
-        r.ssl_connector_ciphers = r.result
-        return r
-
-    @_implemented_by(
-        [
-            TomcatMajorMinor.V8_5,
-            TomcatMajorMinor.V9_0,
-            TomcatMajorMinor.V10_0,
-            TomcatMajorMinor.VNEXT,
-        ]
-    )
-    def ssl_connector_certs(self) -> TomcatManagerResponse:
-        """
-        Get the SSL certificate chain currently configured for each virtual host
-
-        :return: :class:`.TomcatManagerResponse` object with an additional
-                 ``ssl_connector_certs`` attribute
-        """
-        r = self._get("sslConnectorCerts")
-        r.ssl_connector_certs = r.result
-        return r
-
-    @_implemented_by(
-        [
-            TomcatMajorMinor.V8_5,
-            TomcatMajorMinor.V9_0,
-            TomcatMajorMinor.V10_0,
-            TomcatMajorMinor.VNEXT,
-        ]
-    )
-    def ssl_connector_trusted_certs(self) -> TomcatManagerResponse:
-        """
-        Get the trusted certificates currently configured for each virtual host
-
-        :return: :class:`.TomcatManagerResponse` object with an additional
-                 ``ssl_connector_trusted_certs`` attribute
-        """
-        r = self._get("sslConnectorTrustedCerts")
-        r.ssl_connector_trusted_certs = r.result
-        return r
-
-    @_implemented_by(
-        [
-            TomcatMajorMinor.V8_5,
-            TomcatMajorMinor.V9_0,
-            TomcatMajorMinor.V10_0,
-            TomcatMajorMinor.VNEXT,
-        ]
-    )
-    def ssl_reload(self, host: str = None) -> TomcatManagerResponse:
-        """
-        Reload TLS certificates and keys (but not server.xml) for a specified or all virtual hosts
-
-        :param host: (optional) Host name to reload, if omitted, reload all virtual hosts
-
-        :return: :class:`.TomcatManagerResponse` object
-        """
-        if host:
-            r = self._get("sslReload", {"tlsHostName": str(host)})
-        else:
-            r = self._get("sslReload")
-        return r
-
-    ###
-    #
     # These commands return info about the server
     #
     ###
@@ -1073,6 +995,91 @@ class TomcatManager:
         """
         r = self._get("findleaks", {"statusLine": "true"})
         r.leakers = self._parse_leakers(r.result)
+        return r
+
+    ###
+    #
+    # ssl related commands
+    #
+    ###
+    @_implemented_by(
+        [
+            TomcatMajorMinor.V8_0,
+            TomcatMajorMinor.V8_5,
+            TomcatMajorMinor.V9_0,
+            TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.VNEXT,
+        ]
+    )
+    def ssl_connector_ciphers(self) -> TomcatManagerResponse:
+        """
+        Get SSL/TLS ciphers configured for each connector.
+
+        :return: :class:`.TomcatManagerResponse` object with an additional
+                 ``ssl_connector_ciphers`` attribute
+        """
+        r = self._get("sslConnectorCiphers")
+        r.ssl_connector_ciphers = r.result
+        return r
+
+    @_implemented_by(
+        [
+            TomcatMajorMinor.V8_5,
+            TomcatMajorMinor.V9_0,
+            TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.VNEXT,
+        ]
+    )
+    def ssl_connector_certs(self) -> TomcatManagerResponse:
+        """
+        Get the SSL certificate chain currently configured for each virtual host
+
+        :return: :class:`.TomcatManagerResponse` object with an additional
+                 ``ssl_connector_certs`` attribute
+        """
+        r = self._get("sslConnectorCerts")
+        r.ssl_connector_certs = r.result
+        return r
+
+    @_implemented_by(
+        [
+            TomcatMajorMinor.V8_5,
+            TomcatMajorMinor.V9_0,
+            TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.VNEXT,
+        ]
+    )
+    def ssl_connector_trusted_certs(self) -> TomcatManagerResponse:
+        """
+        Get the trusted certificates currently configured for each virtual host
+
+        :return: :class:`.TomcatManagerResponse` object with an additional
+                 ``ssl_connector_trusted_certs`` attribute
+        """
+        r = self._get("sslConnectorTrustedCerts")
+        r.ssl_connector_trusted_certs = r.result
+        return r
+
+    @_implemented_by(
+        [
+            TomcatMajorMinor.V8_5,
+            TomcatMajorMinor.V9_0,
+            TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.VNEXT,
+        ]
+    )
+    def ssl_reload(self, host: str = None) -> TomcatManagerResponse:
+        """
+        Reload TLS certificates and keys (but not server.xml) for a specified or all virtual hosts
+
+        :param host: (optional) Host name to reload, if omitted, reload all virtual hosts
+
+        :return: :class:`.TomcatManagerResponse` object
+        """
+        if host:
+            r = self._get("sslReload", {"tlsHostName": str(host)})
+        else:
+            r = self._get("sslReload")
         return r
 
     ###
