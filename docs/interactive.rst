@@ -22,8 +22,8 @@ Use the ``exit`` or ``quit`` command to exit the interpreter and return to your
 operating system shell.
 
 
-Built In Help
--------------
+Available Commands
+------------------
 
 The interactive shell has a built-in list of all available commands:
 

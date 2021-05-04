@@ -4,14 +4,21 @@ Command Line
 You've already read about :ref:`interactive:Interactive Use` right? If not,
 this part will feel kind of hollow.
 
-Any command described in :ref:`interactive:Interactive Use` can be run from the
+Any command described in :ref:`interactive:Available Commands` can be run from the
 command line. The first argument of ``tomcat-manager`` is the url of the server. The
 rest of the arguments are any commands and their arguments from
-:ref:`interactive:Interactive Use`.
+:ref:`interactive:Interactive Use`. Here's a few examples:
 
 .. code-block::
 
-  $ tomcat-manager http://localhost:8080/manager deploy server /tmp/myfancyapp.war /fancy
+   $ tomcat-manager --user ace --password newenglandclamchowder \
+   http://localhost:8080/manager deploy server /tmp/myfancyapp.war /fancy
+
+.. code-block::
+
+   $ tomcat-manager --user ace --password newenglandclamchowder \
+   http://localhost:8080/manager list --state running --by path
+
 
 
 Using Shell Scripts
@@ -102,8 +109,7 @@ This command line option is the same as the ``timeout`` :ref:`Setting
 Authentication
 --------------
 
-Authenticate with the user you defined when you :doc:`Configured Tomcat
-<configuretomcat>` on the command line:
+Use the user you created when you :doc:`Configured Tomcat <configuretomcat>` on the command line:
 
 .. code-block::
 
