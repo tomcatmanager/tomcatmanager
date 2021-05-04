@@ -46,7 +46,7 @@ from .models import (
     TomcatNotConnected,
 )
 
-
+# pylint: disable=too-many-public-methods
 class TomcatManager:
     """
     A class for interacting with the Tomcat Manager web application.
@@ -56,28 +56,27 @@ class TomcatManager:
     exception and error handling. For this example, we'll use the
     `server_info()` method.
 
-    >>> import tomcatmanager as tm
-    >>> url = "http://localhost:808099/manager"
-    >>> user = "ace"
-    >>> password = "newenglandclamchowder"
-    >>> tomcat = tm.TomcatManager()
-    >>> try:
-    ...     r = tomcat.connect(url, user, password)
-    ...     if r.ok:
-    ...         r = tomcat.server_info()
-    ...         if r.ok:
-    ...             print(r.server_info)
-    ...         else:
-    ...             print("Error: {}".format(r.status_message))
-    ...     else:
-    ...         print("not connected")
-    ... except Exception as err:
-    ...     # handle exception
-    ...     print("not connected")
-    not connected
-    """
+    .. code-block:: python
 
-    # pylint: disable=too-many-public-methods
+       import tomcatmanager as tm
+       url = "http://localhost:808099/manager"
+       user = "ace"
+       password = "newenglandclamchowder"
+       tomcat = tm.TomcatManager()
+       try:
+           r = tomcat.connect(url, user, password)
+           if r.ok:
+               r = tomcat.server_info()
+               if r.ok:
+                   print(r.server_info)
+               else:
+                   print("Error: {}".format(r.status_message))
+           else:
+               print("not connected")
+       except Exception as err:
+           # handle exception
+           print("not connected")
+    """
 
     class _implemented_by:
         """Decorator to show which versions of tomcat implement this method.

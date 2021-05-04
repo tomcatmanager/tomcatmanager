@@ -232,18 +232,14 @@ You will also need:
 - a user with the ``manager-script`` role
 - the password for the aforementioned user
 
-With all these prerequisites ready, you can feed them to ``pytest`` as shown:
-
-.. code-block:: shell
+With all these prerequisites ready, you can feed them to ``pytest`` as shown::
 
    $ pytest --url=http://localhost:8080/manager --user=ace \
    --password=newenglandclamchowder --warfile=/tmp/sample.war \
    --contextfile=/tmp/context.xml
 
 If your tomcat server uses SSL/TLS client certificates for authentication, you
-can specify those certificates instead of a user and password:
-
-.. code-block:: shell
+can specify those certificates instead of a user and password::
 
    $ pytest --url=https://localhost:8088/manager --cert=/path/to/cert.file \
    --key=/path/to/key.file --warfile=/tmp/sample.war --contextfile=/tmp/context.xml

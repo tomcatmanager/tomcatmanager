@@ -19,14 +19,14 @@ runs on it.
 
 You can double check the list of versions supported by:
 
-.. code-block:: text
+.. code-block::
 
    $ tomcat-manager -v
    3.0.0 (works with Tomcat >= 7.0 and <= 10.0)
 
 or:
 
-.. code-block:: text
+.. code-block::
 
    $ tomcat-manager
    tomcat-manager> version
@@ -40,9 +40,11 @@ remarkably stable over many versions, with only a few additions.
 Install using pip
 -----------------
 
-Install using ``pip``::
+Install using ``pip``:
 
-  pip install tomcatmanager
+.. code-block::
+
+  $ pip install tomcatmanager
 
 Works on Windows, macOS, and Linux.
 
@@ -51,9 +53,11 @@ Now what?
 First you will need to :doc:`configuretomcat`.
 
 If you are in a hurry to :doc:`get started with the command line tool
-<interactive>`, type::
+<interactive>`, type:
 
-   tomcat-manager -h
+.. code-block::
+
+   $ tomcat-manager -h
 
 Or, you can start :doc:`writing your own python code which imports the
 package <package>`.

@@ -27,7 +27,7 @@ Built In Help
 
 The interactive shell has a built-in list of all available commands:
 
-.. code-block:: text
+.. code-block::
 
    tomcat-manager> help
    tomcat-manager is a command line tool for managing a Tomcat server
@@ -91,7 +91,7 @@ The interactive shell has a built-in list of all available commands:
 
 As well as help for each command:
 
-.. code-block:: text
+.. code-block::
 
    tomcat-manager> help stop
    usage: stop [-h] [-v VERSION] path
@@ -114,7 +114,6 @@ show how to connect to a Tomcat server and deploy a war file, since there are
 quite a few options for both of those commands. For everything else, the
 built-in help should be sufficient.
 
-.. _interactive_connect:
 
 Connect To A Tomcat Server
 --------------------------
@@ -175,7 +174,7 @@ For all of these examples, lets assume I have a Tomcat server running far away
 in a data center somewhere, accessible at ``https://www.example.com``. I'm
 running the command line ``tomcat-manager`` program on my laptop. We'll also
 assume that we have already connected to the Tomcat server, using one of the
-methods just described in :ref:`interactive_connect`.
+methods just described in :ref:`interactive:Connect To A Tomcat Server`.
 
 For our first example, let's assume we have a WAR file already on our server,
 in ``/tmp/fancyapp.war``. To deploy this WAR file to
@@ -231,7 +230,7 @@ string uniquely identify the application.
 Let's revisit our ``shiny`` app. This time we will deploy with a version
 string:
 
-.. code-block:: text
+.. code-block::
 
   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.5.war /shiny -v v2.0.5
   tomcat-manager>list
@@ -246,7 +245,7 @@ Parallel deployment allows me to deploy two versions of that app at the same
 path, and Tomcat will migrate users to the new version over time as their
 sessions expire in version 2.0.5.
 
-.. code-block:: text
+.. code-block::
 
   tomcat-manager>deploy local ~/src/shiny/dist/shiny2.0.6.war /shiny -v v2.0.6
   tomcat-manager>list
@@ -260,7 +259,7 @@ sessions expire in version 2.0.5.
 Once all the sessions have been migrated to version 2.0.6, I can undeploy
 version 2.0.5:
 
-.. code-block:: text
+.. code-block::
 
   tomcat-manager>undeploy /shiny --version v2.0.5
   tomcat-manager>list
@@ -321,15 +320,13 @@ commands to a file and load commands from a file. Use ``help history`` to get
 the details.
 
 
-.. _settings:
-
 Settings
 --------
 
 The ``show`` or ``settings`` (they do exactly the same thing) commands display
 a list of settings which control the behavior of ``tomcat-manager``:
 
-.. code-block:: text
+.. code-block::
 
   tomcat-manager> show
   autorun_on_edit=False       # Automatically run files after editing
@@ -347,7 +344,7 @@ a list of settings which control the behavior of ``tomcat-manager``:
 
 You can change any of these settings using the ``set`` command:
 
-.. code-block:: text
+.. code-block::
 
   tomcat-manager> set prompt='tm> '
   tm>
@@ -355,8 +352,6 @@ You can change any of these settings using the ``set`` command:
 Quotes around values are not required unless they contain spaces or other
 quotes.
 
-
-.. _configuration_file:
 
 Configuration File
 ------------------
@@ -494,20 +489,20 @@ Shell-style Output Redirection
 
 Save the output of the ``list`` command to a file:
 
-.. code-block:: text
+.. code-block::
 
   tomcat-manager> list > /tmp/tomcat-apps.txt
 
 Search the output of the ``vminfo`` command:
 
-.. code-block:: text
+.. code-block::
 
   tomcat-manager> vminfo | grep user.timezone
     user.timezone: US/Mountain
 
 Or the particularly useful:
 
-.. code-block:: text
+.. code-block::
 
   tomcat-manager> threaddump | less
 
@@ -517,13 +512,13 @@ Clipboard Integration
 
 You can copy output to the clipboard by redirecting but not giving a filename:
 
-.. code-block:: text
+.. code-block::
 
   tomcat-manager> list >
 
 You can also append output to the clipboard using a similar method:
 
-.. code-block:: text
+.. code-block::
 
   tomcat-manager> serverinfo >>
 

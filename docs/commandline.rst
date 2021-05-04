@@ -9,7 +9,7 @@ command line. The first argument of ``tomcat-manager`` is the url of the server.
 rest of the arguments are any commands and their arguments from
 :ref:`interactive:Interactive Use`.
 
-.. code-block:: bash
+.. code-block::
 
   $ tomcat-manager http://localhost:8080/manager deploy server /tmp/myfancyapp.war /fancy
 
@@ -63,7 +63,7 @@ output, you might choose to use ``tomcat-manager`` from within a shell script:
 
 Save this script as ``~/bin/oldshiners.sh``, and then run it:
 
-.. code-block:: bash
+.. code-block::
 
   $ ~/bin/oldshiners.sh
   6
@@ -91,12 +91,12 @@ Timeout
 By default, network operations timeout in 10 seconds. You can change this
 value:
 
-.. code-block:: bash
+.. code-block::
 
   $ tomcat-manager --timeout=2.5 http://localhost:8080/manager list
 
 This command line option is the same as the ``timeout`` :ref:`Setting
-<settings>`.
+<interactive:Settings>`.
 
 
 Authentication
@@ -105,7 +105,7 @@ Authentication
 Authenticate with the user you defined when you :doc:`Configured Tomcat
 <configuretomcat>` on the command line:
 
-.. code-block:: bash
+.. code-block::
 
   $ tomcat-manager --user=ace http://localhost:8080/manager list
   Password:
@@ -113,7 +113,7 @@ Authenticate with the user you defined when you :doc:`Configured Tomcat
 and you will be prompted for the password. You can also specify the password on
 the command line, but this is not secure:
 
-.. code-block:: bash
+.. code-block::
 
   $ tomcat-manager --user=ace --password=newenglandclamchowder http://localhost:8080/manager list
   Password:
@@ -207,11 +207,11 @@ them into a single stream:
 
   $ tomcat-manager localhost list > myapps.txt 2>&1
 
-In addition to redirecting with the shell, there are several command line
-switches that change what's included in the output. These options correspond to
-:ref:`settings` you can change in :doc:`Interactive Use <interactive>`. All of
-the settings default to ``False``, but be aware that you may have altered them
-your :ref:`configuration_file`, which is read on startup.
+In addition to redirecting with the shell, there are several command line switches
+that change what's included in the output. These options correspond to :ref:`Setting
+<interactive:Settings>` you can change in :doc:`Interactive Use <interactive>`. All of
+the settings default to ``False``, but be aware that you may have altered them your
+:ref:`Interactive:Configuration File`, which is read on startup.
 
 ==========================  ====================  =====================================
 Option                      Setting                 Description
