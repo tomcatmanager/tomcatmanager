@@ -78,7 +78,7 @@ setup(
             "sphinx_rtd_theme",
             "autodocsumm",
             "doc8",
-        ]
+        ],
     },
     # define the scripts that should be created on installation
     entry_points={
