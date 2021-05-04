@@ -32,11 +32,11 @@ Added
 - Control server SSL/TLS certificate validation using the new ``verify`` parameter
   to `TomcatManager.connect()`_.
   Also available from the command-line and interactive mode using the ``--cacert``
-  and ``--noverify`` options.
+  and ``--noverify`` options of the ``connect`` command.
 - Client side SSL/TLS certificate authentication added to
   `TomcatManager.connect()`_
   via the ``cert`` parameter. Also available from the command line and interactive
-  mode using the ``--cert`` and ``--key`` options.
+  mode using the ``--cert`` and ``--key`` options of the ``connect`` command.
 - Documentation explaining all
   `authentication <https://tomcatmanager.readthedocs.io/en/stable/authentication.html>`_
   approaches with configuration and usage examples.
