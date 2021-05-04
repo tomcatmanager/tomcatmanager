@@ -52,6 +52,12 @@ tomcatmanager 3.x:
   :exc:`.TomcatNotConnected` will be raised. In tomcatmanager 2.x, you will either
   connect successfully if you had set :attr:`.TomcatManager.url` properly, or you
   would get some sort of HTTP error.
+- since we were already making a breaking change to :meth:`.TomcatManager.connect()`,
+  I decided to make another: the ``timeout`` parameter used to be positional, now it
+  is keyword only. If you were passing it as positional, your calls to
+  :meth:`.TomcatManager.connect()` will now break, and you'll have to fix them. If you
+  were specifying the timeout by setting the :attr:`.TomcatManager.timeout` attribute,
+  that continues to work as before.
 
 If you are assigning values to :attr:`.TomcatManager.user` or
 :attr:`.TomcatManager.url`, I've got bad news, your code will break badly. The good
