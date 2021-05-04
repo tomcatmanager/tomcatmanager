@@ -50,7 +50,7 @@ setup(
         "importlib_metadata>=1.6.0;python_version<'3.8'",
     ],
     setup_requires=["setuptools_scm"],
-    # dependencies for development and testing
+    # dependencies for development and documentation
     # $ pip install -e .[dev]
     extras_require={
         "dev": [
@@ -72,6 +72,13 @@ setup(
             "autodocsumm",
             "doc8",
         ],
+        "docs": [
+            "sphinx",
+            "sphinx-autobuild",
+            "sphinx_rtd_theme",
+            "autodocsumm",
+            "doc8",
+        ]
     },
     # define the scripts that should be created on installation
     entry_points={
