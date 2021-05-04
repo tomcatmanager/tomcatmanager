@@ -94,7 +94,7 @@ Installation
 
 You'll need Python >= 3.6. Install using pip:
 
-.. code-block:: bash
+.. code-block::
 
    $ pip install tomcatmanager
 
@@ -159,6 +159,6 @@ API reference.
 
 Documentation is also built from the `develop
 <https://github.com/tomcatmanager/tomcatmanager/tree/develop>`_ branch, and
-published at `<https://tomcatmanager.readthedocs.io/en/develop/>`_. The develop
+published at `<https://tomcatmanager.readthedocs.io/en/latest/>`_. The develop
 branch may not yet be released to PyPi, but you can see the documentation for what's
 coming up in the next release.
