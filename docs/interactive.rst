@@ -22,8 +22,8 @@ Use the ``exit`` or ``quit`` command to exit the interpreter and return to your
 operating system shell.
 
 
-Built In Help
--------------
+Available Commands
+------------------
 
 The interactive shell has a built-in list of all available commands:
 
@@ -39,28 +39,32 @@ The interactive shell has a built-in list of all available commands:
 
    Managing applications
    ============================================================
-   list            Show all installed applications.
-   deploy local    Deploy a local war file to the tomcat server.
-   deploy server   Deploy a war file to the tomcat server.
-   deploy context  Deploy a context xml file to the tomcat server.
-   redeploy        Undeploy an existing app and deploy a new one in its place.
-   undeploy        Remove an application at a given path from the tomcat server.
-   start           Start a deployed tomcat application that isn't running.
-   stop            Stop a tomcat application and leave it deployed on the server.
-   restart         Start and stop a tomcat application. Synonym for reload.
-     reload        Synonym for 'restart'.
-   sessions        Show active sessions for a tomcat application.
-   expire          Expire idle sessions.
+   list      Show all installed applications.
+   deploy    Deploy an application to the tomcat server.
+   redeploy  Redeploy an application to the tomcat server.
+   undeploy  Remove an application from the tomcat server.
+   start     Start a deployed tomcat application that isn't running.
+   stop      Stop a tomcat application and leave it deployed on the server.
+   restart   Start and stop a tomcat application.
+     reload  Synonym for 'restart'.
+   sessions  Show active sessions for a tomcat application.
+   expire    Expire idle sessions.
 
    Server information
    ============================================================
    findleakers          Show tomcat applications that leak memory.
    resources            Show global JNDI resources configured in Tomcat.
    serverinfo           Show information about the tomcat server.
-   sslconnectorciphers  Show SSL/TLS ciphers configured for each connector.
    status               Show server status information in xml format.
    threaddump           Show a jvm thread dump.
    vminfo               Show diagnostic information about the jvm.
+
+   TLS configuration
+   ============================================================
+   sslconnectorciphers       Show SSL/TLS ciphers configured for each connector.
+   sslconnectorcerts         Show SSL/TLS certificate chain for each connector.
+   sslconnectortrustedcerts  Show SSL/TLS trusted certificates for each connector.
+   sslreload                 Reload SSL/TLS certificates and keys.
 
    Settings, configuration, and tools
    ============================================================
@@ -82,7 +86,7 @@ The interactive shell has a built-in list of all available commands:
      quit   Synonym for 'exit'.
    help     Show available commands, or help on a specific command.
    version  Show the version number of this program.
-   license  Show the MIT license.
+   license  Show the software license for this program.
 
 
 As well as help for each command:
@@ -110,7 +114,6 @@ show how to connect to a Tomcat server and deploy a war file, since there are
 quite a few options for both of those commands. For everything else, the
 built-in help should be sufficient.
 
-.. _interactive_connect:
 
 Connect To A Tomcat Server
 --------------------------
@@ -146,6 +149,9 @@ Or:
    tomcat-manager> connect http://localhost:8080/manager ace
    Password: {type your password here}
 
+See :doc:`authentication` for complete details on all supported authentication
+mechanisms.
+
 
 Deploy applications
 -------------------
@@ -168,7 +174,7 @@ For all of these examples, lets assume I have a Tomcat server running far away
 in a data center somewhere, accessible at ``https://www.example.com``. I'm
 running the command line ``tomcat-manager`` program on my laptop. We'll also
 assume that we have already connected to the Tomcat server, using one of the
-methods just described in :ref:`interactive_connect`.
+methods just described in :ref:`interactive:Connect To A Tomcat Server`.
 
 For our first example, let's assume we have a WAR file already on our server,
 in ``/tmp/fancyapp.war``. To deploy this WAR file to
@@ -314,8 +320,6 @@ commands to a file and load commands from a file. Use ``help history`` to get
 the details.
 
 
-.. _settings:
-
 Settings
 --------
 
@@ -348,8 +352,6 @@ You can change any of these settings using the ``set`` command:
 Quotes around values are not required unless they contain spaces or other
 quotes.
 
-
-.. _configuration_file:
 
 Configuration File
 ------------------
@@ -388,18 +390,18 @@ config file contains:
   editor=/usr/local/bin/zile
 
 
-.. _server_shortcuts:
-
 Server Shortcuts
 ----------------
 
-You can also use the configuration file to set up shortcuts to various Tomcat
-servers. Define a section named the shortcut, and then include a property for
-``url``, ``user``, and ``password``. Here's a simple example:
+You can use the configuration file to define shortcuts to various Tomcat servers.
+Using server shortcuts you can keep the authentication credentials off of the command
+line and out of your scripts, which is more secure. Define a section named the
+shortcut, and then include a property for ``url``, ``user``, and ``password``. Here's
+a simple example:
 
 .. code-block:: ini
 
-  [localhost]
+  [tcl]
   url=http://localhost:8080/manager
   user=ace
   password=newenglandclamchowder
@@ -409,10 +411,77 @@ name of the shortcut:
 
 .. code-block::
 
-  tomcat-manager> connect localhost
+  tomcat-manager> connect tcl
+
+You can also use the name of the shortcut from the command line:
+
+.. code-block::
+
+  $ tomcat-manager tcl
 
 If you define a ``user``, but omit ``password``, you will be prompted for it
 when you use the shortcut in the ``connect`` command.
+
+Here's all the properties supported in a server shortcut:
+
+url
+  Url of the server.
+
+user
+  User to use for HTTP Basic authentication.
+
+password
+  Password to use for HTTP Basic authentication. If user is provided
+  and password is not, you will be prompted for a password.
+
+cert
+  File containing certificate and key, or just a certificate, for SSL/TLS
+  client authentication. See TODO for more detail.
+
+key
+  File containing private key for SSL/TLS client authentication. See TODO
+  for more detail.
+
+cacert
+  File or directory containing a certificate authority bundle used to
+  validate the SSL/TLS certificate presented by the server if the url
+  uses the https protocol.
+
+verify
+  Defaults to ``True`` to verify server SSL/TLS certificates. If ``False``,
+  no verification is performed.
+
+When using a server shortcut, you can override properties from the shortcut on the
+command line. For example, if we had a server shortcut like this:
+
+.. code-block:: ini
+
+  [prod]
+  url=https://www.example.com/manager
+  user=ace
+  password=newenglandclamchowder
+  cacert=/etc/mycacert
+
+You could use that server shortcut but temporarily disable verification of server
+SSL/TLS certificates:
+
+.. code-block::
+
+  tomcat-manager> connect prod --noverify
+
+Or you could override the user and password:
+
+.. code-block::
+
+  tomcat-manager> connect prod root Z1ON0101
+
+
+Some of these properties make no sense when combined together. For example, if your
+server authenticates with a certificate and key, it almost certainly doesn't use a
+user and password. If you don't want to verify server SSL/TLS certificates, then it
+makes no sense to provide a certificate authority bundle. See
+:doc:`authentication` for complete details of all supported authentication
+mechanisms.
 
 
 Shell-style Output Redirection

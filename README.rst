@@ -30,7 +30,8 @@ tomcatmanager
       :alt: develop branch documentation status
 
 
-If you use Apache Tomcat for any sort of development work you’ve probably deployed lots of applications to it. There are a several ways to get your war files deployed:
+If you use Apache Tomcat for any sort of development work you’ve probably deployed
+lots of applications to it. There are a several ways to get your war files deployed:
 
 - use the `Tomcat Manager <https://tomcat.apache.org/tomcat-9.0-doc/manager-howto.html>`_
   application in your browser
@@ -38,12 +39,11 @@ If you use Apache Tomcat for any sort of development work you’ve probably depl
   Tomcat
 - use `Cargo <https://codehaus-cargo.github.io/>`_ and its plugins for ant and maven
 
-Here's another way: a command line tool and python library for managing a
-Tomcat server.
+Here's another way: a command line tool and python library for managing a Tomcat server.
 
 
-What Can It Do?
----------------
+How Do I Use It?
+----------------
 
 This package installs a command line utility called ``tomcat-manager``. It's
 easily scriptable using your favorite shell:
@@ -78,15 +78,60 @@ And for the ultimate in flexibility, you can use the python package directly:
 
    >>> import tomcatmanager as tm
    >>> tomcat = tm.TomcatManager()
-   >>> r = tomcat.connect(url='http://localhost:8080/manager',
-   ... user='ace', password='newenglandclamchowder')
+   >>> r = tomcat.connect(url="http://localhost:8080/manager",
+   ... user="ace", password="newenglandclamchowder")
    >>> tomcat.is_connected
    True
-   >>> r = tomcat.stop('/someapp')
+   >>> r = tomcat.stop("/someapp")
    >>> r.ok
    False
    >>> r.status_message
    'No context exists named /someapp'
+
+
+What Can It Do?
+---------------
+
+Tomcatmanager has the following capabilities, all available from the command line,
+interactive mode, and as a python library:
+
+- **deploy** - deploy a war file containing a tomcat application in the tomcat server
+- **redeploy** - remove the application currently installed at a given path and
+  install a new war file there
+- **undeploy** - remove an application from the tomcat server
+- **start** - start a tomcat application that has been deployed but isn't running
+- **stop** - stop a tomcat application and leave it deployed on the server
+- **reload** - stop and start a tomcat application
+- **sessions** - show active sessions for a particular tomcat application
+- **expire** - expire idle sessions
+- **list** - show all installed applications
+- **serverinfo** - show information about the server, including tomcat version, OS
+  version and architecture, and jvm version
+- **status** - show server status information in xml format
+- **vminfo** - show diagnostic information about the jvm
+- **threaddump** - show a jvm thread dump
+- **resources** - show the global jdni resources configured in tomcat
+- **findleakers** - show tomcat applications that leak memory
+- **sslconnectorciphers** - show tls ciphers configured for each connector
+- **sslconnectorcerts** - show tls certificate chain for each virtual host
+- **sslconnectortrustedcerts** - show trusted certificates for each virtual host
+- **sslreload** - reload tls certificate and key files
+
+
+Documentation
+-------------
+
+Complete documentation for the last released version is available at
+`<http://tomcatmanager.readthedocs.io/en/stable/>`_. It includes material
+showing how to use ``tomcat-manager`` from the command line or using
+interactive mode. There is also a walkthrough of how to use the API and an
+API reference.
+
+Documentation is also built from the `develop
+<https://github.com/tomcatmanager/tomcatmanager/tree/develop>`_ branch, and
+published at `<https://tomcatmanager.readthedocs.io/en/latest/>`_. The develop
+branch may not yet be released to PyPi, but you can see the documentation for what's
+coming up in the next release.
 
 
 Installation
@@ -94,7 +139,7 @@ Installation
 
 You'll need Python >= 3.6. Install using pip:
 
-.. code-block:: bash
+.. code-block::
 
    $ pip install tomcatmanager
 
@@ -120,41 +165,3 @@ configure authentication in ``tomcat-users.xml`` with access to the
      ...
    </tomcat-users>
 
-
-Features
---------
-
-The ``tomcat-manager`` command line tool supports the following commands:
-
-- **deploy** - deploy a war file containing a tomcat application in the tomcat server
-- **redeploy** - remove the application currently installed at a given path and install a new war file there
-- **undeploy** - remove an application from the tomcat server
-- **start** - start a tomcat application that has been deployed but isn't running
-- **stop** - stop a tomcat application and leave it deployed on the server
-- **reload** - stop and start a tomcat application
-- **sessions** - show active sessions for a particular tomcat application
-- **expire** - expire idle sessions
-- **list** - show all installed applications
-- **serverinfo** - show information about the server, including tomcat version, OS version and architecture, and jvm version
-- **status** - show server status information in xml format
-- **vminfo** - show diagnostic information about the jvm
-- **sslconnectorciphers** - show ssl/tls ciphers configured for each connector
-- **threaddump** - show a jvm thread dump
-- **resources** - show the global jdni resources configured in tomcat
-- **findleakers** - show tomcat applications that leak memory
-
-
-Documentation
--------------
-
-Complete documentation for the last released version is available at
-`<http://tomcatmanager.readthedocs.io/en/stable/>`_. It includes material
-showing how to use ``tomcat-manager`` from the command line or using
-interactive mode. There is also a walkthrough of how to use the API and an
-API reference.
-
-Documentation is also built from the `develop
-<https://github.com/tomcatmanager/tomcatmanager/tree/develop>`_ branch, and
-published at `<https://tomcatmanager.readthedocs.io/en/develop/>`_. The develop
-branch may not yet be released to PyPi, but you can see the documentation for what's
-coming up in the next release.

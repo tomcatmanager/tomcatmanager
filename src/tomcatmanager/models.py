@@ -29,7 +29,8 @@ This module contains the data objects created and used by tomcatmanager.
 """
 
 import enum
-import typing
+import re
+from typing import List
 
 import requests
 
@@ -42,14 +43,34 @@ class TomcatError(Exception):
     """
 
 
+class TomcatNotImplementedError(Exception):
+    """
+    Raised when a Tomcat Manager web application does not support a python
+    API call.
+
+    .. versionadded:: 3.0.0
+    """
+
+
+class TomcatNotConnected(Exception):
+    """
+    Raised when a method is called on :class:`.TomcatManager` without the
+    :meth:`~.TomcatManager.connect()` method being called first.
+
+    .. versionadded:: 3.0.0
+    """
+
+
 @enum.unique
 class StatusCode(enum.Enum):
     """An enumeration of the various Tomcat Manager web application status codes
 
     ``tomcatmanager`` uses the excellent `requests <https://github.com/psf/requests>`_
-    library, which uses a custom LookupDict class to store HTTP status codes in a
+    library, which uses a custom ``LookupDict`` class to store HTTP status codes in a
     dictionary. After much debate on whether we should do it the requests way, or
     a more pythonic way, I chose to use a native Enum class instead.
+
+    .. versionadded:: 2.0.0
     """
 
     OK = "OK"
@@ -83,14 +104,14 @@ class TomcatManagerResponse:
     the command completed succesfully before relying on the results::
 
         >>> import tomcatmanager as tm
-        >>> tomcat = getfixture('tomcat')
+        >>> tomcat = getfixture("tomcat")
         >>> try:
         ...     r = tomcat.server_info()
         ...     r.raise_for_status()
         ...     if r.ok:
         ...         print("Operating System: {}".format(r.server_info.os_name))
         ...     else:
-        ...         print('Error: {}'.format(r.status_message))
+        ...         print("Error: {}".format(r.status_message))
         ... except Exception as err:
         ...     # handle exception
         ...     pass
@@ -100,9 +121,32 @@ class TomcatManagerResponse:
 
     def __init__(self, response=None):
         self._response = response
-        self._status_code = None
-        self._status_message = None
-        self._result = None
+
+        self.status_code = None
+        """Status of the Tomcat Manager command from the first line of text.
+
+        The preferred way to check for success is to use the
+        :meth:`~.TomcatManagerResponse.ok` method, because it checks for http
+        errors as well as tomcat errors. However, if you want specific access
+        to the status of the tomcat command, use this method.
+
+        The status codes are enumerated in :class:`StatusCode`.
+
+            >>> import tomcatmanager as tm
+            >>> tomcat = getfixture("tomcat")
+            >>> r = tomcat.server_info()
+            >>> r.status_code == tm.StatusCode.OK
+            True
+        """
+
+        self.status_message = None
+        """The message on the first line of the response from the Tomcat Server.
+        """
+
+        self.result = None
+        """The text of the response from the Tomcat server, without the first line
+        (which contains the status code and message).
+        """
 
     @property
     def ok(self):
@@ -137,53 +181,6 @@ class TomcatManagerResponse:
         self.response.raise_for_status()
         if self.status_code != tm.StatusCode.OK:
             raise TomcatError(self.status_message)
-
-    @property
-    def status_code(self):
-        """
-        Status of the Tomcat Manager command from the first line of text.
-
-        The preferred way to check for success is to use the
-        :meth:`~.TomcatManagerResponse.ok` method, because it checks for http
-        errors as well as tomcat errors. However, if you want specific access
-        to the status of the tomcat command, use this method.
-
-        The status codes are enumerated in :class:`StatusCode`.
-
-            >>> import tomcatmanager as tm
-            >>> tomcat = getfixture('tomcat')
-            >>> r = tomcat.server_info()
-            >>> r.status_code == tm.StatusCode.OK
-            True
-        """
-        return self._status_code
-
-    @status_code.setter
-    def status_code(self, value: str):
-        self._status_code = value
-
-    @property
-    def status_message(self):
-        """
-        The message on the first line of the response from the Tomcat Server.
-        """
-        return self._status_message
-
-    @status_message.setter
-    def status_message(self, value: str):
-        self._status_message = value
-
-    @property
-    def result(self):
-        """
-        The text of the response from the Tomcat server, without the first
-        line (which contains the status code and message).
-        """
-        return self._result
-
-    @result.setter
-    def result(self, value: str):
-        self._result = value
 
     @property
     def response(self) -> requests.models.Response:
@@ -221,7 +218,10 @@ class TomcatManagerResponse:
 
 @enum.unique
 class ApplicationState(enum.Enum):
-    """An enumeration of the various tomcat application states"""
+    """An enumeration of the various tomcat application states.
+
+    .. versionadded:: 2.0.0
+    """
 
     RUNNING = "running"
     STOPPED = "stopped"
@@ -251,21 +251,19 @@ class TomcatApplication:
     A list of these objects is returned by :meth:`.TomcatManager.list`.
     """
 
-    TA = typing.TypeVar("TA", bound="TomcatApplication")
-
     @classmethod
-    def sort_by_state_by_path_by_version(cls, app: TA):
+    def sort_by_state_by_path_by_version(cls, app: "TomcatApplication"):
         """
-        Function to create a key usable by ``sort`` to sort by state, by path, by version.
+        Create a key usable by ``sort`` to sort by state, by path, by version.
         """
         return "{}:{}:{}".format(
             app.state.value or "", app.path or "", app.version or ""
         )
 
     @classmethod
-    def sort_by_path_by_version_by_state(cls, app: TA):
+    def sort_by_path_by_version_by_state(cls, app: "TomcatApplication"):
         """
-        Function to create a key usable by ``sort`` to sort by path, by version, by state
+        Create a key usable by ``sort`` to sort by path, by version, by state
         """
         return "{}:{}:{}".format(
             app.path or "", app.version or "", app.state.value or ""
@@ -291,7 +289,7 @@ class TomcatApplication:
             self.directory_and_version or "",
         )
 
-    def __lt__(self, other: TA):
+    def __lt__(self, other: "TomcatApplication"):
         """
         Compare one object to another. Useful for sorting lists of apps.
 
@@ -399,6 +397,101 @@ class TomcatApplication:
         return dandv
 
 
+# type annotations on some class methods reference itself, which generates an error
+# because the type has not yet been defined. Will be fixed in Python 3.10, see PEP 484
+# and PEP 563. Until this, we store the type annotations as strings
+@enum.unique
+class TomcatMajorMinor(enum.Enum):
+    """An enumeration of the supported Tomcat major and minor version numbers
+
+    Major and Minor have the meanings defined at `https://semver.org
+    <https://semver.org>`_.
+
+    This enumeration includes a value VNEXT, so that this module can mostly keep working
+    when accessing a version of Tomcat that the module doesn't officially support yet.
+
+    It also includes a value UNSUPPORTED, for older versions of Tomcat that are unknown
+    to this module.
+
+    .. versionadded:: 3.0.0
+
+    """
+
+    V7_0 = "7.0"
+    V8_0 = "8.0"
+    V8_5 = "8.5"
+    V9_0 = "9.0"
+    V10_0 = "10.0"
+    VNEXT = "next"
+    UNSUPPORTED = "unsupported"
+
+    @classmethod
+    def parse(cls, version_string: str) -> "TomcatMajorMinor":
+        """Return one of the enums from a string sent by the Tomcat Manager
+        web application.
+
+        :param version_string: the string value of the application state from the
+            tomcat server
+        :return: :class:`.TomcatMajorMinor` instance
+        :raises ValueError: if the version string does not represent a known app
+        """
+        version_re = re.compile(r"(\d+)\.(\d+)\.(\d+)")
+        match = version_re.search(version_string)
+        ver = TomcatMajorMinor.UNSUPPORTED
+        if match:
+            # shouldn't ever throw exceptions because of the regex
+            major_ver = int(match.group(1))
+            minor_ver = int(match.group(2))
+            if major_ver < 7:
+                ver = TomcatMajorMinor.UNSUPPORTED
+            if major_ver == 7 and minor_ver == 0:
+                ver = TomcatMajorMinor.V7_0
+            elif major_ver == 8 and minor_ver == 0:
+                ver = TomcatMajorMinor.V8_0
+            elif major_ver == 8 and minor_ver == 5:
+                ver = TomcatMajorMinor.V8_5
+            elif major_ver == 9 and minor_ver == 0:
+                ver = TomcatMajorMinor.V9_0
+            elif major_ver == 10 and minor_ver == 0:
+                ver = TomcatMajorMinor.V10_0
+            elif major_ver == 10 and minor_ver > 0:
+                ver = TomcatMajorMinor.VNEXT
+            elif major_ver > 10:
+                ver = TomcatMajorMinor.VNEXT
+        return ver
+
+    @staticmethod
+    def supported() -> List:
+        """
+        Return the list of officially supported Tomcat major versions
+        """
+        return [
+            TomcatMajorMinor.V7_0,
+            TomcatMajorMinor.V8_0,
+            TomcatMajorMinor.V8_5,
+            TomcatMajorMinor.V9_0,
+            TomcatMajorMinor.V10_0,
+        ]
+
+    @classmethod
+    def lowest_supported(cls) -> "TomcatMajorMinor":
+        """
+        Return the lowest officially supported Tomcat major version
+        """
+        return TomcatMajorMinor.supported()[0]
+
+    @classmethod
+    def highest_supported(cls) -> "TomcatMajorMinor":
+        """
+        Return the highest officially supported Tomcat major version
+
+        This does not include ``TomcatMajorMinor.VNEXT``, which exists to ensure this
+        module mostly works on future versions of tomcat before official support
+        is added.
+        """
+        return TomcatMajorMinor.supported()[-1]
+
+
 class ServerInfo(dict):
     """
     Discrete data about the Tomcat server.
@@ -424,6 +517,7 @@ class ServerInfo(dict):
         line with the status info
         """
         super().__init__(*args, **kwargs)
+        self._tomcat_major_minor = None
         self._tomcat_version = None
         self._os_name = None
         self._os_version = None
@@ -439,13 +533,26 @@ class ServerInfo(dict):
             for line in result.splitlines():
                 key, value = line.rstrip().split(":", 1)
                 self[key] = value.lstrip()
-
             self._tomcat_version = self["Tomcat Version"]
+            self._tomcat_major_minor = TomcatMajorMinor.parse(self._tomcat_version)
             self._os_name = self["OS Name"]
             self._os_version = self["OS Version"]
             self._os_architecture = self["OS Architecture"]
             self._jvm_version = self["JVM Version"]
             self._jvm_vendor = self["JVM Vendor"]
+
+    @property
+    def tomcat_major_minor(self) -> TomcatMajorMinor:
+        """An instance of :class:`~.models.TomcatMajorMinor` indicating which
+        major and minor version of Tomcat is running on the server.
+
+        This value is computed, not received from the server, and therefore does not
+        show up in the dictionary, ie ``server_info["tomcat_major_minor"]`` does
+        not exist.
+
+        .. versionadded:: 3.0.0
+        """
+        return self._tomcat_major_minor
 
     @property
     def tomcat_version(self):

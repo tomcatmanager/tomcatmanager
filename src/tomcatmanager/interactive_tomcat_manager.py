@@ -30,11 +30,11 @@ import argparse
 import ast
 import configparser
 import getpass
+import http.client
 import os
 import sys
 import traceback
 import xml.dom.minidom
-from http.client import responses
 from typing import Callable, Any, List
 
 import appdirs
@@ -132,7 +132,7 @@ def _deploy_parser(
     return deploy_parser
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods, too-many-instance-attributes
 class InteractiveTomcatManager(cmd2.Cmd):
     """An interactive command line tool for the Tomcat Manager web application.
 
@@ -292,7 +292,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.stdout.write(msg_str)
                 if not msg_str.endswith(end):
                     self.stdout.write(end)
-            except BrokenPipeError:
+            except BrokenPipeError:  # pragma: nocover
                 # This occurs if a command's output is being piped to another
                 # process and that process closes before the command is
                 # finished.
@@ -358,14 +358,18 @@ class InteractiveTomcatManager(cmd2.Cmd):
         Sets exit_code to 0 and calls {func}. If func throws a TomcatError,
         set exit_code to 1 and print the exception
         """
-        self.exit_code = self.EXIT_SUCCESS
-        r = func(*args, **kwargs)
+        self.exit_code = self.EXIT_ERROR
         try:
+            r = func(*args, **kwargs)
             r.raise_for_status()
+            self.exit_code = self.EXIT_SUCCESS
+            return r
+        except tm.TomcatNotImplementedError as err:
+            self.perror("command not implemented by server")
+            return None
         except tm.TomcatError as err:
-            self.exit_code = self.EXIT_ERROR
             self.perror(str(err))
-        return r
+            return None
 
     def show_help_from(self, argparser: argparse.ArgumentParser):
         """Set exit code and output help from an argparser."""
@@ -396,17 +400,26 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         What url are we connected to and who are we connected as.
 
-        Returns None if '.url` is None.
+        Returns None if not connected to a server.
         """
         out = None
-        if self.tomcat.url:
+        if self.tomcat.is_connected:
             out = "connected to {}".format(self.tomcat.url)
             if self.tomcat.user:
                 out += " as {}".format(self.tomcat.user)
+            if self.tomcat.cert:
+                if isinstance(self.tomcat.cert, tuple):
+                    # get the key
+                    _, authby = self.tomcat.cert
+                else:
+                    authby = self.tomcat.cert
+                out += " authenticated by {}".format(authby)
+
         return out
 
     def do_help(self, args: str):
         """Show available commands, or help on a specific command."""
+        # pylint: disable=too-many-statements
         if args:
             # they want help on a specific command, use cmd2 for that
             super().do_help(args)
@@ -526,7 +539,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
             # ensure the configuration directory exists
             configdir = os.path.dirname(self.config_file)
-            if not os.path.exists(configdir):
+            if not os.path.exists(configdir):  # pragma: nocover
                 os.makedirs(configdir)
 
             # go edit the file
@@ -710,19 +723,16 @@ change the value of one of this program's settings
 
         Calls the settable onchange callback if it exists.
         """
-        if param_name in self.settables:
-            try:
-                settable = self.settables[param_name]
-            except KeyError as keyerr:
-                raise ValueError from keyerr
+        try:
+            settable = self.settables[param_name]
 
             value = cmd2.utils.strip_quotes(value)
             current_value = getattr(self, param_name)
             setattr(self, param_name, settable.val_type(value))
-            if current_value != value and settable.onchange_cb:
+            if current_value != value and settable.onchange_cb:  # pragma: nocover
                 settable.onchange_cb(param_name, current_value, value)
-        else:
-            raise ValueError
+        except KeyError as keyerr:
+            raise ValueError from keyerr
 
     def convert_to_boolean(self, value: Any):
         """Return a boolean value translating from other types if necessary."""
@@ -773,9 +783,8 @@ change the value of one of this program's settings
         prog="connect",
         description="connect to a tomcat manager instance",
         usage="%(prog)s [-h] config_name\n       %(prog)s [-h] url [user] [password]",
-        epilog=""""If you specify a user and no password, you will be prompted for the
-               password. If you don't specify a user or password, attempt to connect with
-               no authentication.""",
+        epilog="""If you specify a user and no password, you will be prompted for the
+               password.""",
     )
     connect_parser.add_argument(
         "config_name",
@@ -797,12 +806,44 @@ change the value of one of this program's settings
         nargs="?",
         help="optional password to use for authentication",
     )
+    connect_parser.add_argument(
+        "--cert",
+        action="store",
+        help="""path to certificate for client side authentication;
+        file can include private key, in which case --key is unnecessary""",
+    )
+    connect_parser.add_argument(
+        "--key",
+        action="store",
+        help="path to private key for client side authentication",
+    )
+    connect_parser.add_argument(
+        "--cacert",
+        action="store",
+        help="""path to certificate authority bundle or directory used to
+        validate server SSL/TLS certificate""",
+    )
+    connect_parser.add_argument(
+        "--noverify",
+        # store_true makes the default False, aka default is to verify
+        # server certificates
+        action="store_true",
+        help="don't validate server SSL certificates, overrides --cacert",
+    )
 
     def do_connect(self, cmdline: cmd2.Statement):
         """Connect to a tomcat manager instance."""
+        # pylint: disable=too-many-branches, too-many-statements
+        # define some variables that we will either fill from a server shortcut
+        # or from arguments
         url = None
         user = None
         password = None
+        cert = None
+        key = None
+        cacert = None
+        verify = True
+
         args = self.parse_args(self.connect_parser, cmdline.argv)
         server = args.config_name
         if self.config.has_section(server):
@@ -812,6 +853,15 @@ change the value of one of this program's settings
                 user = self.config[server]["user"]
             if self.config.has_option(server, "password"):
                 password = self.config[server]["password"]
+            if self.config.has_option(server, "cert"):
+                cert = self.config[server]["cert"]
+            if self.config.has_option(server, "key"):
+                key = self.config[server]["key"]
+            if self.config.has_option(server, "cacert"):
+                cacert = self.config[server]["cacert"]
+            if self.config.has_option(server, "verify"):
+                verify = self.config[server]["verify"]
+            # check for user and password overrides on the command line
         else:
             # This is an ugly hack required to get argparse to show the help properly.
             # the argparser has both a config_name and a url positional argument.
@@ -819,15 +869,45 @@ change the value of one of this program's settings
             # the configuration file, then it must be a url, so we have to
             # 'shift' the positional arguments to the left.
             url = args.config_name
+
+        if args.url:
             user = args.url
-            password = args.user
+            # can't set the password if you don't set the user because
+            # these arguments are positional
+            if args.user:
+                password = args.user
+        # end of ugly hack
 
         # prompt for password if necessary
         if url and user and not password:
             password = getpass.getpass()
 
+        # allow command line arguments to override server options
+        # that's why this code isn't in the big if statement above
+
+        # set ssl client validation
+        if args.cert:
+            cert = args.cert
+        if args.key:
+            key = args.key
+        if cert and key:
+            cert = (cert, key)
+
+        # set ssl server certificate validation
+        if args.noverify:
+            # if you say not to verify SSL certs, this overrides --cacert
+            verify = False
+        if args.cacert:
+            cacert = args.cacert
+
+        if verify and cacert:
+            # when verify is false, cacert doesn't matter
+            # when it's true, then we can override with cacert
+            verify = cacert
+
         try:
-            r = self.tomcat.connect(url, user, password)
+            r = self.tomcat.connect(url, user, password, verify=verify, cert=cert)
+
             if r.ok:
                 self.pfeedback(self._which_server())
                 if r.server_info.tomcat_version:
@@ -858,7 +938,7 @@ change the value of one of this program's settings
                         self.perror(
                             "http error: {} {}".format(
                                 r.response.status_code,
-                                responses[r.response.status_code],
+                                http.client.responses[r.response.status_code],
                             )
                         )
                     self.exit_code = self.EXIT_ERROR
@@ -949,7 +1029,7 @@ change the value of one of this program's settings
         args = self.parse_args(self.deploy_parser, cmdline.argv)
         try:
             args.func(self, args, update=False)
-        except AttributeError:
+        except AttributeError:  # pragma: nocover
             self.help_deploy()
             self.exit_code = self.EXIT_ERROR
 
@@ -971,7 +1051,7 @@ change the value of one of this program's settings
         args = self.parse_args(self.redeploy_parser, cmdline.argv)
         try:
             args.func(self, args, update=True)
-        except AttributeError:
+        except AttributeError:  # pragma: nocover
             self.help_redeploy()
             self.exit_code = self.EXIT_ERROR
 
@@ -1023,12 +1103,12 @@ change the value of one of this program's settings
 
     reload_parser = _path_version_parser(
         "reload",
-        "Start and stop a tomcat application. Synonym for 'restart'.",
+        "Stop and start a tomcat application. Synonym for 'restart'.",
     )
 
     @requires_connection
     def do_reload(self, cmdline: cmd2.Statement):
-        """Start and stop a tomcat application."""
+        """Stop and start a tomcat application."""
         args = self.parse_args(self.reload_parser, cmdline.argv)
         self.docmd(self.tomcat.reload, args.path, args.version)
 
@@ -1038,12 +1118,12 @@ change the value of one of this program's settings
 
     restart_parser = _path_version_parser(
         "restart",
-        "Start and stop a tomcat application.",
+        "Stop and start a tomcat application.",
     )
 
     @requires_connection
     def do_restart(self, cmdline: cmd2.Statement):
-        """Start and stop a tomcat application."""
+        """Stop and start a tomcat application."""
         args = self.parse_args(self.reload_parser, cmdline.argv)
         self.docmd(self.tomcat.reload, args.path, args.version)
 
@@ -1143,28 +1223,26 @@ change the value of one of this program's settings
         args = self.parse_args(self.list_parser, cmdline.argv)
 
         response = self.docmd(self.tomcat.list)
-        if not response.ok:
-            return
-
-        apps = self._list_process_apps(response.apps, args)
-        self.exit_code = self.EXIT_SUCCESS
-        if args.raw:
-            for app in apps:
-                self.poutput(app)
-        else:
-            fmt = "{:24.24} {:7.7} {:>8.8} {:36.36}"
-            dashes = "-" * 80
-            self.poutput(fmt.format("Path", "State", "Sessions", "Directory"))
-            self.poutput(fmt.format(dashes, dashes, dashes, dashes))
-            for app in apps:
-                self.poutput(
-                    fmt.format(
-                        app.path,
-                        app.state.value,
-                        str(app.sessions),
-                        app.directory_and_version,
+        if response.ok:
+            apps = self._list_process_apps(response.apps, args)
+            self.exit_code = self.EXIT_SUCCESS
+            if args.raw:
+                for app in apps:
+                    self.poutput(app)
+            else:
+                fmt = "{:24.24} {:7.7} {:>8.8} {:36.36}"
+                dashes = "-" * 80
+                self.poutput(fmt.format("Path", "State", "Sessions", "Directory"))
+                self.poutput(fmt.format(dashes, dashes, dashes, dashes))
+                for app in apps:
+                    self.poutput(
+                        fmt.format(
+                            app.path,
+                            app.state.value,
+                            str(app.sessions),
+                            app.directory_and_version,
+                        )
                     )
-                )
 
     def help_list(self):
         """Show help for the 'list' command."""
@@ -1315,7 +1393,7 @@ change the value of one of this program's settings
         """Reload SSL/TLS certificates and keys."""
         args = self.parse_args(self.sslreload_parser, cmdline.argv)
         r = self.docmd(self.tomcat.ssl_reload, args.host_name)
-        if r.ok:
+        if r and r.ok:
             self.pfeedback(r.status_message)
 
     def help_sslreload(self):
@@ -1486,6 +1564,6 @@ class EvaluatingConfigParser(configparser.ConfigParser):
         if "'" in val or '"' in val:
             try:
                 val = ast.literal_eval(val)
-            except ValueError:
+            except ValueError:  # pragma: nocover
                 pass
         return val

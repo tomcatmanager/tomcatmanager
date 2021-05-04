@@ -1,13 +1,93 @@
-.. :changelog:
-
 Changelog
 =========
-All notable changes to
-`tomcatmanager <https://github.com/tomcatmanager/tomcatmanager>`_ are
-documented in this file.
 
-The format is based on `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_
-and this project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_.
+All notable changes to `tomcatmanager
+<https://github.com/tomcatmanager/tomcatmanager>`__ are documented in this file.
+
+This project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_ and the
+format of this file follows recommendations from `Keep a Changelog
+<http://keepachangelog.com/en/1.0.0/>`_.
+
+
+3.0.0 (2021-05-04)
+------------------
+
+Added
+^^^^^
+
+- Support for discovering and exposing the version of the Tomcat server we
+  are connected to in the API. See `TomcatManager.connect()
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.connect>`_,
+  `TomcatManager.implements()
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.implements>`_,
+  and `TomcatManager.implemented_by()
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.implemented_by>`_.
+- `TomcatMajorMinor <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatMajorMinor.html>`_
+  enumeration for supported versions of Tomcat. Major and minor have the meaning
+  defined at `https://semver.org/ <https://semver.org>`_.
+- `TomcatManager.tomcat_major_minor
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.tomcat_major_minor>`_
+  attribute which contains one of the values from `TomcatMajorMinor`_
+  representing the version of the Tomcat server we are connected to.
+- Control server SSL/TLS certificate validation using the new ``verify`` parameter
+  to `TomcatManager.connect()`_.
+  Also available from the command-line and interactive mode using the ``--cacert``
+  and ``--noverify`` options of the ``connect`` command.
+- Client side SSL/TLS certificate authentication added to
+  `TomcatManager.connect()`_
+  via the ``cert`` parameter. Also available from the command line and interactive
+  mode using the ``--cert`` and ``--key`` options of the ``connect`` command.
+- Documentation explaining all
+  `authentication <https://tomcatmanager.readthedocs.io/en/stable/authentication.html>`_
+  approaches with configuration and usage examples.
+- Documentation for
+  `migrating from 2.x to 3.x
+  <https://tomcatmanager.readthedocs.io/en/stable/api/migrating3.html>`_.
+
+
+Changed
+^^^^^^^
+- `TomcatManager
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html>`_
+  methods raise `TomcatNotConnected
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatNotConnected.html>`_ if
+  called before `connect()
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.connect>`_.
+  Previously you got a `TomcatManagerResponse
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManagerResponse.html>`_
+  and had to call `raise_for_status()
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManagerResponse.html#tomcatmanager.models.TomcatManagerResponse.raise_for_status>`_
+  or check `ok
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManagerResponse.html#tomcatmanager.models.TomcatManagerResponse.ok>`_
+  in order to determine that you weren't connected.
+- `TomcatManager.url
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.url>`_
+  and `TomcatManager.user
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.user>`_
+  are now read-only properties set by `TomcatManager.connect()`_.
+- `TomcatManager`_ methods raise `TomcatNotImplementedError
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatNotImplementedError.html>`_
+  if the server does not implement the requested capability. For example `ssl_reload()
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.ssl_reload>`__
+  is not implemented by Tomcat 7.0.x or 8.0.x, so if you are connected to a Tomcat 7.0.x
+  server and call `ssl_reload()
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.ssl_reload>`__,
+  `TomcatNotImplementedError`_ will be raised.
+- Timeouts were previously ``int`` only, now they can be ``float``
+- The ``timeout`` parameter to `TomcatManager.connect()
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.connect>`_
+  is now keyword only.
+
+
+Fixed
+^^^^^
+
+- `TomcatManager.connect()`_ no longer erroneously sets the `url
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.url>`_
+  and `user <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.user>`_
+  attributes if an exception is raised.
+- Allow ``--timeout=0`` from the command line if you want to wait forever for
+  network operations.
 
 
 2.0.0 (2021-03-26)

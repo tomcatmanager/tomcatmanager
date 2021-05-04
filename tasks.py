@@ -29,6 +29,9 @@ namespace = invoke.Collection()
 namespace_clean = invoke.Collection("clean")
 namespace.add_collection(namespace_clean, "clean")
 
+namespace_check = invoke.Collection("check")
+namespace.add_collection(namespace_check, "check")
+
 #####
 #
 # pytest, tox, pylint, and codecov
@@ -37,10 +40,11 @@ namespace.add_collection(namespace_clean, "clean")
 @invoke.task
 def pytest(context):
     "Run tests and code coverage using pytest"
-    context.run("pytest --cov=tomcatmanager", pty=True)
+    context.run("pytest", echo=True, pty=True)
 
 
 namespace.add_task(pytest)
+namespace_check.add_task(pytest)
 
 
 @invoke.task
@@ -57,7 +61,7 @@ namespace_clean.add_task(pytest_clean, "pytest")
 @invoke.task
 def tox(context):
     "Run unit and integration tests on multiple python versions using tox"
-    context.run("tox")
+    context.run("tox", echo=True)
 
 
 namespace.add_task(tox)
@@ -76,25 +80,17 @@ namespace_clean.add_task(tox_clean, "tox")
 @invoke.task
 def pylint(context):
     "Check code quality using pylint"
-    context.run("pylint --rcfile=src/tomcatmanager/pylintrc src/tomcatmanager")
+    context.run("pylint src/tomcatmanager tests", echo=True)
 
 
 namespace.add_task(pylint)
-
-
-@invoke.task
-def pylint_tests(context):
-    "Check code quality of test suite using pylint"
-    context.run("pylint --rcfile=tests/pylintrc tests")
-
-
-namespace.add_task(pylint_tests)
+namespace_check.add_task(pylint)
 
 
 @invoke.task
 def black_check(context):
     """Check if code is properly formatted using black"""
-    context.run("black --check *.py tests src docs")
+    context.run("black --check *.py tests src docs", echo=True)
 
 
 namespace.add_task(black_check)
@@ -103,11 +99,11 @@ namespace.add_task(black_check)
 @invoke.task
 def black(context):
     """Format code using black"""
-    context.run("black *.py tests src docs")
+    context.run("black *.py tests src docs", echo=True)
 
 
 namespace.add_task(black)
-
+namespace_check.add_task(black)
 
 #####
 #
@@ -115,6 +111,7 @@ namespace.add_task(black)
 #
 #####
 DOCS_SRCDIR = "docs"
+DOCS_ADDITIONAL = "README.rst CONTRIBUTING.rst CHANGELOG.rst"
 DOCS_BUILDDIR = os.path.join("docs", "build")
 SPHINX_OPTS = "-nvWT"  # Be nitpicky, verbose, and treat warnings as errors
 
@@ -125,19 +122,21 @@ def docs(context, builder="html"):
     cmdline = "python -msphinx -M {} {} {} {}".format(
         builder, DOCS_SRCDIR, DOCS_BUILDDIR, SPHINX_OPTS
     )
-    context.run(cmdline)
+    context.run(cmdline, echo=True)
 
 
 namespace.add_task(docs)
+namespace_check.add_task(docs)
 
 
 @invoke.task()
 def doc8(context):
     "Check documentation with doc8"
-    context.run("doc8 {}".format(DOCS_SRCDIR))
+    context.run("doc8 {} {}".format(DOCS_SRCDIR, DOCS_ADDITIONAL), echo=True)
 
 
 namespace.add_task(doc8)
+namespace_check.add_task(doc8)
 
 
 @invoke.task
@@ -159,7 +158,7 @@ def livehtml(context):
     cmdline = "sphinx-autobuild -b {} {} {} {}".format(
         builder, DOCS_SRCDIR, outputdir, watch
     )
-    context.run(cmdline, pty=True)
+    context.run(cmdline, echo=True, pty=True)
 
 
 namespace.add_task(livehtml)
@@ -228,15 +227,20 @@ def bytecode_clean(context):
 
 namespace_clean.add_task(bytecode_clean, "bytecode")
 
-#
-# make a dummy clean task which runs all the tasks in the clean namespace
-clean_tasks = list(namespace_clean.tasks.values())
+
+@invoke.task(pre=list(namespace_check.tasks.values()), default=True)
+def check_all(context):
+    "Run this before you commit or submit a pull request"
+    # pylint: disable=unused-argument
+
+
+namespace_check.add_task(check_all, "all")
 
 
 @invoke.task(pre=list(namespace_clean.tasks.values()), default=True)
-# pylint: disable=unused-argument
 def clean_all(context):
-    "Run all clean tasks"
+    "Clean everything"
+    # pylint: disable=unused-argument
 
 
 namespace_clean.add_task(clean_all, "all")
