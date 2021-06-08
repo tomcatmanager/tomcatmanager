@@ -78,8 +78,7 @@ Changed
   <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.ssl_reload>`__,
   `TomcatNotImplementedError`_ will be raised.
 - Timeouts were previously ``int`` only, now they can be ``float``
-- The ``timeout`` parameter to `TomcatManager.connect()
-  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.connect>`_
+- The ``timeout`` parameter to `TomcatManager.connect()`_
   is now keyword only.
 
 
