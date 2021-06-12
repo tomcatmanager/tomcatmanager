@@ -42,6 +42,10 @@ setup(
     keywords="java tomcat command line",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
+    # for PEP 561
+    package_data={"tomcatmanager": ['py.typed']},
+    include_package_data=True,
+    #
     python_requires=">=3.6",
     install_requires=[
         "cmd2>=1.0.2,<2",
