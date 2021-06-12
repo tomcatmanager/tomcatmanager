@@ -43,7 +43,7 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     # for PEP 561
-    package_data={"tomcatmanager": ['py.typed']},
+    package_data={"tomcatmanager": ["py.typed"]},
     include_package_data=True,
     #
     python_requires=">=3.6",

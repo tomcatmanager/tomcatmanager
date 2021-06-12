@@ -12,6 +12,11 @@ format of this file follows recommendations from `Keep a Changelog
 Unreleased
 ----------
 
+Added
+^^^^^
+
+- Add `py.typed` file to make type annotations work properly per PEP 516
+
 
 3.0.0 (2021-05-04)
 ------------------
