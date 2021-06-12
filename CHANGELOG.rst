@@ -15,7 +15,7 @@ Unreleased
 Added
 ^^^^^
 
-- Add `py.typed` file to make type annotations work properly per PEP 516
+- Add ``py.typed`` file to make type annotations work properly per PEP 516
 
 
 3.0.0 (2021-05-04)
