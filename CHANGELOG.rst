@@ -16,6 +16,8 @@ Added
 ^^^^^
 
 - Add ``py.typed`` file to make type annotations work properly per PEP 516
+- Add documentation showing how to specify tomcatmanager as a dependency
+  in your package
 
 
 3.0.0 (2021-05-04)
