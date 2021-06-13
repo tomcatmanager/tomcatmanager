@@ -48,7 +48,7 @@ setup(
     #
     python_requires=">=3.6",
     install_requires=[
-        "cmd2>=1.0.2,<2",
+        "cmd2>=2,<3",
         "requests>=2,<3",
         "appdirs",
         "importlib_metadata>=1.6.0;python_version<'3.8'",

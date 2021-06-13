@@ -227,32 +227,37 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 pass
 
         self.add_settable(
-            cmd2.Settable("echo", bool, "For piped input, echo command to output")
+            cmd2.Settable("echo", bool, "For piped input, echo command to output", self)
         )
         self.add_settable(
             cmd2.Settable(
                 "status_to_stdout",
                 bool,
                 "Status information to stdout instead of stderr",
+                self,
             )
         )
         self.add_settable(
             cmd2.Settable(
-                "status_prefix", str, "String to prepend to all status output"
+                "status_prefix", str, "String to prepend to all status output", self
             )
         )
-        self.add_settable(cmd2.Settable("editor", str, "Program used to edit files"))
         self.add_settable(
-            cmd2.Settable("timeout", float, "Seconds to wait for HTTP connections")
+            cmd2.Settable("editor", str, "Program used to edit files", self)
         )
         self.add_settable(
             cmd2.Settable(
-                "prompt", str, "The prompt displayed before accepting user input"
+                "timeout", float, "Seconds to wait for HTTP connections", self
+            )
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "prompt", str, "The prompt displayed before accepting user input", self
             )
         )
         self.prompt = "{}> ".format(self.app_name)
         self.add_settable(
-            cmd2.Settable("debug", str, "Show stack trace for exceptions")
+            cmd2.Settable("debug", str, "Show stack trace for exceptions", self)
         )
 
         self.tomcat = tm.TomcatManager()
