@@ -145,7 +145,7 @@ You'll need Python >= 3.6. Install using pip:
 
 Works on Windows, macOS, and Linux.
 
-Works with Tomcat >= 7 and <= 10.
+Works with Tomcat >= 8 and <= 10.
 
 
 Tomcat Configuration
