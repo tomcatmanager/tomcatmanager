@@ -19,6 +19,11 @@ Added
 - Add documentation showing how to specify tomcatmanager as a dependency
   in your package
 
+Removed
+^^^^^^^
+
+- Support for Tomcat 7, which is no longer supported or available for download
+
 
 3.0.0 (2021-05-04)
 ------------------

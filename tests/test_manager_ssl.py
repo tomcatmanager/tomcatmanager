@@ -24,8 +24,10 @@
 # pylint: disable=protected-access, missing-function-docstring
 # pylint: disable=missing-module-docstring, unused-variable
 
-import unittest.mock as mock
+from unittest import mock
+
 import pytest
+
 import tomcatmanager as tm
 
 
