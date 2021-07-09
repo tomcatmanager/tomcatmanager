@@ -8,7 +8,7 @@ tomcatmanager
       :target: https://pypi.python.org/pypi/tomcatmanager
       :alt: supported python versions
 .. image:: https://img.shields.io/badge/license-MIT-orange
-      :target: https://github.com/tomcatmanager/tomcatmanager/blob/master/LICENSE
+      :target: https://github.com/tomcatmanager/tomcatmanager/blob/main/LICENSE
       :alt: license
 .. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/main?label=build%20%28main%29
       :target: https://github.com/tomcatmanager/tomcatmanager/tree/main
