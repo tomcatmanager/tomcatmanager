@@ -866,7 +866,6 @@ change the value of one of this program's settings
                 cacert = self.config[server]["cacert"]
             if self.config.has_option(server, "verify"):
                 verify = self.config[server]["verify"]
-            # TODO check for user and password overrides on the command line
         else:
             # This is an ugly hack required to get argparse to show the help properly.
             # the argparser has both a config_name and a url positional argument.

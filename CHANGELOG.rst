@@ -27,7 +27,8 @@ Removed
 Fixed
 ^^^^^
 
-- Fixed bug when passing authentication credentials from the shell command line to `tomcat-manager`
+- Fixed bug when passing authentication credentials from the shell command line
+  to ``tomcat-manager``
 
 
 3.0.0 (2021-05-04)

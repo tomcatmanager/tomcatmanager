@@ -85,6 +85,7 @@ def _build_parser():
 
 #
 # entry point for command line
+# pylint: disable=too-many-branches
 def main(argv=None):
     """Entry point for 'tomcat-manager' command line program.
 
