@@ -42,6 +42,28 @@ def test_main_noargs(mocker):
     assert mock_cmdloop.call_count == 1
 
 
+def test_main_sys_argv(tomcat_manager_server, capsys, mocker):
+    mock_sys_argv = mocker.patch("sys.argv")
+    mock_sys_argv.return_value = [
+        "tomcat-manager",
+        "-u",
+        tomcat_manager_server.user,
+        "-p",
+        tomcat_manager_server.password,
+        tomcat_manager_server.url,
+        "list",
+    ]
+
+    exit_code = main()
+    out, err = capsys.readouterr()
+    out = out.splitlines()
+    err = err.splitlines()
+    assert exit_code == 0
+    assert "Path" in out[0]
+    assert "Sessions" in out[0]
+    assert "--connected to" in err[0]
+
+
 def test_main_user_password_url_command(tomcat_manager_server, capsys):
     cmdline = "-u {} -p {} {} list".format(
         tomcat_manager_server.user,
