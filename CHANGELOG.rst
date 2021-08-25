@@ -24,6 +24,11 @@ Removed
 
 - Support for Tomcat 7, which is no longer supported or available for download
 
+Fixed
+^^^^^
+
+- Fixed bug when passing authentication credentials from the shell command line to `tomcat-manager`
+
 
 3.0.0 (2021-05-04)
 ------------------
