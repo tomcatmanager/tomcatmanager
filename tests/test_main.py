@@ -42,17 +42,19 @@ def test_main_noargs(mocker):
     assert mock_cmdloop.call_count == 1
 
 
-def test_main_sys_argv(tomcat_manager_server, capsys, mocker):
-    mock_sys_argv = mocker.patch("sys.argv")
-    mock_sys_argv.return_value = [
-        "tomcat-manager",
-        "-u",
-        tomcat_manager_server.user,
-        "-p",
-        tomcat_manager_server.password,
-        tomcat_manager_server.url,
-        "list",
-    ]
+def test_main_sys_argv(tomcat_manager_server, capsys, monkeypatch):
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "tomcat-manager",
+            "-u",
+            tomcat_manager_server.user,
+            "-p",
+            tomcat_manager_server.password,
+            tomcat_manager_server.url,
+            "list",
+        ],
+    )
 
     exit_code = main()
     out, err = capsys.readouterr()
