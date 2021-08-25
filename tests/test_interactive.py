@@ -53,7 +53,7 @@ def itm_with_config(mocker, configstring):
     itm = tm.InteractiveTomcatManager()
     fdesc, fname = tempfile.mkstemp(prefix="", suffix=".ini")
     os.close(fdesc)
-    with open(fname, "w") as fobj:
+    with open(fname, "w", encoding="utf-8") as fobj:
         fobj.write(configstring)
 
     # itm aleady tried to load a config file, which it may or may not

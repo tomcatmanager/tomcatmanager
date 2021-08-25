@@ -369,7 +369,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             r.raise_for_status()
             self.exit_code = self.EXIT_SUCCESS
             return r
-        except tm.TomcatNotImplementedError as err:
+        except tm.TomcatNotImplementedError:
             self.perror("command not implemented by server")
             return None
         except tm.TomcatError as err:
@@ -701,7 +701,7 @@ change the value of one of this program's settings
         if self.config_file is not None:
             config = EvaluatingConfigParser()
             try:
-                with open(self.config_file, "r") as fobj:
+                with open(self.config_file, "r", encoding="utf-8") as fobj:
                     config.read_file(fobj)
             except FileNotFoundError:
                 pass
