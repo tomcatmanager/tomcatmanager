@@ -24,7 +24,7 @@
 # pylint: disable=protected-access, missing-function-docstring
 # pylint: disable=missing-module-docstring, unused-variable
 
-import unittest.mock as mock
+from unittest import mock
 
 import pytest
 import requests
@@ -50,69 +50,10 @@ def test_implemented_by_invalid(mocker):
         "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major_minor",
         new_callable=mock.PropertyMock,
     )
-    vmock.return_value = tm.TomcatMajorMinor.V7_0
+    vmock.return_value = tm.TomcatMajorMinor.V8_0
 
     with pytest.raises(tm.TomcatNotImplementedError):
         response = tomcat.ssl_reload()
-
-
-def test_implemented_by_decorations7(mocker):
-    tomcat = tm.TomcatManager()
-    cmock = mocker.patch(
-        "tomcatmanager.tomcat_manager.TomcatManager.is_connected",
-        new_callable=mock.PropertyMock,
-    )
-    cmock.return_value = True
-    vmock = mocker.patch(
-        "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major_minor",
-        new_callable=mock.PropertyMock,
-    )
-    vmock.return_value = tm.TomcatMajorMinor.V7_0
-    # don't care if this errors because all we care is that the decorator
-    # allowed us to try and make a HTTP request. Functionality of the
-    # decorated method is tested elsewhere
-    gmock = mocker.patch("requests.get")
-    gmock.side_effect = requests.HTTPError
-
-    with pytest.raises(ValueError):
-        tomcat.deploy_localwar(None, None)
-    with pytest.raises(ValueError):
-        tomcat.deploy_serverwar(None, None)
-    with pytest.raises(ValueError):
-        tomcat.deploy_servercontext(None, None)
-    with pytest.raises(ValueError):
-        tomcat.undeploy(None)
-    with pytest.raises(ValueError):
-        tomcat.start(None)
-    with pytest.raises(ValueError):
-        tomcat.stop(None)
-    with pytest.raises(ValueError):
-        tomcat.reload(None)
-    with pytest.raises(ValueError):
-        tomcat.sessions(None)
-    with pytest.raises(ValueError):
-        tomcat.expire(None)
-    with pytest.raises(requests.HTTPError):
-        response = tomcat.list()
-    assert gmock.call_count == 1
-    with pytest.raises(requests.HTTPError):
-        response = tomcat.server_info()
-    assert gmock.call_count == 2
-    with pytest.raises(requests.HTTPError):
-        response = tomcat.status_xml()
-    assert gmock.call_count == 3
-    with pytest.raises(requests.HTTPError):
-        response = tomcat.vm_info()
-    assert gmock.call_count == 4
-    with pytest.raises(requests.HTTPError):
-        response = tomcat.thread_dump()
-    assert gmock.call_count == 5
-    with pytest.raises(requests.HTTPError):
-        response = tomcat.resources()
-    assert gmock.call_count == 6
-    with pytest.raises(requests.HTTPError):
-        response = tomcat.find_leakers()
-    assert gmock.call_count == 7
 
 
 def test_implemented_by_decorations8_0(mocker):
@@ -275,5 +216,5 @@ def test_implemented_by_method():
 
 def test_implemented_by_method_invalid():
     tomcat = tm.TomcatManager()
-    assert not tomcat.implemented_by("ssl_reload", tm.TomcatMajorMinor.V7_0)
+    assert not tomcat.implemented_by("ssl_reload", tm.TomcatMajorMinor.V8_0)
     assert not tomcat.implemented_by("notamethod", tm.TomcatMajorMinor.V9_0)

@@ -227,32 +227,37 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 pass
 
         self.add_settable(
-            cmd2.Settable("echo", bool, "For piped input, echo command to output")
+            cmd2.Settable("echo", bool, "For piped input, echo command to output", self)
         )
         self.add_settable(
             cmd2.Settable(
                 "status_to_stdout",
                 bool,
                 "Status information to stdout instead of stderr",
+                self,
             )
         )
         self.add_settable(
             cmd2.Settable(
-                "status_prefix", str, "String to prepend to all status output"
+                "status_prefix", str, "String to prepend to all status output", self
             )
         )
-        self.add_settable(cmd2.Settable("editor", str, "Program used to edit files"))
         self.add_settable(
-            cmd2.Settable("timeout", float, "Seconds to wait for HTTP connections")
+            cmd2.Settable("editor", str, "Program used to edit files", self)
         )
         self.add_settable(
             cmd2.Settable(
-                "prompt", str, "The prompt displayed before accepting user input"
+                "timeout", float, "Seconds to wait for HTTP connections", self
+            )
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "prompt", str, "The prompt displayed before accepting user input", self
             )
         )
         self.prompt = "{}> ".format(self.app_name)
         self.add_settable(
-            cmd2.Settable("debug", str, "Show stack trace for exceptions")
+            cmd2.Settable("debug", str, "Show stack trace for exceptions", self)
         )
 
         self.tomcat = tm.TomcatManager()
@@ -364,7 +369,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             r.raise_for_status()
             self.exit_code = self.EXIT_SUCCESS
             return r
-        except tm.TomcatNotImplementedError as err:
+        except tm.TomcatNotImplementedError:
             self.perror("command not implemented by server")
             return None
         except tm.TomcatError as err:
@@ -696,7 +701,7 @@ change the value of one of this program's settings
         if self.config_file is not None:
             config = EvaluatingConfigParser()
             try:
-                with open(self.config_file, "r") as fobj:
+                with open(self.config_file, "r", encoding="utf-8") as fobj:
                     config.read_file(fobj)
             except FileNotFoundError:
                 pass
@@ -861,7 +866,6 @@ change the value of one of this program's settings
                 cacert = self.config[server]["cacert"]
             if self.config.has_option(server, "verify"):
                 verify = self.config[server]["verify"]
-            # check for user and password overrides on the command line
         else:
             # This is an ugly hack required to get argparse to show the help properly.
             # the argparser has both a config_name and a url positional argument.

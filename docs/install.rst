@@ -8,7 +8,6 @@ You'll need Python 3.6 or higher on macOS, Windows, or Linux.
 
 The following Tomcat versions are supported:
 
-- 7.0.x
 - 8.0.x
 - 8.5.x
 - 9.0.x
@@ -22,7 +21,7 @@ You can double check the list of versions supported by:
 .. code-block::
 
    $ tomcat-manager -v
-   3.0.0 (works with Tomcat >= 7.0 and <= 10.0)
+   4.0.0 (works with Tomcat >= 8.0 and <= 10.0)
 
 or:
 
@@ -30,7 +29,7 @@ or:
 
    $ tomcat-manager
    tomcat-manager> version
-   3.0.0 (works with Tomcat >= 7.0 and <= 10.0)
+   4.0.0 (works with Tomcat >= 8.0 and <= 10.0)
 
 These tools should work with newer versions of Tomcat than the ones officially
 supported. The Tomcat Manager web application that is part of Tomcat has been

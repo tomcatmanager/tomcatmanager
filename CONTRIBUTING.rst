@@ -87,11 +87,11 @@ Branches, Tags, and Versions
 This project uses a simplified version of the `git flow branching strategy
 <http://nvie.com/posts/a-successful-git-branching-model/>`_. We don't use release
 branches, and we generally don't do hotfixes, so we don't have any of those branches
-either. The master branch always contains the latest release of the code uploaded to
+either. The ``main`` branch always contains the latest release of the code uploaded to
 PyPI, with a tag for the version number of that release.
 
-The develop branch is where all the action occurs. Feature branches are welcome. When
-it's time for a release, we merge develop into master.
+The ``develop`` branch is where all the action occurs. Feature branches are welcome.
+When it's time for a release, we merge ``develop`` into ``main``.
 
 This project uses `semantic versioning <https://semver.org/>`_.
 

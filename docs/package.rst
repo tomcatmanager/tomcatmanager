@@ -160,6 +160,22 @@ want to check::
 
    >>> import tomcatmanager as tm
    >>> tomcat = tm.TomcatManager()
-   >>> tver = tm.TomcatMajorMinor.V7_0
+   >>> tver = tm.TomcatMajorMinor.V8_0
    >>> print(tomcat.implemented_by(tomcat.ssl_reload, tver))
    False
+
+
+Specifying As A Dependency
+--------------------------
+
+If you incorporate tomcatmanager into your own package, you will need to specify it as
+a dependency. I strongly recommend you specify the dependency such that it limits
+usage to a single major version of this library. This way when a new major version of
+this library is released, it won't break your code. If you use ``setup.py``, you
+should do it like this::
+
+   setup(
+   ...
+       install_requires=["tomcatmanager>=3,<4"]
+   ...
+   )

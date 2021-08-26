@@ -85,8 +85,15 @@ def _build_parser():
 
 #
 # entry point for command line
+# pylint: disable=too-many-branches
 def main(argv=None):
-    """Entry point for 'tomcat-manager' command line program."""
+    """Entry point for 'tomcat-manager' command line program.
+
+    :param argv:   pass a list of arguments to be processed. If None, sys.argv[1:] will
+                   be used. To process with no arguments, pass an empty list.
+    """
+    if argv is None:
+        argv = sys.argv[1:]
     parser = _build_parser()
     args = parser.parse_args(argv)
     if args.debug:

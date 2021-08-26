@@ -24,7 +24,7 @@
 # pylint: disable=protected-access, missing-function-docstring
 # pylint: disable=missing-module-docstring, unused-variable, redefined-outer-name
 
-import unittest.mock as mock
+from unittest import mock
 
 import pytest
 import requests
@@ -319,8 +319,8 @@ TOMCAT_VERSIONS = [
     ("", tm.TomcatMajorMinor.UNSUPPORTED),
     ("Apache Tomcat/sixpointfive", tm.TomcatMajorMinor.UNSUPPORTED),
     ("Apache Tomcat/6.0.3", tm.TomcatMajorMinor.UNSUPPORTED),
-    ("Tomcat Version: Apache Tomcat/7.0.33", tm.TomcatMajorMinor.V7_0),
-    ("Apache Tomcat/7.0.108", tm.TomcatMajorMinor.V7_0),
+    ("Tomcat Version: Apache Tomcat/7.0.33", tm.TomcatMajorMinor.UNSUPPORTED),
+    ("Apache Tomcat/7.0.108", tm.TomcatMajorMinor.UNSUPPORTED),
     ("Apache Tomcat/8.0.0", tm.TomcatMajorMinor.V8_0),
     ("Apache Tomcat/8.5.16", tm.TomcatMajorMinor.V8_5),
     ("Apache Tomcat/9.0.44", tm.TomcatMajorMinor.V9_0),
@@ -338,7 +338,6 @@ def test_tomcatmajor(version_string, major):
 
 def test_tomcatmajor_supported():
     assert tm.TomcatMajorMinor.supported() == [
-        tm.TomcatMajorMinor.V7_0,
         tm.TomcatMajorMinor.V8_0,
         tm.TomcatMajorMinor.V8_5,
         tm.TomcatMajorMinor.V9_0,
@@ -347,7 +346,7 @@ def test_tomcatmajor_supported():
 
 
 def test_tomcatmajor_lowest():
-    assert tm.TomcatMajorMinor.lowest_supported() == tm.TomcatMajorMinor.V7_0
+    assert tm.TomcatMajorMinor.lowest_supported() == tm.TomcatMajorMinor.V8_0
 
 
 def test_tomcatmajor_highest():

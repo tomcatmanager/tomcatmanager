@@ -417,7 +417,6 @@ class TomcatMajorMinor(enum.Enum):
 
     """
 
-    V7_0 = "7.0"
     V8_0 = "8.0"
     V8_5 = "8.5"
     V9_0 = "9.0"
@@ -442,10 +441,8 @@ class TomcatMajorMinor(enum.Enum):
             # shouldn't ever throw exceptions because of the regex
             major_ver = int(match.group(1))
             minor_ver = int(match.group(2))
-            if major_ver < 7:
+            if major_ver < 8:
                 ver = TomcatMajorMinor.UNSUPPORTED
-            if major_ver == 7 and minor_ver == 0:
-                ver = TomcatMajorMinor.V7_0
             elif major_ver == 8 and minor_ver == 0:
                 ver = TomcatMajorMinor.V8_0
             elif major_ver == 8 and minor_ver == 5:
@@ -466,7 +463,6 @@ class TomcatMajorMinor(enum.Enum):
         Return the list of officially supported Tomcat major versions
         """
         return [
-            TomcatMajorMinor.V7_0,
             TomcatMajorMinor.V8_0,
             TomcatMajorMinor.V8_5,
             TomcatMajorMinor.V9_0,

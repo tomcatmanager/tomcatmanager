@@ -20,3 +20,4 @@ Python API documentation for tomcatmanager |release|
    TomcatNotImplementedError
    migrating2
    migrating3
+   migrating4

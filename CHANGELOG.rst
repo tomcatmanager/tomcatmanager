@@ -9,6 +9,28 @@ format of this file follows recommendations from `Keep a Changelog
 <http://keepachangelog.com/en/1.0.0/>`_.
 
 
+4.0.0 (2021-08-26)
+------------------
+
+Added
+^^^^^
+
+- Add ``py.typed`` file to make type annotations work properly per PEP 516
+- Add documentation showing how to specify tomcatmanager as a dependency
+  in your package
+
+Removed
+^^^^^^^
+
+- Support for Tomcat 7, which is no longer supported or available for download
+
+Fixed
+^^^^^
+
+- Fixed bug when parsing authentication credentials on the shell command line
+  to ``tomcat-manager``
+
+
 3.0.0 (2021-05-04)
 ------------------
 
@@ -74,8 +96,7 @@ Changed
   <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.ssl_reload>`__,
   `TomcatNotImplementedError`_ will be raised.
 - Timeouts were previously ``int`` only, now they can be ``float``
-- The ``timeout`` parameter to `TomcatManager.connect()
-  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.connect>`_
+- The ``timeout`` parameter to `TomcatManager.connect()`_
   is now keyword only.
 
 
