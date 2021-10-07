@@ -45,22 +45,22 @@ Whether you ran the script, or did it by hand, you now have isolated virtualenvs
 each of the minor python versions. This table shows various python commands, the
 version of python which will be executed, and the virtualenv it will utilize.
 
-==============  ======  ==================
-Command        python   virtualenv
-==============  ======  ==================
-``python``     3.10.0  tomcatmanager-3.10
-``python3``    3.10.0  tomcatmanager-3.10
-``python3.10`` 3.10.0  tomcatmanager-3.10
-``python3.9``  3.9.7   tomcatmanager-3.9
-``python3.8``  3.8.12  tomcatmanager-3.8
-``python3.7``  3.7.12  tomcatmanager-3.7
-``pip``        3.9.1   tomcatmanager-3.10
-``pip3``       3.9.1   tomcatmanager-3.10
-``pip3.10``    3.10.0  tomcatmanager-3.10
-``pip3.9``     3.9.7   tomcatmanager-3.9
-``pip3.8``     3.8.12  tomcatmanager-3.8
-``pip3.7``     3.7.12  tomcatmanager-3.7
-=============  ======  =================
+==============  =======  ==================
+Command         python   virtualenv
+==============  =======  ==================
+``python``      3.10.0   tomcatmanager-3.10
+``python3``     3.10.0   tomcatmanager-3.10
+``python3.10``  3.10.0   tomcatmanager-3.10
+``python3.9``   3.9.7    tomcatmanager-3.9
+``python3.8``   3.8.12   tomcatmanager-3.8
+``python3.7``   3.7.12   tomcatmanager-3.7
+``pip``         3.9.1    tomcatmanager-3.10
+``pip3``        3.9.1    tomcatmanager-3.10
+``pip3.10``     3.10.0   tomcatmanager-3.10
+``pip3.9``      3.9.7    tomcatmanager-3.9
+``pip3.8``      3.8.12   tomcatmanager-3.8
+``pip3.7``      3.7.12   tomcatmanager-3.7
+==============  =======  ==================
 
 
 Install Dependencies
