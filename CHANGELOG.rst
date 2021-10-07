@@ -12,6 +12,16 @@ format of this file follows recommendations from `Keep a Changelog
 Unreleased
 ----------
 
+Added
+^^^^^
+
+- Support for Python 3.10
+
+Removed
+^^^^^^^
+
+- Support for Python 3.6, which will not receive security fixes after 2021-12-23
+
 
 4.0.0 (2021-08-26)
 ------------------

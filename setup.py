@@ -34,10 +34,10 @@ setup(
         "Intended Audience :: System Administrators",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
     ],
     keywords="java tomcat command line",
     packages=find_packages(where="src"),
@@ -46,7 +46,7 @@ setup(
     package_data={"tomcatmanager": ["py.typed"]},
     include_package_data=True,
     #
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     install_requires=[
         "cmd2>=2,<3",
         "requests>=2,<3",
