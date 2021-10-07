@@ -67,10 +67,9 @@ def test_main_sys_argv(tomcat_manager_server, capsys, monkeypatch):
 
 
 def test_main_user_password_url_command(tomcat_manager_server, capsys):
-    cmdline = "-u {} -p {} {} list".format(
-        tomcat_manager_server.user,
-        tomcat_manager_server.password,
-        tomcat_manager_server.url,
+    cmdline = (
+        f"-u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
     )
     argv = cmdline.split(" ")
     exit_code = main(argv)
@@ -84,10 +83,9 @@ def test_main_user_password_url_command(tomcat_manager_server, capsys):
 
 
 def test_main_quiet(tomcat_manager_server, capsys):
-    cmdline = "-q -u {} -p {} {} list".format(
-        tomcat_manager_server.user,
-        tomcat_manager_server.password,
-        tomcat_manager_server.url,
+    cmdline = (
+        f"-q -u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
     )
     argv = cmdline.split(" ")
     exit_code = main(argv)
@@ -119,10 +117,9 @@ def test_main_version(capsys):
 
 
 def test_main_debug(tomcat_manager_server, capsys):
-    cmdline = "-d -u {} -p {} {} list".format(
-        tomcat_manager_server.user,
-        tomcat_manager_server.password,
-        tomcat_manager_server.url,
+    cmdline = (
+        f"-d -u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
     )
     argv = cmdline.split(" ")
     exit_code = main(argv)
@@ -135,10 +132,9 @@ def test_main_debug(tomcat_manager_server, capsys):
 
 
 def test_main_version_with_others(tomcat_manager_server, capsys):
-    cmdline = "-v -q -u {} -p {} {} list".format(
-        tomcat_manager_server.user,
-        tomcat_manager_server.password,
-        tomcat_manager_server.url,
+    cmdline = (
+        f"-v -q -u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
     )
     argv = cmdline.split(" ")
     with pytest.raises(SystemExit) as exit_e:
@@ -153,10 +149,9 @@ def test_main_version_with_others(tomcat_manager_server, capsys):
 def test_main_stdin(tomcat_manager_server, capsys):
     inio = io.StringIO("list\n")
     stdin = sys.stdin
-    cmdline = "-u {} -p {} {}".format(
-        tomcat_manager_server.user,
-        tomcat_manager_server.password,
-        tomcat_manager_server.url,
+    cmdline = (
+        f"-u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
     )
     argv = cmdline.split(" ")
     try:
@@ -177,10 +172,9 @@ def test_main_stdin(tomcat_manager_server, capsys):
 def test_main_echo(tomcat_manager_server, capsys):
     inio = io.StringIO("list\n")
     stdin = sys.stdin
-    cmdline = "-e -u {} -p {} {}".format(
-        tomcat_manager_server.user,
-        tomcat_manager_server.password,
-        tomcat_manager_server.url,
+    cmdline = (
+        f"-e -u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
     )
     argv = cmdline.split(" ")
     try:
@@ -200,10 +194,10 @@ def test_main_echo(tomcat_manager_server, capsys):
 
 
 def test_main_status_to_stdout(tomcat_manager_server, capsys):
-    cmdline = "-s -u {} -p {} {} list".format(
-        tomcat_manager_server.user,
-        tomcat_manager_server.password,
-        tomcat_manager_server.url,
+    cmdline = (
+        f"-s -u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
+        f" list"
     )
     argv = cmdline.split(" ")
     exit_code = main(argv)
@@ -217,10 +211,10 @@ def test_main_status_to_stdout(tomcat_manager_server, capsys):
 
 
 def test_main_timeout(tomcat_manager_server, capsys):
-    cmdline = "-t 7.8 -u {} -p {} {} settings timeout".format(
-        tomcat_manager_server.user,
-        tomcat_manager_server.password,
-        tomcat_manager_server.url,
+    cmdline = (
+        f"-t 7.8 -u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
+        f" settings timeout"
     )
     argv = cmdline.split(" ")
     exit_code = main(argv)
@@ -231,10 +225,10 @@ def test_main_timeout(tomcat_manager_server, capsys):
 
 
 def test_main_timeout_zero(tomcat_manager_server, capsys):
-    cmdline = "-t 0 -u {} -p {} {} settings timeout".format(
-        tomcat_manager_server.user,
-        tomcat_manager_server.password,
-        tomcat_manager_server.url,
+    cmdline = (
+        f"-t 0 -u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
+        f" settings timeout"
     )
     argv = cmdline.split(" ")
     exit_code = main(argv)

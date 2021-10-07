@@ -92,7 +92,7 @@ class StatusCode(enum.Enum):
         for _, member in cls.__members__.items():
             if code == member.value:
                 return member
-        raise ValueError("{} is an unknown status code".format(code))
+        raise ValueError(f"{code} is an unknown status code")
 
 
 # pylint: disable=too-many-instance-attributes
@@ -241,7 +241,7 @@ class ApplicationState(enum.Enum):
         for _, member in cls.__members__.items():
             if state == member.value:
                 return member
-        raise ValueError("{} is an unknown application state".format(state))
+        raise ValueError(f"{state} is an unknown application state")
 
 
 class TomcatApplication:
@@ -256,18 +256,14 @@ class TomcatApplication:
         """
         Create a key usable by ``sort`` to sort by state, by path, by version.
         """
-        return "{}:{}:{}".format(
-            app.state.value or "", app.path or "", app.version or ""
-        )
+        return f"{app.state.value or ''}" f":{app.path or ''}" f":{app.version or ''}"
 
     @classmethod
     def sort_by_path_by_version_by_state(cls, app: "TomcatApplication"):
         """
         Create a key usable by ``sort`` to sort by path, by version, by state
         """
-        return "{}:{}:{}".format(
-            app.path or "", app.version or "", app.state.value or ""
-        )
+        return f"{app.path or ''}" f":{app.version or ''}" f":{app.state.value or ''}"
 
     def __init__(self):
         self._path = None
@@ -393,7 +389,7 @@ class TomcatApplication:
         if self.directory:
             dandv = self.directory
             if self.version:
-                dandv += "##{}".format(self.version)
+                dandv += f"##{self.version}"
         return dandv
 
 

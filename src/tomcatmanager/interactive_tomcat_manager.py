@@ -255,7 +255,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 "prompt", str, "The prompt displayed before accepting user input", self
             )
         )
-        self.prompt = "{}> ".format(self.app_name)
+        self.prompt = f"{self.app_name}> "
         self.add_settable(
             cmd2.Settable("debug", str, "Show stack trace for exceptions", self)
         )
@@ -293,7 +293,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         if msg is not None:
             try:
-                msg_str = "{}".format(msg)
+                msg_str = f"{msg}"
                 self.stdout.write(msg_str)
                 if not msg_str.endswith(end):
                     self.stdout.write(end)
@@ -318,7 +318,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         exception.
         """
         if msg:
-            sys.stderr.write("{}{}".format(msg, end))
+            sys.stderr.write(f"{msg}{end}")
         else:
             _type, _exception, _traceback = sys.exc_info()
             if _exception:
@@ -350,7 +350,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def default(self, statement: cmd2.Statement):
         """what to do if we don't recognize the command the user entered"""
         self.exit_code = self.EXIT_COMMAND_NOT_FOUND
-        self.perror("unknown command: {}".format(statement.command))
+        self.perror(f"unknown command: {statement.command}")
 
     ###
     #
@@ -409,16 +409,16 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         out = None
         if self.tomcat.is_connected:
-            out = "connected to {}".format(self.tomcat.url)
+            out = f"connected to {self.tomcat.url}"
             if self.tomcat.user:
-                out += " as {}".format(self.tomcat.user)
+                out += f" as {self.tomcat.user}"
             if self.tomcat.cert:
                 if isinstance(self.tomcat.cert, tuple):
                     # get the key
                     _, authby = self.tomcat.cert
                 else:
                     authby = self.tomcat.cert
-                out += " authenticated by {}".format(authby)
+                out += f" authenticated by {authby}"
 
         return out
 
@@ -436,58 +436,52 @@ class InteractiveTomcatManager(cmd2.Cmd):
             )
 
             help_ = self._help_add_header(help_, "Connecting to a Tomcat server")
-            help_.append("connect   {}".format(self.do_connect.__doc__))
-            help_.append("which     {}".format(self.do_which.__doc__))
+            help_.append(f"connect   {self.do_connect.__doc__}")
+            help_.append(f"which     {self.do_which.__doc__}")
 
             help_ = self._help_add_header(help_, "Managing applications")
-            help_.append("list      {}".format(self.do_list.__doc__))
-            help_.append("deploy    {}".format(self.do_deploy.__doc__))
-            help_.append("redeploy  {}".format(self.do_redeploy.__doc__))
-            help_.append("undeploy  {}".format(self.do_undeploy.__doc__))
-            help_.append("start     {}".format(self.do_start.__doc__))
-            help_.append("stop      {}".format(self.do_stop.__doc__))
-            help_.append("restart   {}".format(self.do_restart.__doc__))
+            help_.append(f"list      {self.do_list.__doc__}")
+            help_.append(f"deploy    {self.do_deploy.__doc__}")
+            help_.append(f"redeploy  {self.do_redeploy.__doc__}")
+            help_.append(f"undeploy  {self.do_undeploy.__doc__}")
+            help_.append(f"start     {self.do_start.__doc__}")
+            help_.append(f"stop      {self.do_stop.__doc__}")
+            help_.append(f"restart   {self.do_restart.__doc__}")
             help_.append("  reload  Synonym for 'restart'.")
-            help_.append("sessions  {}".format(self.do_sessions.__doc__))
-            help_.append("expire    {}".format(self.do_expire.__doc__))
+            help_.append(f"sessions  {self.do_sessions.__doc__}")
+            help_.append(f"expire    {self.do_expire.__doc__}")
 
             help_ = self._help_add_header(help_, "Server information")
-            help_.append("findleakers          {}".format(self.do_findleakers.__doc__))
-            help_.append("resources            {}".format(self.do_resources.__doc__))
-            help_.append("serverinfo           {}".format(self.do_serverinfo.__doc__))
-            help_.append("status               {}".format(self.do_status.__doc__))
-            help_.append("threaddump           {}".format(self.do_threaddump.__doc__))
-            help_.append("vminfo               {}".format(self.do_vminfo.__doc__))
+            help_.append(f"findleakers          {self.do_findleakers.__doc__}")
+            help_.append(f"resources            {self.do_resources.__doc__}")
+            help_.append(f"serverinfo           {self.do_serverinfo.__doc__}")
+            help_.append(f"status               {self.do_status.__doc__}")
+            help_.append(f"threaddump           {self.do_threaddump.__doc__}")
+            help_.append(f"vminfo               {self.do_vminfo.__doc__}")
 
             help_ = self._help_add_header(help_, "TLS configuration")
             help_.append(
-                "sslconnectorciphers       {}".format(
-                    self.do_sslconnectorciphers.__doc__
-                )
+                f"sslconnectorciphers       {self.do_sslconnectorciphers.__doc__}"
             )
             help_.append(
-                "sslconnectorcerts         {}".format(self.do_sslconnectorcerts.__doc__)
+                f"sslconnectorcerts         {self.do_sslconnectorcerts.__doc__}"
             )
             help_.append(
-                "sslconnectortrustedcerts  {}".format(
-                    self.do_sslconnectortrustedcerts.__doc__
-                )
+                f"sslconnectortrustedcerts  {self.do_sslconnectortrustedcerts.__doc__}"
             )
-            help_.append(
-                "sslreload                 {}".format(self.do_sslreload.__doc__)
-            )
+            help_.append(f"sslreload                 {self.do_sslreload.__doc__}")
 
             help_ = self._help_add_header(help_, "Settings, configuration, and tools")
-            help_.append("config       {}".format(self.do_config.__doc__))
+            help_.append(f"config       {self.do_config.__doc__}")
             help_.append("edit         Edit a file in the preferred text editor.")
-            help_.append("exit_code    {}".format(self.do_exit_code.__doc__))
+            help_.append(f"exit_code    {self.do_exit_code.__doc__}")
             help_.append(
                 "history      View, run, edit, and save previously entered commands."
             )
             help_.append("py           Execute python commands.")
             help_.append("pyscript     Run a file containing a python script.")
-            help_.append("set          {}".format(self.do_set.__doc__))
-            help_.append("show         {}".format(self.do_show.__doc__))
+            help_.append(f"set          {self.do_set.__doc__}")
+            help_.append(f"show         {self.do_show.__doc__}")
             help_.append("  settings   Synonym for 'show'.")
             help_.append(
                 "shell        Execute a command in the operating system shell."
@@ -497,9 +491,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help_ = self._help_add_header(help_, "Other")
             help_.append("exit     Exit this program.")
             help_.append("  quit   Synonym for 'exit'.")
-            help_.append("help     {}".format(self.do_help.__doc__))
-            help_.append("version  {}".format(self.do_version.__doc__))
-            help_.append("license  {}".format(self.do_license.__doc__))
+            help_.append(f"help     {self.do_help.__doc__}")
+            help_.append(f"version  {self.do_version.__doc__}")
+            help_.append(f"license  {self.do_license.__doc__}")
 
             for line in help_:
                 self.poutput(line)
@@ -548,8 +542,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 os.makedirs(configdir)
 
             # go edit the file
-            cmd = '"{}" "{}"'.format(self.editor, self.config_file)
-            self.pfeedback("executing {}".format(cmd))
+            cmd = f'"{self.editor}" "{self.config_file}"'
+            self.pfeedback(f"executing {cmd}")
             os.system(cmd)
 
             # read it back in and apply it
@@ -581,21 +575,21 @@ class InteractiveTomcatManager(cmd2.Cmd):
         for setting in self.settables:
             if (not args.setting) or (setting == args.setting):
                 val = str(getattr(self, setting))
-                result[setting] = "{}={}".format(setting, self._pythonize(val))
+                result[setting] = f"{setting}={self._pythonize(val)}"
                 maxlen = max(maxlen, len(result[setting]))
         # make a little extra space
         maxlen += 1
         if result:
             for setting in sorted(result):
                 self.poutput(
-                    "{}  # {}".format(
-                        result[setting].ljust(maxlen),
-                        self.settables[setting].description,
+                    (
+                        f"{result[setting].ljust(maxlen)}"
+                        f"  # {self.settables[setting].description}"
                     )
                 )
             self.exit_code = self.EXIT_SUCCESS
         else:
-            self.perror("unknown setting: '{}'".format(args.setting))
+            self.perror(f"unknown setting: '{args.setting}'")
             self.exit_code = self.EXIT_ERROR
 
     def help_show(self):
@@ -625,7 +619,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Change program settings."""
         if args:
             config = EvaluatingConfigParser()
-            setting_string = "[settings]\n{}".format(args)
+            setting_string = f"[settings]\n{args}"
             try:
                 config.read_string(setting_string)
             except configparser.ParsingError:
@@ -644,7 +638,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                             self.perror(err)
                         self.exit_code = self.EXIT_ERROR
                 else:
-                    self.perror("unknown setting: '{}'".format(param_name))
+                    self.perror(f"unknown setting: '{param_name}'")
                     self.exit_code = self.EXIT_ERROR
         else:
             self.perror("invalid syntax: try {setting}={value}")
@@ -748,7 +742,7 @@ change the value of one of this program's settings
             if value is None or value == "":
                 raise ValueError("invalid syntax: must be true-ish or false-ish")
             # we can't figure out what it is
-            raise ValueError("invalid syntax: not a boolean: '{}'".format(value))
+            raise ValueError(f"invalid syntax: not a boolean: '{value}'")
         return self.BOOLEAN_VALUES[value.lower()]
 
     @staticmethod
@@ -770,13 +764,13 @@ change the value of one of this program's settings
             # use sq as the outer quote, which means we have to
             # backslash all the other sq in the string
             value = value.replace(single_quote, "\\" + single_quote)
-            pvalue = "'{}'".format(value)
+            pvalue = f"'{value}'"
         elif single_quote in value:
-            pvalue = '"{}"'.format(value)
+            pvalue = f'"{value}"'
         elif double_quote in value:
-            pvalue = "'{}'".format(value)
+            pvalue = f"'{value}'"
         elif " " in value:
-            pvalue = "'{}'".format(value)
+            pvalue = f"'{value}'"
         return pvalue
 
     ###
@@ -915,9 +909,7 @@ change the value of one of this program's settings
             if r.ok:
                 self.pfeedback(self._which_server())
                 if r.server_info.tomcat_version:
-                    self.pfeedback(
-                        "tomcat version: {}".format(r.server_info.tomcat_version)
-                    )
+                    self.pfeedback(f"tomcat version: {r.server_info.tomcat_version}")
                 self.exit_code = self.EXIT_SUCCESS
             else:
                 if self.debug:
@@ -934,15 +926,15 @@ change the value of one of this program's settings
                         # there was some problem with the request, but we
                         # got http 200 OK. That means there was no tomcat
                         # at the url
-                        self.perror("tomcat manager not found at {}".format(url))
+                        self.perror(f"tomcat manager not found at {url}")
                     elif r.response.status_code == requests.codes.not_found:
                         # we connected, but the url was bad. No tomcat there
-                        self.perror("tomcat manager not found at {}".format(url))
+                        self.perror(f"tomcat manager not found at {url}")
                     else:
                         self.perror(
-                            "http error: {} {}".format(
-                                r.response.status_code,
-                                http.client.responses[r.response.status_code],
+                            (
+                                f"http error: {r.response.status_code}"
+                                f" {http.client.responses[r.response.status_code]}"
                             )
                         )
                     self.exit_code = self.EXIT_ERROR
@@ -1437,7 +1429,7 @@ change the value of one of this program's settings
         r = self.docmd(self.tomcat.resources, args.class_name)
         if r.resources:
             for resource, classname in iter(sorted(r.resources.items())):
-                self.poutput("{}: {}".format(resource, classname))
+                self.poutput(f"{resource}: {classname}")
         else:
             self.exit_code = self.EXIT_ERROR
 
@@ -1499,7 +1491,7 @@ change the value of one of this program's settings
     exit_code_epilog = []
     exit_code_epilog.append("The codes have the following meanings:")
     for number, name in EXIT_CODES.items():
-        exit_code_epilog.append("    {:3}  {}".format(number, name))
+        exit_code_epilog.append(f"    {number:3}  {name}")
 
     exit_code_parser = argparse.ArgumentParser(
         prog="exit_code",

@@ -129,8 +129,9 @@ class TomcatManager:
                     if celff.tomcat_major_minor in self.tomcats:
                         return method(celff, *args, **kwargs)
                     raise TomcatNotImplementedError(
-                        "'{}' not implemented on Tomcat {}".format(
-                            method.__name__, celff.tomcat_major_minor.value
+                        (
+                            f"'{method.__name__}' not implemented on"
+                            f" Tomcat {celff.tomcat_major_minor.value}"
                         )
                     )
                 raise TomcatNotConnected("not connected")

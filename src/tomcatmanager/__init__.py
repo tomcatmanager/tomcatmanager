@@ -58,8 +58,9 @@ try:
     __version__ = importlib_metadata.version(__name__)
 except importlib_metadata.PackageNotFoundError:  # pragma: nocover
     __version__ = "unknown"
-VERSION_STRING = "{} (works with Tomcat >= {} and <= {})".format(
-    __version__,
-    TomcatMajorMinor.lowest_supported().value,
-    TomcatMajorMinor.highest_supported().value,
+VERSION_STRING = (
+    f"{__version__} (works with"
+    f" Tomcat >= {TomcatMajorMinor.lowest_supported().value}"
+    f" and <= {TomcatMajorMinor.highest_supported().value}"
+    f")"
 )
