@@ -95,6 +95,28 @@ When it's time for a release, we merge ``develop`` into ``main``.
 
 This project uses `semantic versioning <https://semver.org/>`_.
 
+When this library adds support for a new version of Tomcat or Python, we increment the
+minor version number. However, if support for these new versions requires API changes
+incompatible with prior releases of this software, then we increment the major version
+number.
+
+When this library drops support for a version of Tomcat or Python, we increment the
+major version number. For example, when this project dropped support for Python 3.6,
+we released that version as 5.0.0 instead of 4.1.0, even though there were no
+incompatible API changes.
+
+These versioning rules were chosen so that if you are using this library against a
+single version of Tomcat, and you specify your ``setup.py`` dependency rules like::
+
+   setup(
+   ...
+       install_requires=["tomcatmanager>=3,<4"]
+   ...
+   )
+
+and you won't have to worry about a future release of this software breaking your
+setup.
+
 
 Invoking Common Development Tasks
 ---------------------------------
