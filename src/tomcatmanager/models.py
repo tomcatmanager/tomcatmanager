@@ -119,7 +119,7 @@ class TomcatManagerResponse:
 
     """
 
-    def __init__(self, response=None):
+    def __init__(self, response: requests.Response=None):
         self._response = response
 
         self.status_code = None
