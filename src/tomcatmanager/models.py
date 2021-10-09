@@ -119,7 +119,7 @@ class TomcatManagerResponse:
 
     """
 
-    def __init__(self, response: requests.Response=None):
+    def __init__(self, response=None):
         self._response = response
 
         self.status_code = None
@@ -183,7 +183,7 @@ class TomcatManagerResponse:
             raise TomcatError(self.status_message)
 
     @property
-    def response(self) -> requests.Response:
+    def response(self):
         """
         The server's response to an HTTP request.
 
@@ -200,7 +200,7 @@ class TomcatManagerResponse:
         return self._response
 
     @response.setter
-    def response(self, response: requests.Response):
+    def response(self, response):
         self._response = response
         # parse the text to get the status code and results
         if response.text:
