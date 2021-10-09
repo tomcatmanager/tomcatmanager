@@ -16,6 +16,7 @@ Added
 ^^^^^
 
 - Support for Python 3.10
+- Cross-reference links to Requests and standard library documentation
 
 Removed
 ^^^^^^^
