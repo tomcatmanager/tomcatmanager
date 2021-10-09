@@ -313,7 +313,7 @@ class TomcatManager:
 
         :return: ``True`` if connected to a tomcat server, otherwise, ``False``.
         """
-        return self._url and self._tomcat_major_minor
+        return (self._url is not None) and (self._tomcat_major_minor is not None)
 
     def connect(
         self,
