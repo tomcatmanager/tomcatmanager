@@ -206,6 +206,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             allow_cli_args=False,
             terminators=[],
             auto_load_commands=False,
+            include_py=True,
         )
 
         self.echo = False
@@ -472,21 +473,21 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help_.append(f"sslreload                 {self.do_sslreload.__doc__}")
 
             help_ = self._help_add_header(help_, "Settings, configuration, and tools")
-            help_.append(f"config       {self.do_config.__doc__}")
-            help_.append("edit         Edit a file in the preferred text editor.")
-            help_.append(f"exit_code    {self.do_exit_code.__doc__}")
+            help_.append(f"config        {self.do_config.__doc__}")
+            help_.append("edit          Edit a file in the preferred text editor.")
+            help_.append(f"exit_code     {self.do_exit_code.__doc__}")
             help_.append(
-                "history      View, run, edit, and save previously entered commands."
+                "history       View, run, edit, and save previously entered commands."
             )
-            help_.append("py           Execute python commands.")
-            help_.append("pyscript     Run a file containing a python script.")
-            help_.append(f"set          {self.do_set.__doc__}")
-            help_.append(f"show         {self.do_show.__doc__}")
-            help_.append("  settings   Synonym for 'show'.")
+            help_.append("py            Run an interactive python shell.")
+            help_.append("run_pyscript  Run a file containing a python script.")
+            help_.append(f"set           {self.do_set.__doc__}")
+            help_.append(f"show          {self.do_show.__doc__}")
+            help_.append("  settings    Synonym for 'show'.")
             help_.append(
-                "shell        Execute a command in the operating system shell."
+                "shell         Execute a command in the operating system shell."
             )
-            help_.append("shortcuts    Show shortcuts for other commands.")
+            help_.append("shortcuts     Show shortcuts for other commands.")
 
             help_ = self._help_add_header(help_, "Other")
             help_.append("exit     Exit this program.")
