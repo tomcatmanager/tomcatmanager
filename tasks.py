@@ -199,11 +199,10 @@ def eggs_clean(context):
     # pylint: disable=unused-argument
     dirs = set()
     dirs.add(".eggs")
-    for name in os.listdir(os.curdir):
-        if name.endswith(".egg-info"):
-            dirs.add(name)
-        if name.endswith(".egg"):
-            dirs.add(name)
+    for _, _, files in os.walk(os.curdir):
+        for file in files:
+            if file.endswith(".egg"):
+                dirs.add(file)
     rmrf(dirs)
 
 
@@ -215,12 +214,12 @@ def bytecode_clean(context):
     "Remove __pycache__ directories and *.pyc files"
     # pylint: disable=unused-argument
     dirs = set()
-    for root, dirnames, files in os.walk(os.curdir):
-        if "__pycache__" in dirnames:
-            dirs.add(os.path.join(root, "__pycache__"))
+    for dirpath, _, files in os.walk(os.curdir):
+        if dirpath == "__pycache__":
+            dirs.add(dirpath)
         for file in files:
             if file.endswith(".pyc"):
-                dirs.add(os.path.join(root, file))
+                dirs.add(os.path.join(dirpath, file))
     print("Removing __pycache__ directories and .pyc files")
     rmrf(dirs, verbose=False)
 
