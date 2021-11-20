@@ -66,13 +66,13 @@ def start_mock_server_9_0(tms):
     address, port = sock.getsockname()
     sock.close()
 
-    tms.url = "http://localhost:{}/manager".format(port)
+    tms.url = f"http://localhost:{port}/manager"
     tms.user = MockRequestHandler90.USER
     tms.password = MockRequestHandler90.PASSWORD
     tms.cert = None
     tms.warfile = "/path/to/server.war"
     tms.contextfile = "path/to/context.xml"
-    tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
+    tms.connect_command = f"connect {tms.url} {tms.user} {tms.password}"
 
     mock_server = HTTPServer(("localhost", port), MockRequestHandler90)
     mock_server_thread = threading.Thread(target=mock_server.serve_forever)

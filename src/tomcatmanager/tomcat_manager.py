@@ -129,8 +129,9 @@ class TomcatManager:
                     if celff.tomcat_major_minor in self.tomcats:
                         return method(celff, *args, **kwargs)
                     raise TomcatNotImplementedError(
-                        "'{}' not implemented on Tomcat {}".format(
-                            method.__name__, celff.tomcat_major_minor.value
+                        (
+                            f"'{method.__name__}' not implemented on"
+                            f" Tomcat {celff.tomcat_major_minor.value}"
                         )
                     )
                 raise TomcatNotConnected("not connected")
@@ -312,7 +313,7 @@ class TomcatManager:
 
         :return: ``True`` if connected to a tomcat server, otherwise, ``False``.
         """
-        return self._url and self._tomcat_major_minor
+        return (self._url is not None) and (self._tomcat_major_minor is not None)
 
     def connect(
         self,

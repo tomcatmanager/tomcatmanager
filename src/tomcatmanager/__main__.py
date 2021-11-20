@@ -128,9 +128,7 @@ def main(argv=None):
         if args.command:
             if itm.exit_code == itm.EXIT_SUCCESS:
                 # we connected successfully, go run the command
-                itm.onecmd_plus_hooks(
-                    "{} {}".format(args.command, " ".join(args.command_args))
-                )
+                itm.onecmd_plus_hooks(f"{args.command} {' '.join(args.command_args)}")
         else:
             # we have no command, but we got a url, regardless of
             # whether the connect command worked or didn't, let's drop

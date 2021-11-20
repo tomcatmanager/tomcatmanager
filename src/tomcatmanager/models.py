@@ -65,7 +65,7 @@ class TomcatNotConnected(Exception):
 class StatusCode(enum.Enum):
     """An enumeration of the various Tomcat Manager web application status codes
 
-    ``tomcatmanager`` uses the excellent `requests <https://github.com/psf/requests>`_
+    ``tomcatmanager`` uses the excellent `requests <https://github.com/psf/requests>`__
     library, which uses a custom ``LookupDict`` class to store HTTP status codes in a
     dictionary. After much debate on whether we should do it the requests way, or
     a more pythonic way, I chose to use a native Enum class instead.
@@ -92,7 +92,7 @@ class StatusCode(enum.Enum):
         for _, member in cls.__members__.items():
             if code == member.value:
                 return member
-        raise ValueError("{} is an unknown status code".format(code))
+        raise ValueError(f"{code} is an unknown status code")
 
 
 # pylint: disable=too-many-instance-attributes
@@ -119,7 +119,7 @@ class TomcatManagerResponse:
 
     """
 
-    def __init__(self, response=None):
+    def __init__(self, response: requests.Response = None):
         self._response = response
 
         self.status_code = None
@@ -171,7 +171,7 @@ class TomcatManagerResponse:
         """
         Raise exceptions for server errors.
 
-        First this method calls ``requests.Response.raise_for_status()`` which
+        First this method calls :meth:`requests.Response.raise_for_status()` which
         raises exceptions if a 4xx or 5xx response is received from the server.
 
         If that doesn't raise anything, then it raises a :class:`TomcatError`
@@ -183,22 +183,24 @@ class TomcatManagerResponse:
             raise TomcatError(self.status_message)
 
     @property
-    def response(self) -> requests.models.Response:
+    def response(self) -> requests.Response:
         """
         The server's response to an HTTP request.
 
-        :class:`.TomcatManager` uses the excellent Requests package for HTTP
-        communication. This property returns the ``requests.models.Response``
-        object which contains the server's response to the HTTP request.
+        :class:`.TomcatManager` uses the excellent
+        `Requests <https://docs.python-requests.org/en/master/index.html>`__
+        package for HTTP communication. This property returns the
+        :class:`requests.Response` object which contains the server's response
+        to the HTTP request.
 
-        Of particular use is ``requests.models.Response.text`` which contains
+        Of particular use is :attr:`requests.Response.text` which contains
         the content of the response in unicode. If you want raw access to the
         content returned by the Tomcat Server, this is where you can get it.
         """
         return self._response
 
     @response.setter
-    def response(self, response: requests.models.Response):
+    def response(self, response: requests.Response):
         self._response = response
         # parse the text to get the status code and results
         if response.text:
@@ -241,7 +243,7 @@ class ApplicationState(enum.Enum):
         for _, member in cls.__members__.items():
             if state == member.value:
                 return member
-        raise ValueError("{} is an unknown application state".format(state))
+        raise ValueError(f"{state} is an unknown application state")
 
 
 class TomcatApplication:
@@ -256,18 +258,14 @@ class TomcatApplication:
         """
         Create a key usable by ``sort`` to sort by state, by path, by version.
         """
-        return "{}:{}:{}".format(
-            app.state.value or "", app.path or "", app.version or ""
-        )
+        return f"{app.state.value or ''}" f":{app.path or ''}" f":{app.version or ''}"
 
     @classmethod
     def sort_by_path_by_version_by_state(cls, app: "TomcatApplication"):
         """
         Create a key usable by ``sort`` to sort by path, by version, by state
         """
-        return "{}:{}:{}".format(
-            app.path or "", app.version or "", app.state.value or ""
-        )
+        return f"{app.path or ''}" f":{app.version or ''}" f":{app.state.value or ''}"
 
     def __init__(self):
         self._path = None
@@ -393,7 +391,7 @@ class TomcatApplication:
         if self.directory:
             dandv = self.directory
             if self.version:
-                dandv += "##{}".format(self.version)
+                dandv += f"##{self.version}"
         return dandv
 
 

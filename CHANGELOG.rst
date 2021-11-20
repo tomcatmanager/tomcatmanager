@@ -9,6 +9,31 @@ format of this file follows recommendations from `Keep a Changelog
 <http://keepachangelog.com/en/1.0.0/>`_.
 
 
+5.0.0 (2021-11-19)
+------------------
+
+Added
+^^^^^
+
+- Support for Python 3.10
+- Cross-reference links to Requests and standard library documentation
+
+Removed
+^^^^^^^
+
+- Support for Python 3.6, which will not receive security fixes after 2021-12-23.
+  Python 3.6 should still work for now, but we no longer test against it.
+
+Fixed
+^^^^^
+
+- `TomcatManager.is_connected()
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.is_connected>`__
+  now returns ``True`` or ``False`` instead of truthy or falsy values
+- Fix interactive ``py`` and ``pyscript`` commands which were broken by upstream
+  changes in cmd2 version 2.0
+
+
 4.0.0 (2021-08-26)
 ------------------
 

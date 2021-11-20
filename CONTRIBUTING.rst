@@ -27,40 +27,40 @@ creation of these environments.
 If you prefer to create these virtual envs by hand, do the following::
 
    $ cd tomcatmanager
-   $ pyenv install 3.9.1
-   $ pyenv virtualenv -p python3.9 3.9.1 tomcatmanager-3.9
-   $ pyenv install 3.8.7
-   $ pyenv virtualenv -p python3.8 3.8.7 tomcatmanager-3.8
-   $ pyenv install 3.7.10
-   $ pyenv virtualenv -p python3.7 3.7.10 tomcatmanager-3.7
-   $ pyenv install 3.6.13
-   $ pyenv virtualenv -p python3.6 3.6.13 tomcatmanager-3.6
+   $ pyenv install 3.10.0
+   $ pyenv virtualenv -p python3.10 3.10.0 tomcatmanager-3.10
+   $ pyenv install 3.9.7
+   $ pyenv virtualenv -p python3.9 3.9.7 tomcatmanager-3.9
+   $ pyenv install 3.8.12
+   $ pyenv virtualenv -p python3.8 3.8.12 tomcatmanager-3.8
+   $ pyenv install 3.7.12
+   $ pyenv virtualenv -p python3.7 3.7.12 tomcatmanager-3.7
 
 
 Now set pyenv to make all four of those available at the same time::
 
-   $ pyenv local tomcatmanager-3.8 tomcatmanager-3.7 tomcatmanager-3.6 tomcatmanager-3.5
+   $ pyenv local tomcatmanager-3.10 tomcatmanager-3.9 tomcatmanager-3.8 tomcatmanager-3.7
 
 Whether you ran the script, or did it by hand, you now have isolated virtualenvs for
 each of the minor python versions. This table shows various python commands, the
 version of python which will be executed, and the virtualenv it will utilize.
 
-=============  ======  =================
-Command        python   virtualenv
-=============  ======  =================
-``python``     3.9.1   tomcatmanager-3.9
-``python3``    3.9.1   tomcatmanager-3.9
-``python3.9``  3.9.1   tomcatmanager-3.9
-``python3.8``  3.8.7   tomcatmanager-3.5
-``python3.7``  3.7.10  tomcatmanager-3.7
-``python3.6``  3.6.13  tomcatmanager-3.6
-``pip``        3.9.1   tomcatmanager-3.9
-``pip3``       3.9.1   tomcatmanager-3.9
-``pip3.9``     3.9.1   tomcatmanager-3.9
-``pip3.8``     3.8.7   tomcatmanager-3.8
-``pip3.7``     3.7.10  tomcatmanager-3.7
-``pip3.6``     3.6.13  tomcatmanager-3.6
-=============  ======  =================
+==============  =======  ==================
+Command         python   virtualenv
+==============  =======  ==================
+``python``      3.10.0   tomcatmanager-3.10
+``python3``     3.10.0   tomcatmanager-3.10
+``python3.10``  3.10.0   tomcatmanager-3.10
+``python3.9``   3.9.7    tomcatmanager-3.9
+``python3.8``   3.8.12   tomcatmanager-3.8
+``python3.7``   3.7.12   tomcatmanager-3.7
+``pip``         3.9.1    tomcatmanager-3.10
+``pip3``        3.9.1    tomcatmanager-3.10
+``pip3.10``     3.10.0   tomcatmanager-3.10
+``pip3.9``      3.9.7    tomcatmanager-3.9
+``pip3.8``      3.8.12   tomcatmanager-3.8
+``pip3.7``      3.7.12   tomcatmanager-3.7
+==============  =======  ==================
 
 
 Install Dependencies
@@ -94,6 +94,28 @@ The ``develop`` branch is where all the action occurs. Feature branches are welc
 When it's time for a release, we merge ``develop`` into ``main``.
 
 This project uses `semantic versioning <https://semver.org/>`_.
+
+When this library adds support for a new version of Tomcat or Python, we increment the
+minor version number. However, if support for these new versions requires API changes
+incompatible with prior releases of this software, then we increment the major version
+number.
+
+When this library drops support for a version of Tomcat or Python, we increment the
+major version number. For example, when this project dropped support for Python 3.6,
+we released that version as 5.0.0 instead of 4.1.0, even though there were no
+incompatible API changes.
+
+These versioning rules were chosen so that if you are using this library against a
+single version of Tomcat, and you specify your ``setup.py`` dependency rules like::
+
+   setup(
+   ...
+       install_requires=["tomcatmanager>=3,<4"]
+   ...
+   )
+
+and you won't have to worry about a future release of this software breaking your
+setup.
 
 
 Invoking Common Development Tasks

@@ -73,7 +73,7 @@ The interactive shell has a built-in list of all available commands:
    exit_code    Show a number indicating the status of the previous command.
    history      View, run, edit, and save previously entered commands.
    py           Execute python commands.
-   pyscript     Run a file containing a python script.
+   run_pyscript Run a file containing a python script.
    set          Change program settings.
    show         Show all settings or a specific setting.
      settings   Synonym for 'show'.
@@ -544,23 +544,19 @@ You can launch a python interpreter:
 .. code-block::
 
   tomcat-manager> py
-  Python 3.6.1 (default, Apr  4 2017, 09:40:51)
-  [GCC 4.2.1 Compatible Apple LLVM 8.0.0 (clang-800.0.42.1)] on darwin
+  Python 3.10.0 (default, Oct  7 2021, 15:03:23) [Clang 11.0.3 (clang-1103.0.32.62)] on darwin
   Type "help", "copyright", "credits" or "license" for more information.
-  (InteractiveTomcatManager)
 
-      py <command>: Executes a Python command.
-      py: Enters interactive Python mode.
-      End with ``Ctrl-D`` (Unix) / ``Ctrl-Z`` (Windows), ``quit()``, ``exit()``.
-      Non-python commands can be issued with ``cmd("your command")``.
-      Run python code from external script files with ``run("script.py")``
+  Use `Ctrl-D` (Unix) / `Ctrl-Z` (Windows), `quit()`, `exit()` to exit.
+  Run CLI commands with: app("command ...")
 
   >>> self.tomcat
-  <tomcatmanager.tomcat_manager.TomcatManager object at 0x10f353550>
+  <tomcatmanager.tomcat_manager.TomcatManager object at 0x10f652a40>
   >>> self.tomcat.is_connected
   True
   >>> exit()
+  Now exiting Python shell...
 
 As you can see, if you have connected to a Tomcat server, then you will have a
-``self.tomcat`` object available. See :doc:`package` for more information about
-what you can do with this object.
+``self.tomcat`` object available which is an instance of :class:`.TomcatManager`.
+See :doc:`package` for more information about what you can do with this object.

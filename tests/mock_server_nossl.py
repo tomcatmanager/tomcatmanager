@@ -53,9 +53,7 @@ class MockRequestHandlerNoSSL(BaseHTTPRequestHandler):
 
     USER = "admin"
     PASSWORD = "admin"
-    AUTH_KEY = base64.b64encode("{}:{}".format(USER, PASSWORD).encode("utf-8")).decode(
-        "utf-8"
-    )
+    AUTH_KEY = base64.b64encode(f"{USER}:{PASSWORD}".encode("utf-8")).decode("utf-8")
     TEXT_PATTERN = re.compile(r"^/manager/text/?$")
     # info commands
     LIST_PATTERN = re.compile(r"^/manager/text/list($|\?.*$)")
@@ -173,7 +171,7 @@ class MockRequestHandlerNoSSL(BaseHTTPRequestHandler):
 
     def send_fail(self, msg=None):
         """Send the Tomcat FAIL message."""
-        self.send_text("FAIL - {}".format(msg))
+        self.send_text(f"FAIL - {msg}")
 
     def send_text(self, content):
         """Send a status ok and content as text/html."""
@@ -933,19 +931,19 @@ Default maximum session inactive interval 30 minutes
         """Start an application."""
         path = self.ensure_path("Invalid context path null was specified")
         if path:
-            self.send_text("OK - Started application at context path {}".format(path))
+            self.send_text(f"OK - Started application at context path {path}")
 
     def get_stop(self):
         """Stop an application."""
         path = self.ensure_path("Invalid context path null was specified")
         if path:
-            self.send_text("OK - Stopped application at context path {}".format(path))
+            self.send_text(f"OK - Stopped application at context path {path}")
 
     def get_reload(self):
         """Stop and start an application."""
         path = self.ensure_path("Invalid context path null was specified")
         if path:
-            self.send_text("OK - Reloaded application at context path {}".format(path))
+            self.send_text(f"OK - Reloaded application at context path {path}")
 
     def put_deploy(self):
         """Deploy a tomcat application from an incoming stream."""
@@ -953,7 +951,7 @@ Default maximum session inactive interval 30 minutes
         if path:
             length = int(self.headers.get("Content-Length"))
             self.rfile.read(length)
-            self.send_text("OK - Deployed application at context path {}".format(path))
+            self.send_text(f"OK - Deployed application at context path {path}")
 
     def get_deploy(self):
         """Deploy a tomcat application already in a war file on the server."""
@@ -966,14 +964,10 @@ Default maximum session inactive interval 30 minutes
             context = query_string.get("config", None)
 
             if context:
-                self.send_text(
-                    "OK - Deployed application at context path {}".format(path)
-                )
+                self.send_text(f"OK - Deployed application at context path {path}")
             else:
                 if war:
-                    self.send_text(
-                        "OK - Deployed application at context path {}".format(path)
-                    )
+                    self.send_text(f"OK - Deployed application at context path {path}")
                 else:
                     self.send_text(
                         "FAIL - Invalid parameters supplied for command [/deploy]"
@@ -983,6 +977,4 @@ Default maximum session inactive interval 30 minutes
         """Remove an application from the server."""
         path = self.ensure_path("Invalid context path null was specified")
         if path:
-            self.send_text(
-                "OK - Undeployed application at context path {}".format(path)
-            )
+            self.send_text(f"OK - Undeployed application at context path {path}")
