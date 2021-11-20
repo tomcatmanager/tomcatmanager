@@ -114,7 +114,7 @@ single version of Tomcat, and you specify your ``setup.py`` dependency rules lik
    ...
    )
 
-and you won't have to worry about a future release of this software breaking your
+you won't have to worry about a future release of this software breaking your
 setup.
 
 
