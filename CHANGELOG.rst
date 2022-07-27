@@ -12,6 +12,14 @@ format of this file follows recommendations from `Keep a Changelog
 Unreleased
 ----------
 
+Changed
+^^^^^^^
+
+- ``config_file`` attribute now contains a ``pathlib.Path`` object instead
+  of a ``str`` for better cross-platform compatability
+- ``history_file`` attribute now contains a ``pathlib.Path`` object instead
+  of a ``str`` for better cross-platform compatability
+
 
 5.0.0 (2021-11-19)
 ------------------
@@ -25,8 +33,9 @@ Added
 Removed
 ^^^^^^^
 
-- Support for Python 3.6, which will not receive security fixes after 2021-12-23.
-  Python 3.6 should still work for now, but we no longer test against it.
+- Support for Python 3.6, which will not receive security fixes after
+  2021-12-23. Python 3.6 should still work for now, but we no longer test
+  against it.
 
 Fixed
 ^^^^^

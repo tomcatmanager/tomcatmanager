@@ -32,6 +32,7 @@ import configparser
 import getpass
 import http.client
 import os
+import pathlib
 import sys
 import traceback
 import xml.dom.minidom
@@ -538,9 +539,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 return
 
             # ensure the configuration directory exists
-            configdir = os.path.dirname(self.config_file)
-            if not os.path.exists(configdir):  # pragma: nocover
-                os.makedirs(configdir)
+            configdir = self.config_file.parent
+            if not configdir.exists():  # pragma: nocover
+                configdir.mkdir(parents=True, exist_ok=True)
 
             # go edit the file
             cmd = f'"{self.editor}" "{self.config_file}"'
@@ -665,7 +666,7 @@ change the value of one of this program's settings
     #
     ###
     @property
-    def config_file(self) -> str:
+    def config_file(self) -> pathlib.Path:
         """
         The location of the user configuration file.
 
@@ -674,11 +675,11 @@ change the value of one of this program's settings
         """
         if self.appdirs:
             filename = self.app_name + ".ini"
-            return os.path.join(self.appdirs.user_config_dir, filename)
+            return pathlib.Path(self.appdirs.user_config_dir).resolve() / filename
         return None
 
     @property
-    def history_file(self) -> str:
+    def history_file(self) -> pathlib.Path:
         """
         The location of the command history file.
 
@@ -687,7 +688,7 @@ change the value of one of this program's settings
                 defined.
         """
         if self.appdirs:
-            return os.path.join(self.appdirs.user_config_dir, "history.txt")
+            return pathlib.Path(self.appdirs.user_config_dir).resolve() / "history.txt"
         return None
 
     def load_config(self):
@@ -978,7 +979,7 @@ change the value of one of this program's settings
     ###
     def deploy_local(self, args: argparse.Namespace, update: bool = False):
         """Deploy a local war file to the tomcat server."""
-        warfile = os.path.expanduser(args.warfile)
+        warfile = pathlib.Path(args.warfile).expanduser()
         with open(warfile, "rb") as fileobj:
             self.exit_code = self.EXIT_SUCCESS
             self.docmd(

@@ -3,7 +3,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # pylint: disable=missing-class-docstring, redefined-outer-name
 
-import os
+import pathlib
 import pytest
 
 import tomcatmanager as tm
@@ -186,7 +186,8 @@ def tomcat(tomcat_manager_server):
 @pytest.fixture
 def localwar_file():
     """return the path to a valid war file"""
-    return os.path.dirname(__file__) + "/tests/war/sample.war"
+    projdir = pathlib.Path(__file__).parent
+    return projdir / "tests" / "war" / "sample.war"
 
 
 @pytest.fixture

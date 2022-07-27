@@ -3,6 +3,7 @@
 """Development related tasks to be run with 'invoke'"""
 
 import os
+import pathlib
 import shutil
 
 import invoke
@@ -110,9 +111,9 @@ namespace_check.add_task(black)
 # documentation
 #
 #####
-DOCS_SRCDIR = "docs"
+DOCS_SRCDIR = pathlib.Path("docs")
 DOCS_ADDITIONAL = "README.rst CONTRIBUTING.rst CHANGELOG.rst"
-DOCS_BUILDDIR = os.path.join("docs", "build")
+DOCS_BUILDDIR = DOCS_SRCDIR / "build"
 SPHINX_OPTS = "-nvWT"  # Be nitpicky, verbose, and treat warnings as errors
 
 
@@ -154,7 +155,7 @@ def livehtml(context):
     "Launch webserver on http://localhost:8000 with rendered documentation"
     watch = "--watch src/tomcatmanager --watch tests --watch ."
     builder = "html"
-    outputdir = os.path.join(DOCS_BUILDDIR, builder)
+    outputdir = DOCS_BUILDDIR / builder
     cmdline = "sphinx-autobuild -b {} {} {} {}".format(
         builder, DOCS_SRCDIR, outputdir, watch
     )
