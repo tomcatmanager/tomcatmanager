@@ -48,13 +48,13 @@ and from Python:
    r = tomcat.connect(url, user, password)
 
 Tomcatmanager uses the `requests
-<https://docs.python-requests.org/en/master/index.html>`_ library for network
+<https://requests.readthedocs.io/en/latest/>`_ library for network
 communication. A SSL/TLS certificate presented by the server will be rejected if not
 signed by one of the certificate authorities included in `requests
-<https://docs.python-requests.org/en/master/index.html>`_.
+<https://requests.readthedocs.io/en/latest/>`_.
 
 Installing the `certifi <https://github.com/certifi/python-certifi>`_ python package
-will cause `requests <https://docs.python-requests.org/en/master/index.html>`_ to use
+will cause `requests <https://requests.readthedocs.io/en/latest/>`_ to use
 Mozilla's carefully curated collection of root certificates instead of the built-in
 ones. Highly recommended.
 

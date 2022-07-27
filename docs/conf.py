@@ -31,7 +31,7 @@ import sphinx_rtd_theme
 
 # links to external documentation
 intersphinx_mapping = {
-    "requests": ("https://docs.python-requests.org/en/latest/", None),
+    "requests": ("https://requests.readthedocs.io/en/latest/", None),
     "python": ("https://docs.python.org/3", None),
 }
 

@@ -369,7 +369,7 @@ class TomcatManager:
         not connected
 
         Many things can go wrong when requesting url's via http. tomcatmanager
-        uses the `requests <https://docs.python-requests.org/en/master/>`_ library
+        uses the `requests <https://requests.readthedocs.io/en/latest/>`_ library
         for all network communication, and follows that library's approach for
         raising exceptions and checking the response to your request. Therefore:
 
@@ -383,7 +383,7 @@ class TomcatManager:
         - The :attr:`.TomcatManagerResponse.ok` attribute is the easiest and most
           rigerous way to check whether you connected successfully. However, as the
           example usage above shows, you still have to catch exceptions because
-          `requests <https://docs.python-requests.org/en/master/>`_ can raise
+          `requests <https://requests.readthedocs.io/en/latest/>`_ can raise
           exceptions from inside the :meth:`.connect` method and this library
           doesn't attempt to catch them so that you can do specific error
           handling if you want to.

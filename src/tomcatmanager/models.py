@@ -188,7 +188,7 @@ class TomcatManagerResponse:
         The server's response to an HTTP request.
 
         :class:`.TomcatManager` uses the excellent
-        `Requests <https://docs.python-requests.org/en/master/index.html>`__
+        `Requests <https://requests.readthedocs.io/en/latest/>`__
         package for HTTP communication. This property returns the
         :class:`requests.Response` object which contains the server's response
         to the HTTP request.
