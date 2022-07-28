@@ -66,11 +66,11 @@ def _path_version_parser(cmdname: str, helpmsg: str) -> argparse.ArgumentParser:
     parser.add_argument(
         "-v",
         "--version",
-        help="""Optional version string of the application to
-             {cmdname}. If the application was deployed with
-             a version string, it must be specified in order to
-             {cmdname} the application.""".format(
-            cmdname=cmdname
+        help=(
+            f"Optional version string of the application to"
+            f" {cmdname}. If the application was deployed with"
+            f" a version string, it must be specified in order to"
+            f" {cmdname} the application."
         ),
     )
     path_help = "The path part of the URL where the application is deployed."
@@ -289,7 +289,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         the cmd2 command is finished executing.
 
         :param msg: str - message to print to current stdout - anyting
-                          convertible to a str with '{}'.format() is OK
+                          convertible to a str with f"{msg}" is OK
         :param end: str - string appended after the end of the message if
                           not already present, default a newline
         """
@@ -340,11 +340,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         will be sent to sys.stderr.
         """
         if not self.quiet:
-            fmt = "{}{}{}"
+            formatted_msg = f"{self.status_prefix}{msg}{end}"
             if self.feedback_to_output:
-                self.poutput(fmt.format(self.status_prefix, msg, end))
+                self.poutput(formatted_msg)
             else:
-                sys.stderr.write(fmt.format(self.status_prefix, msg, end))
+                sys.stderr.write(formatted_msg)
 
     def emptyline(self):
         """Do nothing on an empty line"""

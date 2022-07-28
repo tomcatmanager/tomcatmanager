@@ -123,7 +123,10 @@ def main(argv=None):
         server_info["user"] = args.user or ""
         if args.user:
             server_info["password"] = args.password or ""
-        itm.onecmd_plus_hooks("connect {url} {user} {password}".format_map(server_info))
+        itm.onecmd_plus_hooks(
+            f"connect {server_info['url']} {server_info['user']}"
+            f" {server_info['password']}"
+        )
 
         if args.command:
             if itm.exit_code == itm.EXIT_SUCCESS:

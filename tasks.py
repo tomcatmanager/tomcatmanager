@@ -16,7 +16,7 @@ def rmrf(items, verbose=True):
 
     for item in items:
         if verbose:
-            print("Removing {}".format(item))
+            print(f"Removing {item}")
         shutil.rmtree(item, ignore_errors=True)
         # rmtree doesn't remove bare files
         try:
@@ -120,8 +120,8 @@ SPHINX_OPTS = "-nvWT"  # Be nitpicky, verbose, and treat warnings as errors
 @invoke.task()
 def docs(context, builder="html"):
     "Build documentation using sphinx"
-    cmdline = "python -msphinx -M {} {} {} {}".format(
-        builder, DOCS_SRCDIR, DOCS_BUILDDIR, SPHINX_OPTS
+    cmdline = (
+        f"python -msphinx -M {builder} {DOCS_SRCDIR} {DOCS_BUILDDIR} {SPHINX_OPTS}"
     )
     context.run(cmdline, echo=True)
 
@@ -133,7 +133,7 @@ namespace_check.add_task(docs)
 @invoke.task()
 def doc8(context):
     "Check documentation with doc8"
-    context.run("doc8 {} {}".format(DOCS_SRCDIR, DOCS_ADDITIONAL), echo=True)
+    context.run(f"doc8 {DOCS_SRCDIR} {DOCS_ADDITIONAL}", echo=True)
 
 
 namespace.add_task(doc8)
@@ -156,9 +156,7 @@ def livehtml(context):
     watch = "--watch src/tomcatmanager --watch tests --watch ."
     builder = "html"
     outputdir = DOCS_BUILDDIR / builder
-    cmdline = "sphinx-autobuild -b {} {} {} {}".format(
-        builder, DOCS_SRCDIR, outputdir, watch
-    )
+    cmdline = f"sphinx-autobuild -b {builder} {DOCS_SRCDIR} {outputdir} {watch}"
     context.run(cmdline, echo=True, pty=True)
 
 

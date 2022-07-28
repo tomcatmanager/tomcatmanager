@@ -105,7 +105,7 @@ def assert_tomcatresponse():
             """Assertions on TomcatResponse for calls that should be successful."""
             assert (
                 r.status_code == tm.StatusCode.OK
-            ), 'message from server: "{}"'.format(r.status_message)
+            ), f'message from server: "{r.status_message}"'
             assert r.status_message
             r.raise_for_status()
 
@@ -153,7 +153,7 @@ def tomcat_manager_server(request):
             tms.verify = verify
         tms.warfile = request.config.getoption("--warfile")
         tms.contextfile = request.config.getoption("--contextfile")
-        tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
+        tms.connect_command = f"connect {tms.url} {tms.user} {tms.password}"
         return tms
 
     # go start up a fake server

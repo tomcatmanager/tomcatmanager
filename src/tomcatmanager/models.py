@@ -109,9 +109,9 @@ class TomcatManagerResponse:
         ...     r = tomcat.server_info()
         ...     r.raise_for_status()
         ...     if r.ok:
-        ...         print("Operating System: {}".format(r.server_info.os_name))
+        ...         print(f"Operating System: {r.server_info.os_name}")
         ...     else:
-        ...         print("Error: {}".format(r.status_message))
+        ...         print(f"Error: {r.status_message}")
         ... except Exception as err:
         ...     # handle exception
         ...     pass
@@ -276,15 +276,15 @@ class TomcatApplication:
 
     def __str__(self):
         """Format this application as it comes from the tomcat server."""
-        fmt = "{}:{}:{}:{}"
+        # sessions could be zero, so we have to explicity check for None
         sessions = ""
         if self.sessions is not None:
             sessions = self.sessions
-        return fmt.format(
-            self.path or "",
-            self.state.value or "",
-            sessions,
-            self.directory_and_version or "",
+        return (
+            f"{self.path or ''}"
+            f":{self.state.value or ''}"
+            f":{sessions}"
+            f":{self.directory_and_version or ''}"
         )
 
     def __lt__(self, other: "TomcatApplication"):

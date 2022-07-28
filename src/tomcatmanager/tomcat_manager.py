@@ -70,7 +70,7 @@ class TomcatManager:
                if r.ok:
                    print(r.server_info)
                else:
-                   print("Error: {}".format(r.status_message))
+                   print(f"Error: {r.status_message}")
            else:
                print("not connected")
        except Exception as err:
@@ -866,7 +866,7 @@ class TomcatManager:
             >>> if r.ok:
             ...     root = ET.fromstring(r.status_xml)
             ...     mem = root.find("jvm/memory")
-            ...     print("Free Memory = {}".format(mem.attrib["free"])) #doctest: +ELLIPSIS
+            ...     print(f"Free Memory = {mem.attrib['free']}") #doctest: +ELLIPSIS
             Free Memory ...
 
         Tomcat 8.0 doesn't include application info in the XML, even though the docs
