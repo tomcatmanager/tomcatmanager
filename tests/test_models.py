@@ -285,7 +285,7 @@ def test_sort_by_pvs(apps):
 ###
 def test_dict(server_info):
     sinfo = tm.models.ServerInfo(result=server_info)
-    assert sinfo["Tomcat Version"] == "Apache Tomcat/8.0.32 (Ubuntu)"
+    assert sinfo["Tomcat Version"] == "Apache Tomcat/8.5.82 (Ubuntu)"
     assert sinfo["OS Name"] == "Linux"
     assert sinfo["OS Version"] == "4.4.0-89-generic"
     assert sinfo["OS Architecture"] == "amd64"
@@ -295,8 +295,8 @@ def test_dict(server_info):
 
 def test_properties(server_info):
     sinfo = tm.models.ServerInfo(result=server_info)
-    assert sinfo.tomcat_major_minor == tm.TomcatMajorMinor.V8_0
-    assert sinfo.tomcat_version == "Apache Tomcat/8.0.32 (Ubuntu)"
+    assert sinfo.tomcat_major_minor == tm.TomcatMajorMinor.V8_5
+    assert sinfo.tomcat_version == "Apache Tomcat/8.5.82 (Ubuntu)"
     assert sinfo.os_name == "Linux"
     assert sinfo.os_version == "4.4.0-89-generic"
     assert sinfo.os_architecture == "amd64"
@@ -321,7 +321,7 @@ TOMCAT_VERSIONS = [
     ("Apache Tomcat/6.0.3", tm.TomcatMajorMinor.UNSUPPORTED),
     ("Tomcat Version: Apache Tomcat/7.0.33", tm.TomcatMajorMinor.UNSUPPORTED),
     ("Apache Tomcat/7.0.108", tm.TomcatMajorMinor.UNSUPPORTED),
-    ("Apache Tomcat/8.0.0", tm.TomcatMajorMinor.V8_0),
+    ("Apache Tomcat/8.0.0", tm.TomcatMajorMinor.UNSUPPORTED),
     ("Apache Tomcat/8.5.16", tm.TomcatMajorMinor.V8_5),
     ("Apache Tomcat/9.0.44", tm.TomcatMajorMinor.V9_0),
     ("Tomcat Version: [Apache Tomcat/10.0.1", tm.TomcatMajorMinor.V10_0),
@@ -339,7 +339,6 @@ def test_tomcatmajor(version_string, major):
 
 def test_tomcatmajor_supported():
     assert tm.TomcatMajorMinor.supported() == [
-        tm.TomcatMajorMinor.V8_0,
         tm.TomcatMajorMinor.V8_5,
         tm.TomcatMajorMinor.V9_0,
         tm.TomcatMajorMinor.V10_0,
@@ -348,7 +347,7 @@ def test_tomcatmajor_supported():
 
 
 def test_tomcatmajor_lowest():
-    assert tm.TomcatMajorMinor.lowest_supported() == tm.TomcatMajorMinor.V8_0
+    assert tm.TomcatMajorMinor.lowest_supported() == tm.TomcatMajorMinor.V8_5
 
 
 def test_tomcatmajor_highest():

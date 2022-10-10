@@ -21,6 +21,11 @@ Changed
 - ``history_file`` attribute now contains a ``pathlib.Path`` object instead
   of a ``str`` for better cross-platform compatability
 
+Removed
+^^^^^^^
+
+- Support for Tomcat 8.0 (EOL 30 June 2018)
+
 
 5.0.0 (2021-11-19)
 ------------------

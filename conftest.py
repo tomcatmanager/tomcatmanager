@@ -12,7 +12,6 @@ from tests.mock_server_10_1 import start_mock_server_10_1
 from tests.mock_server_10_0 import start_mock_server_10_0
 from tests.mock_server_9_0 import start_mock_server_9_0
 from tests.mock_server_8_5 import start_mock_server_8_5
-from tests.mock_server_8_0 import start_mock_server_8_0
 
 
 ###
@@ -167,8 +166,6 @@ def tomcat_manager_server(request):
             (mock_server, tms) = start_mock_server_9_0(tms)
         elif mockver == tm.TomcatMajorMinor.V8_5.value:
             (mock_server, tms) = start_mock_server_8_5(tms)
-        elif mockver == tm.TomcatMajorMinor.V8_0.value:
-            (mock_server, tms) = start_mock_server_8_0(tms)
         else:
             raise NotImplementedError()
 
@@ -203,7 +200,7 @@ def safe_path():
 
 @pytest.fixture
 def server_info():
-    return """Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
+    return """Tomcat Version: Apache Tomcat/8.5.82 (Ubuntu)
 OS Name: Linux
 OS Version: 4.4.0-89-generic
 OS Architecture: amd64

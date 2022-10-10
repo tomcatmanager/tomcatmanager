@@ -48,6 +48,11 @@ class TomcatNotImplementedError(Exception):
     Raised when a Tomcat Manager web application does not support a python
     API call.
 
+    As of version 6.0.0, all supported Tomcat Manager web application versions
+    support all python API calls: therefore this error will never be raised.
+
+    It is not deprecated in case it is needed in future versions.
+
     .. versionadded:: 3.0.0
     """
 
@@ -415,7 +420,6 @@ class TomcatMajorMinor(enum.Enum):
 
     """
 
-    V8_0 = "8.0"
     V8_5 = "8.5"
     V9_0 = "9.0"
     V10_0 = "10.0"
@@ -443,7 +447,7 @@ class TomcatMajorMinor(enum.Enum):
             if major_ver < 8:
                 ver = TomcatMajorMinor.UNSUPPORTED
             elif major_ver == 8 and minor_ver == 0:
-                ver = TomcatMajorMinor.V8_0
+                ver = TomcatMajorMinor.UNSUPPORTED
             elif major_ver == 8 and minor_ver == 5:
                 ver = TomcatMajorMinor.V8_5
             elif major_ver == 9 and minor_ver == 0:
@@ -464,7 +468,6 @@ class TomcatMajorMinor(enum.Enum):
         Return the list of officially supported Tomcat major versions
         """
         return [
-            TomcatMajorMinor.V8_0,
             TomcatMajorMinor.V8_5,
             TomcatMajorMinor.V9_0,
             TomcatMajorMinor.V10_0,

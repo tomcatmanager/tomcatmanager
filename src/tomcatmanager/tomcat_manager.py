@@ -42,7 +42,6 @@ from .models import (
     ServerInfo,
     TomcatApplication,
     TomcatMajorMinor,
-    TomcatNotImplementedError,
     TomcatNotConnected,
 )
 
@@ -106,7 +105,7 @@ class TomcatManager:
 
         """
 
-        # pylint: disable=invalid-name, too-few-public-methods
+        # pylint: disable=invalid-name, too-few-public-methods, inconsistent-return-statements
 
         matrix = {}
 
@@ -129,13 +128,31 @@ class TomcatManager:
                 if celff.is_connected:
                     if celff.tomcat_major_minor in self.tomcats:
                         return method(celff, *args, **kwargs)
-                    raise TomcatNotImplementedError(
-                        (
-                            f"'{method.__name__}' not implemented on"
-                            f" Tomcat {celff.tomcat_major_minor.value}"
-                        )
-                    )
-                raise TomcatNotConnected("not connected")
+                    # as of version 6.0.0, all python methods work with all
+                    # supported versions of Tomcat. Therefore, this code is
+                    # not needed. It's commented out because I couldn't
+                    # figure out a way to test it effectively. I chose
+                    # not to remove it from the source to make it easier
+                    # to re-enable in the future if necessary.
+                    #
+                    # I also added a pylint pragma above to disable
+                    # inconsistent-return-statements errors. This should
+                    # be removed if this code is re-enabled.
+                    #
+                    # the code to test all of this is commented out in
+                    # test_manager_implemented.py test_implemented_by_invalid()
+                    #
+                    # raise TomcatNotImplementedError(
+                    #     (
+                    #         f"'{method.__name__}' not implemented on"
+                    #         f" Tomcat {celff.tomcat_major_minor.value}"
+                    #     )
+                    # )
+                # this line is indented at the level of 'if celff.is_connected'
+                # it's not in an else clause because pylint, but it is part
+                # of the code tested by test_implmemented_by_invalid()
+
+                # raise TomcatNotConnected("not connected")
 
             return wrapper
 
@@ -869,9 +886,6 @@ class TomcatManager:
             ...     mem = root.find("jvm/memory")
             ...     print(f"Free Memory = {mem.attrib['free']}") #doctest: +ELLIPSIS
             Free Memory ...
-
-        Tomcat 8.0 doesn't include application info in the XML, even though the docs
-        say it does.
         """
         # this command isn't in the /manager/text url space, so we can't use _get()
         base = self._url or ""
@@ -1003,16 +1017,7 @@ class TomcatManager:
     # ssl related commands
     #
     ###
-    @_implemented_by(
-        [
-            TomcatMajorMinor.V8_0,
-            TomcatMajorMinor.V8_5,
-            TomcatMajorMinor.V9_0,
-            TomcatMajorMinor.V10_0,
-            TomcatMajorMinor.V10_1,
-            TomcatMajorMinor.VNEXT,
-        ]
-    )
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def ssl_connector_ciphers(self) -> TomcatManagerResponse:
         """
         Get SSL/TLS ciphers configured for each connector.
@@ -1024,15 +1029,7 @@ class TomcatManager:
         r.ssl_connector_ciphers = r.result
         return r
 
-    @_implemented_by(
-        [
-            TomcatMajorMinor.V8_5,
-            TomcatMajorMinor.V9_0,
-            TomcatMajorMinor.V10_0,
-            TomcatMajorMinor.V10_1,
-            TomcatMajorMinor.VNEXT,
-        ]
-    )
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def ssl_connector_certs(self) -> TomcatManagerResponse:
         """
         Get the SSL certificate chain currently configured for each virtual host
@@ -1044,15 +1041,7 @@ class TomcatManager:
         r.ssl_connector_certs = r.result
         return r
 
-    @_implemented_by(
-        [
-            TomcatMajorMinor.V8_5,
-            TomcatMajorMinor.V9_0,
-            TomcatMajorMinor.V10_0,
-            TomcatMajorMinor.V10_1,
-            TomcatMajorMinor.VNEXT,
-        ]
-    )
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def ssl_connector_trusted_certs(self) -> TomcatManagerResponse:
         """
         Get the trusted certificates currently configured for each virtual host
@@ -1064,15 +1053,7 @@ class TomcatManager:
         r.ssl_connector_trusted_certs = r.result
         return r
 
-    @_implemented_by(
-        [
-            TomcatMajorMinor.V8_5,
-            TomcatMajorMinor.V9_0,
-            TomcatMajorMinor.V10_0,
-            TomcatMajorMinor.V10_1,
-            TomcatMajorMinor.VNEXT,
-        ]
-    )
+    @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def ssl_reload(self, host: str = None) -> TomcatManagerResponse:
         """
         Reload TLS certificates and keys (but not server.xml) for a specified or all virtual hosts
