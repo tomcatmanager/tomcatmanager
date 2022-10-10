@@ -40,7 +40,7 @@ intersphinx_mapping = {
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # when we autodoc classes, show the methods in the order they are in the
 # source
