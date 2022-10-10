@@ -326,7 +326,8 @@ TOMCAT_VERSIONS = [
     ("Apache Tomcat/9.0.44", tm.TomcatMajorMinor.V9_0),
     ("Tomcat Version: [Apache Tomcat/10.0.1", tm.TomcatMajorMinor.V10_0),
     ("[Apache Tomcat/10.0.4]", tm.TomcatMajorMinor.V10_0),
-    ("[Apache Tomcat/10.1.3]", tm.TomcatMajorMinor.VNEXT),
+    ("[Apache Tomcat/10.1.3]", tm.TomcatMajorMinor.V10_1),
+    ("[Apache Tomcat/10.2.6]", tm.TomcatMajorMinor.VNEXT),
     ("[Apache Tomcat/11.0.1]", tm.TomcatMajorMinor.VNEXT),
 ]
 
@@ -342,6 +343,7 @@ def test_tomcatmajor_supported():
         tm.TomcatMajorMinor.V8_5,
         tm.TomcatMajorMinor.V9_0,
         tm.TomcatMajorMinor.V10_0,
+        tm.TomcatMajorMinor.V10_1,
     ]
 
 
@@ -350,4 +352,4 @@ def test_tomcatmajor_lowest():
 
 
 def test_tomcatmajor_highest():
-    assert tm.TomcatMajorMinor.highest_supported() == tm.TomcatMajorMinor.V10_0
+    assert tm.TomcatMajorMinor.highest_supported() == tm.TomcatMajorMinor.V10_1

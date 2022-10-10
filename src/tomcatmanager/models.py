@@ -419,6 +419,7 @@ class TomcatMajorMinor(enum.Enum):
     V8_5 = "8.5"
     V9_0 = "9.0"
     V10_0 = "10.0"
+    V10_1 = "10.1"
     VNEXT = "next"
     UNSUPPORTED = "unsupported"
 
@@ -449,6 +450,8 @@ class TomcatMajorMinor(enum.Enum):
                 ver = TomcatMajorMinor.V9_0
             elif major_ver == 10 and minor_ver == 0:
                 ver = TomcatMajorMinor.V10_0
+            elif major_ver == 10 and minor_ver == 1:
+                ver = TomcatMajorMinor.V10_1
             elif major_ver == 10 and minor_ver > 0:
                 ver = TomcatMajorMinor.VNEXT
             elif major_ver > 10:
@@ -465,6 +468,7 @@ class TomcatMajorMinor(enum.Enum):
             TomcatMajorMinor.V8_5,
             TomcatMajorMinor.V9_0,
             TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.V10_1,
         ]
 
     @classmethod

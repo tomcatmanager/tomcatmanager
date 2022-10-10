@@ -8,6 +8,7 @@ import pytest
 
 import tomcatmanager as tm
 
+from tests.mock_server_10_1 import start_mock_server_10_1
 from tests.mock_server_10_0 import start_mock_server_10_0
 from tests.mock_server_9_0 import start_mock_server_9_0
 from tests.mock_server_8_5 import start_mock_server_8_5
@@ -154,21 +155,25 @@ def tomcat_manager_server(request):
         tms.warfile = request.config.getoption("--warfile")
         tms.contextfile = request.config.getoption("--contextfile")
         tms.connect_command = f"connect {tms.url} {tms.user} {tms.password}"
-        return tms
+        yield tms
+    else:
+        # we don't have a url on the command line, go start up a fake server
+        mockver = request.config.getoption("--mocktomcat")
+        if mockver == tm.TomcatMajorMinor.V10_1.value:
+            (mock_server, tms) = start_mock_server_10_1(tms)
+        elif mockver == tm.TomcatMajorMinor.V10_0.value:
+            (mock_server, tms) = start_mock_server_10_0(tms)
+        elif mockver == tm.TomcatMajorMinor.V9_0.value:
+            (mock_server, tms) = start_mock_server_9_0(tms)
+        elif mockver == tm.TomcatMajorMinor.V8_5.value:
+            (mock_server, tms) = start_mock_server_8_5(tms)
+        elif mockver == tm.TomcatMajorMinor.V8_0.value:
+            (mock_server, tms) = start_mock_server_8_0(tms)
+        else:
+            raise NotImplementedError()
 
-    # go start up a fake server
-    mockver = request.config.getoption("--mocktomcat")
-    if mockver == tm.TomcatMajorMinor.V10_0.value:
-        (mock_server, tms) = start_mock_server_10_0(tms)
-    if mockver == tm.TomcatMajorMinor.V9_0.value:
-        (mock_server, tms) = start_mock_server_9_0(tms)
-    if mockver == tm.TomcatMajorMinor.V8_5.value:
-        (mock_server, tms) = start_mock_server_8_5(tms)
-    if mockver == tm.TomcatMajorMinor.V8_0.value:
-        (mock_server, tms) = start_mock_server_8_0(tms)
-
-    yield tms
-    mock_server.shutdown()
+        yield tms
+        mock_server.shutdown()
 
 
 @pytest.fixture

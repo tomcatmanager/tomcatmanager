@@ -122,6 +122,7 @@ TOMCAT_MAJORS = [
     tm.TomcatMajorMinor.V8_5,
     tm.TomcatMajorMinor.V9_0,
     tm.TomcatMajorMinor.V10_0,
+    tm.TomcatMajorMinor.V10_1,
     tm.TomcatMajorMinor.VNEXT,
 ]
 

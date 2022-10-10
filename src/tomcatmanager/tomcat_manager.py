@@ -97,6 +97,7 @@ class TomcatManager:
                     TomcatMajorMinor.V8_5,
                     TomcatMajorMinor.V9_0,
                     TomcatMajorMinor.V10_0,
+                    TomcatMajorMinor.V10_1,
                     TomcatMajorMinor.VNEXT,
                 ]
             )
@@ -1008,6 +1009,7 @@ class TomcatManager:
             TomcatMajorMinor.V8_5,
             TomcatMajorMinor.V9_0,
             TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.V10_1,
             TomcatMajorMinor.VNEXT,
         ]
     )
@@ -1027,6 +1029,7 @@ class TomcatManager:
             TomcatMajorMinor.V8_5,
             TomcatMajorMinor.V9_0,
             TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.V10_1,
             TomcatMajorMinor.VNEXT,
         ]
     )
@@ -1046,6 +1049,7 @@ class TomcatManager:
             TomcatMajorMinor.V8_5,
             TomcatMajorMinor.V9_0,
             TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.V10_1,
             TomcatMajorMinor.VNEXT,
         ]
     )
@@ -1065,6 +1069,7 @@ class TomcatManager:
             TomcatMajorMinor.V8_5,
             TomcatMajorMinor.V9_0,
             TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.V10_1,
             TomcatMajorMinor.VNEXT,
         ]
     )

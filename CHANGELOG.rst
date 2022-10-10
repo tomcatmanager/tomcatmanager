@@ -15,6 +15,7 @@ Unreleased
 Changed
 ^^^^^^^
 
+- Support for Tomcat 10.1
 - ``config_file`` attribute now contains a ``pathlib.Path`` object instead
   of a ``str`` for better cross-platform compatability
 - ``history_file`` attribute now contains a ``pathlib.Path`` object instead
