@@ -11,7 +11,7 @@ import invoke
 # shared function
 def rmrf(items, verbose=True):
     "Silently remove a list of directories or files"
-    if isinstance(items, str):
+    if isinstance(items, str) or isinstance(items, pathlib.PosixPath):
         items = [items]
 
     for item in items:
@@ -113,7 +113,7 @@ namespace_check.add_task(black)
 #####
 DOCS_SRCDIR = pathlib.Path("docs")
 DOCS_ADDITIONAL = "README.rst CONTRIBUTING.rst CHANGELOG.rst"
-DOCS_BUILDDIR = DOCS_SRCDIR / "build"
+DOCS_BUILDDIR = pathlib.Path(DOCS_SRCDIR, "build")
 SPHINX_OPTS = "-nvWT"  # Be nitpicky, verbose, and treat warnings as errors
 
 
@@ -168,18 +168,7 @@ namespace.add_task(livehtml)
 # build and distribute
 #
 #####
-BUILDDIR = "build"
-DISTDIR = "dist"
-
-
-@invoke.task
-def build_clean(context):
-    "Remove the build directory"
-    # pylint: disable=unused-argument
-    rmrf(BUILDDIR)
-
-
-namespace_clean.add_task(build_clean, "build")
+DISTDIR = pathlib.Path("dist")
 
 
 @invoke.task
@@ -245,24 +234,15 @@ namespace_clean.add_task(clean_all, "all")
 
 
 @invoke.task(pre=[clean_all])
-def sdist(context):
+def build(context):
     "Create a source distribution"
-    context.run("python setup.py sdist")
+    context.run("python -m build")
 
 
-namespace.add_task(sdist)
+namespace.add_task(build)
 
 
-@invoke.task(pre=[clean_all])
-def wheel(context):
-    "Build a wheel distribution"
-    context.run("python setup.py bdist_wheel")
-
-
-namespace.add_task(wheel)
-
-
-@invoke.task(pre=[sdist, wheel])
+@invoke.task(pre=[build])
 def pypi(context):
     "Build and upload a distribution to pypi"
     context.run("twine upload dist/*")
@@ -271,7 +251,7 @@ def pypi(context):
 namespace.add_task(pypi)
 
 
-@invoke.task(pre=[sdist, wheel])
+@invoke.task(pre=[build])
 def pypi_test(context):
     "Build and upload a distribution to https://test.pypi.org"
     context.run("twine upload --repository-url https://test.pypi.org/legacy/ dist/*")

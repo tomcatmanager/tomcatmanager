@@ -1,8 +1,96 @@
 # pyproject.toml
+#
+
 [build-system]
 requires = [
-    "setuptools>=42",
+    "setuptools>=45",
     "wheel",
-    "setuptools_scm[toml]>=3.4"
+    "setuptools_scm[toml]>=6.2"
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "tomcatmanager"
+description = "A command line tool and python library for managing a tomcat server."
+readme = "README.rst"
+authors = [
+    {name = "Jared Crapo", email = "jared@kotfu.net"},
+]
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+keywords = ["java", "tomcat", "command line"]
+requires-python = ">=3.7"
+dependencies = [
+    "cmd2>=2,<3",
+    "requests>=2,<3",
+    "appdirs",
+    "importlib_metadata>=1.6.0; python_version<'3.8'"
+]
+dynamic = ["version"]
+
+[tool.setuptools_scm]
+# empty section is the quivilent of setuptools_scm=True in setup.py
+
+
+[project.scripts]
+tomcat-manager = "tomcatmanager.__main__:main"
+
+
+[project.urls]
+homepage = "https://github.com/tomcatmanager/tomcatmanager"
+documentation = "https://tomcatmanager.readthedocs.io"
+repository = "https://github.com/tomcatmanager/tomcatmanager"
+
+
+[project.optional-dependencies]
+dev = [
+    "build",
+    "pytest",
+    "pytest-mock",
+    "tox",
+    "codecov",
+    "pytest-cov",
+    "pylint",
+    "black",
+    "setuptools_scm",
+    "wheel",
+    "twine",
+    "rope",
+    "invoke",
+    "sphinx",
+    "sphinx-autobuild",
+    "sphinx_rtd_theme",
+    "autodocsumm",
+    "doc8",
+]
+docs = [
+    "sphinx",
+    "sphinx-autobuild",
+    "sphinx_rtd_theme",
+    "autodocsumm",
+    "doc8",
+]
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+
+[tool.setuptools.package-data]
+tomcatmanager = ["py.typed"]
