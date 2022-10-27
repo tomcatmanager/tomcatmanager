@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 #
-
 # create pyenv environments for each minor version of python
 # supported by tomcatmanager
+#
+# You need all these versions of python installed in order for tox
+# to run properly. These are also helpful if you have to use the
+# debugger to chase down test cases that fail in one version of python
+# but work in another version of python.
 #
 # this script uses terms from Semantic Versioning https://semver.org/
 # version numbers are: major.minor.patch
