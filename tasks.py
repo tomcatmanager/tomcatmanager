@@ -113,7 +113,7 @@ namespace_check.add_task(black)
 #####
 DOCS_SRCDIR = pathlib.Path("docs")
 DOCS_ADDITIONAL = "README.rst CONTRIBUTING.rst CHANGELOG.rst"
-DOCS_BUILDDIR = pathlib.Path(DOCS_SRCDIR, "build")
+DOCS_BUILDDIR = DOCS_SRCDIR / "build"
 SPHINX_OPTS = "-nvWT"  # Be nitpicky, verbose, and treat warnings as errors
 
 
