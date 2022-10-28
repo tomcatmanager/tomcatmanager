@@ -27,19 +27,21 @@ creation of these environments.
 If you prefer to create these virtual envs by hand, do the following::
 
    $ cd tomcatmanager
-   $ pyenv install 3.10.0
+   $ pyenv install 3.11.0
+   $ pyenv virtualenv -p python3.11 3.11.0 tomcatmanager-3.11
+   $ pyenv install 3.10.7
    $ pyenv virtualenv -p python3.10 3.10.0 tomcatmanager-3.10
-   $ pyenv install 3.9.7
+   $ pyenv install 3.9.14
    $ pyenv virtualenv -p python3.9 3.9.7 tomcatmanager-3.9
-   $ pyenv install 3.8.12
+   $ pyenv install 3.8.14
    $ pyenv virtualenv -p python3.8 3.8.12 tomcatmanager-3.8
-   $ pyenv install 3.7.12
+   $ pyenv install 3.7.14
    $ pyenv virtualenv -p python3.7 3.7.12 tomcatmanager-3.7
 
 
-Now set pyenv to make all four of those available at the same time::
+Now set pyenv to make all five of those available at the same time::
 
-   $ pyenv local tomcatmanager-3.10 tomcatmanager-3.9 tomcatmanager-3.8 tomcatmanager-3.7
+   $ pyenv local tomcatmanager-3.11 tomcatmanager-3.10 tomcatmanager-3.9 tomcatmanager-3.8 tomcatmanager-3.7
 
 Whether you ran the script, or did it by hand, you now have isolated virtualenvs for
 each of the minor python versions. This table shows various python commands, the
@@ -48,18 +50,20 @@ version of python which will be executed, and the virtualenv it will utilize.
 ==============  =======  ==================
 Command         python   virtualenv
 ==============  =======  ==================
-``python``      3.10.0   tomcatmanager-3.10
-``python3``     3.10.0   tomcatmanager-3.10
-``python3.10``  3.10.0   tomcatmanager-3.10
-``python3.9``   3.9.7    tomcatmanager-3.9
-``python3.8``   3.8.12   tomcatmanager-3.8
-``python3.7``   3.7.12   tomcatmanager-3.7
-``pip``         3.9.1    tomcatmanager-3.10
-``pip3``        3.9.1    tomcatmanager-3.10
-``pip3.10``     3.10.0   tomcatmanager-3.10
-``pip3.9``      3.9.7    tomcatmanager-3.9
-``pip3.8``      3.8.12   tomcatmanager-3.8
-``pip3.7``      3.7.12   tomcatmanager-3.7
+``python``      3.11.0   tomcatmanager-3.11
+``python3``     3.11.0   tomcatmanager-3.11
+``python3.11``  3.11.0   tomcatmanager-3.11
+``python3.10``  3.10.7   tomcatmanager-3.10
+``python3.9``   3.9.14   tomcatmanager-3.9
+``python3.8``   3.8.14   tomcatmanager-3.8
+``python3.7``   3.7.14   tomcatmanager-3.7
+``pip``         3.11.0   tomcatmanager-3.11
+``pip3``        3.11.0   tomcatmanager-3.11
+``pip3.11``     3.11.0   tomcatmanager-3.11
+``pip3.10``     3.10.7   tomcatmanager-3.10
+``pip3.9``      3.9.14   tomcatmanager-3.9
+``pip3.8``      3.8.14   tomcatmanager-3.8
+``pip3.7``      3.7.14   tomcatmanager-3.7
 ==============  =======  ==================
 
 
@@ -73,7 +77,7 @@ Now install all the development dependencies::
 This installs the tomcatmanager package "in-place", so the package points to the
 source code instead of copying files to the python ``site-packages`` folder.
 
-All the dependencies now have been installed in the ``tomcatmanager-3.9`` virtualenv.
+All the dependencies now have been installed in the ``tomcatmanager-3.11`` virtualenv.
 If you want to work in other virtualenvs, you'll need to manually select it, and
 install again::
 
@@ -167,8 +171,8 @@ You can run the tests against all the supported versions of python using tox::
 
    $ tox
 
-tox expects that when it runs ``python3.7`` it will actually get a python from the
-3.7.x series. That's why we set up the various python environments earlier.
+tox expects that when it runs ``python3.9`` it will actually get a python from the
+3.9.x series. That's why we set up the various python environments earlier.
 
 If you just want to run the tests in your current python environment, use pytest::
 
@@ -192,7 +196,7 @@ By default, ``pytest`` runs the mock server corresponding to the latest supporte
 version of Tomcat. If you want to test against a different mock server, do something
 like::
 
-   $ pytest --mocktomcat 8.5
+   $ pytest --mocktomcat 9.0
 
 Look in ``conftest.py`` to see how these servers are implemented and launched.
 
