@@ -539,6 +539,30 @@ def test_load_config_not_boolean(itm_nc, mocker):
     assert itm_nc.echo == itm.echo
 
 
+def test_load_config_echo_false(mocker):
+    configstring = """
+        [settings]
+        echo = false
+        """
+    # this shouldn't throw any exceptions
+    itm = itm_with_config(mocker, configstring)
+    # make sure the echo setting is the same
+    # as when we don't load a config file
+    assert itm.echo is False
+
+
+def test_load_config_echo_true(mocker):
+    configstring = """
+        [settings]
+        echo = true
+        """
+    # this shouldn't throw any exceptions
+    itm = itm_with_config(mocker, configstring)
+    # make sure the echo setting is the same
+    # as when we don't load a config file
+    assert itm.echo is True
+
+
 def test_load_config_not_integer(itm_nc, mocker):
     configstring = """
         [settings]

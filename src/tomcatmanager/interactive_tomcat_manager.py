@@ -211,7 +211,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
             include_py=True,
         )
 
-        self.echo = False
         self.self_in_py = True
 
         to_remove = [
@@ -230,12 +229,17 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 pass
 
         self.add_settable(
-            cmd2.Settable("echo", bool, "For piped input, echo command to output", self)
+            cmd2.Settable(
+                "echo",
+                self.convert_to_boolean,
+                "For piped input, echo command to output",
+                self,
+            )
         )
         self.add_settable(
             cmd2.Settable(
                 "status_to_stdout",
-                bool,
+                self.convert_to_boolean,
                 "Status information to stdout instead of stderr",
                 self,
             )
@@ -258,16 +262,23 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 "prompt", str, "The prompt displayed before accepting user input", self
             )
         )
-        self.prompt = f"{self.app_name}> "
         self.add_settable(
-            cmd2.Settable("debug", bool, "Show stack trace for exceptions", self)
+            cmd2.Settable(
+                "debug",
+                self.convert_to_boolean,
+                "Show stack trace for exceptions",
+                self,
+            )
         )
 
         self.tomcat = tm.TomcatManager()
 
         # set default values
+        self.prompt = f"{self.app_name}> "
+        self.debug = False
         self.timeout = 10
         self.status_prefix = "--"
+        self.echo = False
 
         # load config file if it exists
         self.load_config()
@@ -831,17 +842,18 @@ change the value of one of this program's settings
         except KeyError as keyerr:
             raise ValueError(f"invalid setting: {param_name}") from keyerr
 
-    def convert_to_boolean(self, value: Any):
+    @classmethod
+    def convert_to_boolean(cls, value: Any):
         """Return a boolean value translating from other types if necessary."""
         if isinstance(value, bool) is True:
             return value
 
-        if str(value).lower() not in self.BOOLEAN_VALUES:
+        if str(value).lower() not in cls.BOOLEAN_VALUES:
             if value is None or value == "":
                 raise ValueError("invalid syntax: must be true-ish or false-ish")
             # we can't figure out what it is
             raise ValueError(f"invalid syntax: not a boolean: '{value}'")
-        return self.BOOLEAN_VALUES[value.lower()]
+        return cls.BOOLEAN_VALUES[value.lower()]
 
     @staticmethod
     def _pythonize(value: str):
