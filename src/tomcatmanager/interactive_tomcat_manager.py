@@ -708,7 +708,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             try:
                 config.read_string(setting_string)
             except configparser.ParsingError:
-                self.perror("invalid syntax: try {setting}={value}")
+                self.perror("invalid syntax: try 'set {setting} = {value}'")
                 self.exit_code = self.EXIT_ERROR
                 return
             for param_name in config["settings"]:
@@ -726,7 +726,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     self.perror(f"unknown setting: '{param_name}'")
                     self.exit_code = self.EXIT_ERROR
         else:
-            self.perror("invalid syntax: try {setting}={value}")
+            self.perror("invalid syntax: try 'set {setting} = {value}'")
             self.exit_code = self.EXIT_USAGE
 
     def help_set(self):
@@ -826,10 +826,8 @@ change the value of one of this program's settings
         """
         try:
             settable = self.settables[param_name]
-            current_value = getattr(self, param_name)
-            setattr(self, param_name, settable.val_type(value))
-            if current_value != value and settable.onchange_cb:  # pragma: nocover
-                settable.onchange_cb(param_name, current_value, value)
+            # calling set_value should fire any on change callbacks
+            settable.set_value(value)
         except KeyError as keyerr:
             raise ValueError(f"invalid setting: {param_name}") from keyerr
 

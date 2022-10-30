@@ -590,7 +590,7 @@ def test_set_noargs(capsys):
     itm.onecmd_plus_hooks("set")
     out, err = capsys.readouterr()
     assert not out
-    assert err == "invalid syntax: try {setting}={value}\n"
+    assert err == "invalid syntax: try 'set {setting} = {value}'\n"
     assert itm.exit_code == itm.EXIT_USAGE
 
 
