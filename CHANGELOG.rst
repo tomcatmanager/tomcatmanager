@@ -15,14 +15,16 @@ Unreleased
 Changed
 ^^^^^^^
 
+- Change configuration file from .ini format to .toml format
 - Support for Python 3.11
 - Support for Tomcat 10.1
 - ``config_file`` attribute now contains a ``pathlib.Path`` object instead
   of a ``str`` for better cross-platform compatability
 - ``history_file`` attribute now contains a ``pathlib.Path`` object instead
   of a ``str`` for better cross-platform compatability
-- Switch to ``pyproject.toml`` from ``setup.py``. This has no impact on functionality
-  of the library, it's just a change in how the library is packaged.
+- Switch to ``pyproject.toml`` from ``setup.py``. This has no impact on
+  functionality of the library, it's just a change in how the library is
+  packaged.
 
 Removed
 ^^^^^^^

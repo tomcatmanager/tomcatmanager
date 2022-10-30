@@ -368,7 +368,7 @@ system. To see the location of the file:
 .. code-block::
 
   tomcat-manager> config file
-  /Users/kotfu/Library/Application Support/tomcat-manager/tomcat-manager.ini
+  /Users/kotfu/Library/Application Support/tomcat-manager/tomcat-manager.toml
 
 You can edit the file from within ``tomcat-manager`` too. Well, it really just
 launches the editor of your choice, you know, the one specified in the
@@ -378,16 +378,16 @@ launches the editor of your choice, you know, the one specified in the
 
   tomcat-manager> config edit
 
-This file uses the INI file format. If you create a section called
-``settings``, you can set the values of any of the available settings. My
-config file contains:
+This file uses the `TOML <https://toml.io/>`_ file format. Create a table called
+``settings``, and use key/value pairs to set values of any of the available settings.
+These settings are applied when the application first runs. My config file contains:
 
-.. code-block:: ini
+.. code-block:: toml
 
   [settings]
-  prompt='tm> '
-  debug=True
-  editor=/usr/local/bin/zile
+  prompt = "tm> "
+  debug = true
+  editor = "/usr/local/bin/zile"
 
 
 Server Shortcuts
@@ -395,16 +395,16 @@ Server Shortcuts
 
 You can use the configuration file to define shortcuts to various Tomcat servers.
 Using server shortcuts you can keep the authentication credentials off of the command
-line and out of your scripts, which is more secure. Define a section named the
-shortcut, and then include a property for ``url``, ``user``, and ``password``. Here's
-a simple example:
+line and out of your scripts, which is more secure. Create a table named the shortcut,
+and then include keys and values for ``url``, ``user``, and ``password``. Here's a
+simple example:
 
-.. code-block:: ini
+.. code-block:: toml
 
   [tcl]
-  url=http://localhost:8080/manager
-  user=ace
-  password=newenglandclamchowder
+  url = "http://localhost:8080/manager"
+  user = "ace"
+  password = "newenglandclamchowder"
 
 With this defined in your configuration file, you can now connect using the
 name of the shortcut:
@@ -451,16 +451,16 @@ verify
   Defaults to ``True`` to verify server SSL/TLS certificates. If ``False``,
   no verification is performed.
 
-When using a server shortcut, you can override properties from the shortcut on the
-command line. For example, if we had a server shortcut like this:
+When using a server shortcut, you can override properties from the shortcut
+on the command line. For example, if we had a server shortcut like this:
 
-.. code-block:: ini
+.. code-block:: toml
 
   [prod]
-  url=https://www.example.com/manager
-  user=ace
-  password=newenglandclamchowder
-  cacert=/etc/mycacert
+  url = "https://www.example.com/manager"
+  user = "ace"
+  password = "newenglandclamchowder"
+  cacert = "/etc/mycacert"
 
 You could use that server shortcut but temporarily disable verification of server
 SSL/TLS certificates:
