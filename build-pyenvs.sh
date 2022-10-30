@@ -49,7 +49,7 @@ do
 
     envname="tomcatmanager-$minor_version"
     # remove the associated virtualenv
-    pyenv uninstall -f "$envname"
+    pyenv virtualenv-delete -f "$envname"
     # create a new virtualenv
     pyenv virtualenv -p "python$minor_version" "$patch_version" "$envname"
     # append the virtualenv to .python-version
