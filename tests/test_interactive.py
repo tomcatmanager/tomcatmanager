@@ -25,6 +25,7 @@
 # pylint: disable=missing-module-docstring, unused-variable, redefined-outer-name
 
 import os
+import pathlib
 import tempfile
 from unittest import mock
 import uuid
@@ -51,6 +52,7 @@ def get_itm(tms):
 def itm_with_config(mocker, configstring):
     """Return an InteractiveTomcatManager object with the config set from the passed string."""
     itm = tm.InteractiveTomcatManager()
+    # TODO switch this to a temporary directory context manager
     fdesc, fname = tempfile.mkstemp(prefix="", suffix=".ini")
     os.close(fdesc)
     with open(fname, "w", encoding="utf-8") as fobj:
@@ -263,6 +265,15 @@ def test_config_file_property():
     assert not itm.config_file
 
 
+def test_config_file_old_property():
+    itm = tm.InteractiveTomcatManager()
+    # don't care where it is, just care that there is one
+    assert itm.config_file_old
+    # if appdirs doesn't exist, config_file shouldn't either
+    itm.appdirs = None
+    assert not itm.config_file_old
+
+
 def test_history_file_property():
     itm = tm.InteractiveTomcatManager()
     # don't care where it is, just care that there is one
@@ -305,12 +316,191 @@ def test_config_file_command(mocker, capsys):
         "tomcatmanager.InteractiveTomcatManager.config_file",
         new_callable=mock.PropertyMock,
     )
-    config_file.return_value = fname
+    config_file.return_value = pathlib.Path(fname)
 
     itm.onecmd_plus_hooks("config file")
     out, _ = capsys.readouterr()
     assert out == f"{fname}\n"
     assert itm.exit_code == itm.EXIT_SUCCESS
+
+
+def test_config_convert_no_config(mocker, capsys):
+    # verify conversion behavior when neither ini nor toml config files exist
+    itm = tm.InteractiveTomcatManager()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+
+        inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
+        tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
+
+        config_file = mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file",
+            new_callable=mock.PropertyMock,
+        )
+        config_file.return_value = tomlfile
+
+        config_file = mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file_old",
+            new_callable=mock.PropertyMock,
+        )
+        config_file.return_value = inifile
+
+        itm.onecmd_plus_hooks("config convert")
+        _, err = capsys.readouterr()
+
+        assert "old configuration file does not exist: nothing to convert" in err
+        assert itm.exit_code == itm.EXIT_ERROR
+
+
+def test_config_convert(mocker, capsys):
+    iniconfig = """#
+[settings]
+prompt='tm> '
+debug=True
+timeout=20.0
+editor=/usr/local/bin/zile
+
+[server1]
+url=https://www.example1.com
+user=someuser
+password=somepassword
+
+[server2]
+url = https://www.example2.com/some/path/to/tomcat
+cert = ~/certs/my.cert
+key = ~/keys/mykey
+verify = False
+"""
+    tomlconfig = """[settings]
+prompt = "tm> "
+debug = true
+timeout = 20.0
+editor = "/usr/local/bin/zile"
+
+[server1]
+url = "https://www.example1.com"
+user = "someuser"
+password = "somepassword"
+
+[server2]
+url = "https://www.example2.com/some/path/to/tomcat"
+cert = "~/certs/my.cert"
+key = "~/keys/mykey"
+verify = false
+"""
+
+    itm = tm.InteractiveTomcatManager()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+
+        inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
+        tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
+
+        config_file = mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file",
+            new_callable=mock.PropertyMock,
+        )
+        config_file.return_value = tomlfile
+
+        config_file = mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file_old",
+            new_callable=mock.PropertyMock,
+        )
+        config_file.return_value = inifile
+
+        with open(inifile, "w", encoding="utf-8") as iniobj:
+            iniobj.write(iniconfig)
+
+        itm.onecmd_plus_hooks("config convert")
+        _, err = capsys.readouterr()
+
+        assert "converting old configuration file to new format" in err
+        assert "reloading configuration" in err
+        assert itm.exit_code == itm.EXIT_SUCCESS
+
+        with open(tomlfile, "r", encoding="utf-8") as tomlobj:
+            test_tomlconfig = tomlobj.read()
+            assert test_tomlconfig == tomlconfig
+
+
+def test_config_convert_invalid_setting(mocker, capsys):
+    iniconfig = """#
+[settings]
+prompt='tm> '
+debug=True
+timeout=20.0
+editor=/usr/local/bin/zile
+invalidsetting=this should break
+
+[server1]
+url=https://www.example1.com
+user=someuser
+password=somepassword
+
+[server2]
+url = https://www.example2.com/some/path/to/tomcat
+cert = ~/certs/my.cert
+key = ~/keys/mykey
+verify = False
+"""
+
+    itm = tm.InteractiveTomcatManager()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+
+        inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
+        tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
+
+        config_file = mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file",
+            new_callable=mock.PropertyMock,
+        )
+        config_file.return_value = tomlfile
+
+        config_file = mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file_old",
+            new_callable=mock.PropertyMock,
+        )
+        config_file.return_value = inifile
+
+        with open(inifile, "w", encoding="utf-8") as iniobj:
+            iniobj.write(iniconfig)
+
+        itm.onecmd_plus_hooks("config convert")
+        _, err = capsys.readouterr()
+
+        assert "converting old configuration file to new format" in err
+        assert "conversion failed" in err
+        assert itm.exit_code == itm.EXIT_ERROR
+
+
+def test_config_convert_both_exist(mocker, capsys):
+    itm = tm.InteractiveTomcatManager()
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+
+        inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
+        inifile.touch()
+        tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
+        tomlfile.touch()
+
+        config_file = mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file",
+            new_callable=mock.PropertyMock,
+        )
+        config_file.return_value = tomlfile
+
+        config_file = mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file_old",
+            new_callable=mock.PropertyMock,
+        )
+        config_file.return_value = inifile
+
+        itm.onecmd_plus_hooks("config convert")
+        _, err = capsys.readouterr()
+
+        assert "configuration file exists: cowardly refusing to overwrite it" in err
+        assert itm.exit_code == itm.EXIT_ERROR
 
 
 def test_load_config(mocker):

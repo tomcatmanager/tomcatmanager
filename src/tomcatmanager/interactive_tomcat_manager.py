@@ -34,6 +34,7 @@ import http.client
 import os
 import pathlib
 import sys
+import tomlkit
 import traceback
 import xml.dom.minidom
 from typing import Callable, Any, List
@@ -259,7 +260,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         self.prompt = f"{self.app_name}> "
         self.add_settable(
-            cmd2.Settable("debug", str, "Show stack trace for exceptions", self)
+            cmd2.Settable("debug", bool, "Show stack trace for exceptions", self)
         )
 
         self.tomcat = tm.TomcatManager()
@@ -519,10 +520,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
     )
     config_parser.add_argument(
         "action",
-        choices=["edit", "file"],
+        choices=["edit", "file", "convert"],
         help="""'file' shows the name of the configuration
              file. 'edit' edits the configuration file
-             in your preferred editor.""",
+             in your preferred editor. 'convert' writes a new .toml
+             configuration file with the same settings as the old
+             .ini configuration file.""",
     )
 
     def do_config(self, cmdline: cmd2.Statement):
@@ -532,30 +535,110 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if args.action == "file":
             self.poutput(self.config_file)
             self.exit_code = self.EXIT_SUCCESS
-        else:
-            if not self.editor:
-                self.perror("no editor: use 'set editor={path}' to specify one")
-                self.exit_code = self.EXIT_ERROR
-                return
-
-            # ensure the configuration directory exists
-            configdir = self.config_file.parent
-            if not configdir.exists():  # pragma: nocover
-                configdir.mkdir(parents=True, exist_ok=True)
-
-            # go edit the file
-            cmd = f'"{self.editor}" "{self.config_file}"'
-            self.pfeedback(f"executing {cmd}")
-            os.system(cmd)
-
-            # read it back in and apply it
-            self.pfeedback("reloading configuration")
-            self.load_config()
-            self.exit_code = self.EXIT_SUCCESS
+        elif args.action == "edit":
+            self._config_edit()
+        elif args.action == "convert":
+            self._config_convert()
 
     def help_config(self):
         """Show help for the 'config' command."""
         self.show_help_from(self.config_parser)
+
+    def _config_edit(self):
+        """
+        Open the configuration file in an editor, and reload the configuration when the
+        editor exits.
+        """
+        if not self.editor:
+            self.perror("no editor: use 'set editor={path}' to specify one")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        # ensure the configuration directory exists
+        configdir = self.config_file.parent
+        if not configdir.exists():  # pragma: nocover
+            configdir.mkdir(parents=True, exist_ok=True)
+
+        # go edit the file
+        cmd = f'"{self.editor}" "{self.config_file}"'
+        self.pfeedback(f"executing {cmd}")
+        os.system(cmd)
+
+        # read it back in and apply it
+        self.pfeedback("reloading configuration")
+        self.load_config()
+        self.exit_code = self.EXIT_SUCCESS
+
+    def _config_convert(self):
+        """
+        Convert the old .ini based configuration file into the new .toml
+        based one.
+
+        The .ini file _must_ exist and the .toml file _must not_ exist in order
+        for this to do anything.
+        """
+        if self.config_file.exists():
+            self.pfeedback(
+                "configuration file exists: cowardly refusing to overwrite it"
+            )
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        if not self.config_file_old.exists():
+            self.pfeedback("old configuration file does not exist: nothing to convert")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        self.pfeedback("converting old configuration file to new format")
+        iniconfig = EvaluatingConfigParser()
+        with open(self.config_file_old, "r", encoding="utf-8") as fobj:
+            iniconfig.read_file(fobj)
+            # convert it to a new toml file
+            toml = tomlkit.document()
+            for section in dict(iniconfig).keys():
+                if section == "DEFAULT":
+                    pass
+                elif section == "settings":
+                    table = tomlkit.table()
+                    for param_name in dict(iniconfig[section]):
+                        # inifiles are untyped so everything is read from
+                        # them as a string. this code converts the string
+                        # to the proper type, so that it gets written into
+                        # the toml file as the proper type
+                        try:
+                            settable = self.settables[param_name]
+                            value = iniconfig[section][param_name]
+                            value = cmd2.utils.strip_quotes(value)
+                            table.add(param_name, settable.val_type(value))
+                        except KeyError:
+                            # we found a setting in the file that isn't a valid
+                            # setting for this program, bail out
+                            self.pfeedback(
+                                f"conversion failed: '{param_name}' is not a valid setting"
+                            )
+                            self.exit_code = self.EXIT_ERROR
+                            return
+                    toml.add(section, table)
+                else:
+                    # all the other sections/tables are servers
+                    table = tomlkit.table()
+                    for key in dict(iniconfig[section]):
+                        value = iniconfig[section][key]
+                        # all values here are strings, except for 'verify' which
+                        # is a boolen. Let's check for that and convert if necessary
+                        if key == "verify":
+                            value = self.convert_to_boolean(value)
+                        table.add(key, value)
+                    toml.add(section, table)
+
+            with open(self.config_file, "w", encoding="utf-8") as ftoml:
+                ftoml.write(tomlkit.dumps(toml))
+                self.pfeedback(f"configuration written to {self.config_file}")
+
+        # read it back in and apply it
+        self.pfeedback("reloading configuration")
+        self.load_config()
+        self.exit_code = self.EXIT_SUCCESS
 
     show_parser = argparse.ArgumentParser(
         prog="show",
@@ -671,6 +754,24 @@ change the value of one of this program's settings
         The location of the user configuration file.
 
         :return: The full path to the user configuration file, or None
+                 if self.appdirs has not been defined.
+        """
+        if self.appdirs:
+            filename = self.app_name + ".toml"
+            return pathlib.Path(self.appdirs.user_config_dir).resolve() / filename
+        return None
+
+    @property
+    def config_file_old(self) -> pathlib.Path:
+        """
+        The location of the old configuration file, using the .ini extension and
+        format.
+
+        As of 6.0.0 this file is no longer used, instead we use a .toml file available
+        in `config_file`. This property exists so we can convert the old file to the
+        new format
+
+        :return: The full path to the old user configuration file, or None
                  if self.appdirs has not been defined.
         """
         if self.appdirs:
