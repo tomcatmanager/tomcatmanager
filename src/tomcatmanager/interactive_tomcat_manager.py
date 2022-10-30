@@ -34,14 +34,14 @@ import http.client
 import os
 import pathlib
 import sys
-import tomlkit
 import traceback
 import xml.dom.minidom
 from typing import Callable, Any, List
 
 import appdirs
-import requests
 import cmd2
+import requests
+import tomlkit
 
 import tomcatmanager as tm
 
@@ -175,7 +175,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # for configuration
     app_name = "tomcat-manager"
     app_author = "tomcatmanager"
-    config = None
+    config = tomlkit.loads("")
 
     @property
     def status_to_stdout(self) -> bool:
@@ -794,12 +794,11 @@ change the value of one of this program's settings
 
     def load_config(self):
         """Open and parse the user config file and set self.config."""
-        config = None
+        config = tomlkit.loads("")
         if self.config_file is not None:
-            config = EvaluatingConfigParser()
             try:
                 with open(self.config_file, "r", encoding="utf-8") as fobj:
-                    config.read_file(fobj)
+                    config = tomlkit.loads(fobj.read())
             except FileNotFoundError:
                 pass
         try:
@@ -827,14 +826,12 @@ change the value of one of this program's settings
         """
         try:
             settable = self.settables[param_name]
-
-            value = cmd2.utils.strip_quotes(value)
             current_value = getattr(self, param_name)
             setattr(self, param_name, settable.val_type(value))
             if current_value != value and settable.onchange_cb:  # pragma: nocover
                 settable.onchange_cb(param_name, current_value, value)
         except KeyError as keyerr:
-            raise ValueError from keyerr
+            raise ValueError(f"invalid setting: {param_name}") from keyerr
 
     def convert_to_boolean(self, value: Any):
         """Return a boolean value translating from other types if necessary."""
@@ -948,20 +945,20 @@ change the value of one of this program's settings
 
         args = self.parse_args(self.connect_parser, cmdline.argv)
         server = args.config_name
-        if self.config.has_section(server):
-            if self.config.has_option(server, "url"):
+        if server in self.config.keys():
+            if "url" in self.config[server].keys():
                 url = self.config[server]["url"]
-            if self.config.has_option(server, "user"):
+            if "user" in self.config[server].keys():
                 user = self.config[server]["user"]
-            if self.config.has_option(server, "password"):
+            if "password" in self.config[server].keys():
                 password = self.config[server]["password"]
-            if self.config.has_option(server, "cert"):
+            if "cert" in self.config[server].keys():
                 cert = self.config[server]["cert"]
-            if self.config.has_option(server, "key"):
+            if "key" in self.config[server].keys():
                 key = self.config[server]["key"]
-            if self.config.has_option(server, "cacert"):
+            if "cacert" in self.config[server].keys():
                 cacert = self.config[server]["cacert"]
-            if self.config.has_option(server, "verify"):
+            if "verify" in self.config[server].keys():
                 verify = self.config[server]["verify"]
         else:
             # This is an ugly hack required to get argparse to show the help properly.
