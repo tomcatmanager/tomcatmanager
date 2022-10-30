@@ -221,7 +221,7 @@ Parallel Deployment
 -------------------
 
 Tomcat supports a `parallel deployment feature
-<https://tomcat.apache.org/tomcat-8.5-doc/config/context.html#Parallel_deplo
+<https://tomcat.apache.org/tomcat-10.1-doc/config/context.html#Parallel_deplo
 yment>`_ which allows multiple versions of the same WAR to be deployed
 simultaneously at the same URL. To utilize this feature, you need to deploy
 an application with a version string. The combination of path and version
@@ -379,8 +379,9 @@ launches the editor of your choice, you know, the one specified in the
   tomcat-manager> config edit
 
 This file uses the `TOML <https://toml.io/>`_ file format. Create a table called
-``settings``, and use key/value pairs to set values of any of the available settings.
-These settings are applied when the application first runs. My config file contains:
+``settings``, and use key/value pairs to set values for any of the available settings.
+These settings are applied when the application first runs, and after you finish
+editing the config file. My config file contains:
 
 .. code-block:: toml
 
@@ -435,17 +436,18 @@ password
   and password is not, you will be prompted for a password.
 
 cert
-  File containing certificate and key, or just a certificate, for SSL/TLS
-  client authentication. See TODO for more detail.
+  File containing certificate and key, or just a certificate, for SSL/TLS client
+  authentication. See :ref:`authentication:SSL/TLS Client Authentication` for more
+  information.
 
 key
-  File containing private key for SSL/TLS client authentication. See TODO
-  for more detail.
+  File containing private key for SSL/TLS client authentication. See
+  :ref:`authentication:SSL/TLS Client Authentication` for more information.
 
 cacert
-  File or directory containing a certificate authority bundle used to
-  validate the SSL/TLS certificate presented by the server if the url
-  uses the https protocol.
+  File or directory containing a certificate authority bundle used to validate the
+  SSL/TLS certificate presented by the server if the url uses the https protocol. See
+  :ref:`authentication:Encrypted Connections` for more information.
 
 verify
   Defaults to ``True`` to verify server SSL/TLS certificates. If ``False``,
