@@ -23,14 +23,14 @@ To use these encrypted connections with tomcatmanager, simply use the ``https``
 protocol in the url you specify for the server. The ``list`` command shown here can be
 replaced with any supported command. Here are examples from the command line,
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager --user=ace --password=newenglandclamchowder \
    https://www.example.com/manager list
 
 interactive mode,
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager
    tomcat-manager>connect https://www.example.com/manager ace newenglandclamchowder
@@ -78,14 +78,14 @@ certificates of trusted certificate authorities.
 Use the ``--cacert`` option from the command line. The ``list`` command shown here can
 be replaced with any supported command.
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager --user=ace --password=newenglandclamchowder \
    --cacert=/etc/ssl/mycertbundle https://www.example.com/manager list
 
 Interactive mode is similar:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager
    tomcat-manager>connect --cacert=/etc/ssl/mycertbundle https://www.example.com/manager ace newenglandclamchowder
@@ -118,14 +118,14 @@ production server.
 
 Use the ``--noverify`` option from the command line:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager --user=ace --password=newenglandclamchowder \
    --noverify https://www.example.com/manager list
 
 from interactive mode:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager
    tomcat-manager>connect --noverify https://www.example.com/manager ace newenglandclamchowder
@@ -200,7 +200,7 @@ key and associated certificate used to respond to the authentication requests fr
 server. If you have the key and the certificate in a single file, then omit the
 ``--key`` option and use the combined file with the ``--cert`` option:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager --key /etc/ssl/mykey --cert /etc/ssl/mycert \
    https://www.example.com/manager list
@@ -208,7 +208,7 @@ server. If you have the key and the certificate in a single file, then omit the
 Interactive mode works simiarly, this example shows how to use a combined key and
 certificate file:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager
    tomcat-manager>connect --cert /etc/ssl/mycertandkey https://www.example.com/manager

@@ -18,14 +18,14 @@ runs on it.
 
 You can double check the list of versions supported by:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager -v
    6.0.0 (works with Tomcat >= 8.5 and <= 10.1)
 
 or:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager
    tomcat-manager> version
@@ -41,7 +41,7 @@ Install using pip
 
 Install using ``pip``:
 
-.. code-block::
+.. code-block:: text
 
   $ pip install tomcatmanager
 
@@ -54,7 +54,7 @@ First you will need to :doc:`configuretomcat`.
 If you are in a hurry to :doc:`get started with the command line tool
 <interactive>`, type:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager -h
 

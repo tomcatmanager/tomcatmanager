@@ -48,7 +48,7 @@ How Do I Use It?
 This package installs a command line utility called ``tomcat-manager``. It's
 easily scriptable using your favorite shell:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager --user=ace --password=newenglandclamchowder \
    http://localhost:8080/manager deploy local sample.war /sampleapp
@@ -57,7 +57,7 @@ easily scriptable using your favorite shell:
 
 There is also an interactive mode:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager
    tomcat-manager>connect http://localhost:8080/manager ace
@@ -139,7 +139,7 @@ Installation
 
 You'll need Python >= 3.7. Install using pip:
 
-.. code-block::
+.. code-block:: text
 
    $ pip install tomcatmanager
 

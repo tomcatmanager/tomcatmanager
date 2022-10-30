@@ -312,13 +312,13 @@ class TomcatApplication:
 
         Tomcat Manager outputs a line like this for each application:
 
-        .. code-block::
+        .. code-block:: text
 
            /shiny:running:0:shiny##v2.0.6
 
         The data elements in this line can be described as:
 
-        .. code-block::
+        .. code-block:: text
 
            {path}:{state}:{sessions}:{directory}##{version}
 
