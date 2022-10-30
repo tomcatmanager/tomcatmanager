@@ -76,16 +76,16 @@ dev = [
     "invoke",
     "sphinx",
     "sphinx-autobuild",
-    "sphinx_rtd_theme",
+    "sphinx_rtd_theme==0.5.2",
     "autodocsumm",
-    "doc8",
+    "doc8==0.11.2",
 ]
 docs = [
     "sphinx",
     "sphinx-autobuild",
-    "sphinx_rtd_theme",
+    "sphinx_rtd_theme==0.5.2",
     "autodocsumm",
-    "doc8",
+    "doc8==0.11.2",
 ]
 
 
