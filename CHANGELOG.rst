@@ -15,7 +15,9 @@ Unreleased
 Changed
 ^^^^^^^
 
-- Change configuration file from .ini format to .toml format
+- Change configuration file from .ini format to .toml format. See
+  `Configuration File <https://tomcatmanager.readthedocs.io/en/stable/interactive.html#configuration-file>`_
+  for more information.
 - Support for Python 3.11
 - Support for Tomcat 10.1
 - ``config_file`` attribute now contains a ``pathlib.Path`` object instead

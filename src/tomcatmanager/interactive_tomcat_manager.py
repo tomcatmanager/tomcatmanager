@@ -282,6 +282,18 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         # load config file if it exists
         self.load_config()
+        # give a friendly message if there is an old config file but not a
+        # new one
+        if (
+            not self.config_file.exists() and self.config_file_old.exists()
+        ):  # pragma: nocover
+            self.pfeedback(
+                "In version 6.0.0 the configuration file format changed from INI to TOML."
+            )
+            self.pfeedback(
+                "You have a configuration file in the old format. Type 'config convert' to"
+            )
+            self.pfeedback("migrate your old configuration to the new format.")
 
         # initialize command exit code
         self.exit_code = None

@@ -380,8 +380,8 @@ launches the editor of your choice, you know, the one specified in the
 
 This file uses the `TOML <https://toml.io/>`_ file format. Create a table called
 ``settings``, and use key/value pairs to set values for any of the available settings.
-These settings are applied when the application first runs, and after you finish
-editing the config file. My config file contains:
+These settings are applied when the application first runs, and applied again after
+you finish editing the config file. Here's an example of settings in the config file:
 
 .. code-block:: toml
 
@@ -389,16 +389,38 @@ editing the config file. My config file contains:
   prompt = "tm> "
   debug = true
   editor = "/usr/local/bin/zile"
+  echo = false
+  quiet = false
+  status_prefix = "--"
+
+.. note::
+
+  In versions prior to 6.0.0, the configuration file used a Microsoft Windows INI file
+  format, which is similar to TOML. The biggest difference apparent in our
+  configuration file is that all string values must be quoted in TOML, and in INI they
+  are accepted without quotes.
+
+  When you run ``tomcat-manager`` in interactive mode it will check if the old
+  configuration file is present. If it is, and if the new configuration file doesn't
+  exist, it will let you know. Here's how to convert your old configuration file to
+  the new format:
+
+  .. code-block:: text
+
+    tomcat-manager> config convert
+
+  Everything should be converted over automatically except any comments you have in
+  your file. You'll have to add those back by hand.
 
 
 Server Shortcuts
 ----------------
 
-You can use the configuration file to define shortcuts to various Tomcat servers.
-Using server shortcuts you can keep the authentication credentials off of the command
-line and out of your scripts, which is more secure. Create a table named the shortcut,
-and then include keys and values for ``url``, ``user``, and ``password``. Here's a
-simple example:
+In addition to settings, you can use the configuration file to define shortcuts to
+various Tomcat servers. Using server shortcuts you can keep the authentication
+credentials off of the command line and out of your scripts, which is more secure.
+Create a table named the shortcut, and then include keys and values for ``url``,
+``user``, and ``password``. Here's a simple example:
 
 .. code-block:: toml
 
