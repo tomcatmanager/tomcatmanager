@@ -737,8 +737,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     self.perror(f"unknown setting: '{param_name}'")
                     self.exit_code = self.EXIT_ERROR
         else:
-            self.perror("invalid syntax: try 'set {setting} = {value}'")
-            self.exit_code = self.EXIT_USAGE
+            self.do_show(args)
 
     def help_set(self):
         """Show help for the 'set' command."""

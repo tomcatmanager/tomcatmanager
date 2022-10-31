@@ -612,10 +612,12 @@ def test_show_invalid_setting(command, capsys):
 def test_set_noargs(capsys):
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks("set")
-    out, err = capsys.readouterr()
-    assert not out
-    assert err == "invalid syntax: try 'set {setting} = {value}'\n"
-    assert itm.exit_code == itm.EXIT_USAGE
+    out, _ = capsys.readouterr()
+    # not going to parse all the lines, but there
+    # should be one per setting
+    assert len(out.splitlines()) == len(itm.settables)
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
 
 
 def test_set_string():
