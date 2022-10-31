@@ -105,7 +105,7 @@ def black_check(context):
     context.run("black --check *.py tests src docs", echo=True)
 
 
-namespace.add_task(black_check)
+namespace_check.add_task(black_check)
 
 
 @invoke.task
@@ -115,7 +115,6 @@ def black(context):
 
 
 namespace.add_task(black)
-namespace_check.add_task(black)
 
 #####
 #
