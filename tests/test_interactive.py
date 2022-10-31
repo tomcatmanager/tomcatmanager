@@ -619,11 +619,10 @@ def test_set_noargs(capsys):
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
-
 def test_set_string():
     itm = tm.InteractiveTomcatManager()
     prompt = str(uuid.uuid1())
-    itm.onecmd_plus_hooks(f"set prompt={prompt}")
+    itm.onecmd_plus_hooks(f"set prompt = {prompt}")
     assert itm.prompt == prompt
     assert itm.exit_code == itm.EXIT_SUCCESS
 
@@ -631,7 +630,7 @@ def test_set_string():
 def test_set_float_valid():
     itm = tm.InteractiveTomcatManager()
     itm.timeout = 10.0
-    itm.onecmd_plus_hooks("set timeout=5.5")
+    itm.onecmd_plus_hooks("set timeout = 5.5")
     assert itm.timeout == 5.5
     assert itm.exit_code == itm.EXIT_SUCCESS
 
@@ -640,7 +639,7 @@ def test_set_float_invalid():
     itm = tm.InteractiveTomcatManager()
     itm.debug = False
     itm.timeout = 10.0
-    itm.onecmd_plus_hooks("set timeout=joe")
+    itm.onecmd_plus_hooks("set timeout = joe")
     assert itm.timeout == 10.0
     assert itm.exit_code == itm.EXIT_ERROR
 
@@ -649,7 +648,7 @@ def test_set_float_invalid_debug():
     itm = tm.InteractiveTomcatManager()
     itm.debug = True
     itm.timeout = 10.0
-    itm.onecmd_plus_hooks("set timeout=joe")
+    itm.onecmd_plus_hooks("set timeout = joe")
     assert itm.timeout == 10.0
     assert itm.exit_code == itm.EXIT_ERROR
 
@@ -657,7 +656,7 @@ def test_set_float_invalid_debug():
 def test_set_boolean_valid():
     itm = tm.InteractiveTomcatManager()
     itm.echo = False
-    itm.onecmd_plus_hooks("set echo=True")
+    itm.onecmd_plus_hooks("set echo = True")
     assert itm.echo is True
     assert itm.exit_code == itm.EXIT_SUCCESS
 
@@ -665,7 +664,7 @@ def test_set_boolean_valid():
 def test_set_boolean_invalid():
     itm = tm.InteractiveTomcatManager()
     itm.echo = False
-    itm.onecmd_plus_hooks("set echo=notaboolean")
+    itm.onecmd_plus_hooks("set echo = notaboolean")
     assert itm.echo is False
     assert itm.exit_code == itm.EXIT_ERROR
 
@@ -674,7 +673,7 @@ def test_set_debug_invalid():
     itm = tm.InteractiveTomcatManager()
     itm.echo = False
     itm.debug = True
-    itm.onecmd_plus_hooks("set echo=notaboolean")
+    itm.onecmd_plus_hooks("set echo = notaboolean")
     assert itm.echo is False
     assert itm.exit_code == itm.EXIT_ERROR
 
@@ -695,20 +694,20 @@ def test_timeout_property():
     # the command
     itm.timeout = 5
     assert itm.tomcat.timeout == 5
-    itm.onecmd_plus_hooks(f"set timeout={timeout}")
+    itm.onecmd_plus_hooks(f"set timeout = {timeout}")
     assert itm.exit_code == itm.EXIT_SUCCESS
     assert itm.timeout == timeout
     assert itm.tomcat.timeout == timeout
 
 
 SETTINGS_SUCCESSFUL = [
-    ("prompt=tm>", "tm>"),
-    ("prompt=tm> ", "tm>"),
-    ("prompt=t m>", "t m>"),
-    ('prompt="tm> "', "tm> "),
-    ('prompt="tm> "   # some comment here', "tm> "),
-    ('prompt="t\'m> "', "t'm> "),
-    ('prompt="""h\'i"""', "h'i"),
+    ("prompt = tm>", "tm>"),
+    ("prompt = tm> ", "tm>"),
+    ("prompt = t m>", "t m>"),
+    ('prompt = "tm> "', "tm> "),
+    ('prompt = "tm> "   # some comment here', "tm> "),
+    ('prompt = "t\'m> "', "t'm> "),
+    ('prompt = """h\'i"""', "h'i"),
 ]
 
 
