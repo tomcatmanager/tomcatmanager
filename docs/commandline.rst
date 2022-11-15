@@ -9,12 +9,12 @@ command line. The first argument of ``tomcat-manager`` is the url of the server.
 rest of the arguments are any commands and their arguments from
 :ref:`interactive:Interactive Use`. Here's a few examples:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager --user ace --password newenglandclamchowder \
    http://localhost:8080/manager deploy server /tmp/myfancyapp.war /fancy
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager --user ace --password newenglandclamchowder \
    http://localhost:8080/manager list --state running --by path
@@ -28,7 +28,7 @@ Say you want to find out how many active sessions there are in the oldest versio
 our ``shiny`` app (told you it would feel kind of hollow). You could use interactive
 mode:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager
    tomcat-manager>connect https://www.example.com/manager ace newenglandclamchowder
@@ -51,7 +51,7 @@ output, you might choose to use ``tomcat-manager`` from within a shell script:
    URL=https://www.example.com/manager
    USERID=ace
    PASSWD=newenglandclamchowder
-   COMMAND='list --raw'
+   COMMAND="list --raw"
    TOMCAT="tomcat-manager --quiet --user=$USERID --password=$PASSWD $URL $COMMAND"
 
    # get the output of the list into a shell variable
@@ -70,7 +70,7 @@ output, you might choose to use ``tomcat-manager`` from within a shell script:
 
 Save this script as ``~/bin/oldshiners.sh``, and then run it:
 
-.. code-block::
+.. code-block:: text
 
    $ ~/bin/oldshiners.sh
    6
@@ -98,7 +98,7 @@ Timeout
 By default, network operations timeout in 10 seconds. You can change this
 value:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager --timeout=2.5 http://localhost:8080/manager list
 
@@ -112,7 +112,7 @@ Authentication
 Use the user you created when you :doc:`Configured Tomcat <configuretomcat>` on the
 command line:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager --user=ace http://localhost:8080/manager list
    Password:
@@ -120,7 +120,7 @@ command line:
 and you will be prompted for the password. You can also specify the password on
 the command line, but this is not secure:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager --user=ace --password=newenglandclamchowder \
    http://localhost:8080/manager list
@@ -139,7 +139,7 @@ Server Shortcuts
 You can use :ref:`interactive:Server Shortcuts` from the command line with or without
 commands:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager localhost
    --connected to http://localhost:8080/manager as ace
@@ -151,7 +151,7 @@ commands:
 
 Or:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager localhost list
    --connected to http://localhost:8080/manager as ace
@@ -176,12 +176,12 @@ you might use this:
 
 with the following in your configuration file:
 
-.. code-block:: ini
+.. code-block:: toml
 
    [example]
-   url=https://www.example.com
-   user=ace
-   password=newenglandclamchowder
+   url = "https://www.example.com"
+   user = "ace"
+   password = "newenglandclamchowder"
 
 
 Piped Input
@@ -211,7 +211,7 @@ program it sends output to ``stdout`` and errors to ``stderr``. If you are
 using ``bash`` or one of the other ``sh`` variants, you can easily co-mingle
 them into a single stream:
 
-.. code-block:: bash
+.. code-block:: text
 
    $ tomcat-manager localhost list > myapps.txt 2>&1
 
@@ -247,7 +247,7 @@ first one uses the shell to redirect status messages to the bitbucket, the
 second one uses the ``--quiet`` switch to instruct ``tomcat-manager`` to
 suppress status messages.
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager localhost list 2>/dev/null
    Path                     Status  Sessions Directory
@@ -264,7 +264,7 @@ If you pipe commands into ``tomcat-manager`` instead of providing them as
 arguments, the ``--echo`` command line switch can be included which will print
 the prompt and command to the output:
 
-.. code-block::
+.. code-block:: text
 
    $ echo list | tomcat-manager --echo localhost
    --connected to https://home.kotfu.net/manager as ace
@@ -280,7 +280,7 @@ errors, and outputs a terse message describing the problem. For example, if my
 Tomcat container is not currently running, or if the HTTP request fails for any
 other reason, you will see something like this:
 
-.. code-block::
+.. code-block:: text
 
    $ tomcat-manager vm list
    connection error
@@ -289,7 +289,7 @@ If you want all the gory detail, give the ``--debug`` command line switch or
 set ``debug=True``. Then you'll see something like this (stack trace truncated
 with '...'):
 
-.. code-block::
+.. code-block:: text
 
    $ tm --debug vm list
    Traceback (most recent call last):

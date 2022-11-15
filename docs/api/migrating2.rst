@@ -31,7 +31,7 @@ much of anything. The following code works in both 1.x and 2.x::
         if r.ok:
             print(r.server_info.os_name)
         else:
-            print('Error: {}'.format(r.status_message))
+            print(f"Error: {r.status_message}")
     except Exception as err:
         # handle exception
         pass

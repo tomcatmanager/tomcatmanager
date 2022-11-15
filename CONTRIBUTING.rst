@@ -13,8 +13,8 @@ Create Python Environments
 --------------------------
 
 tomcatmanager uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run the test
-suite against multiple python versions. tox expects that when it runs ``python3.7`` it
-will actually get a python from the 3.7.x series.
+suite against multiple python versions. tox expects that when it runs ``python3.9`` it
+will actually get a python from the 3.9.x series.
 
 I recommend using `pyenv <https://github.com/pyenv/pyenv>`_ with the `pyenv-virtualenv
 <https://github.com/pyenv/pyenv-virtualenv>`_ plugin to manage these various python
@@ -27,19 +27,21 @@ creation of these environments.
 If you prefer to create these virtual envs by hand, do the following::
 
    $ cd tomcatmanager
-   $ pyenv install 3.10.0
+   $ pyenv install 3.11.0
+   $ pyenv virtualenv -p python3.11 3.11.0 tomcatmanager-3.11
+   $ pyenv install 3.10.7
    $ pyenv virtualenv -p python3.10 3.10.0 tomcatmanager-3.10
-   $ pyenv install 3.9.7
+   $ pyenv install 3.9.14
    $ pyenv virtualenv -p python3.9 3.9.7 tomcatmanager-3.9
-   $ pyenv install 3.8.12
+   $ pyenv install 3.8.14
    $ pyenv virtualenv -p python3.8 3.8.12 tomcatmanager-3.8
-   $ pyenv install 3.7.12
+   $ pyenv install 3.7.14
    $ pyenv virtualenv -p python3.7 3.7.12 tomcatmanager-3.7
 
 
-Now set pyenv to make all four of those available at the same time::
+Now set pyenv to make all five of those available at the same time::
 
-   $ pyenv local tomcatmanager-3.10 tomcatmanager-3.9 tomcatmanager-3.8 tomcatmanager-3.7
+   $ pyenv local tomcatmanager-3.11 tomcatmanager-3.10 tomcatmanager-3.9 tomcatmanager-3.8 tomcatmanager-3.7
 
 Whether you ran the script, or did it by hand, you now have isolated virtualenvs for
 each of the minor python versions. This table shows various python commands, the
@@ -48,18 +50,20 @@ version of python which will be executed, and the virtualenv it will utilize.
 ==============  =======  ==================
 Command         python   virtualenv
 ==============  =======  ==================
-``python``      3.10.0   tomcatmanager-3.10
-``python3``     3.10.0   tomcatmanager-3.10
-``python3.10``  3.10.0   tomcatmanager-3.10
-``python3.9``   3.9.7    tomcatmanager-3.9
-``python3.8``   3.8.12   tomcatmanager-3.8
-``python3.7``   3.7.12   tomcatmanager-3.7
-``pip``         3.9.1    tomcatmanager-3.10
-``pip3``        3.9.1    tomcatmanager-3.10
-``pip3.10``     3.10.0   tomcatmanager-3.10
-``pip3.9``      3.9.7    tomcatmanager-3.9
-``pip3.8``      3.8.12   tomcatmanager-3.8
-``pip3.7``      3.7.12   tomcatmanager-3.7
+``python``      3.11.0   tomcatmanager-3.11
+``python3``     3.11.0   tomcatmanager-3.11
+``python3.11``  3.11.0   tomcatmanager-3.11
+``python3.10``  3.10.7   tomcatmanager-3.10
+``python3.9``   3.9.14   tomcatmanager-3.9
+``python3.8``   3.8.14   tomcatmanager-3.8
+``python3.7``   3.7.14   tomcatmanager-3.7
+``pip``         3.11.0   tomcatmanager-3.11
+``pip3``        3.11.0   tomcatmanager-3.11
+``pip3.11``     3.11.0   tomcatmanager-3.11
+``pip3.10``     3.10.7   tomcatmanager-3.10
+``pip3.9``      3.9.14   tomcatmanager-3.9
+``pip3.8``      3.8.14   tomcatmanager-3.8
+``pip3.7``      3.7.14   tomcatmanager-3.7
 ==============  =======  ==================
 
 
@@ -73,11 +77,11 @@ Now install all the development dependencies::
 This installs the tomcatmanager package "in-place", so the package points to the
 source code instead of copying files to the python ``site-packages`` folder.
 
-All the dependencies now have been installed in the ``tomcatmanager-3.9`` virtualenv.
+All the dependencies now have been installed in the ``tomcatmanager-3.11`` virtualenv.
 If you want to work in other virtualenvs, you'll need to manually select it, and
 install again::
 
-   $ pyenv shell tomcatmanager-3.8
+   $ pyenv shell tomcatmanager-3.9
    $ pip install -e .[dev]
 
 
@@ -106,15 +110,15 @@ we released that version as 5.0.0 instead of 4.1.0, even though there were no
 incompatible API changes.
 
 These versioning rules were chosen so that if you are using this library against a
-single version of Tomcat, and you specify your ``setup.py`` dependency rules like::
+single version of Tomcat, and you specify your ``pyproject.toml`` dependency rules
+like::
 
-   setup(
-   ...
-       install_requires=["tomcatmanager>=3,<4"]
-   ...
-   )
+   [project]
+   dependencies = [
+    "tomcatmanager>=4,<5"
+   ]
 
-and you won't have to worry about a future release of this software breaking your
+you won't have to worry about a future release of this software breaking your
 setup.
 
 
@@ -133,7 +137,7 @@ interface for these development tasks. To see the full list of functions availab
 
 You can run multiple tasks in a single invocation, for example::
 
-   $ invoke clean docs sdist wheel
+   $ invoke clean docs build
 
 That one command will remove all superflous cache, testing, and build files, render
 the documentation, and build a source distribution and a wheel distribution.
@@ -145,10 +149,13 @@ To make it easy to check everything before you commit, you can just type::
    $ echo $?
    0
 
-and it will test, lint, and format all the code and all the documentation. If this
-doesn't complete everything successfully then you still need to fix some stuff before
-you commit or submit a pull request. In this context, complete everything successfully
-means: all tests pass, lint returns a perfect score, doc8 finds no errors, etc.
+and it will test, lint, and check the format of all the code and the documentation. If
+this doesn't complete everything successfully then you still need to fix some stuff
+before you commit or submit a pull request. In this context, complete everything
+successfully means: all tests pass, lint returns a perfect score, doc8 finds no
+errors, etc.
+
+To see what is actually getting executed by ``invoke``, check the ``tasks.py`` file.
 
 
 Testing
@@ -167,8 +174,8 @@ You can run the tests against all the supported versions of python using tox::
 
    $ tox
 
-tox expects that when it runs ``python3.7`` it will actually get a python from the
-3.7.x series. That's why we set up the various python environments earlier.
+tox expects that when it runs ``python3.9`` it will actually get a python from the
+3.9.x series. That's why we set up the various python environments earlier.
 
 If you just want to run the tests in your current python environment, use pytest::
 
@@ -192,7 +199,7 @@ By default, ``pytest`` runs the mock server corresponding to the latest supporte
 version of Tomcat. If you want to test against a different mock server, do something
 like::
 
-   $ pytest --mocktomcat 8.5
+   $ pytest --mocktomcat 9.0
 
 Look in ``conftest.py`` to see how these servers are implemented and launched.
 
@@ -271,9 +278,9 @@ command line option.
 
 .. warning::
 
-   The private key to your local certificate must be unencrypted. The
-   Requests library used for network communication does not support using
-   encrypted keys.
+   The private key to your local certificate must be unencrypted. The `Requests
+   <https://requests.readthedocs.io/en/latest/>`_ library used for network
+   communication does not support using encrypted keys.
 
 .. warning::
 
@@ -407,9 +414,9 @@ following:
 
 9. Create a new release on Github.
 
-10. Build source distribution, wheel distribution, and upload them to pypi staging::
+10. Build source distribution, wheel distribution, and upload them to testpypi::
 
-       $ invoke pypi-test
+       $ invoke testpypi
 
 11. Build source distribution, wheel distribution, and upload them to pypi::
 

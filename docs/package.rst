@@ -160,9 +160,9 @@ want to check::
 
    >>> import tomcatmanager as tm
    >>> tomcat = tm.TomcatManager()
-   >>> tver = tm.TomcatMajorMinor.V8_0
+   >>> tver = tm.TomcatMajorMinor.V8_5
    >>> print(tomcat.implemented_by(tomcat.ssl_reload, tver))
-   False
+   True
 
 
 Specifying As A Dependency

@@ -31,7 +31,7 @@ import sphinx_rtd_theme
 
 # links to external documentation
 intersphinx_mapping = {
-    "requests": ("https://docs.python-requests.org/en/latest/", None),
+    "requests": ("https://requests.readthedocs.io/en/latest/", None),
     "python": ("https://docs.python.org/3", None),
 }
 
@@ -40,7 +40,7 @@ intersphinx_mapping = {
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # when we autodoc classes, show the methods in the order they are in the
 # source

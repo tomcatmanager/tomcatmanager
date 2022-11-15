@@ -32,28 +32,41 @@ import requests
 import tomcatmanager as tm
 
 
-def test_implemented_by_invalid(mocker):
+def test_implemented_by_invalid():
     # - this test makes sure the _implemented_by decorator throws the proper exceptions
-    # - it depends on ssl_reload() being decorated as not implemented in TomcatMajor.V7
-    # - this does not attempt to test whether various methods are decorated with the
-    #   proper versions of Tomcat
-    tomcat = tm.TomcatManager()
-    with pytest.raises(tm.TomcatNotConnected):
-        response = tomcat.ssl_reload()
-    # pretend we are connected and use an invalid version
-    cmock = mocker.patch(
-        "tomcatmanager.tomcat_manager.TomcatManager.is_connected",
-        new_callable=mock.PropertyMock,
-    )
-    cmock.return_value = True
-    vmock = mocker.patch(
-        "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major_minor",
-        new_callable=mock.PropertyMock,
-    )
-    vmock.return_value = tm.TomcatMajorMinor.V8_0
-
-    with pytest.raises(tm.TomcatNotImplementedError):
-        response = tomcat.ssl_reload()
+    # - as of version 6.0.0 of this library, all supported tomcat versions support
+    #   all commands, so there is nothing to test. In the future, if a new command
+    #   is added to the server, this method should test to make sure that versions
+    #   of the server that do not support the command throw the proper exceptions
+    # - prior to version 6.0.0 of this library, this method ensured that ssl_reload()
+    #   threw a TomcatNotImplementedError() when connected to server version 8
+    # - the code tested by this method is in tomcat_manager.py in the
+    #   _implemented_by class, which is a decorator
+    #
+    # prior test code is commented here for ease if re-introducing in the future:
+    #
+    # method signature for this test was 'def test_implemented_by_invalid(mocker)'
+    # paramter 'mocker' removed because pylint complained about unused parameter
+    #
+    #
+    # tomcat = tm.TomcatManager()
+    # with pytest.raises(tm.TomcatNotConnected):
+    #     response = tomcat.ssl_reload()
+    # # pretend we are connected and use an invalid version
+    # cmock = mocker.patch(
+    #     "tomcatmanager.tomcat_manager.TomcatManager.is_connected",
+    #     new_callable=mock.PropertyMock,
+    # )
+    # cmock.return_value = True
+    # vmock = mocker.patch(
+    #     "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major_minor",
+    #     new_callable=mock.PropertyMock,
+    # )
+    # vmock.return_value = tm.TomcatMajorMinor.V8_0
+    #
+    # with pytest.raises(tm.TomcatNotImplementedError):
+    #     response = tomcat.ssl_reload()
+    assert True
 
 
 def test_implemented_by_decorations8_0(mocker):
@@ -67,7 +80,7 @@ def test_implemented_by_decorations8_0(mocker):
         "tomcatmanager.tomcat_manager.TomcatManager.tomcat_major_minor",
         new_callable=mock.PropertyMock,
     )
-    vmock.return_value = tm.TomcatMajorMinor.V8_0
+    vmock.return_value = tm.TomcatMajorMinor.V8_5
     # don't care if this errors because all we care is that the decorator
     # allowed us to try and make a HTTP request. Functionality of the
     # decorated method is tested elsewhere
@@ -122,6 +135,7 @@ TOMCAT_MAJORS = [
     tm.TomcatMajorMinor.V8_5,
     tm.TomcatMajorMinor.V9_0,
     tm.TomcatMajorMinor.V10_0,
+    tm.TomcatMajorMinor.V10_1,
     tm.TomcatMajorMinor.VNEXT,
 ]
 
@@ -216,5 +230,11 @@ def test_implemented_by_method():
 
 def test_implemented_by_method_invalid():
     tomcat = tm.TomcatManager()
-    assert not tomcat.implemented_by("ssl_reload", tm.TomcatMajorMinor.V8_0)
+    # as of library version 6.0.0 all methods are available in all supported
+    # server versions. In library version 5.0.0, tomcat 8.0 was supported,
+    # which did not have the ssl_reload command. This test remains commented
+    # here for ease of reintroducing in the future if a new server method is
+    # added
+
+    # assert not tomcat.implemented_by("ssl_reload", tm.TomcatMajorMinor.V8_0)
     assert not tomcat.implemented_by("notamethod", tm.TomcatMajorMinor.V9_0)

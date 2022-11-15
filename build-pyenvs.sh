@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 #
-
 # create pyenv environments for each minor version of python
 # supported by tomcatmanager
+#
+# You need all these versions of python installed in order for tox
+# to run properly. These are also helpful if you have to use the
+# debugger to chase down test cases that fail in one version of python
+# but work in another version of python.
 #
 # this script uses terms from Semantic Versioning https://semver.org/
 # version numbers are: major.minor.patch
@@ -23,7 +27,7 @@
 # virtualenvs will be added to '.python-version'. Feel free to modify
 # this list, but note that this script intentionally won't install
 # dev, rc, or beta python releases
-declare -a pythons=("3.10" "3.9" "3.8" "3.7")
+declare -a pythons=("3.11" "3.10" "3.9" "3.8" "3.7")
 
 # function to find the latest patch of a minor version of python
 function find_latest_version {
@@ -45,7 +49,7 @@ do
 
     envname="tomcatmanager-$minor_version"
     # remove the associated virtualenv
-    pyenv uninstall -f "$envname"
+    pyenv virtualenv-delete -f "$envname"
     # create a new virtualenv
     pyenv virtualenv -p "python$minor_version" "$patch_version" "$envname"
     # append the virtualenv to .python-version

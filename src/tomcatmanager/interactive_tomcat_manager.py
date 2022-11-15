@@ -32,14 +32,16 @@ import configparser
 import getpass
 import http.client
 import os
+import pathlib
 import sys
 import traceback
 import xml.dom.minidom
 from typing import Callable, Any, List
 
 import appdirs
-import requests
 import cmd2
+import requests
+import tomlkit
 
 import tomcatmanager as tm
 
@@ -65,11 +67,11 @@ def _path_version_parser(cmdname: str, helpmsg: str) -> argparse.ArgumentParser:
     parser.add_argument(
         "-v",
         "--version",
-        help="""Optional version string of the application to
-             {cmdname}. If the application was deployed with
-             a version string, it must be specified in order to
-             {cmdname} the application.""".format(
-            cmdname=cmdname
+        help=(
+            f"Optional version string of the application to"
+            f" {cmdname}. If the application was deployed with"
+            f" a version string, it must be specified in order to"
+            f" {cmdname} the application."
         ),
     )
     path_help = "The path part of the URL where the application is deployed."
@@ -173,7 +175,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # for configuration
     app_name = "tomcat-manager"
     app_author = "tomcatmanager"
-    config = None
+    config = tomlkit.loads("")
 
     @property
     def status_to_stdout(self) -> bool:
@@ -209,7 +211,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
             include_py=True,
         )
 
-        self.echo = False
         self.self_in_py = True
 
         to_remove = [
@@ -228,12 +229,17 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 pass
 
         self.add_settable(
-            cmd2.Settable("echo", bool, "For piped input, echo command to output", self)
+            cmd2.Settable(
+                "echo",
+                self.convert_to_boolean,
+                "For piped input, echo command to output",
+                self,
+            )
         )
         self.add_settable(
             cmd2.Settable(
                 "status_to_stdout",
-                bool,
+                self.convert_to_boolean,
                 "Status information to stdout instead of stderr",
                 self,
             )
@@ -256,19 +262,38 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 "prompt", str, "The prompt displayed before accepting user input", self
             )
         )
-        self.prompt = f"{self.app_name}> "
         self.add_settable(
-            cmd2.Settable("debug", str, "Show stack trace for exceptions", self)
+            cmd2.Settable(
+                "debug",
+                self.convert_to_boolean,
+                "Show stack trace for exceptions",
+                self,
+            )
         )
 
         self.tomcat = tm.TomcatManager()
 
         # set default values
+        self.prompt = f"{self.app_name}> "
+        self.debug = False
         self.timeout = 10
         self.status_prefix = "--"
+        self.echo = False
 
         # load config file if it exists
         self.load_config()
+        # give a friendly message if there is an old config file but not a
+        # new one
+        if (
+            not self.config_file.exists() and self.config_file_old.exists()
+        ):  # pragma: nocover
+            self.pfeedback(
+                "In version 6.0.0 the configuration file format changed from INI to TOML."
+            )
+            self.pfeedback(
+                "You have a configuration file in the old format. Type 'config convert' to"
+            )
+            self.pfeedback("migrate your old configuration to the new format.")
 
         # initialize command exit code
         self.exit_code = None
@@ -288,7 +313,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         the cmd2 command is finished executing.
 
         :param msg: str - message to print to current stdout - anyting
-                          convertible to a str with '{}'.format() is OK
+                          convertible to a str with f"{msg}" is OK
         :param end: str - string appended after the end of the message if
                           not already present, default a newline
         """
@@ -339,11 +364,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         will be sent to sys.stderr.
         """
         if not self.quiet:
-            fmt = "{}{}{}"
+            formatted_msg = f"{self.status_prefix}{msg}{end}"
             if self.feedback_to_output:
-                self.poutput(fmt.format(self.status_prefix, msg, end))
+                self.poutput(formatted_msg)
             else:
-                sys.stderr.write(fmt.format(self.status_prefix, msg, end))
+                sys.stderr.write(formatted_msg)
 
     def emptyline(self):
         """Do nothing on an empty line"""
@@ -518,10 +543,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
     )
     config_parser.add_argument(
         "action",
-        choices=["edit", "file"],
+        choices=["edit", "file", "convert"],
         help="""'file' shows the name of the configuration
              file. 'edit' edits the configuration file
-             in your preferred editor.""",
+             in your preferred editor. 'convert' writes a new .toml
+             configuration file with the same settings as the old
+             .ini configuration file.""",
     )
 
     def do_config(self, cmdline: cmd2.Statement):
@@ -531,30 +558,110 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if args.action == "file":
             self.poutput(self.config_file)
             self.exit_code = self.EXIT_SUCCESS
-        else:
-            if not self.editor:
-                self.perror("no editor: use 'set editor={path}' to specify one")
-                self.exit_code = self.EXIT_ERROR
-                return
-
-            # ensure the configuration directory exists
-            configdir = os.path.dirname(self.config_file)
-            if not os.path.exists(configdir):  # pragma: nocover
-                os.makedirs(configdir)
-
-            # go edit the file
-            cmd = f'"{self.editor}" "{self.config_file}"'
-            self.pfeedback(f"executing {cmd}")
-            os.system(cmd)
-
-            # read it back in and apply it
-            self.pfeedback("reloading configuration")
-            self.load_config()
-            self.exit_code = self.EXIT_SUCCESS
+        elif args.action == "edit":
+            self._config_edit()
+        elif args.action == "convert":
+            self._config_convert()
 
     def help_config(self):
         """Show help for the 'config' command."""
         self.show_help_from(self.config_parser)
+
+    def _config_edit(self):
+        """
+        Open the configuration file in an editor, and reload the configuration when the
+        editor exits.
+        """
+        if not self.editor:
+            self.perror("no editor: use 'set editor={path}' to specify one")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        # ensure the configuration directory exists
+        configdir = self.config_file.parent
+        if not configdir.exists():  # pragma: nocover
+            configdir.mkdir(parents=True, exist_ok=True)
+
+        # go edit the file
+        cmd = f'"{self.editor}" "{self.config_file}"'
+        self.pfeedback(f"executing {cmd}")
+        os.system(cmd)
+
+        # read it back in and apply it
+        self.pfeedback("reloading configuration")
+        self.load_config()
+        self.exit_code = self.EXIT_SUCCESS
+
+    def _config_convert(self):
+        """
+        Convert the old .ini based configuration file into the new .toml
+        based one.
+
+        The .ini file _must_ exist and the .toml file _must not_ exist in order
+        for this to do anything.
+        """
+        if self.config_file.exists():
+            self.pfeedback(
+                "configuration file exists: cowardly refusing to overwrite it"
+            )
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        if not self.config_file_old.exists():
+            self.pfeedback("old configuration file does not exist: nothing to convert")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        self.pfeedback("converting old configuration file to new format")
+        iniconfig = EvaluatingConfigParser()
+        with open(self.config_file_old, "r", encoding="utf-8") as fobj:
+            iniconfig.read_file(fobj)
+            # convert it to a new toml file
+            toml = tomlkit.document()
+            for section in dict(iniconfig).keys():
+                if section == "DEFAULT":
+                    pass
+                elif section == "settings":
+                    table = tomlkit.table()
+                    for param_name in dict(iniconfig[section]):
+                        # inifiles are untyped so everything is read from
+                        # them as a string. this code converts the string
+                        # to the proper type, so that it gets written into
+                        # the toml file as the proper type
+                        try:
+                            settable = self.settables[param_name]
+                            value = iniconfig[section][param_name]
+                            value = cmd2.utils.strip_quotes(value)
+                            table.add(param_name, settable.val_type(value))
+                        except KeyError:
+                            # we found a setting in the file that isn't a valid
+                            # setting for this program, bail out
+                            self.pfeedback(
+                                f"conversion failed: '{param_name}' is not a valid setting"
+                            )
+                            self.exit_code = self.EXIT_ERROR
+                            return
+                    toml.add(section, table)
+                else:
+                    # all the other sections/tables are servers
+                    table = tomlkit.table()
+                    for key in dict(iniconfig[section]):
+                        value = iniconfig[section][key]
+                        # all values here are strings, except for 'verify' which
+                        # is a boolen. Let's check for that and convert if necessary
+                        if key == "verify":
+                            value = self.convert_to_boolean(value)
+                        table.add(key, value)
+                    toml.add(section, table)
+
+            with open(self.config_file, "w", encoding="utf-8") as ftoml:
+                ftoml.write(tomlkit.dumps(toml))
+                self.pfeedback(f"configuration written to {self.config_file}")
+
+        # read it back in and apply it
+        self.pfeedback("reloading configuration")
+        self.load_config()
+        self.exit_code = self.EXIT_SUCCESS
 
     show_parser = argparse.ArgumentParser(
         prog="show",
@@ -624,7 +731,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             try:
                 config.read_string(setting_string)
             except configparser.ParsingError:
-                self.perror("invalid syntax: try {setting}={value}")
+                self.perror("invalid syntax: try 'set {setting} = {value}'")
                 self.exit_code = self.EXIT_ERROR
                 return
             for param_name in config["settings"]:
@@ -642,8 +749,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     self.perror(f"unknown setting: '{param_name}'")
                     self.exit_code = self.EXIT_ERROR
         else:
-            self.perror("invalid syntax: try {setting}={value}")
-            self.exit_code = self.EXIT_USAGE
+            self.do_show(args)
 
     def help_set(self):
         """Show help for the 'set' command."""
@@ -665,7 +771,7 @@ change the value of one of this program's settings
     #
     ###
     @property
-    def config_file(self) -> str:
+    def config_file(self) -> pathlib.Path:
         """
         The location of the user configuration file.
 
@@ -673,12 +779,30 @@ change the value of one of this program's settings
                  if self.appdirs has not been defined.
         """
         if self.appdirs:
-            filename = self.app_name + ".ini"
-            return os.path.join(self.appdirs.user_config_dir, filename)
+            filename = self.app_name + ".toml"
+            return pathlib.Path(self.appdirs.user_config_dir).resolve() / filename
         return None
 
     @property
-    def history_file(self) -> str:
+    def config_file_old(self) -> pathlib.Path:
+        """
+        The location of the old configuration file, using the .ini extension and
+        format.
+
+        As of 6.0.0 this file is no longer used, instead we use a .toml file available
+        in `config_file`. This property exists so we can convert the old file to the
+        new format
+
+        :return: The full path to the old user configuration file, or None
+                 if self.appdirs has not been defined.
+        """
+        if self.appdirs:
+            filename = self.app_name + ".ini"
+            return pathlib.Path(self.appdirs.user_config_dir).resolve() / filename
+        return None
+
+    @property
+    def history_file(self) -> pathlib.Path:
         """
         The location of the command history file.
 
@@ -687,17 +811,16 @@ change the value of one of this program's settings
                 defined.
         """
         if self.appdirs:
-            return os.path.join(self.appdirs.user_config_dir, "history.txt")
+            return pathlib.Path(self.appdirs.user_config_dir).resolve() / "history.txt"
         return None
 
     def load_config(self):
         """Open and parse the user config file and set self.config."""
-        config = None
+        config = tomlkit.loads("")
         if self.config_file is not None:
-            config = EvaluatingConfigParser()
             try:
                 with open(self.config_file, "r", encoding="utf-8") as fobj:
-                    config.read_file(fobj)
+                    config = tomlkit.loads(fobj.read())
             except FileNotFoundError:
                 pass
         try:
@@ -725,26 +848,23 @@ change the value of one of this program's settings
         """
         try:
             settable = self.settables[param_name]
-
-            value = cmd2.utils.strip_quotes(value)
-            current_value = getattr(self, param_name)
-            setattr(self, param_name, settable.val_type(value))
-            if current_value != value and settable.onchange_cb:  # pragma: nocover
-                settable.onchange_cb(param_name, current_value, value)
+            # calling set_value should fire any on change callbacks
+            settable.set_value(value)
         except KeyError as keyerr:
-            raise ValueError from keyerr
+            raise ValueError(f"invalid setting: {param_name}") from keyerr
 
-    def convert_to_boolean(self, value: Any):
+    @classmethod
+    def convert_to_boolean(cls, value: Any):
         """Return a boolean value translating from other types if necessary."""
         if isinstance(value, bool) is True:
             return value
 
-        if str(value).lower() not in self.BOOLEAN_VALUES:
+        if str(value).lower() not in cls.BOOLEAN_VALUES:
             if value is None or value == "":
                 raise ValueError("invalid syntax: must be true-ish or false-ish")
             # we can't figure out what it is
             raise ValueError(f"invalid syntax: not a boolean: '{value}'")
-        return self.BOOLEAN_VALUES[value.lower()]
+        return cls.BOOLEAN_VALUES[value.lower()]
 
     @staticmethod
     def _pythonize(value: str):
@@ -846,20 +966,20 @@ change the value of one of this program's settings
 
         args = self.parse_args(self.connect_parser, cmdline.argv)
         server = args.config_name
-        if self.config.has_section(server):
-            if self.config.has_option(server, "url"):
+        if server in self.config.keys():
+            if "url" in self.config[server].keys():
                 url = self.config[server]["url"]
-            if self.config.has_option(server, "user"):
+            if "user" in self.config[server].keys():
                 user = self.config[server]["user"]
-            if self.config.has_option(server, "password"):
+            if "password" in self.config[server].keys():
                 password = self.config[server]["password"]
-            if self.config.has_option(server, "cert"):
+            if "cert" in self.config[server].keys():
                 cert = self.config[server]["cert"]
-            if self.config.has_option(server, "key"):
+            if "key" in self.config[server].keys():
                 key = self.config[server]["key"]
-            if self.config.has_option(server, "cacert"):
+            if "cacert" in self.config[server].keys():
                 cacert = self.config[server]["cacert"]
-            if self.config.has_option(server, "verify"):
+            if "verify" in self.config[server].keys():
                 verify = self.config[server]["verify"]
         else:
             # This is an ugly hack required to get argparse to show the help properly.
@@ -978,7 +1098,7 @@ change the value of one of this program's settings
     ###
     def deploy_local(self, args: argparse.Namespace, update: bool = False):
         """Deploy a local war file to the tomcat server."""
-        warfile = os.path.expanduser(args.warfile)
+        warfile = pathlib.Path(args.warfile).expanduser()
         with open(warfile, "rb") as fileobj:
             self.exit_code = self.EXIT_SUCCESS
             self.docmd(

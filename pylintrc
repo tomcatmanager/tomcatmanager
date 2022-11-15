@@ -12,8 +12,7 @@ function-rgx=(([a-z][a-z0-9_]{2,50})|(_[a-z0-9_]*))$
 
 [messages control]
 # no-member          requests uses LookupDict which makes all these errors
-# bad-continuation   so that blacked code doesn't generate warnings
 # cyclic-import      pylint generates spurious errors on test_interactive.py
 # duplicate-code     don't tell us we need to refactor our mock tomcat servers
 #                    there is no way to disable this on a per-file basis
-disable=no-member, bad-continuation, cyclic-import, duplicate-code
+disable=no-member, cyclic-import, duplicate-code

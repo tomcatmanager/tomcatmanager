@@ -48,6 +48,11 @@ class TomcatNotImplementedError(Exception):
     Raised when a Tomcat Manager web application does not support a python
     API call.
 
+    As of version 6.0.0, all supported Tomcat Manager web application versions
+    support all python API calls: therefore this error will never be raised.
+
+    It is not deprecated in case it is needed in future versions.
+
     .. versionadded:: 3.0.0
     """
 
@@ -109,9 +114,9 @@ class TomcatManagerResponse:
         ...     r = tomcat.server_info()
         ...     r.raise_for_status()
         ...     if r.ok:
-        ...         print("Operating System: {}".format(r.server_info.os_name))
+        ...         print(f"Operating System: {r.server_info.os_name}")
         ...     else:
-        ...         print("Error: {}".format(r.status_message))
+        ...         print(f"Error: {r.status_message}")
         ... except Exception as err:
         ...     # handle exception
         ...     pass
@@ -188,7 +193,7 @@ class TomcatManagerResponse:
         The server's response to an HTTP request.
 
         :class:`.TomcatManager` uses the excellent
-        `Requests <https://docs.python-requests.org/en/master/index.html>`__
+        `Requests <https://requests.readthedocs.io/en/latest/>`__
         package for HTTP communication. This property returns the
         :class:`requests.Response` object which contains the server's response
         to the HTTP request.
@@ -276,15 +281,15 @@ class TomcatApplication:
 
     def __str__(self):
         """Format this application as it comes from the tomcat server."""
-        fmt = "{}:{}:{}:{}"
+        # sessions could be zero, so we have to explicity check for None
         sessions = ""
         if self.sessions is not None:
             sessions = self.sessions
-        return fmt.format(
-            self.path or "",
-            self.state.value or "",
-            sessions,
-            self.directory_and_version or "",
+        return (
+            f"{self.path or ''}"
+            f":{self.state.value or ''}"
+            f":{sessions}"
+            f":{self.directory_and_version or ''}"
         )
 
     def __lt__(self, other: "TomcatApplication"):
@@ -307,13 +312,13 @@ class TomcatApplication:
 
         Tomcat Manager outputs a line like this for each application:
 
-        .. code-block::
+        .. code-block:: text
 
            /shiny:running:0:shiny##v2.0.6
 
         The data elements in this line can be described as:
 
-        .. code-block::
+        .. code-block:: text
 
            {path}:{state}:{sessions}:{directory}##{version}
 
@@ -415,10 +420,10 @@ class TomcatMajorMinor(enum.Enum):
 
     """
 
-    V8_0 = "8.0"
     V8_5 = "8.5"
     V9_0 = "9.0"
     V10_0 = "10.0"
+    V10_1 = "10.1"
     VNEXT = "next"
     UNSUPPORTED = "unsupported"
 
@@ -442,13 +447,15 @@ class TomcatMajorMinor(enum.Enum):
             if major_ver < 8:
                 ver = TomcatMajorMinor.UNSUPPORTED
             elif major_ver == 8 and minor_ver == 0:
-                ver = TomcatMajorMinor.V8_0
+                ver = TomcatMajorMinor.UNSUPPORTED
             elif major_ver == 8 and minor_ver == 5:
                 ver = TomcatMajorMinor.V8_5
             elif major_ver == 9 and minor_ver == 0:
                 ver = TomcatMajorMinor.V9_0
             elif major_ver == 10 and minor_ver == 0:
                 ver = TomcatMajorMinor.V10_0
+            elif major_ver == 10 and minor_ver == 1:
+                ver = TomcatMajorMinor.V10_1
             elif major_ver == 10 and minor_ver > 0:
                 ver = TomcatMajorMinor.VNEXT
             elif major_ver > 10:
@@ -461,10 +468,10 @@ class TomcatMajorMinor(enum.Enum):
         Return the list of officially supported Tomcat major versions
         """
         return [
-            TomcatMajorMinor.V8_0,
             TomcatMajorMinor.V8_5,
             TomcatMajorMinor.V9_0,
             TomcatMajorMinor.V10_0,
+            TomcatMajorMinor.V10_1,
         ]
 
     @classmethod

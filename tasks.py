@@ -3,19 +3,33 @@
 """Development related tasks to be run with 'invoke'"""
 
 import os
+import pathlib
 import shutil
+
+# make it easy on ourselves, the context argument is often unused
+# pylint: disable=unused-argument
+
+#
+# python 3.11 removed inspect.getargspec, which breaks invoke
+#
+# so we monkeypatch it here until invoke gets this fixed
+import inspect
+
+if not hasattr(inspect, "getargspec"):
+    inspect.getargspec = inspect.getfullargspec
+# end monkeypatch
 
 import invoke
 
 # shared function
 def rmrf(items, verbose=True):
     "Silently remove a list of directories or files"
-    if isinstance(items, str):
+    if isinstance(items, str) or isinstance(items, pathlib.PosixPath):
         items = [items]
 
     for item in items:
         if verbose:
-            print("Removing {}".format(item))
+            print(f"Removing {item}")
         shutil.rmtree(item, ignore_errors=True)
         # rmtree doesn't remove bare files
         try:
@@ -43,14 +57,12 @@ def pytest(context):
     context.run("pytest", echo=True, pty=True)
 
 
-namespace.add_task(pytest)
 namespace_check.add_task(pytest)
 
 
 @invoke.task
 def pytest_clean(context):
     "Remove pytest cache and code coverage files and directories"
-    # pylint: disable=unused-argument
     dirs = [".pytest_cache", ".cache", ".coverage"]
     rmrf(dirs)
 
@@ -64,13 +76,12 @@ def tox(context):
     context.run("tox", echo=True)
 
 
-namespace.add_task(tox)
+namespace_check.add_task(tox)
 
 
 @invoke.task
 def tox_clean(context):
     "Remove tox virtualenvs and logs"
-    # pylint: disable=unused-argument
     rmrf(".tox")
 
 
@@ -83,17 +94,16 @@ def pylint(context):
     context.run("pylint src/tomcatmanager tests", echo=True)
 
 
-namespace.add_task(pylint)
 namespace_check.add_task(pylint)
 
 
-@invoke.task
+@invoke.task(name="black")
 def black_check(context):
     """Check if code is properly formatted using black"""
     context.run("black --check *.py tests src docs", echo=True)
 
 
-namespace.add_task(black_check)
+namespace_check.add_task(black_check)
 
 
 @invoke.task
@@ -103,24 +113,23 @@ def black(context):
 
 
 namespace.add_task(black)
-namespace_check.add_task(black)
 
 #####
 #
 # documentation
 #
 #####
-DOCS_SRCDIR = "docs"
+DOCS_SRCDIR = pathlib.Path("docs")
 DOCS_ADDITIONAL = "README.rst CONTRIBUTING.rst CHANGELOG.rst"
-DOCS_BUILDDIR = os.path.join("docs", "build")
+DOCS_BUILDDIR = DOCS_SRCDIR / "build"
 SPHINX_OPTS = "-nvWT"  # Be nitpicky, verbose, and treat warnings as errors
 
 
 @invoke.task()
 def docs(context, builder="html"):
     "Build documentation using sphinx"
-    cmdline = "python -msphinx -M {} {} {} {}".format(
-        builder, DOCS_SRCDIR, DOCS_BUILDDIR, SPHINX_OPTS
+    cmdline = (
+        f"python -msphinx -M {builder} {DOCS_SRCDIR} {DOCS_BUILDDIR} {SPHINX_OPTS}"
     )
     context.run(cmdline, echo=True)
 
@@ -132,17 +141,15 @@ namespace_check.add_task(docs)
 @invoke.task()
 def doc8(context):
     "Check documentation with doc8"
-    context.run("doc8 {} {}".format(DOCS_SRCDIR, DOCS_ADDITIONAL), echo=True)
+    context.run(f"doc8 {DOCS_SRCDIR} {DOCS_ADDITIONAL}", echo=True)
 
 
-namespace.add_task(doc8)
 namespace_check.add_task(doc8)
 
 
 @invoke.task
 def docs_clean(context):
     "Remove rendered documentation"
-    # pylint: disable=unused-argument
     rmrf(DOCS_BUILDDIR)
 
 
@@ -154,10 +161,8 @@ def livehtml(context):
     "Launch webserver on http://localhost:8000 with rendered documentation"
     watch = "--watch src/tomcatmanager --watch tests --watch ."
     builder = "html"
-    outputdir = os.path.join(DOCS_BUILDDIR, builder)
-    cmdline = "sphinx-autobuild -b {} {} {} {}".format(
-        builder, DOCS_SRCDIR, outputdir, watch
-    )
+    outputdir = DOCS_BUILDDIR / builder
+    cmdline = f"sphinx-autobuild -b {builder} {DOCS_SRCDIR} {outputdir} {watch}"
     context.run(cmdline, echo=True, pty=True)
 
 
@@ -169,24 +174,12 @@ namespace.add_task(livehtml)
 # build and distribute
 #
 #####
-BUILDDIR = "build"
-DISTDIR = "dist"
-
-
-@invoke.task
-def build_clean(context):
-    "Remove the build directory"
-    # pylint: disable=unused-argument
-    rmrf(BUILDDIR)
-
-
-namespace_clean.add_task(build_clean, "build")
+DISTDIR = pathlib.Path("dist")
 
 
 @invoke.task
 def dist_clean(context):
     "Remove the dist directory"
-    # pylint: disable=unused-argument
     rmrf(DISTDIR)
 
 
@@ -196,14 +189,12 @@ namespace_clean.add_task(dist_clean, "dist")
 @invoke.task
 def eggs_clean(context):
     "Remove egg directories"
-    # pylint: disable=unused-argument
     dirs = set()
     dirs.add(".eggs")
-    for name in os.listdir(os.curdir):
-        if name.endswith(".egg-info"):
-            dirs.add(name)
-        if name.endswith(".egg"):
-            dirs.add(name)
+    for _, _, files in os.walk(os.curdir):
+        for file in files:
+            if file.endswith(".egg"):
+                dirs.add(file)
     rmrf(dirs)
 
 
@@ -213,14 +204,13 @@ namespace_clean.add_task(eggs_clean, "eggs")
 @invoke.task
 def bytecode_clean(context):
     "Remove __pycache__ directories and *.pyc files"
-    # pylint: disable=unused-argument
     dirs = set()
-    for root, dirnames, files in os.walk(os.curdir):
-        if "__pycache__" in dirnames:
-            dirs.add(os.path.join(root, "__pycache__"))
+    for dirpath, _, files in os.walk(os.curdir):
+        if dirpath == "__pycache__":
+            dirs.add(dirpath)
         for file in files:
             if file.endswith(".pyc"):
-                dirs.add(os.path.join(root, file))
+                dirs.add(os.path.join(dirpath, file))
     print("Removing __pycache__ directories and .pyc files")
     rmrf(dirs, verbose=False)
 
@@ -228,43 +218,33 @@ def bytecode_clean(context):
 namespace_clean.add_task(bytecode_clean, "bytecode")
 
 
-@invoke.task(pre=list(namespace_check.tasks.values()), default=True)
-def check_all(context):
-    "Run this before you commit or submit a pull request"
-    # pylint: disable=unused-argument
-
-
-namespace_check.add_task(check_all, "all")
-
-
 @invoke.task(pre=list(namespace_clean.tasks.values()), default=True)
 def clean_all(context):
     "Clean everything"
-    # pylint: disable=unused-argument
 
 
 namespace_clean.add_task(clean_all, "all")
 
 
 @invoke.task(pre=[clean_all])
-def sdist(context):
+def build(context):
     "Create a source distribution"
-    context.run("python setup.py sdist")
+    context.run("python -m build")
 
 
-namespace.add_task(sdist)
+namespace.add_task(build)
 
 
-@invoke.task(pre=[clean_all])
-def wheel(context):
-    "Build a wheel distribution"
-    context.run("python setup.py bdist_wheel")
+@invoke.task(pre=[build])
+def twine(context):
+    "Check for rendering errors in README.rst"
+    context.run("twine check dist/*")
 
 
-namespace.add_task(wheel)
+namespace_check.add_task(twine)
 
 
-@invoke.task(pre=[sdist, wheel])
+@invoke.task(pre=[build, twine])
 def pypi(context):
     "Build and upload a distribution to pypi"
     context.run("twine upload dist/*")
@@ -273,10 +253,24 @@ def pypi(context):
 namespace.add_task(pypi)
 
 
-@invoke.task(pre=[sdist, wheel])
-def pypi_test(context):
+@invoke.task(pre=[build, twine])
+def testpypi(context):
     "Build and upload a distribution to https://test.pypi.org"
-    context.run("twine upload --repository-url https://test.pypi.org/legacy/ dist/*")
+    context.run("twine upload -r testpypi dist/*")
 
 
-namespace.add_task(pypi_test)
+namespace.add_task(testpypi)
+
+# we don't need pytest here because tox will run pytest for us
+checktasks = []
+for task in list(namespace_check.tasks.values()):
+    if task.name != "pytest":
+        checktasks.append(task)
+
+
+@invoke.task(pre=checktasks, default=True)
+def check_all(context):
+    "Run this before you commit or submit a pull request"
+
+
+namespace_check.add_task(check_all, "all")

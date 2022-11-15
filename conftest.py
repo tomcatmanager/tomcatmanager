@@ -3,15 +3,15 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # pylint: disable=missing-class-docstring, redefined-outer-name
 
-import os
+import pathlib
 import pytest
 
 import tomcatmanager as tm
 
+from tests.mock_server_10_1 import start_mock_server_10_1
 from tests.mock_server_10_0 import start_mock_server_10_0
 from tests.mock_server_9_0 import start_mock_server_9_0
 from tests.mock_server_8_5 import start_mock_server_8_5
-from tests.mock_server_8_0 import start_mock_server_8_0
 
 
 ###
@@ -105,7 +105,7 @@ def assert_tomcatresponse():
             """Assertions on TomcatResponse for calls that should be successful."""
             assert (
                 r.status_code == tm.StatusCode.OK
-            ), 'message from server: "{}"'.format(r.status_message)
+            ), f'message from server: "{r.status_message}"'
             assert r.status_message
             r.raise_for_status()
 
@@ -153,22 +153,24 @@ def tomcat_manager_server(request):
             tms.verify = verify
         tms.warfile = request.config.getoption("--warfile")
         tms.contextfile = request.config.getoption("--contextfile")
-        tms.connect_command = "connect {} {} {}".format(tms.url, tms.user, tms.password)
-        return tms
+        tms.connect_command = f"connect {tms.url} {tms.user} {tms.password}"
+        yield tms
+    else:
+        # we don't have a url on the command line, go start up a fake server
+        mockver = request.config.getoption("--mocktomcat")
+        if mockver == tm.TomcatMajorMinor.V10_1.value:
+            (mock_server, tms) = start_mock_server_10_1(tms)
+        elif mockver == tm.TomcatMajorMinor.V10_0.value:
+            (mock_server, tms) = start_mock_server_10_0(tms)
+        elif mockver == tm.TomcatMajorMinor.V9_0.value:
+            (mock_server, tms) = start_mock_server_9_0(tms)
+        elif mockver == tm.TomcatMajorMinor.V8_5.value:
+            (mock_server, tms) = start_mock_server_8_5(tms)
+        else:
+            raise NotImplementedError()
 
-    # go start up a fake server
-    mockver = request.config.getoption("--mocktomcat")
-    if mockver == tm.TomcatMajorMinor.V10_0.value:
-        (mock_server, tms) = start_mock_server_10_0(tms)
-    if mockver == tm.TomcatMajorMinor.V9_0.value:
-        (mock_server, tms) = start_mock_server_9_0(tms)
-    if mockver == tm.TomcatMajorMinor.V8_5.value:
-        (mock_server, tms) = start_mock_server_8_5(tms)
-    if mockver == tm.TomcatMajorMinor.V8_0.value:
-        (mock_server, tms) = start_mock_server_8_0(tms)
-
-    yield tms
-    mock_server.shutdown()
+        yield tms
+        mock_server.shutdown()
 
 
 @pytest.fixture
@@ -186,7 +188,8 @@ def tomcat(tomcat_manager_server):
 @pytest.fixture
 def localwar_file():
     """return the path to a valid war file"""
-    return os.path.dirname(__file__) + "/tests/war/sample.war"
+    projdir = pathlib.Path(__file__).parent
+    return projdir / "tests" / "war" / "sample.war"
 
 
 @pytest.fixture
@@ -197,7 +200,7 @@ def safe_path():
 
 @pytest.fixture
 def server_info():
-    return """Tomcat Version: Apache Tomcat/8.0.32 (Ubuntu)
+    return """Tomcat Version: Apache Tomcat/8.5.82 (Ubuntu)
 OS Name: Linux
 OS Version: 4.4.0-89-generic
 OS Architecture: amd64

@@ -9,6 +9,30 @@ format of this file follows recommendations from `Keep a Changelog
 <http://keepachangelog.com/en/1.0.0/>`_.
 
 
+6.0.0 (2022-11-14)
+------------------
+
+Changed
+^^^^^^^
+
+- Change configuration file from .ini format to .toml format. See
+  `Configuration File <https://tomcatmanager.readthedocs.io/en/stable/interactive.html#configuration-file>`_
+  for more information.
+- Support for Python 3.11
+- Support for Tomcat 10.1
+- ``config_file`` attribute now contains a ``pathlib.Path`` object instead
+  of a ``str`` for better cross-platform compatability
+- ``history_file`` attribute now contains a ``pathlib.Path`` object instead
+  of a ``str`` for better cross-platform compatability
+- Switch to ``pyproject.toml`` from ``setup.py``. This has no impact on
+  functionality, it's just a packaging change.
+
+Removed
+^^^^^^^
+
+- Support for Tomcat 8.0 (EOL 30 June 2018)
+
+
 5.0.0 (2021-11-19)
 ------------------
 
@@ -21,8 +45,9 @@ Added
 Removed
 ^^^^^^^
 
-- Support for Python 3.6, which will not receive security fixes after 2021-12-23.
-  Python 3.6 should still work for now, but we no longer test against it.
+- Support for Python 3.6, which will not receive security fixes after
+  2021-12-23. Python 3.6 should still work for now, but we no longer test
+  against it.
 
 Fixed
 ^^^^^
