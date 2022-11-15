@@ -8,6 +8,9 @@ This project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_ an
 format of this file follows recommendations from `Keep a Changelog
 <http://keepachangelog.com/en/1.0.0/>`_.
 
+Unreleased
+----------
+
 
 6.0.0 (2022-11-14)
 ------------------
