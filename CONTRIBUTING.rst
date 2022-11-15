@@ -13,8 +13,8 @@ Create Python Environments
 --------------------------
 
 tomcatmanager uses `tox <https://tox.readthedocs.io/en/latest/>`_ to run the test
-suite against multiple python versions. tox expects that when it runs ``python3.7`` it
-will actually get a python from the 3.7.x series.
+suite against multiple python versions. tox expects that when it runs ``python3.9`` it
+will actually get a python from the 3.9.x series.
 
 I recommend using `pyenv <https://github.com/pyenv/pyenv>`_ with the `pyenv-virtualenv
 <https://github.com/pyenv/pyenv-virtualenv>`_ plugin to manage these various python
@@ -81,7 +81,7 @@ All the dependencies now have been installed in the ``tomcatmanager-3.11`` virtu
 If you want to work in other virtualenvs, you'll need to manually select it, and
 install again::
 
-   $ pyenv shell tomcatmanager-3.8
+   $ pyenv shell tomcatmanager-3.9
    $ pip install -e .[dev]
 
 
@@ -110,13 +110,13 @@ we released that version as 5.0.0 instead of 4.1.0, even though there were no
 incompatible API changes.
 
 These versioning rules were chosen so that if you are using this library against a
-single version of Tomcat, and you specify your ``setup.py`` dependency rules like::
+single version of Tomcat, and you specify your ``pyproject.toml`` dependency rules
+like::
 
-   setup(
-   ...
-       install_requires=["tomcatmanager>=3,<4"]
-   ...
-   )
+   [project]
+   dependencies = [
+    "tomcatmanager>=4,<5"
+   ]
 
 you won't have to worry about a future release of this software breaking your
 setup.
@@ -137,7 +137,7 @@ interface for these development tasks. To see the full list of functions availab
 
 You can run multiple tasks in a single invocation, for example::
 
-   $ invoke clean docs sdist wheel
+   $ invoke clean docs build
 
 That one command will remove all superflous cache, testing, and build files, render
 the documentation, and build a source distribution and a wheel distribution.
@@ -149,10 +149,13 @@ To make it easy to check everything before you commit, you can just type::
    $ echo $?
    0
 
-and it will test, lint, and format all the code and all the documentation. If this
-doesn't complete everything successfully then you still need to fix some stuff before
-you commit or submit a pull request. In this context, complete everything successfully
-means: all tests pass, lint returns a perfect score, doc8 finds no errors, etc.
+and it will test, lint, and check the format of all the code and the documentation. If
+this doesn't complete everything successfully then you still need to fix some stuff
+before you commit or submit a pull request. In this context, complete everything
+successfully means: all tests pass, lint returns a perfect score, doc8 finds no
+errors, etc.
+
+To see what is actually getting executed by ``invoke``, check the ``tasks.py`` file.
 
 
 Testing
@@ -275,9 +278,9 @@ command line option.
 
 .. warning::
 
-   The private key to your local certificate must be unencrypted. The
-   Requests library used for network communication does not support using
-   encrypted keys.
+   The private key to your local certificate must be unencrypted. The `Requests
+   <https://requests.readthedocs.io/en/latest/>`_ library used for network
+   communication does not support using encrypted keys.
 
 .. warning::
 
@@ -411,9 +414,9 @@ following:
 
 9. Create a new release on Github.
 
-10. Build source distribution, wheel distribution, and upload them to pypi staging::
+10. Build source distribution, wheel distribution, and upload them to testpypi::
 
-       $ invoke pypi-test
+       $ invoke testpypi
 
 11. Build source distribution, wheel distribution, and upload them to pypi::
 
