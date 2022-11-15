@@ -407,10 +407,10 @@ following:
 6. Create a pull request on github to merge the **develop** branch into
    **main**. Wait for the checks to pass.
 
-7. Merge the **develop** branch into the **main** branch and close the pull
-   request.
+7. Tag the **develop** branch with the new version number, and push the tag.
 
-8. Tag the **main** branch with the new version number, and push the tag.
+8. Merge the **develop** branch into the **main** branch and close the pull
+   request.
 
 9. Create a new release on Github.
 
@@ -426,7 +426,7 @@ following:
     Make sure they look good. Add a "Version" in readthedocs which points to the tag
     you just created. Prune old versions as necessary.
 
-13. Switch back to the **develop** branch. Merge changes in from **main**.
+13. Switch back to the **develop** branch.
 
 14. Add an **Unreleased** section to the top of ``CHANGELOG.rst``. Push the
     change to github.
