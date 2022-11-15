@@ -9,8 +9,8 @@ format of this file follows recommendations from `Keep a Changelog
 <http://keepachangelog.com/en/1.0.0/>`_.
 
 
-Unreleased
-----------
+6.0.0 (2022-11-14)
+------------------
 
 Changed
 ^^^^^^^
@@ -25,8 +25,7 @@ Changed
 - ``history_file`` attribute now contains a ``pathlib.Path`` object instead
   of a ``str`` for better cross-platform compatability
 - Switch to ``pyproject.toml`` from ``setup.py``. This has no impact on
-  functionality of the library, it's just a change in how the library is
-  packaged.
+  functionality, it's just a packaging change.
 
 Removed
 ^^^^^^^
