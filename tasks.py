@@ -55,7 +55,6 @@ def pytest(context):
     context.run("pytest", echo=True, pty=True)
 
 
-namespace.add_task(pytest)
 namespace_check.add_task(pytest)
 
 
@@ -76,7 +75,7 @@ def tox(context):
     context.run("tox", echo=True)
 
 
-namespace.add_task(tox)
+namespace_check.add_task(tox)
 
 
 @invoke.task
@@ -95,11 +94,10 @@ def pylint(context):
     context.run("pylint src/tomcatmanager tests", echo=True)
 
 
-namespace.add_task(pylint)
 namespace_check.add_task(pylint)
 
 
-@invoke.task
+@invoke.task(name="black")
 def black_check(context):
     """Check if code is properly formatted using black"""
     context.run("black --check *.py tests src docs", echo=True)
@@ -146,7 +144,6 @@ def doc8(context):
     context.run(f"doc8 {DOCS_SRCDIR} {DOCS_ADDITIONAL}", echo=True)
 
 
-namespace.add_task(doc8)
 namespace_check.add_task(doc8)
 
 
@@ -225,15 +222,6 @@ def bytecode_clean(context):
 namespace_clean.add_task(bytecode_clean, "bytecode")
 
 
-@invoke.task(pre=list(namespace_check.tasks.values()), default=True)
-def check_all(context):
-    "Run this before you commit or submit a pull request"
-    # pylint: disable=unused-argument
-
-
-namespace_check.add_task(check_all, "all")
-
-
 @invoke.task(pre=list(namespace_clean.tasks.values()), default=True)
 def clean_all(context):
     "Clean everything"
@@ -253,6 +241,15 @@ namespace.add_task(build)
 
 
 @invoke.task(pre=[build])
+def twine(context):
+    "Check for rendering errors in README.rst"
+    context.run("twine check dist/*")
+
+
+namespace_check.add_task(twine)
+
+
+@invoke.task(pre=[build])
 def pypi(context):
     "Build and upload a distribution to pypi"
     context.run("twine upload dist/*")
@@ -264,7 +261,22 @@ namespace.add_task(pypi)
 @invoke.task(pre=[build])
 def pypi_test(context):
     "Build and upload a distribution to https://test.pypi.org"
-    context.run("twine upload --repository-url https://test.pypi.org/legacy/ dist/*")
+    context.run("twine upload -r testpypi dist/*")
 
 
 namespace.add_task(pypi_test)
+
+# we don't need pytest here because tox will run pytest for us
+checktasks = []
+for task in list(namespace_check.tasks.values()):
+    if task.name != "pytest":
+        checktasks.append(task)
+
+
+@invoke.task(pre=checktasks, default=True)
+def check_all(context):
+    "Run this before you commit or submit a pull request"
+    # pylint: disable=unused-argument
+
+
+namespace_check.add_task(check_all, "all")
