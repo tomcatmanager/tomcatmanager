@@ -307,18 +307,18 @@ def test_config_invalid_action(itm_nc, capsys):
 
 
 def test_config_file_command(mocker, capsys):
-    fname = "/tmp/someconfig.ini"
+    fname = pathlib.Path("/tmp/someconfig.ini")
     itm = tm.InteractiveTomcatManager()
 
     config_file = mocker.patch(
         "tomcatmanager.InteractiveTomcatManager.config_file",
         new_callable=mock.PropertyMock,
     )
-    config_file.return_value = pathlib.Path(fname)
+    config_file.return_value = str(fname)
 
     itm.onecmd_plus_hooks("config file")
     out, _ = capsys.readouterr()
-    assert out == f"{fname}\n"
+    assert out == f"{str(fname)}\n"
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
