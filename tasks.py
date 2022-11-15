@@ -6,6 +6,8 @@ import os
 import pathlib
 import shutil
 
+# make it easy on ourselves, the context argument is often unused
+# pylint: disable=unused-argument
 
 #
 # python 3.11 removed inspect.getargspec, which breaks invoke
@@ -61,7 +63,6 @@ namespace_check.add_task(pytest)
 @invoke.task
 def pytest_clean(context):
     "Remove pytest cache and code coverage files and directories"
-    # pylint: disable=unused-argument
     dirs = [".pytest_cache", ".cache", ".coverage"]
     rmrf(dirs)
 
@@ -81,7 +82,6 @@ namespace_check.add_task(tox)
 @invoke.task
 def tox_clean(context):
     "Remove tox virtualenvs and logs"
-    # pylint: disable=unused-argument
     rmrf(".tox")
 
 
@@ -150,7 +150,6 @@ namespace_check.add_task(doc8)
 @invoke.task
 def docs_clean(context):
     "Remove rendered documentation"
-    # pylint: disable=unused-argument
     rmrf(DOCS_BUILDDIR)
 
 
@@ -181,7 +180,6 @@ DISTDIR = pathlib.Path("dist")
 @invoke.task
 def dist_clean(context):
     "Remove the dist directory"
-    # pylint: disable=unused-argument
     rmrf(DISTDIR)
 
 
@@ -191,7 +189,6 @@ namespace_clean.add_task(dist_clean, "dist")
 @invoke.task
 def eggs_clean(context):
     "Remove egg directories"
-    # pylint: disable=unused-argument
     dirs = set()
     dirs.add(".eggs")
     for _, _, files in os.walk(os.curdir):
@@ -207,7 +204,6 @@ namespace_clean.add_task(eggs_clean, "eggs")
 @invoke.task
 def bytecode_clean(context):
     "Remove __pycache__ directories and *.pyc files"
-    # pylint: disable=unused-argument
     dirs = set()
     for dirpath, _, files in os.walk(os.curdir):
         if dirpath == "__pycache__":
@@ -225,7 +221,6 @@ namespace_clean.add_task(bytecode_clean, "bytecode")
 @invoke.task(pre=list(namespace_clean.tasks.values()), default=True)
 def clean_all(context):
     "Clean everything"
-    # pylint: disable=unused-argument
 
 
 namespace_clean.add_task(clean_all, "all")
@@ -276,7 +271,6 @@ for task in list(namespace_check.tasks.values()):
 @invoke.task(pre=checktasks, default=True)
 def check_all(context):
     "Run this before you commit or submit a pull request"
-    # pylint: disable=unused-argument
 
 
 namespace_check.add_task(check_all, "all")
