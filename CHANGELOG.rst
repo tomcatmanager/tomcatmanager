@@ -15,14 +15,19 @@ Unreleased
 6.0.0 (2022-11-14)
 ------------------
 
+Added
+^^^^^
+
+- Support for Python 3.11
+- Support for Tomcat 10.1
+
+
 Changed
 ^^^^^^^
 
 - Change configuration file from .ini format to .toml format. See
   `Configuration File <https://tomcatmanager.readthedocs.io/en/stable/interactive.html#configuration-file>`_
   for more information.
-- Support for Python 3.11
-- Support for Tomcat 10.1
 - ``config_file`` attribute now contains a ``pathlib.Path`` object instead
   of a ``str`` for better cross-platform compatability
 - ``history_file`` attribute now contains a ``pathlib.Path`` object instead
