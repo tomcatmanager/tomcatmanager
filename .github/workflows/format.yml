@@ -16,7 +16,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade setuptools wheel black invoke
     - name: Check code format with black
-      run: invoke check.black-check
+      run: invoke check.black
 
   doc8:
     runs-on: ubuntu-latest
@@ -31,4 +31,4 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade setuptools wheel doc8 invoke
     - name: Check documentation format with doc8
-      run: invoke doc8
+      run: invoke check.doc8
