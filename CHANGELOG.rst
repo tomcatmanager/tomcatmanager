@@ -8,8 +8,20 @@ This project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_ an
 format of this file follows recommendations from `Keep a Changelog
 <http://keepachangelog.com/en/1.0.0/>`_.
 
-Unreleased
-----------
+6.0.1 (2022-11-15)
+------------------
+
+Added
+^^^^^
+
+- Documentation for migrating to 6.x
+
+
+Changed
+^^^^^^^
+
+- Improved documentation for `module dependency specification <https://tomcatmanager.readthedocs.io/en/stable/package.html#specifying-as-a-dependency>`_
+- Improved documentation for `differences in Tomcat versions <https://tomcatmanager.readthedocs.io/en/stable/package.html#differences-in-tomcat-versions>`_
 
 
 6.0.0 (2022-11-14)
@@ -399,7 +411,7 @@ Added
 - Converted from a single script to an installable python package
 - Remove documentation for tomcat 6, which is no longer supported
 - Add ``expire`` command
-- Add ``vminro`` command
+- Add ``vminfo`` command
 - Add ``sslconnectorciphers`` command
 - Add ``threaddump`` command
 - Add ``findleaks`` command
