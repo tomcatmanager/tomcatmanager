@@ -259,12 +259,12 @@ namespace.add_task(pypi)
 
 
 @invoke.task(pre=[build, twine])
-def pypi_test(context):
+def testpypi(context):
     "Build and upload a distribution to https://test.pypi.org"
     context.run("twine upload -r testpypi dist/*")
 
 
-namespace.add_task(pypi_test)
+namespace.add_task(testpypi)
 
 # we don't need pytest here because tox will run pytest for us
 checktasks = []
