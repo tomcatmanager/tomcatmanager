@@ -282,7 +282,7 @@ class TomcatManager:
            import tomcatmanager as tm
            tomcat = tm.TomcatManager()
            tomcat.connect("http://localhost:8080", "ace", "newenglandclamchowder")
-           print(tomcat.implements(tomcat.deploy_localwar))
+           print(tomcat.implements(tomcat.ssl_reload))
 
         .. versionadded:: 3.0.0
         """
@@ -309,6 +309,15 @@ class TomcatManager:
                                     given tomcat version.
 
         This method does not require prior connection to a Tomcat server.
+
+        Usage:
+
+        .. code-block:: python
+
+           import tomcatmanager as tm
+           lowest = tm.TomcatMajorMinor.lowest_supported()
+           tomcat = tm.TomcatManager()
+           print(tomcat.implemented_by(tomcat.ssl_reload, lowest))
 
         .. versionadded:: 3.0.0
         """

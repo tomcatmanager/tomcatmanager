@@ -53,6 +53,8 @@ class TomcatNotImplementedError(Exception):
 
     It is not deprecated in case it is needed in future versions.
 
+    See :ref:`package:Differences In Tomcat Versions` for more information.
+
     .. versionadded:: 3.0.0
     """
 
