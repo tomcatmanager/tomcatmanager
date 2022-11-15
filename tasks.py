@@ -249,7 +249,7 @@ def twine(context):
 namespace_check.add_task(twine)
 
 
-@invoke.task(pre=[build])
+@invoke.task(pre=[build, twine])
 def pypi(context):
     "Build and upload a distribution to pypi"
     context.run("twine upload dist/*")
@@ -258,7 +258,7 @@ def pypi(context):
 namespace.add_task(pypi)
 
 
-@invoke.task(pre=[build])
+@invoke.task(pre=[build, twine])
 def pypi_test(context):
     "Build and upload a distribution to https://test.pypi.org"
     context.run("twine upload -r testpypi dist/*")
