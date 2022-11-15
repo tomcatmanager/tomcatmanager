@@ -52,7 +52,7 @@ Parallel Deployment
 -------------------
 
 Tomcat supports a `parallel deployment feature
-<https://tomcat.apache.org/tomcat-8.5-doc/config/context.html#Parallel_deplo
+<https://tomcat.apache.org/tomcat-10.0-doc/config/context.html#Parallel_deplo
 yment>`_ which allows multiple versions of the same WAR to be deployed
 simultaneously at the same URL. To utilize this feature, you need to deploy an
 application with a version string. The combination of path and version string
@@ -135,9 +135,29 @@ causes the server to take any action, the rest are informational only.
 Differences in Tomcat Versions
 ------------------------------
 
-Not every version of Tomcat supports all of the methods in this library. If
-you call a method that is not implemented by the particular server you are
+As Tomcat matured, it added new capabilities. For example, Tomcat 8.5 added
+a new command ``ssl_reload``. This library added support for that command
+in version 2.0.0. However, if the server you were connected to happened to
+be running Tomcat 8.0, a somewhat rather generic exception was thrown.
+
+In version 3.0.0, this library was enhanced so it understood all the supported
+versions of Tomcat (see :class:`~.models.TomcatMajorMinor`), and which versions of
+Tomcat supported each of the available API calls.
+
+If you call a method that is not implemented by the particular server you are
 connected to, :exc:`~.models.TomcatNotImplementedError` will be raised.
+
+.. note::
+
+  In version 6.0.0 of this library, all python API methods are available in
+  all supported Tomcat versions. Therefore, this version of the library will not
+  raise :exc:`~.models.TomcatNotImplementedError` exceptions.
+
+  However, you should still check for these exceptions in your code, and if you are
+  already checking for them, you definitely shouldn't delete those checks. This
+  exception, and the related :meth:`.TomcatManager.implements` and
+  :meth:`.TomcatManager.implemented_by` methods are not deprecated in case they are
+  needed in future versions.
 
 If you prefer to check whether a method is supported before calling it, you
 can do so using :meth:`.TomcatManager.implements`:
@@ -168,17 +188,17 @@ want to check::
 Specifying As A Dependency
 --------------------------
 
-If you incorporate tomcatmanager into your own package, you will need to specify it as
-a dependency. I strongly recommend you specify the dependency such that it limits
-usage to a single major version of this library. This way when a new major version of
-this library is released, it won't break your code. If you use ``setup.py``, you
-should do it like this::
+If you incorporate ``tomcatmanager`` into your own package, you will need to specify
+it as a dependency. I strongly recommend you specify the dependency such that it
+limits usage to a single major version of this library. This way when a new major
+version of this library is released, it won't break your code. You should specify your
+``pyproject.toml`` dependency like this::
 
-   setup(
-   ...
-       install_requires=["tomcatmanager>=3,<4"]
-   ...
-   )
+   [project]
+   dependencies = [
+    "tomcatmanager>=5,<6"
+   ]
+
 
 When this library adds support for a new version of Tomcat or Python, we increment the
 minor version number. However, if support for these new versions requires API changes
@@ -194,3 +214,24 @@ These versioning rules were chosen so that if you are using this library against
 single version of Tomcat, and you specify your dependency rules as suggested above,
 you will not have to worry about a future release of this software breaking your
 setup.
+
+For example, say you are using Tomcat 8.0, which is supported by version 5.x of this
+library. You should specify your ``pyproject.toml`` dependency rules::
+
+   [project]
+   dependencies = [
+    "tomcatmanager>=5,<6"
+   ]
+
+When version 6.x of this library was released it dropped support for Tomcat 8.0.
+Without this dependency rule, ``pip`` would upgrade to the new version of this
+library, which would break your application which needs to talk to a Tomcat 8.0
+server.
+
+Once you have migrated your server infrastructure to a newer version of Tomcat, you
+can change your dependency rules::
+
+   [project]
+   dependencies = [
+    "tomcatmanager>=6,<7"
+   ]
