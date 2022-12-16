@@ -10,10 +10,10 @@ tomcatmanager
 .. image:: https://img.shields.io/badge/license-MIT-orange
       :target: https://github.com/tomcatmanager/tomcatmanager/blob/main/LICENSE
       :alt: license
-.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/main?label=build%20%28main%29
+.. image:: https://img.shields.io/github/actions/workflow/status/tomcatmanager/tomcatmanager/quicktest.yml?branch=main&label=build%20%28main%29
       :target: https://github.com/tomcatmanager/tomcatmanager/tree/main
       :alt: main branch build status
-.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/develop?label=build%20%28develop%29
+.. image:: https://img.shields.io/github/actions/workflow/status/tomcatmanager/tomcatmanager/quicktest.yml?branch=develop&label=build%20%28develop%29
       :target: https://github.com/tomcatmanager/tomcatmanager/tree/develop
       :alt: develop branch build status
 .. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/main?token=3YbxJ1PKwJ
@@ -22,10 +22,10 @@ tomcatmanager
 .. image:: https://img.shields.io/badge/code%20style-black-000000
       :target: https://github.com/psf/black
       :alt: code style black
-.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Docs%20Test/main?label=docs%20%28main%29
+.. image:: https://img.shields.io/github/actions/workflow/status/tomcatmanager/tomcatmanager/doctest.yml?branch=main&label=docs%20%28main%29
       :target: http://tomcatmanager.readthedocs.io/en/stable
       :alt: main branch documentation status
-.. image:: https://img.shields.io/github/workflow/status/tomcatmanager/tomcatmanager/Quick%20Test/develop?label=docs%20%28develop%29
+.. image:: https://img.shields.io/github/actions/workflow/status/tomcatmanager/tomcatmanager/doctest.yml?branch=main&label=docs%20%28develop%29
       :target: https://tomcatmanager.readthedocs.io/en/develop/
       :alt: develop branch documentation status
 
