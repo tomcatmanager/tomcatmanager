@@ -41,6 +41,7 @@ from typing import Callable, Any, List
 import appdirs
 import cmd2
 import requests
+import rich.progress
 import tomlkit
 
 import tomcatmanager as tm
@@ -280,6 +281,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.status_prefix = "--"
         self.echo = False
 
+        # set up rich.console
+        self.console = rich.console.Console(markup=False)
+
         # load config file if it exists
         self.load_config()
         # give a friendly message if there is an old config file but not a
@@ -297,6 +301,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         # initialize command exit code
         self.exit_code = None
+
+    def _new_progress(self) -> rich.progress.Progress:
+        progress = rich.progress.Progress(
+            rich.progress.TextColumn("[progress.description]{task.description}"),
+            rich.progress.BarColumn(),
+            rich.progress.TimeElapsedColumn(),
+        )
+        return progress
 
     ###
     #
@@ -344,7 +356,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         exception.
         """
         if msg:
-            sys.stderr.write(f"{msg}{end}")
+            ##sys.stderr.write(f"{msg}{end}")
+            self.console.print(f"{msg}", end=end, style='red')
         else:
             _type, _exception, _traceback = sys.exc_info()
             if _exception:
@@ -364,11 +377,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
         will be sent to sys.stderr.
         """
         if not self.quiet:
-            formatted_msg = f"{self.status_prefix}{msg}{end}"
+            formatted_msg = f"{self.status_prefix}{msg}"
             if self.feedback_to_output:
-                self.poutput(formatted_msg)
+                ##self.poutput(formatted_msg)
+                self.console.print(formatted_msg, end=end, style='blue')
             else:
-                sys.stderr.write(formatted_msg)
+                ## sys.stderr.write(formatted_msg)
+                self.console.print(formatted_msg, end=end, style='blue')
 
     def emptyline(self):
         """Do nothing on an empty line"""
@@ -1024,53 +1039,54 @@ change the value of one of this program's settings
             # when it's true, then we can override with cacert
             verify = cacert
 
-        try:
-            r = self.tomcat.connect(url, user, password, verify=verify, cert=cert)
+        with self.console.status("[bold blue]connecting", spinner="dots"):
+            try:
+                r = self.tomcat.connect(url, user, password, verify=verify, cert=cert)
 
-            if r.ok:
-                self.pfeedback(self._which_server())
-                if r.server_info.tomcat_version:
-                    self.pfeedback(f"tomcat version: {r.server_info.tomcat_version}")
-                self.exit_code = self.EXIT_SUCCESS
-            else:
-                if self.debug:
-                    # raise the exception and print the output
-                    try:
-                        r.raise_for_status()
-                    except (requests.HTTPError, tm.TomcatError):
-                        self.perror(None)
-                        self.exit_code = self.EXIT_ERROR
+                if r.ok:
+                    self.pfeedback(self._which_server())
+                    if r.server_info.tomcat_version:
+                        self.pfeedback(f"tomcat version: {r.server_info.tomcat_version}")
+                    self.exit_code = self.EXIT_SUCCESS
                 else:
-                    # need to see whether we got an http error or whether
-                    # tomcat wasn't at the url
-                    if r.response.status_code == requests.codes.ok:
-                        # there was some problem with the request, but we
-                        # got http 200 OK. That means there was no tomcat
-                        # at the url
-                        self.perror(f"tomcat manager not found at {url}")
-                    elif r.response.status_code == requests.codes.not_found:
-                        # we connected, but the url was bad. No tomcat there
-                        self.perror(f"tomcat manager not found at {url}")
+                    if self.debug:
+                        # raise the exception and print the output
+                        try:
+                            r.raise_for_status()
+                        except (requests.HTTPError, tm.TomcatError):
+                            self.perror(None)
+                            self.exit_code = self.EXIT_ERROR
                     else:
-                        self.perror(
-                            (
-                                f"http error: {r.response.status_code}"
-                                f" {http.client.responses[r.response.status_code]}"
+                        # need to see whether we got an http error or whether
+                        # tomcat wasn't at the url
+                        if r.response.status_code == requests.codes.ok:
+                            # there was some problem with the request, but we
+                            # got http 200 OK. That means there was no tomcat
+                            # at the url
+                            self.perror(f"tomcat manager not found at {url}")
+                        elif r.response.status_code == requests.codes.not_found:
+                            # we connected, but the url was bad. No tomcat there
+                            self.perror(f"tomcat manager not found at {url}")
+                        else:
+                            self.perror(
+                                (
+                                    f"http error: {r.response.status_code}"
+                                    f" {http.client.responses[r.response.status_code]}"
+                                )
                             )
-                        )
-                    self.exit_code = self.EXIT_ERROR
-        except requests.exceptions.ConnectionError:
-            if self.debug:
-                self.perror(None)
-            else:
-                self.perror("connection error")
-            self.exit_code = self.EXIT_ERROR
-        except requests.exceptions.Timeout:
-            if self.debug:
-                self.perror(None)
-            else:
-                self.perror("connection timeout")
-            self.exit_code = self.EXIT_ERROR
+                        self.exit_code = self.EXIT_ERROR
+            except requests.exceptions.ConnectionError:
+                if self.debug:
+                    self.perror(None)
+                else:
+                    self.perror("connection error")
+                self.exit_code = self.EXIT_ERROR
+            except requests.exceptions.Timeout:
+                if self.debug:
+                    self.perror(None)
+                else:
+                    self.perror("connection timeout")
+                self.exit_code = self.EXIT_ERROR
 
     def help_connect(self):
         """Show help for the connect command."""
@@ -1198,7 +1214,11 @@ change the value of one of this program's settings
     def do_start(self, cmdline: cmd2.Statement):
         """Start a deployed tomcat application that isn't running."""
         args = self.parse_args(self.start_parser, cmdline.argv)
-        self.docmd(self.tomcat.start, args.path, args.version)
+        taskname = args.path
+        if args.version:
+            taskname += f"##{args.version}"
+        with self.console.status(f"[blue]starting {taskname}", spinner="dots"):
+            self.docmd(self.tomcat.start, args.path, args.version)
 
     def help_start(self):
         """Help for the 'start' command."""
@@ -1212,7 +1232,11 @@ change the value of one of this program's settings
     def do_stop(self, cmdline: cmd2.Statement):
         """Stop a tomcat application and leave it deployed on the server."""
         args = self.parse_args(self.stop_parser, cmdline.argv)
-        self.docmd(self.tomcat.stop, args.path, args.version)
+        taskname = args.path
+        if args.version:
+            taskname += f"##{args.version}"
+        with self.console.status(f"[blue]stopping {taskname}", spinner="dots"):
+            self.docmd(self.tomcat.stop, args.path, args.version)
 
     def help_stop(self):
         """Help for the 'stop' command."""
