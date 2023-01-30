@@ -41,7 +41,8 @@ from typing import Callable, Any, List
 import appdirs
 import cmd2
 import requests
-import rich.progress
+import rich
+import rich.console
 import tomlkit
 
 import tomcatmanager as tm
@@ -302,14 +303,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # initialize command exit code
         self.exit_code = None
 
-    def _new_progress(self) -> rich.progress.Progress:
-        progress = rich.progress.Progress(
-            rich.progress.TextColumn("[progress.description]{task.description}"),
-            rich.progress.BarColumn(),
-            rich.progress.TimeElapsedColumn(),
-        )
-        return progress
-
     ###
     #
     # Override cmd2.Cmd methods.
@@ -357,7 +350,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         if msg:
             ##sys.stderr.write(f"{msg}{end}")
-            self.console.print(f"{msg}", end=end, style='red')
+            self.console.print(f"{msg}", end=end, style="red")
         else:
             _type, _exception, _traceback = sys.exc_info()
             if _exception:
@@ -380,10 +373,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             formatted_msg = f"{self.status_prefix}{msg}"
             if self.feedback_to_output:
                 ##self.poutput(formatted_msg)
-                self.console.print(formatted_msg, end=end, style='blue')
+                self.console.print(formatted_msg, end=end, style="blue")
             else:
                 ## sys.stderr.write(formatted_msg)
-                self.console.print(formatted_msg, end=end, style='blue')
+                self.console.print(formatted_msg, end=end, style="blue")
 
     def emptyline(self):
         """Do nothing on an empty line"""
@@ -1046,7 +1039,9 @@ change the value of one of this program's settings
                 if r.ok:
                     self.pfeedback(self._which_server())
                     if r.server_info.tomcat_version:
-                        self.pfeedback(f"tomcat version: {r.server_info.tomcat_version}")
+                        self.pfeedback(
+                            f"tomcat version: {r.server_info.tomcat_version}"
+                        )
                     self.exit_code = self.EXIT_SUCCESS
                 else:
                     if self.debug:
@@ -1217,8 +1212,11 @@ change the value of one of this program's settings
         taskname = args.path
         if args.version:
             taskname += f"##{args.version}"
-        with self.console.status(f"[blue]starting {taskname}", spinner="dots"):
-            self.docmd(self.tomcat.start, args.path, args.version)
+        status = rich.text.Text(f"starting {taskname}", style="blue")
+        with self.console.status(status, spinner="dots"):
+            r = self.docmd(self.tomcat.start, args.path, args.version)
+            if r and self.exit_code == self.EXIT_SUCCESS:
+                self.pfeedback(f"started {taskname}")
 
     def help_start(self):
         """Help for the 'start' command."""
@@ -1235,8 +1233,11 @@ change the value of one of this program's settings
         taskname = args.path
         if args.version:
             taskname += f"##{args.version}"
-        with self.console.status(f"[blue]stopping {taskname}", spinner="dots"):
-            self.docmd(self.tomcat.stop, args.path, args.version)
+        status = rich.text.Text(f"stopping {taskname}", style="blue")
+        with self.console.status(status, spinner="dots"):
+            r = self.docmd(self.tomcat.stop, args.path, args.version)
+            if r and self.exit_code == self.EXIT_SUCCESS:
+                self.pfeedback(f"stopped {taskname}")
 
     def help_stop(self):
         """Help for the 'stop' command."""
@@ -1371,19 +1372,25 @@ change the value of one of this program's settings
                 for app in apps:
                     self.poutput(app)
             else:
-                fmt = "{:24.24} {:7.7} {:>8.8} {:36.36}"
-                dashes = "-" * 80
-                self.poutput(fmt.format("Path", "State", "Sessions", "Directory"))
-                self.poutput(fmt.format(dashes, dashes, dashes, dashes))
+                table = rich.table.Table(
+                    box=rich.box.HORIZONTALS,
+                    show_edge=False,
+                    padding=(0, 1, 0, 1),
+                    header_style="bold blue",
+                    border_style="bold blue",
+                )
+                table.add_column("Path")
+                table.add_column("State")
+                table.add_column("Sessions", justify="right")
+                table.add_column("Directory")
                 for app in apps:
-                    self.poutput(
-                        fmt.format(
-                            app.path,
-                            app.state.value,
-                            str(app.sessions),
-                            app.directory_and_version,
-                        )
+                    table.add_row(
+                        app.path,
+                        app.state.value,
+                        str(app.sessions),
+                        app.directory_and_version,
                     )
+                self.console.print(table)
 
     def help_list(self):
         """Show help for the 'list' command."""
