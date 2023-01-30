@@ -282,8 +282,20 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.status_prefix = "--"
         self.echo = False
 
-        # set up rich.console
-        self.console = rich.console.Console(markup=False)
+        # set up the rich theme and console
+        tomcat_theme = rich.theme.Theme(
+            {
+                "tm.feedback": "deep_sky_blue1",
+                "tm.error": "red3",
+                "tm.status": "deep_sky_blue1",
+                "tm.list.header": "bold deep_sky_blue1",
+                "tm.list.border": "bold deep_sky_blue1",
+                "tm.app.running": "green1",
+                "tm.app.stopped": "red3",
+                "tm.app.sessions": "cyan1",
+            }
+        )
+        self.console = rich.console.Console(theme=tomcat_theme, markup=False)
 
         # load config file if it exists
         self.load_config()
@@ -350,7 +362,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         if msg:
             ##sys.stderr.write(f"{msg}{end}")
-            self.console.print(f"{msg}", end=end, style="red")
+            self.console.print(f"{msg}", end=end, style="tm.error")
         else:
             _type, _exception, _traceback = sys.exc_info()
             if _exception:
@@ -373,10 +385,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             formatted_msg = f"{self.status_prefix}{msg}"
             if self.feedback_to_output:
                 ##self.poutput(formatted_msg)
-                self.console.print(formatted_msg, end=end, style="blue")
+                self.console.print(formatted_msg, end=end, style="tm.feedback")
             else:
                 ## sys.stderr.write(formatted_msg)
-                self.console.print(formatted_msg, end=end, style="blue")
+                self.console.print(formatted_msg, end=end, style="tm.feedback")
 
     def emptyline(self):
         """Do nothing on an empty line"""
@@ -1212,7 +1224,7 @@ change the value of one of this program's settings
         taskname = args.path
         if args.version:
             taskname += f"##{args.version}"
-        status = rich.text.Text(f"starting {taskname}", style="blue")
+        status = rich.text.Text(f"starting {taskname}", style="tm.status")
         with self.console.status(status, spinner="dots"):
             r = self.docmd(self.tomcat.start, args.path, args.version)
             if r and self.exit_code == self.EXIT_SUCCESS:
@@ -1233,7 +1245,7 @@ change the value of one of this program's settings
         taskname = args.path
         if args.version:
             taskname += f"##{args.version}"
-        status = rich.text.Text(f"stopping {taskname}", style="blue")
+        status = rich.text.Text(f"stopping {taskname}", style="tm.status")
         with self.console.status(status, spinner="dots"):
             r = self.docmd(self.tomcat.stop, args.path, args.version)
             if r and self.exit_code == self.EXIT_SUCCESS:
@@ -1375,19 +1387,21 @@ change the value of one of this program's settings
                 table = rich.table.Table(
                     box=rich.box.HORIZONTALS,
                     show_edge=False,
-                    padding=(0, 1, 0, 1),
-                    header_style="bold blue",
-                    border_style="bold blue",
+                    padding=(0, 2, 0, 0),
+                    header_style="tm.list.header",
+                    border_style="tm.list.border",
                 )
                 table.add_column("Path")
                 table.add_column("State")
                 table.add_column("Sessions", justify="right")
                 table.add_column("Directory")
+                #app_style = rich.text.Style.parse("tm.app.path")
                 for app in apps:
+                    state_style = f"tm.app.{app.state.value}"
                     table.add_row(
                         app.path,
-                        app.state.value,
-                        str(app.sessions),
+                        rich.text.Text(app.state.value, style=state_style),
+                        rich.text.Text(str(app.sessions), style="tm.app.sessions"),
                         app.directory_and_version,
                     )
                 self.console.print(table)
