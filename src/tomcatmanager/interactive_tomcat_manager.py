@@ -555,30 +555,29 @@ class InteractiveTomcatManager(cmd2.Cmd):
             cmds = self._help_section("Settings, configuration, and tools")
             self._help_command(cmds, "config", self.do_config.__doc__)
             self._help_command(
-                cmds, "edit", "Edit a file in the preferred text editor."
+                cmds, "edit", "Edit a file in the preferred text editor"
             )
             self._help_command(cmds, "exit_code", self.do_exit_code.__doc__)
             self._help_command(
                 cmds,
                 "history",
-                "View, run, edit, and save previously entered commands.",
+                "View, run, edit, and save previously entered commands",
             )
-            self._help_command(cmds, "py", "Run an interactive python shell.")
+            self._help_command(cmds, "py", "Run an interactive python shell")
             self._help_command(
-                cmds, "run_pyscript", "Run a file containing a python script."
+                cmds, "run_pyscript", "Run a file containing a python script"
             )
+            self._help_command(cmds, "settings", self.do_settings.__doc__)
             self._help_command(cmds, "set", self.do_set.__doc__)
-            self._help_command(cmds, "show", self.do_show.__doc__)
-            self._help_command(cmds, "  settings", "Synonym for 'show'.")
             self._help_command(
-                cmds, "shell", "Execute a command in the operating system shell."
+                cmds, "shell", "Execute a command in the operating system shell"
             )
-            self._help_command(cmds, "shortcuts", "Show shortcuts for other commands.")
+            self._help_command(cmds, "shortcuts", "Show shortcuts for other commands")
             self.console.print(cmds)
 
             cmds = self._help_section("Other")
-            self._help_command(cmds, "exit", "Exit this program.")
-            self._help_command(cmds, "  quit", "Synonym for 'exit'.")
+            self._help_command(cmds, "exit", "Exit this program")
+            self._help_command(cmds, "  quit", "Synonym for 'exit'")
             self._help_command(cmds, "help", self.do_help.__doc__)
             self._help_command(cmds, "version", self.do_version.__doc__)
             self._help_command(cmds, "license", self.do_license.__doc__)
@@ -613,7 +612,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     )
 
     def do_config(self, cmdline: cmd2.Statement):
-        """Edit or show the location of the user configuration file."""
+        """Edit or show the location of the user configuration file"""
         args = self.parse_args(self.config_parser, cmdline.argv)
 
         if args.action == "file":
@@ -625,7 +624,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self._config_convert()
 
     def help_config(self):
-        """Show help for the 'config' command."""
+        """Show help for the 'config' command"""
         self.show_help_from(self.config_parser)
 
     def _config_edit(self):
@@ -634,7 +633,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         editor exits.
         """
         if not self.editor:
-            self.perror("no editor: use 'set editor={path}' to specify one")
+            self.perror("no editor: use 'set editor = \"{path}\"' to specify one")
             self.exit_code = self.EXIT_ERROR
             return
 
@@ -724,20 +723,24 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.load_config()
         self.exit_code = self.EXIT_SUCCESS
 
-    show_parser = argparse.ArgumentParser(
-        prog="show",
-        description="Show all settings or a specific setting.",
+    def do_show(self, cmdline: cmd2.Statement):
+        """Override cmd2 builtin show command to be invalid"""
+        self.default(cmdline)
+
+    settings_parser = argparse.ArgumentParser(
+        prog="settings",
+        description="Display program settings.",
     )
-    show_parser.add_argument(
+    settings_parser.add_argument(
         "setting",
         nargs="?",
         help="""Name of the setting to show the value for.
              If omitted show the values of all settings.""",
     )
 
-    def do_show(self, cmdline: cmd2.Statement):
-        """Show all settings or a specific setting."""
-        args = self.parse_args(self.show_parser, cmdline.argv)
+    def do_settings(self, cmdline: cmd2.Statement):
+        """Display program settings"""
+        args = self.parse_args(self.settings_parser, cmdline.argv)
 
         result = {}
         maxlen = 0
@@ -761,31 +764,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.perror(f"unknown setting: '{args.setting}'")
             self.exit_code = self.EXIT_ERROR
 
-    def help_show(self):
-        """Show help for the 'show' command."""
-        self.show_help_from(self.show_parser)
-
-    settings_parser = argparse.ArgumentParser(
-        prog="settings",
-        description="Show all settings or a specific setting. Synonym for 'show'.",
-    )
-    settings_parser.add_argument(
-        "setting",
-        nargs="?",
-        help="""Name of the setting to show the value for.
-             If omitted show the values of all settings.""",
-    )
-
-    def do_settings(self, cmdline: cmd2.Statement):
-        """Synonym for 'show' command."""
-        self.do_show(cmdline)
-
     def help_settings(self):
-        """Show help for the 'settings' command."""
+        """Show help for the 'settings' command"""
         self.show_help_from(self.settings_parser)
 
     def do_set(self, args: cmd2.Statement):
-        """Change program settings."""
+        """Change a program setting"""
         if args:
             config = EvaluatingConfigParser()
             setting_string = f"[settings]\n{args}"
@@ -810,13 +794,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     self.perror(f"unknown setting: '{param_name}'")
                     self.exit_code = self.EXIT_ERROR
         else:
-            self.do_show(args)
+            self.do_settings(args)
 
     def help_set(self):
-        """Show help for the 'set' command."""
+        """Show help for the 'set' command"""
         self.exit_code = self.EXIT_SUCCESS
         self.poutput(
-            """usage: set {setting}={value}
+            """usage: set {setting} = {value}
 
 change the value of one of this program's settings
 
@@ -1013,7 +997,7 @@ change the value of one of this program's settings
     )
 
     def do_connect(self, cmdline: cmd2.Statement):
-        """Connect to a tomcat manager instance."""
+        """Connect to a tomcat manager instance"""
         # pylint: disable=too-many-branches, too-many-statements
         # define some variables that we will either fill from a server shortcut
         # or from arguments
@@ -1137,7 +1121,7 @@ change the value of one of this program's settings
                 self.exit_code = self.EXIT_ERROR
 
     def help_connect(self):
-        """Show help for the connect command."""
+        """Show help for the 'connect' command."""
         self.show_help_from(self.connect_parser)
 
     which_parser = argparse.ArgumentParser(
@@ -1147,12 +1131,12 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_which(self, cmdline: cmd2.Statement):
-        """Show the url of the tomcat server you are connected to."""
+        """Show the url of the tomcat server you are connected to"""
         self.parse_args(self.which_parser, cmdline.argv)
         self.poutput(self._which_server())
 
     def help_which(self):
-        """Show help for the 'which' command."""
+        """Show help for the 'which' command"""
         self.show_help_from(self.which_parser)
 
     ###
@@ -1161,7 +1145,7 @@ change the value of one of this program's settings
     #
     ###
     def deploy_local(self, args: argparse.Namespace, update: bool = False):
-        """Deploy a local war file to the tomcat server."""
+        """Deploy a local war file to the tomcat server"""
         warfile = pathlib.Path(args.warfile).expanduser()
         with open(warfile, "rb") as fileobj:
             self.exit_code = self.EXIT_SUCCESS
@@ -1174,7 +1158,7 @@ change the value of one of this program's settings
             )
 
     def deploy_server(self, args: argparse.Namespace, update: bool = False):
-        """Deploy a war file to the tomcat server."""
+        """Deploy a war file to the tomcat server"""
         self.exit_code = self.EXIT_SUCCESS
         self.docmd(
             self.tomcat.deploy_serverwar,
@@ -1185,7 +1169,7 @@ change the value of one of this program's settings
         )
 
     def deploy_context(self, args: argparse.Namespace, update: bool = False):
-        """Deploy a context xml file to the tomcat server."""
+        """Deploy a context xml file to the tomcat server"""
         self.exit_code = self.EXIT_SUCCESS
         self.docmd(
             self.tomcat.deploy_servercontext,
@@ -1206,7 +1190,7 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_deploy(self, cmdline: cmd2.Statement):
-        """Deploy an application to the tomcat server."""
+        """Deploy an application to the tomcat server"""
         args = self.parse_args(self.deploy_parser, cmdline.argv)
         try:
             args.func(self, args, update=False)
@@ -1215,7 +1199,7 @@ change the value of one of this program's settings
             self.exit_code = self.EXIT_ERROR
 
     def help_deploy(self):
-        """Show help for the deploy command."""
+        """Show help for the 'deploy' command"""
         self.show_help_from(self.deploy_parser)
 
     redeploy_parser = _deploy_parser(
@@ -1228,7 +1212,7 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_redeploy(self, cmdline: cmd2.Statement):
-        """Redeploy an application to the tomcat server."""
+        """Redeploy an application to the tomcat server"""
         args = self.parse_args(self.redeploy_parser, cmdline.argv)
         try:
             args.func(self, args, update=True)
@@ -1237,7 +1221,7 @@ change the value of one of this program's settings
             self.exit_code = self.EXIT_ERROR
 
     def help_redeploy(self):
-        """Show help for the redeploy command."""
+        """Show help for the 'redeploy' command"""
         self.show_help_from(self.redeploy_parser)
 
     undeploy_parser = _path_version_parser(
@@ -1246,12 +1230,12 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_undeploy(self, cmdline: cmd2.Statement):
-        """Remove an application from the tomcat server."""
+        """Remove an application from the tomcat server"""
         args = self.parse_args(self.undeploy_parser, cmdline.argv)
         self.docmd(self.tomcat.undeploy, args.path, args.version)
 
     def help_undeploy(self):
-        """Help for the 'undeploy' command."""
+        """Show help for the 'undeploy' command"""
         self.show_help_from(self.undeploy_parser)
 
     start_parser = _path_version_parser(
@@ -1260,7 +1244,7 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_start(self, cmdline: cmd2.Statement):
-        """Start a deployed tomcat application that isn't running."""
+        """Start a deployed tomcat application that isn't running"""
         args = self.parse_args(self.start_parser, cmdline.argv)
         taskname = args.path
         if args.version:
@@ -1272,7 +1256,7 @@ change the value of one of this program's settings
                 self.pfeedback(f"started {taskname}")
 
     def help_start(self):
-        """Help for the 'start' command."""
+        """Show help for the 'start' command"""
         self.show_help_from(self.start_parser)
 
     stop_parser = _path_version_parser(
@@ -1281,7 +1265,7 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_stop(self, cmdline: cmd2.Statement):
-        """Stop a tomcat application and leave it deployed on the server."""
+        """Stop a tomcat application and leave it deployed on the server"""
         args = self.parse_args(self.stop_parser, cmdline.argv)
         taskname = args.path
         if args.version:
@@ -1293,7 +1277,7 @@ change the value of one of this program's settings
                 self.pfeedback(f"stopped {taskname}")
 
     def help_stop(self):
-        """Help for the 'stop' command."""
+        """Show help for the 'stop' command"""
         self.show_help_from(self.stop_parser)
 
     reload_parser = _path_version_parser(
@@ -1303,12 +1287,12 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_reload(self, cmdline: cmd2.Statement):
-        """Stop and start a tomcat application."""
+        """Stop and start a tomcat application"""
         args = self.parse_args(self.reload_parser, cmdline.argv)
         self.docmd(self.tomcat.reload, args.path, args.version)
 
     def help_reload(self):
-        """Help for the 'reload' command."""
+        """Show help for the 'reload' command"""
         self.show_help_from(self.reload_parser)
 
     restart_parser = _path_version_parser(
@@ -1318,12 +1302,12 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_restart(self, cmdline: cmd2.Statement):
-        """Stop and start a tomcat application."""
+        """Stop and start a tomcat application"""
         args = self.parse_args(self.reload_parser, cmdline.argv)
         self.docmd(self.tomcat.reload, args.path, args.version)
 
     def help_restart(self):
-        """Show help for the 'restart' command."""
+        """Show help for the 'restart' command"""
         self.show_help_from(self.restart_parser)
 
     sessions_parser = argparse.ArgumentParser(
@@ -1344,14 +1328,14 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_sessions(self, cmdline: cmd2.Statement):
-        """Show active sessions for a tomcat application."""
+        """Show active sessions for a tomcat application"""
         args = self.parse_args(self.sessions_parser, cmdline.argv)
         r = self.docmd(self.tomcat.sessions, args.path, args.version)
         if r.ok:
             self.poutput(r.sessions)
 
     def help_sessions(self):
-        """Help for the 'sessions' command."""
+        """Show help for the 'sessions' command"""
         self.show_help_from(self.sessions_parser)
 
     expire_parser = argparse.ArgumentParser(
@@ -1377,14 +1361,14 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_expire(self, cmdline: cmd2.Statement):
-        """Expire idle sessions."""
+        """Expire idle sessions"""
         args = self.parse_args(self.expire_parser, cmdline.argv)
         r = self.docmd(self.tomcat.expire, args.path, args.version, args.idle)
         if r.ok:
             self.poutput(r.sessions)
 
     def help_expire(self):
-        """Help for the 'expire' command."""
+        """Show help for the 'expire' command"""
         self.show_help_from(self.expire_parser)
 
     list_parser = argparse.ArgumentParser(
@@ -1414,7 +1398,7 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_list(self, cmdline: cmd2.Statement):
-        """Show all installed applications."""
+        """Show all installed tomcat applications"""
         args = self.parse_args(self.list_parser, cmdline.argv)
 
         response = self.docmd(self.tomcat.list)
@@ -1447,7 +1431,7 @@ change the value of one of this program's settings
                 self.console.print(table)
 
     def help_list(self):
-        """Show help for the 'list' command."""
+        """Show help for the 'list' command"""
         self.show_help_from(self.list_parser)
 
     @staticmethod
@@ -1490,13 +1474,13 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_serverinfo(self, cmdline: cmd2.Statement):
-        """Show information about the tomcat server."""
+        """Show information about the tomcat server"""
         self.parse_args(self.serverinfo_parser, cmdline.argv)
         r = self.docmd(self.tomcat.server_info)
         self.poutput(r.result)
 
     def help_serverinfo(self):
-        """Show help for the 'serverinfo' command."""
+        """Show help for the 'serverinfo' command"""
         self.show_help_from(self.serverinfo_parser)
 
     status_parser = argparse.ArgumentParser(
@@ -1506,14 +1490,14 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_status(self, cmdline: cmd2.Statement):
-        """Show server status information in xml format."""
+        """Show server status information in xml format"""
         self.parse_args(self.status_parser, cmdline.argv)
         r = self.docmd(self.tomcat.status_xml)
         root = xml.dom.minidom.parseString(r.status_xml)
         self.poutput(root.toprettyxml(indent="   "))
 
     def help_status(self):
-        """Show help for the 'status' command."""
+        """Show help for the 'status' command"""
         self.show_help_from(self.status_parser)
 
     vminfo_parser = argparse.ArgumentParser(
@@ -1523,13 +1507,13 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_vminfo(self, cmdline: cmd2.Statement):
-        """Show diagnostic information about the jvm."""
+        """Show diagnostic information about the jvm"""
         self.parse_args(self.vminfo_parser, cmdline.argv)
         r = self.docmd(self.tomcat.vm_info)
         self.poutput(r.vm_info)
 
     def help_vminfo(self):
-        """Show help for the 'vminfo' command."""
+        """Show help for the 'vminfo' command"""
         self.show_help_from(self.vminfo_parser)
 
     sslconnectorciphers_parser = argparse.ArgumentParser(
@@ -1539,13 +1523,13 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_sslconnectorciphers(self, cmdline: cmd2.Statement):
-        """Show SSL/TLS ciphers configured for each connector."""
+        """Show SSL/TLS ciphers configured for each connector"""
         self.parse_args(self.sslconnectorciphers_parser, cmdline.argv)
         r = self.docmd(self.tomcat.ssl_connector_ciphers)
         self.poutput(r.ssl_connector_ciphers)
 
     def help_sslconnectorciphers(self):
-        """Show help for the 'sslconnectorciphers' command."""
+        """Show help for the 'sslconnectorciphers' command"""
         self.show_help_from(self.sslconnectorciphers_parser)
 
     sslconnectorcerts_parser = argparse.ArgumentParser(
@@ -1555,13 +1539,13 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_sslconnectorcerts(self, cmdline: cmd2.Statement):
-        """Show SSL/TLS certificate chain for each connector."""
+        """Show SSL/TLS certificate chain for each connector"""
         self.parse_args(self.sslconnectorcerts_parser, cmdline.argv)
         r = self.docmd(self.tomcat.ssl_connector_certs)
         self.poutput(r.ssl_connector_certs)
 
     def help_sslconnectorcerts(self):
-        """Show help for the 'sslconnectorcerts' command."""
+        """Show help for the 'sslconnectorcerts' command"""
         self.show_help_from(self.sslconnectorcerts_parser)
 
     sslconnectortrustedcerts_parser = argparse.ArgumentParser(
@@ -1571,13 +1555,13 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_sslconnectortrustedcerts(self, cmdline: cmd2.Statement):
-        """Show SSL/TLS trusted certificates for each connector."""
+        """Show SSL/TLS trusted certificates for each connector"""
         self.parse_args(self.sslconnectortrustedcerts_parser, cmdline.argv)
         r = self.docmd(self.tomcat.ssl_connector_trusted_certs)
         self.poutput(r.ssl_connector_trusted_certs)
 
     def help_sslconnectortrustedcerts(self):
-        """Show help for the 'sslconnectortrustedcerts' command."""
+        """Show help for the 'sslconnectortrustedcerts' command"""
         self.show_help_from(self.sslconnectortrustedcerts_parser)
 
     sslreload_parser = argparse.ArgumentParser(
@@ -1592,14 +1576,14 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_sslreload(self, cmdline: cmd2.Statement):
-        """Reload SSL/TLS certificates and keys."""
+        """Reload SSL/TLS certificates and keys"""
         args = self.parse_args(self.sslreload_parser, cmdline.argv)
         r = self.docmd(self.tomcat.ssl_reload, args.host_name)
         if r and r.ok:
             self.pfeedback(r.status_message)
 
     def help_sslreload(self):
-        """Show help for the 'resources' command."""
+        """Show help for the 'sslreload' command"""
         self.show_help_from(self.sslreload_parser)
 
     threaddump_parser = argparse.ArgumentParser(
@@ -1609,13 +1593,13 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_threaddump(self, cmdline: cmd2.Statement):
-        """Show a jvm thread dump."""
+        """Show a jvm thread dump"""
         self.parse_args(self.threaddump_parser, cmdline.argv)
         r = self.docmd(self.tomcat.thread_dump)
         self.poutput(r.thread_dump)
 
     def help_threaddump(self):
-        """Show help for the 'threaddump' command."""
+        """Show help for the 'threaddump' command"""
         self.show_help_from(self.threaddump_parser)
 
     resources_parser = argparse.ArgumentParser(
@@ -1630,7 +1614,7 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_resources(self, cmdline: cmd2.Statement):
-        """Show global JNDI resources configured in Tomcat."""
+        """Show global JNDI resources configured in Tomcat"""
         args = self.parse_args(self.resources_parser, cmdline.argv)
         r = self.docmd(self.tomcat.resources, args.class_name)
         if r.resources:
@@ -1640,7 +1624,7 @@ change the value of one of this program's settings
             self.exit_code = self.EXIT_ERROR
 
     def help_resources(self):
-        """Show help for the 'resources' command."""
+        """Show help for the 'resources' command"""
         self.show_help_from(self.resources_parser)
 
     findleakers_parser = argparse.ArgumentParser(
@@ -1652,14 +1636,14 @@ change the value of one of this program's settings
 
     @requires_connection
     def do_findleakers(self, cmdline: cmd2.Statement):
-        """Show tomcat applications that leak memory."""
+        """Show tomcat applications that leak memory"""
         self.parse_args(self.findleakers_parser, cmdline.argv)
         r = self.docmd(self.tomcat.find_leakers)
         for leaker in r.leakers:
             self.poutput(leaker)
 
     def help_findleakers(self):
-        """Show help for the 'findleakers' command."""
+        """Show help for the 'findleakers' command"""
         self.show_help_from(self.findleakers_parser)
 
     ###
@@ -1668,16 +1652,16 @@ change the value of one of this program's settings
     #
     ###
     def do_exit(self, _):
-        """Exit the interactive command prompt."""
+        """Exit the interactive command prompt"""
         self.exit_code = self.EXIT_SUCCESS
         return True
 
     def do_quit(self, cmdline: cmd2.Statement):
-        """Synonym for the 'exit' command."""
+        """Synonym for the 'exit' command"""
         return self.do_exit(cmdline)
 
     def do_eof(self, cmdline: cmd2.Statement):
-        """Exit on the end-of-file character."""
+        """Exit on the end-of-file character"""
         return self.do_exit(cmdline)
 
     version_parser = argparse.ArgumentParser(
@@ -1686,12 +1670,12 @@ change the value of one of this program's settings
     )
 
     def do_version(self, cmdline: cmd2.Statement):
-        """Show the version number of this program."""
+        """Show the version number of this program"""
         self.parse_args(self.version_parser, cmdline.argv)
         self.poutput(tm.VERSION_STRING)
 
     def help_version(self):
-        """Show help for the 'version' command."""
+        """Show help for the 'version' command"""
         self.show_help_from(self.version_parser)
 
     exit_code_epilog = []
@@ -1707,7 +1691,7 @@ change the value of one of this program's settings
     )
 
     def do_exit_code(self, _):
-        """Show a number indicating the status of the previous command."""
+        """Show a number indicating the status of the previous command"""
         # we don't use exit_code_parser here because we don't want to generate
         # spurrious exit codes, i.e. if they have incorrect usage on the
         # exit_code command
@@ -1716,7 +1700,7 @@ change the value of one of this program's settings
         self.poutput(self.exit_code)
 
     def help_exit_code(self):
-        """Show help for the 'exit_code' command."""
+        """Show help for the 'exit_code' command"""
         self.show_help_from(self.exit_code_parser)
 
     license_parser = argparse.ArgumentParser(
@@ -1725,7 +1709,7 @@ change the value of one of this program's settings
     )
 
     def do_license(self, cmdline: cmd2.Statement):
-        """Show the software license for this program."""
+        """Show the software license for this program"""
         self.parse_args(self.license_parser, cmdline.argv)
         mitlicense = textwrap.dedent(
             """\
@@ -1753,7 +1737,7 @@ change the value of one of this program's settings
         self.poutput(mitlicense)
 
     def help_license(self):
-        """Show help for the 'license' command."""
+        """Show help for the 'license' command"""
         self.show_help_from(self.license_parser)
 
 

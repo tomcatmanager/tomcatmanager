@@ -575,14 +575,18 @@ def test_load_config_not_integer(itm_nc, mocker):
     # as when we don't load a config file
     assert itm_nc.timeout == itm.timeout
 
-
-SHOW_SETTINGS = ["settings", "show"]
-
-
-@pytest.mark.parametrize("command", SHOW_SETTINGS)
-def test_show_noargs(command, capsys):
+def test_show_invalid(capsys):
     itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks(command)
+    itm.onecmd_plus_hooks("show")
+    out, err = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_COMMAND_NOT_FOUND
+    assert not out
+    assert err == f"unknown command: show\n"
+
+
+def test_settings_noargs(capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks("settings")
     out, _ = capsys.readouterr()
     # not going to parse all the lines, but there
     # should be one per setting
@@ -590,20 +594,18 @@ def test_show_noargs(command, capsys):
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
-@pytest.mark.parametrize("command", SHOW_SETTINGS)
-def test_show_valid_setting(command, capsys):
+def test_settings_valid_setting(capsys):
     itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks(f"{command} prompt")
+    itm.onecmd_plus_hooks("settings prompt")
     out, _ = capsys.readouterr()
     assert out.startswith(f"prompt='{itm.prompt}' ")
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
-@pytest.mark.parametrize("command", SHOW_SETTINGS)
-def test_show_invalid_setting(command, capsys):
+def test_settings_invalid_setting(capsys):
     itm = tm.InteractiveTomcatManager()
     itm.debug = False
-    itm.onecmd_plus_hooks(f"{command} bogus")
+    itm.onecmd_plus_hooks("settings bogus")
     out, err = capsys.readouterr()
     assert not out
     assert err == "unknown setting: 'bogus'\n"

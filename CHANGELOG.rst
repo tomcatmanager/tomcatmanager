@@ -11,6 +11,23 @@ format of this file follows recommendations from `Keep a Changelog
 Unreleased
 ----------
 
+Added
+^^^^^
+
+- Styled and colored output using ``rich``
+
+Changed
+^^^^^^^
+
+- Output from the ``settings`` command now matches the TOML format of the
+  configuration file
+
+Removed
+^^^^^^^
+
+- Removed allow_style setting
+- Removed show command, settings does the same thing and is still available
+-
 
 6.0.1 (2022-11-15)
 ------------------
