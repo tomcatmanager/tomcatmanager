@@ -34,6 +34,7 @@ import http.client
 import os
 import pathlib
 import sys
+import textwrap
 import traceback
 import xml.dom.minidom
 from typing import Callable, Any, List
@@ -285,6 +286,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # set up the rich theme and console
         tomcat_theme = rich.theme.Theme(
             {
+                "tm.help.section": "gold1",
+                "tm.help.command": "magenta3",
                 "tm.feedback": "deep_sky_blue1",
                 "tm.error": "red3",
                 "tm.status": "deep_sky_blue1",
@@ -295,7 +298,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 "tm.app.sessions": "cyan1",
             }
         )
-        self.console = rich.console.Console(theme=tomcat_theme, markup=False)
+        self.console = rich.console.Console(
+            theme=tomcat_theme, markup=False, emoji=False, highlight=False
+        )
+        self.error_console = rich.console.Console(
+            stderr=True, theme=tomcat_theme, markup=False, emoji=False, highlight=False
+        )
 
         # load config file if it exists
         self.load_config()
@@ -337,9 +345,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if msg is not None:
             try:
                 msg_str = f"{msg}"
-                self.stdout.write(msg_str)
-                if not msg_str.endswith(end):
-                    self.stdout.write(end)
+                ##self.stdout.write(msg_str)
+                self.console.print(msg_str, end=end)
+                # if not msg_str.endswith(end):
+                #     ##self.stdout.write(end)
+                #     self.console.print(end)
             except BrokenPipeError:  # pragma: nocover
                 # This occurs if a command's output is being piped to another
                 # process and that process closes before the command is
@@ -362,7 +372,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         if msg:
             ##sys.stderr.write(f"{msg}{end}")
-            self.console.print(f"{msg}", end=end, style="tm.error")
+            self.error_console.print(f"{msg}", end=end, style="tm.error")
         else:
             _type, _exception, _traceback = sys.exc_info()
             if _exception:
@@ -371,7 +381,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 # else:
                 #    output = ''.join(traceback.format_exception_only(_type, _exception))
                 output = "".join(traceback.format_exception_only(_type, _exception))
-                sys.stderr.write(output)
+                ##sys.stderr.write(output)
+                self.error_console.print(output, end=end)
 
     def pfeedback(self, msg: Any, *, end: str = "\n") -> None:
         """
@@ -388,7 +399,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.console.print(formatted_msg, end=end, style="tm.feedback")
             else:
                 ## sys.stderr.write(formatted_msg)
-                self.console.print(formatted_msg, end=end, style="tm.feedback")
+                self.error_console.print(formatted_msg, end=end, style="tm.feedback")
 
     def emptyline(self):
         """Do nothing on an empty line"""
@@ -468,6 +479,23 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         return out
 
+    def _help_section(self, title: str):
+        """Start a new help section and return a table for commands in that section"""
+        self.console.print("")
+        self.console.print(title, style="tm.help.section")
+        self.console.print("─" * 72, style="tm.help.section")
+        cmds = rich.table.Table(
+            show_edge=False,
+            box=None,
+            padding=(0, 3, 0, 0),
+            show_header=False,
+        )
+        return cmds
+
+    def _help_command(self, table, command, desc):
+        """Add a new command to a help table"""
+        table.add_row(rich.text.Text(command, style="tm.help.command"), desc)
+
     def do_help(self, args: str):
         """Show available commands, or help on a specific command."""
         # pylint: disable=too-many-statements
@@ -475,74 +503,87 @@ class InteractiveTomcatManager(cmd2.Cmd):
             # they want help on a specific command, use cmd2 for that
             super().do_help(args)
         else:
-            # show a custom list of commands, organized by category
-            help_ = []
-            help_.append(
-                "tomcat-manager is a command line tool for managing a Tomcat server"
+            self.console.print("tomcat-manager", style="tm.help.command", end="")
+            self.console.print(" is a command line tool for managing a Tomcat server")
+            self.console.print()
+            self.console.print("Type 'help [command]' for help on any command.")
+            self.console.print()
+            self.console.print("Here's a categorized list of all available commands:")
+
+            cmds = self._help_section("Connecting to a Tomcat server")
+            self._help_command(cmds, "connect", self.do_connect.__doc__)
+            self._help_command(cmds, "which", self.do_which.__doc__)
+            self.console.print(cmds)
+
+            cmds = self._help_section("Managing applications")
+            self._help_command(cmds, "list", self.do_list.__doc__)
+            self._help_command(cmds, "deploy", self.do_deploy.__doc__)
+            self._help_command(cmds, "redeploy", self.do_redeploy.__doc__)
+            self._help_command(cmds, "undeploy", self.do_undeploy.__doc__)
+            self._help_command(cmds, "start", self.do_start.__doc__)
+            self._help_command(cmds, "stop", self.do_stop.__doc__)
+            self._help_command(cmds, "restart", self.do_restart.__doc__)
+            self._help_command(cmds, "  reload", "Synonym for 'restart'")
+            self._help_command(cmds, "sessions", self.do_sessions.__doc__)
+            self._help_command(cmds, "expire", self.do_expire.__doc__)
+            self.console.print(cmds)
+
+            cmds = self._help_section("Server information")
+            self._help_command(cmds, "findleakers", self.do_findleakers.__doc__)
+            self._help_command(cmds, "resources", self.do_resources.__doc__)
+            self._help_command(cmds, "serverinfo", self.do_serverinfo.__doc__)
+            self._help_command(cmds, "status", self.do_status.__doc__)
+            self._help_command(cmds, "threaddump", self.do_threaddump.__doc__)
+            self._help_command(cmds, "vminfo", self.do_vminfo.__doc__)
+            self.console.print(cmds)
+
+            cmds = self._help_section("TLS configuration")
+            self._help_command(
+                cmds, "sslconnectorciphers", self.do_sslconnectorciphers.__doc__
             )
-
-            help_ = self._help_add_header(help_, "Connecting to a Tomcat server")
-            help_.append(f"connect   {self.do_connect.__doc__}")
-            help_.append(f"which     {self.do_which.__doc__}")
-
-            help_ = self._help_add_header(help_, "Managing applications")
-            help_.append(f"list      {self.do_list.__doc__}")
-            help_.append(f"deploy    {self.do_deploy.__doc__}")
-            help_.append(f"redeploy  {self.do_redeploy.__doc__}")
-            help_.append(f"undeploy  {self.do_undeploy.__doc__}")
-            help_.append(f"start     {self.do_start.__doc__}")
-            help_.append(f"stop      {self.do_stop.__doc__}")
-            help_.append(f"restart   {self.do_restart.__doc__}")
-            help_.append("  reload  Synonym for 'restart'.")
-            help_.append(f"sessions  {self.do_sessions.__doc__}")
-            help_.append(f"expire    {self.do_expire.__doc__}")
-
-            help_ = self._help_add_header(help_, "Server information")
-            help_.append(f"findleakers          {self.do_findleakers.__doc__}")
-            help_.append(f"resources            {self.do_resources.__doc__}")
-            help_.append(f"serverinfo           {self.do_serverinfo.__doc__}")
-            help_.append(f"status               {self.do_status.__doc__}")
-            help_.append(f"threaddump           {self.do_threaddump.__doc__}")
-            help_.append(f"vminfo               {self.do_vminfo.__doc__}")
-
-            help_ = self._help_add_header(help_, "TLS configuration")
-            help_.append(
-                f"sslconnectorciphers       {self.do_sslconnectorciphers.__doc__}"
+            self._help_command(
+                cmds, "sslconnectorcerts", self.do_sslconnectorcerts.__doc__
             )
-            help_.append(
-                f"sslconnectorcerts         {self.do_sslconnectorcerts.__doc__}"
+            self._help_command(
+                cmds,
+                "sslconnectortrustedcerts",
+                self.do_sslconnectortrustedcerts.__doc__,
             )
-            help_.append(
-                f"sslconnectortrustedcerts  {self.do_sslconnectortrustedcerts.__doc__}"
-            )
-            help_.append(f"sslreload                 {self.do_sslreload.__doc__}")
+            self._help_command(cmds, "sslreload", self.do_sslreload.__doc__)
+            self.console.print(cmds)
 
-            help_ = self._help_add_header(help_, "Settings, configuration, and tools")
-            help_.append(f"config        {self.do_config.__doc__}")
-            help_.append("edit          Edit a file in the preferred text editor.")
-            help_.append(f"exit_code     {self.do_exit_code.__doc__}")
-            help_.append(
-                "history       View, run, edit, and save previously entered commands."
+            cmds = self._help_section("Settings, configuration, and tools")
+            self._help_command(cmds, "config", self.do_config.__doc__)
+            self._help_command(
+                cmds, "edit", "Edit a file in the preferred text editor."
             )
-            help_.append("py            Run an interactive python shell.")
-            help_.append("run_pyscript  Run a file containing a python script.")
-            help_.append(f"set           {self.do_set.__doc__}")
-            help_.append(f"show          {self.do_show.__doc__}")
-            help_.append("  settings    Synonym for 'show'.")
-            help_.append(
-                "shell         Execute a command in the operating system shell."
+            self._help_command(cmds, "exit_code", self.do_exit_code.__doc__)
+            self._help_command(
+                cmds,
+                "history",
+                "View, run, edit, and save previously entered commands.",
             )
-            help_.append("shortcuts     Show shortcuts for other commands.")
+            self._help_command(cmds, "py", "Run an interactive python shell.")
+            self._help_command(
+                cmds, "run_pyscript", "Run a file containing a python script."
+            )
+            self._help_command(cmds, "set", self.do_set.__doc__)
+            self._help_command(cmds, "show", self.do_show.__doc__)
+            self._help_command(cmds, "  settings", "Synonym for 'show'.")
+            self._help_command(
+                cmds, "shell", "Execute a command in the operating system shell."
+            )
+            self._help_command(cmds, "shortcuts", "Show shortcuts for other commands.")
+            self.console.print(cmds)
 
-            help_ = self._help_add_header(help_, "Other")
-            help_.append("exit     Exit this program.")
-            help_.append("  quit   Synonym for 'exit'.")
-            help_.append(f"help     {self.do_help.__doc__}")
-            help_.append(f"version  {self.do_version.__doc__}")
-            help_.append(f"license  {self.do_license.__doc__}")
+            cmds = self._help_section("Other")
+            self._help_command(cmds, "exit", "Exit this program.")
+            self._help_command(cmds, "  quit", "Synonym for 'exit'.")
+            self._help_command(cmds, "help", self.do_help.__doc__)
+            self._help_command(cmds, "version", self.do_version.__doc__)
+            self._help_command(cmds, "license", self.do_license.__doc__)
+            self.console.print(cmds)
 
-            for line in help_:
-                self.poutput(line)
             self.exit_code = self.EXIT_SUCCESS
 
     @staticmethod
@@ -1395,7 +1436,6 @@ change the value of one of this program's settings
                 table.add_column("State")
                 table.add_column("Sessions", justify="right")
                 table.add_column("Directory")
-                #app_style = rich.text.Style.parse("tm.app.path")
                 for app in apps:
                     state_style = f"tm.app.{app.state.value}"
                     table.add_row(
@@ -1687,29 +1727,30 @@ change the value of one of this program's settings
     def do_license(self, cmdline: cmd2.Statement):
         """Show the software license for this program."""
         self.parse_args(self.license_parser, cmdline.argv)
-        self.poutput(
+        mitlicense = textwrap.dedent(
+            """\
+            Copyright 2007 Jared Crapo
+
+            Permission is hereby granted, free of charge, to any person obtaining a copy
+            of this software and associated documentation files (the "Software"), to deal
+            in the Software without restriction, including without limitation the rights
+            to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+            copies of the Software, and to permit persons to whom the Software is
+            furnished to do so, subject to the following conditions:
+
+            The above copyright notice and this permission notice shall be included in
+            all copies or substantial portions of the Software.
+
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+            IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+            FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+            AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+            LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+            OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+            THE SOFTWARE.
             """
-Copyright 2007 Jared Crapo
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-"""
         )
+        self.poutput(mitlicense)
 
     def help_license(self):
         """Show help for the 'license' command."""
