@@ -42,6 +42,7 @@ dependencies = [
     "appdirs",
     "importlib_metadata>=1.6.0; python_version<'3.8'",
     "tomlkit",
+    "rich",
 ]
 dynamic = ["version"]
 
