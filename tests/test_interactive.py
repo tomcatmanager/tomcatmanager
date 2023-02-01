@@ -820,6 +820,15 @@ def test_connect(tomcat_manager_server, capsys):
     assert_connected_to(itm, tomcat_manager_server.url, capsys)
 
 
+def test_connect_noparams(capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks("connect")
+    out, err = capsys.readouterr()
+    assert out
+    assert not err
+    assert itm.exit_code == itm.EXIT_USAGE
+
+
 def test_connect_noverify(tomcat_manager_server, mocker):
     itm = tm.InteractiveTomcatManager()
     get_mock = mocker.patch("requests.get")

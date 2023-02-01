@@ -408,10 +408,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if not self.quiet:
             formatted_msg = f"{self.status_prefix}{msg}"
             if self.feedback_to_output:
-                ##self.poutput(formatted_msg)
                 self.console.print(formatted_msg, end=end, style="tm.feedback")
             else:
-                ## sys.stderr.write(formatted_msg)
                 self.error_console.print(formatted_msg, end=end, style="tm.feedback")
 
     def emptyline(self):
@@ -1047,6 +1045,12 @@ change the value of one of this program's settings
 
         args = self.parse_args(self.connect_parser, cmdline.argv)
         server = args.config_name
+
+        if not server:
+            self.help_connect()
+            self.exit_code = self.EXIT_USAGE
+            return
+
         if server in self.config.keys():
             if "url" in self.config[server].keys():
                 url = self.config[server]["url"]
