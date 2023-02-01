@@ -93,7 +93,7 @@ def assert_connected_to(itm, url, capsys):
 
 
 @pytest.fixture
-def itm_nc(mocker):
+def itm_nc():
     """Don't allow it to load a config file"""
     itm = tm.InteractiveTomcatManager(loadconfig=False)
     return itm

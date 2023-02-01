@@ -44,6 +44,7 @@ import cmd2
 import requests
 import rich
 import rich.console
+import rich.syntax
 import tomlkit
 
 import tomcatmanager as tm
@@ -316,6 +317,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 "tm.setting.float": "royal_blue1",
             }
         )
+        # other theme-related settings
+        self._tomcat_theme_settings = {}
+        self._tomcat_theme_settings["tm.status.text"] = "..."
+        self._tomcat_theme_settings["tm.status.spinner"] = "bouncingBar"
+        # pygments theme to use for syntax highlighting
+        # see https://pygments.org/demo
+        self._tomcat_theme_settings["tm.syntax.theme"] = "monokai"
+
         self.console = rich.console.Console(
             theme=tomcat_theme, markup=False, emoji=False, highlight=False
         )
@@ -343,6 +352,24 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         # initialize command exit code
         self.exit_code = None
+
+    ###
+    #
+    # Theme and rendering helpers
+    #
+    ###
+    def _statustxt(self, message: str) -> rich.text.Text:
+        """Render a status message"""
+        statustxt = message + self._tomcat_theme_settings["tm.status.text"]
+        statustxt = rich.text.Text(statustxt, style="tm.status")
+        return statustxt
+
+    def _apptag(self, path: str, version: str) -> str:
+        """Render an message with an app tag"""
+        apptag = path
+        if version:
+            apptag += f"##{version}"
+        return apptag
 
     ###
     #
@@ -427,7 +454,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # Convenience and shared methods.
     #
     ###
-    def docmd(self, func: Callable, *args, **kwargs) -> Any:
+    def docmd(self, statustxt: str, func: Callable, *args, **kwargs) -> Any:
         """Call a function and return, printing any exceptions that occur
 
         Sets exit_code to 0 and calls {func}. If func throws a TomcatError,
@@ -435,9 +462,22 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         self.exit_code = self.EXIT_ERROR
         try:
-            r = func(*args, **kwargs)
+            if statustxt:
+                # call the function (which will typically do network access)
+                # wrapped in a status spinner
+                smesg = self._statustxt(statustxt)
+                with self.console.status(
+                    smesg, spinner=self._tomcat_theme_settings["tm.status.spinner"]
+                ):
+                    r = func(*args, **kwargs)
+            else:
+                # no status message, so just call the function
+                r = func(*args, **kwargs)
             r.raise_for_status()
             self.exit_code = self.EXIT_SUCCESS
+            if r.status_message and r.status_message != tm.StatusCode.OK.value:
+                # don't print the status message if it's just "OK"
+                self.pfeedback(r.status_message)
             return r
         except tm.TomcatNotImplementedError:
             self.perror("command not implemented by server")
@@ -1114,8 +1154,10 @@ change the value of one of this program's settings
             verify = cacert
 
         try:
-            statustxt = rich.text.Text("connecting", style="tm.status")
-            with self.console.status(statustxt, spinner="dots"):
+            statustxt = self._statustxt("connecting")
+            with self.console.status(
+                statustxt, spinner=self._tomcat_theme_settings["tm.status.spinner"]
+            ):
                 r = self.tomcat.connect(url, user, password, verify=verify, cert=cert)
 
             if r.ok:
@@ -1192,7 +1234,13 @@ change the value of one of this program's settings
         warfile = pathlib.Path(args.warfile).expanduser()
         with open(warfile, "rb") as fileobj:
             self.exit_code = self.EXIT_SUCCESS
+            apptag = self._apptag(args.path, args.version)
+            if update:
+                msg = f"redeploying {apptag}"
+            else:
+                msg = f"deploying {apptag}"
             self.docmd(
+                msg,
                 self.tomcat.deploy_localwar,
                 args.path,
                 fileobj,
@@ -1203,7 +1251,13 @@ change the value of one of this program's settings
     def deploy_server(self, args: argparse.Namespace, update: bool = False):
         """Deploy a war file to the tomcat server"""
         self.exit_code = self.EXIT_SUCCESS
+        apptag = self._apptag(args.path, args.version)
+        if update:
+            msg = f"redeploying {apptag}"
+        else:
+            msg = f"deploying {apptag}"
         self.docmd(
+            msg,
             self.tomcat.deploy_serverwar,
             args.path,
             args.warfile,
@@ -1214,7 +1268,13 @@ change the value of one of this program's settings
     def deploy_context(self, args: argparse.Namespace, update: bool = False):
         """Deploy a context xml file to the tomcat server"""
         self.exit_code = self.EXIT_SUCCESS
+        apptag = self._apptag(args.path, args.version)
+        if update:
+            msg = f"redeploying {apptag}"
+        else:
+            msg = f"deploying {apptag}"
         self.docmd(
+            msg,
             self.tomcat.deploy_servercontext,
             args.path,
             args.contextfile,
@@ -1275,7 +1335,10 @@ change the value of one of this program's settings
     def do_undeploy(self, cmdline: cmd2.Statement):
         """Remove an application from the tomcat server"""
         args = self.parse_args(self.undeploy_parser, cmdline.argv)
-        self.docmd(self.tomcat.undeploy, args.path, args.version)
+        apptag = self._apptag(args.path, args.version)
+        self.docmd(
+            f"undeploying {apptag}", self.tomcat.undeploy, args.path, args.version
+        )
 
     def help_undeploy(self):
         """Show help for the 'undeploy' command"""
@@ -1289,14 +1352,8 @@ change the value of one of this program's settings
     def do_start(self, cmdline: cmd2.Statement):
         """Start a deployed tomcat application that isn't running"""
         args = self.parse_args(self.start_parser, cmdline.argv)
-        taskname = args.path
-        if args.version:
-            taskname += f"##{args.version}"
-        status = rich.text.Text(f"starting {taskname}", style="tm.status")
-        with self.console.status(status, spinner="dots"):
-            r = self.docmd(self.tomcat.start, args.path, args.version)
-            if r and self.exit_code == self.EXIT_SUCCESS:
-                self.pfeedback(f"started {taskname}")
+        apptag = self._apptag(args.path, args.version)
+        self.docmd(f"starting {apptag}", self.tomcat.start, args.path, args.version)
 
     def help_start(self):
         """Show help for the 'start' command"""
@@ -1310,14 +1367,8 @@ change the value of one of this program's settings
     def do_stop(self, cmdline: cmd2.Statement):
         """Stop a tomcat application and leave it deployed on the server"""
         args = self.parse_args(self.stop_parser, cmdline.argv)
-        taskname = args.path
-        if args.version:
-            taskname += f"##{args.version}"
-        status = rich.text.Text(f"stopping {taskname}", style="tm.status")
-        with self.console.status(status, spinner="dots"):
-            r = self.docmd(self.tomcat.stop, args.path, args.version)
-            if r and self.exit_code == self.EXIT_SUCCESS:
-                self.pfeedback(f"stopped {taskname}")
+        apptag = self._apptag(args.path, args.version)
+        self.docmd(f"stopping {apptag}", self.tomcat.stop, args.path, args.version)
 
     def help_stop(self):
         """Show help for the 'stop' command"""
@@ -1332,7 +1383,8 @@ change the value of one of this program's settings
     def do_reload(self, cmdline: cmd2.Statement):
         """Stop and start a tomcat application"""
         args = self.parse_args(self.reload_parser, cmdline.argv)
-        self.docmd(self.tomcat.reload, args.path, args.version)
+        apptag = self._apptag(args.path, args.version)
+        self.docmd(f"reloading {apptag}", self.tomcat.reload, args.path, args.version)
 
     def help_reload(self):
         """Show help for the 'reload' command"""
@@ -1346,8 +1398,7 @@ change the value of one of this program's settings
     @requires_connection
     def do_restart(self, cmdline: cmd2.Statement):
         """Stop and start a tomcat application"""
-        args = self.parse_args(self.reload_parser, cmdline.argv)
-        self.docmd(self.tomcat.reload, args.path, args.version)
+        self.do_reload(cmdline)
 
     def help_restart(self):
         """Show help for the 'restart' command"""
@@ -1373,7 +1424,7 @@ change the value of one of this program's settings
     def do_sessions(self, cmdline: cmd2.Statement):
         """Show active sessions for a tomcat application"""
         args = self.parse_args(self.sessions_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.sessions, args.path, args.version)
+        r = self.docmd(None, self.tomcat.sessions, args.path, args.version)
         if r.ok:
             self.poutput(r.sessions)
 
@@ -1406,7 +1457,7 @@ change the value of one of this program's settings
     def do_expire(self, cmdline: cmd2.Statement):
         """Expire idle sessions"""
         args = self.parse_args(self.expire_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.expire, args.path, args.version, args.idle)
+        r = self.docmd(None, self.tomcat.expire, args.path, args.version, args.idle)
         if r.ok:
             self.poutput(r.sessions)
 
@@ -1444,7 +1495,7 @@ change the value of one of this program's settings
         """Show all installed tomcat applications"""
         args = self.parse_args(self.list_parser, cmdline.argv)
 
-        response = self.docmd(self.tomcat.list)
+        response = self.docmd("listing applications", self.tomcat.list)
         if response.ok:
             apps = self._list_process_apps(response.apps, args)
             self.exit_code = self.EXIT_SUCCESS
@@ -1519,8 +1570,9 @@ change the value of one of this program's settings
     def do_serverinfo(self, cmdline: cmd2.Statement):
         """Show information about the tomcat server"""
         self.parse_args(self.serverinfo_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.server_info)
-        self.poutput(r.result)
+        r = self.docmd("querying server", self.tomcat.server_info)
+        if r.ok:
+            self.poutput(r.result)
 
     def help_serverinfo(self):
         """Show help for the 'serverinfo' command"""
@@ -1535,9 +1587,15 @@ change the value of one of this program's settings
     def do_status(self, cmdline: cmd2.Statement):
         """Show server status information in xml format"""
         self.parse_args(self.status_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.status_xml)
+        r = self.docmd("querying server", self.tomcat.status_xml)
         root = xml.dom.minidom.parseString(r.status_xml)
-        self.poutput(root.toprettyxml(indent="   "))
+        syntax = rich.syntax.Syntax(
+            root.toprettyxml(indent="   ").strip(),
+            "xml",
+            theme=self._tomcat_theme_settings["tm.syntax.theme"],
+            background_color="default",
+        )
+        self.console.print(syntax)
 
     def help_status(self):
         """Show help for the 'status' command"""
@@ -1552,7 +1610,7 @@ change the value of one of this program's settings
     def do_vminfo(self, cmdline: cmd2.Statement):
         """Show diagnostic information about the jvm"""
         self.parse_args(self.vminfo_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.vm_info)
+        r = self.docmd("querying server", self.tomcat.vm_info)
         self.poutput(r.vm_info)
 
     def help_vminfo(self):
@@ -1568,7 +1626,7 @@ change the value of one of this program's settings
     def do_sslconnectorciphers(self, cmdline: cmd2.Statement):
         """Show SSL/TLS ciphers configured for each connector"""
         self.parse_args(self.sslconnectorciphers_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.ssl_connector_ciphers)
+        r = self.docmd("querying server", self.tomcat.ssl_connector_ciphers)
         self.poutput(r.ssl_connector_ciphers)
 
     def help_sslconnectorciphers(self):
@@ -1584,7 +1642,7 @@ change the value of one of this program's settings
     def do_sslconnectorcerts(self, cmdline: cmd2.Statement):
         """Show SSL/TLS certificate chain for each connector"""
         self.parse_args(self.sslconnectorcerts_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.ssl_connector_certs)
+        r = self.docmd("querying server", self.tomcat.ssl_connector_certs)
         self.poutput(r.ssl_connector_certs)
 
     def help_sslconnectorcerts(self):
@@ -1600,7 +1658,7 @@ change the value of one of this program's settings
     def do_sslconnectortrustedcerts(self, cmdline: cmd2.Statement):
         """Show SSL/TLS trusted certificates for each connector"""
         self.parse_args(self.sslconnectortrustedcerts_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.ssl_connector_trusted_certs)
+        r = self.docmd("querying server", self.tomcat.ssl_connector_trusted_certs)
         self.poutput(r.ssl_connector_trusted_certs)
 
     def help_sslconnectortrustedcerts(self):
@@ -1621,9 +1679,7 @@ change the value of one of this program's settings
     def do_sslreload(self, cmdline: cmd2.Statement):
         """Reload SSL/TLS certificates and keys"""
         args = self.parse_args(self.sslreload_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.ssl_reload, args.host_name)
-        if r and r.ok:
-            self.pfeedback(r.status_message)
+        self.docmd("reloading SSL/TLS", self.tomcat.ssl_reload, args.host_name)
 
     def help_sslreload(self):
         """Show help for the 'sslreload' command"""
@@ -1638,7 +1694,7 @@ change the value of one of this program's settings
     def do_threaddump(self, cmdline: cmd2.Statement):
         """Show a jvm thread dump"""
         self.parse_args(self.threaddump_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.thread_dump)
+        r = self.docmd("querying server", self.tomcat.thread_dump)
         self.poutput(r.thread_dump)
 
     def help_threaddump(self):
@@ -1659,7 +1715,7 @@ change the value of one of this program's settings
     def do_resources(self, cmdline: cmd2.Statement):
         """Show global JNDI resources configured in Tomcat"""
         args = self.parse_args(self.resources_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.resources, args.class_name)
+        r = self.docmd("querying server", self.tomcat.resources, args.class_name)
         if r.resources:
             for resource, classname in iter(sorted(r.resources.items())):
                 self.poutput(f"{resource}: {classname}")
@@ -1681,7 +1737,7 @@ change the value of one of this program's settings
     def do_findleakers(self, cmdline: cmd2.Statement):
         """Show tomcat applications that leak memory"""
         self.parse_args(self.findleakers_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.find_leakers)
+        r = self.docmd("finding memory leaks", self.tomcat.find_leakers)
         for leaker in r.leakers:
             self.poutput(leaker)
 

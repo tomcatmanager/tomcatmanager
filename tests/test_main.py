@@ -26,7 +26,6 @@
 
 import io
 import sys
-from unittest import mock
 
 import pytest
 
@@ -270,8 +269,9 @@ def test_main_status_to_stdout(tomcat_manager_server, mocker, capsys):
     assert exit_code == 0
     assert "connected to" in out[0]
     assert "tomcat version" in out[1]
-    assert "Path" in out[2]
-    assert "Sessions" in out[2]
+    # out[2] is a status message from the server
+    assert "Path" in out[3]
+    assert "Sessions" in out[3]
 
 
 def test_main_timeout(tomcat_manager_server, mocker, capsys):
