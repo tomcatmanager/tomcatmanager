@@ -26,6 +26,7 @@
 
 import io
 import sys
+from unittest import mock
 
 import pytest
 
@@ -42,7 +43,15 @@ def test_main_noargs(mocker):
     assert mock_cmdloop.call_count == 1
 
 
-def test_main_sys_argv(tomcat_manager_server, capsys, monkeypatch):
+def test_main_sys_argv(tomcat_manager_server, capsys, mocker, monkeypatch):
+    # don't let it load a config file
+    mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+
+    # hack up sys.argv
     monkeypatch.setattr(
         "sys.argv",
         [
@@ -66,7 +75,14 @@ def test_main_sys_argv(tomcat_manager_server, capsys, monkeypatch):
     assert "connected to" in err[0]
 
 
-def test_main_user_password_url_command(tomcat_manager_server, capsys):
+def test_main_user_password_url_command(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+
     cmdline = (
         f"-u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
@@ -82,7 +98,14 @@ def test_main_user_password_url_command(tomcat_manager_server, capsys):
     assert "connected to" in err[0]
 
 
-def test_main_quiet(tomcat_manager_server, capsys):
+def test_main_quiet(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+
     cmdline = (
         f"-q -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
@@ -116,7 +139,14 @@ def test_main_version(capsys):
     assert not err
 
 
-def test_main_debug(tomcat_manager_server, capsys):
+def test_main_debug(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+
     cmdline = (
         f"-d -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
@@ -131,7 +161,14 @@ def test_main_debug(tomcat_manager_server, capsys):
     assert "Sessions" in out[0]
 
 
-def test_main_version_with_others(tomcat_manager_server, capsys):
+def test_main_version_with_others(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+
     cmdline = (
         f"-v -q -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
@@ -146,7 +183,14 @@ def test_main_version_with_others(tomcat_manager_server, capsys):
     assert not err
 
 
-def test_main_stdin(tomcat_manager_server, capsys):
+def test_main_stdin(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+
     inio = io.StringIO("list\n")
     stdin = sys.stdin
     cmdline = (
@@ -169,7 +213,14 @@ def test_main_stdin(tomcat_manager_server, capsys):
     assert "connected to" in err[0]
 
 
-def test_main_echo(tomcat_manager_server, capsys):
+def test_main_echo(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+
     inio = io.StringIO("list\n")
     stdin = sys.stdin
     cmdline = (
@@ -193,7 +244,14 @@ def test_main_echo(tomcat_manager_server, capsys):
     assert "connected to" in err[0]
 
 
-def test_main_status_to_stdout(tomcat_manager_server, capsys):
+def test_main_status_to_stdout(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+
     cmdline = (
         f"-s -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
@@ -210,7 +268,14 @@ def test_main_status_to_stdout(tomcat_manager_server, capsys):
     assert "Sessions" in out[2]
 
 
-def test_main_timeout(tomcat_manager_server, capsys):
+def test_main_timeout(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+
     cmdline = (
         f"-t 7.8 -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
@@ -221,10 +286,17 @@ def test_main_timeout(tomcat_manager_server, capsys):
     out, _ = capsys.readouterr()
     out = out.splitlines()
     assert exit_code == 0
-    assert "timeout=7.8" in out[0]
+    assert "timeout = 7.8" in out[0]
 
 
-def test_main_timeout_zero(tomcat_manager_server, capsys):
+def test_main_timeout_zero(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+
     cmdline = (
         f"-t 0 -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
@@ -235,4 +307,4 @@ def test_main_timeout_zero(tomcat_manager_server, capsys):
     out, _ = capsys.readouterr()
     out = out.splitlines()
     assert exit_code == 0
-    assert "timeout=0.0" in out[0]
+    assert "timeout = 0.0" in out[0]

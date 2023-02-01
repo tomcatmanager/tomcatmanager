@@ -221,8 +221,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             "always_show_hint",
             "allow_style",
             "feedback_to_output",
-            "quiet"
-            "debug",
+            "quiet" "debug",
             "echo",
             "editor",
             "prompt",
@@ -284,7 +283,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
             )
         )
 
-
         self.tomcat = tm.TomcatManager()
 
         # set default values
@@ -328,16 +326,17 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.load_config()
         # give a friendly message if there is an old config file but not a
         # new one
-        if (
-            not self.config_file.exists() and self.config_file_old.exists()
-        ):  # pragma: nocover
-            self.pfeedback(
-                "In version 6.0.0 the configuration file format changed from INI to TOML."
-            )
-            self.pfeedback(
-                "You have a configuration file in the old format. Type 'config convert' to"
-            )
-            self.pfeedback("migrate your old configuration to the new format.")
+        if self.config_file and not self.config_file.exists():  # pragma: nocover
+            if (
+                self.config_file_old and self.config_file_old.exists()
+            ):  # pragma: nocover
+                self.pfeedback(
+                    "In version 6.0.0 the configuration file format changed from INI to TOML."
+                )
+                self.pfeedback(
+                    "You have a configuration file in the old format. Type 'config convert' to"
+                )
+                self.pfeedback("migrate your old configuration to the new format.")
 
         # initialize command exit code
         self.exit_code = None
@@ -671,14 +670,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
         The .ini file _must_ exist and the .toml file _must not_ exist in order
         for this to do anything.
         """
-        if self.config_file.exists():
+        if self.config_file and self.config_file.exists():
             self.pfeedback(
                 "configuration file exists: cowardly refusing to overwrite it"
             )
             self.exit_code = self.EXIT_ERROR
             return
 
-        if not self.config_file_old.exists():
+        if self.config_file_old and not self.config_file_old.exists():
             self.pfeedback("old configuration file does not exist: nothing to convert")
             self.exit_code = self.EXIT_ERROR
             return
@@ -753,6 +752,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Display program settings"""
         args = self.parse_args(self.settings_parser, cmdline.argv)
 
+        if args.setting and args.setting not in self.settables:
+            self.perror(f"unknown setting: '{args.setting}'")
+            self.exit_code = self.EXIT_ERROR
+            return
+
         # create a table with the desired output, we use this so the
         # comments line up nicely
         otable = rich.table.Table(
@@ -821,7 +825,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 else:
                     self.perror(str(err))
                 self.exit_code = self.EXIT_ERROR
-            except tomlkit.TOMLKitError:
+            except tomlkit.exceptions.TOMLKitError:
                 self.perror("invalid syntax: try 'set {setting} = {value}'")
                 self.exit_code = self.EXIT_ERROR
         else:
@@ -903,7 +907,7 @@ change the value of one of this program's settings
             settings = config["settings"]
             for key in settings:
                 self._change_setting(key, settings[key])
-        except KeyError:
+        except tomlkit.exceptions.TOMLKitError:
             pass
         except ValueError:
             pass

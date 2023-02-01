@@ -51,7 +51,17 @@ def get_itm(tms):
 
 def itm_with_config(mocker, configstring):
     """Return an InteractiveTomcatManager object with the config set from the passed string."""
+
+    # prevent notification of conversion from old to new format
+    mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file_old",
+        new_callable=mock.PropertyMock,
+        return_value=None,
+    )
+
+    # create an interactive tomcat manager object
     itm = tm.InteractiveTomcatManager()
+    # write the passed string to a temp file
     with tempfile.TemporaryDirectory() as tmpdir:
         configfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
         with open(configfile, "w", encoding="utf-8") as fobj:
@@ -61,11 +71,11 @@ def itm_with_config(mocker, configstring):
         # have found, depending on if you have one or not
         # we are now going to patch up the config_file to point to
         # a known file, and the reload the config from that
-        config_file = mocker.patch(
+        mocker.patch(
             "tomcatmanager.InteractiveTomcatManager.config_file",
             new_callable=mock.PropertyMock,
+            return_value=configfile,
         )
-        config_file.return_value = configfile
         # this has to be inside the context manager for tmpdir because
         # the config file will get deleted when the context manager is
         # no longer in scope
@@ -593,7 +603,7 @@ def test_settings_noargs(capsys):
     # gets too long
     # check the first setting is "debug", they are sorted in
     # alphabetical order, so this one should come out first
-    assert out.splitlines()[0].split('=')[0].strip() == "debug"
+    assert out.splitlines()[0].split("=")[0].strip() == "debug"
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
@@ -601,7 +611,7 @@ def test_settings_valid_setting(capsys):
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks("settings prompt")
     out, _ = capsys.readouterr()
-    assert out.startswith(f"prompt = \"{itm.prompt}\" ")
+    assert out.startswith(f'prompt = "{itm.prompt}" ')
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
@@ -625,14 +635,14 @@ def test_set_noargs(capsys):
     # gets too long
     # check the first setting is "debug", they are sorted in
     # alphabetical order, so this one should come out first
-    assert out.splitlines()[0].split('=')[0].strip() == "debug"
+    assert out.splitlines()[0].split("=")[0].strip() == "debug"
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 def test_set_string():
     itm = tm.InteractiveTomcatManager()
     prompt = str(uuid.uuid1())
-    itm.onecmd_plus_hooks(f"set prompt = {prompt}")
+    itm.onecmd_plus_hooks(f"set prompt = '{prompt}'")
     assert itm.prompt == prompt
     assert itm.exit_code == itm.EXIT_SUCCESS
 
@@ -666,7 +676,7 @@ def test_set_float_invalid_debug():
 def test_set_boolean_valid():
     itm = tm.InteractiveTomcatManager()
     itm.echo = False
-    itm.onecmd_plus_hooks("set echo = True")
+    itm.onecmd_plus_hooks("set echo = true")
     assert itm.echo is True
     assert itm.exit_code == itm.EXIT_SUCCESS
 
@@ -711,9 +721,9 @@ def test_timeout_property():
 
 
 SETTINGS_SUCCESSFUL = [
-    ("prompt = tm>", "tm>"),
-    ("prompt = tm> ", "tm>"),
-    ("prompt = t m>", "t m>"),
+    ("prompt = 'tm>'", "tm>"),
+    ("prompt = 'tm> '", "tm> "),
+    ('prompt = "t m>"', "t m>"),
     ('prompt = "tm> "', "tm> "),
     ('prompt = "tm> "   # some comment here', "tm> "),
     ('prompt = "t\'m> "', "t'm> "),
