@@ -97,7 +97,6 @@ def itm_nc(mocker):
 ###
 HELP_COMMANDS = [
     "config",
-    "show",
     "settings",
     "connect",
     "which",
@@ -152,7 +151,7 @@ def test_help_matches_argparser(command, capsys):
     itm.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     parser_func = getattr(itm, f"{command}_parser")
-    assert out == parser_func.format_help()
+    assert out.strip() == parser_func.format_help().strip()
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
@@ -575,6 +574,7 @@ def test_load_config_not_integer(itm_nc, mocker):
     # as when we don't load a config file
     assert itm_nc.timeout == itm.timeout
 
+
 def test_show_invalid(capsys):
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks("show")
@@ -588,9 +588,12 @@ def test_settings_noargs(capsys):
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks("settings")
     out, _ = capsys.readouterr()
-    # not going to parse all the lines, but there
-    # should be one per setting
-    assert len(out.splitlines()) == len(itm.settables)
+    # can't count lines, because rich renders in a table
+    # which wraps if the description of a setting
+    # gets too long
+    # check the first setting is "debug", they are sorted in
+    # alphabetical order, so this one should come out first
+    assert out.splitlines()[0].split('=')[0].strip() == "debug"
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
@@ -598,7 +601,7 @@ def test_settings_valid_setting(capsys):
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks("settings prompt")
     out, _ = capsys.readouterr()
-    assert out.startswith(f"prompt='{itm.prompt}' ")
+    assert out.startswith(f"prompt = \"{itm.prompt}\" ")
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
@@ -616,9 +619,13 @@ def test_set_noargs(capsys):
     itm = tm.InteractiveTomcatManager()
     itm.onecmd_plus_hooks("set")
     out, _ = capsys.readouterr()
-    # not going to parse all the lines, but there
-    # should be one per setting
-    assert len(out.splitlines()) == len(itm.settables)
+    # this should output all the settings
+    # can't count lines, because rich renders in a table
+    # which wraps if the description of a setting
+    # gets too long
+    # check the first setting is "debug", they are sorted in
+    # alphabetical order, so this one should come out first
+    assert out.splitlines()[0].split('=')[0].strip() == "debug"
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 

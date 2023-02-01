@@ -219,10 +219,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
         to_remove = [
             "max_completion_items",
             "always_show_hint",
+            "allow_style",
+            "feedback_to_output",
+            "quiet"
             "debug",
             "echo",
             "editor",
-            "feedback_to_output",
             "prompt",
         ]
         for setting in to_remove:
@@ -233,16 +235,35 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         self.add_settable(
             cmd2.Settable(
-                "echo",
-                self.convert_to_boolean,
-                "For piped input, echo command to output",
+                "quiet",
+                bool,
+                "Suppress all status output",
                 self,
             )
         )
         self.add_settable(
             cmd2.Settable(
+                "debug",
+                bool,
+                "Show stack trace for exceptions",
+                self,
+            )
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "echo",
+                bool,
+                "For piped input, echo command to output",
+                self,
+            )
+        )
+        self.add_settable(
+            cmd2.Settable("editor", str, "Program used to edit files", self)
+        )
+        self.add_settable(
+            cmd2.Settable(
                 "status_to_stdout",
-                self.convert_to_boolean,
+                bool,
                 "Status information to stdout instead of stderr",
                 self,
             )
@@ -253,26 +274,16 @@ class InteractiveTomcatManager(cmd2.Cmd):
             )
         )
         self.add_settable(
-            cmd2.Settable("editor", str, "Program used to edit files", self)
-        )
-        self.add_settable(
-            cmd2.Settable(
-                "timeout", float, "Seconds to wait for HTTP connections", self
-            )
-        )
-        self.add_settable(
             cmd2.Settable(
                 "prompt", str, "The prompt displayed before accepting user input", self
             )
         )
         self.add_settable(
             cmd2.Settable(
-                "debug",
-                self.convert_to_boolean,
-                "Show stack trace for exceptions",
-                self,
+                "timeout", float, "Seconds to wait for HTTP connections", self
             )
         )
+
 
         self.tomcat = tm.TomcatManager()
 
@@ -282,6 +293,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.timeout = 10
         self.status_prefix = "--"
         self.echo = False
+        self.quiet = False
 
         # set up the rich theme and console
         tomcat_theme = rich.theme.Theme(
@@ -296,6 +308,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 "tm.app.running": "green1",
                 "tm.app.stopped": "red3",
                 "tm.app.sessions": "cyan1",
+                "tm.setting.name": "dark_orange3",
+                "tm.setting.equals": "orchid1",
+                "tm.setting.comment": "pale_turquoise4",
+                "tm.setting.string": "green1",
+                "tm.setting.bool": "purple",
+                "tm.setting.int": "royal_blue1",
+                "tm.setting.float": "royal_blue1",
             }
         )
         self.console = rich.console.Console(
@@ -342,19 +361,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
         :param end: str - string appended after the end of the message if
                           not already present, default a newline
         """
-        if msg is not None:
-            try:
-                msg_str = f"{msg}"
-                ##self.stdout.write(msg_str)
-                self.console.print(msg_str, end=end)
-                # if not msg_str.endswith(end):
-                #     ##self.stdout.write(end)
-                #     self.console.print(end)
-            except BrokenPipeError:  # pragma: nocover
-                # This occurs if a command's output is being piped to another
-                # process and that process closes before the command is
-                # finished.
-                pass
+        try:
+            self.console.print(msg, end=end)
+        except BrokenPipeError:  # pragma: nocover
+            # This occurs if a command's output is being piped to another
+            # process and that process closes before the command is
+            # finished.
+            pass
 
     # pylint: disable=unused-argument
     def perror(self, msg: Any = "", *, end: str = "\n", apply_style=False) -> None:
@@ -554,9 +567,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
             cmds = self._help_section("Settings, configuration, and tools")
             self._help_command(cmds, "config", self.do_config.__doc__)
-            self._help_command(
-                cmds, "edit", "Edit a file in the preferred text editor"
-            )
+            self._help_command(cmds, "edit", "Edit a file in the preferred text editor")
             self._help_command(cmds, "exit_code", self.do_exit_code.__doc__)
             self._help_command(
                 cmds,
@@ -742,27 +753,48 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Display program settings"""
         args = self.parse_args(self.settings_parser, cmdline.argv)
 
-        result = {}
-        maxlen = 0
-        for setting in self.settables:
+        # create a table with the desired output, we use this so the
+        # comments line up nicely
+        otable = rich.table.Table(
+            show_edge=False,
+            box=None,
+            padding=(0, 3, 0, 0),
+            show_header=False,
+        )
+
+        for setting in sorted(self.settables):
             if (not args.setting) or (setting == args.setting):
-                val = str(getattr(self, setting))
-                result[setting] = f"{setting}={self._pythonize(val)}"
-                maxlen = max(maxlen, len(result[setting]))
-        # make a little extra space
-        maxlen += 1
-        if result:
-            for setting in sorted(result):
-                self.poutput(
-                    (
-                        f"{result[setting].ljust(maxlen)}"
-                        f"  # {self.settables[setting].description}"
-                    )
+                ttable = tomlkit.table()
+                ttable.add(setting, getattr(self, setting))
+                styled_setting = rich.text.Text(setting, style="tm.setting.name")
+                styled_setting += " "
+                styled_setting += rich.text.Text("=", style="tm.setting.equals")
+                styled_setting += " "
+                value = tomlkit.dumps(ttable).split("=")[1].strip()
+                typ = type(getattr(self, setting))
+                if typ == bool:
+                    styled_value = rich.text.Text(value, style="tm.setting.bool")
+                elif typ == str:
+                    styled_value = rich.text.Text(value, style="tm.setting.string")
+                elif typ == float:
+                    styled_value = rich.text.Text(value, style="tm.setting.float")
+                elif typ == int:
+                    styled_value = rich.text.Text(value, style="tm.setting.int")
+                else:
+                    styled_value = value
+
+                styled_setting += styled_value
+                styled_comment = rich.text.Text(
+                    f"# {self.settables[setting].description}",
+                    style="tm.setting.comment",
                 )
-            self.exit_code = self.EXIT_SUCCESS
-        else:
-            self.perror(f"unknown setting: '{args.setting}'")
-            self.exit_code = self.EXIT_ERROR
+                otable.add_row(
+                    styled_setting,
+                    styled_comment,
+                )
+
+        self.console.print(otable)
+        self.exit_code = self.EXIT_SUCCESS
 
     def help_settings(self):
         """Show help for the 'settings' command"""
@@ -771,28 +803,27 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def do_set(self, args: cmd2.Statement):
         """Change a program setting"""
         if args:
-            config = EvaluatingConfigParser()
-            setting_string = f"[settings]\n{args}"
             try:
-                config.read_string(setting_string)
-            except configparser.ParsingError:
-                self.perror("invalid syntax: try 'set {setting} = {value}'")
-                self.exit_code = self.EXIT_ERROR
-                return
-            for param_name in config["settings"]:
-                if param_name in self.settables:
-                    try:
+                setting_string = f"[settings]\n{args}"
+                config = tomlkit.loads(setting_string)
+                for param_name in config["settings"]:
+                    if param_name in self.settables:
                         self._change_setting(param_name, config["settings"][param_name])
                         self.exit_code = self.EXIT_SUCCESS
-                    except ValueError as err:
-                        if self.debug:
-                            self.perror(None)
-                        else:
-                            self.perror(err)
+                    else:
+                        self.perror(f"unknown setting: '{param_name}'")
                         self.exit_code = self.EXIT_ERROR
+            except ValueError as err:
+                # this could be thrown by self._change_setting if we try to set a string
+                # value to a boolean parameter
+                if self.debug:
+                    self.perror(None)
                 else:
-                    self.perror(f"unknown setting: '{param_name}'")
-                    self.exit_code = self.EXIT_ERROR
+                    self.perror(str(err))
+                self.exit_code = self.EXIT_ERROR
+            except tomlkit.TOMLKitError:
+                self.perror("invalid syntax: try 'set {setting} = {value}'")
+                self.exit_code = self.EXIT_ERROR
         else:
             self.do_settings(args)
 
