@@ -15,19 +15,21 @@ Added
 ^^^^^
 
 - Styled and colored output using ``rich``
+- New command line option ``--noconfig`` to prevent configuration loading on startup
 
 Changed
 ^^^^^^^
 
 - Output from the ``settings`` command now matches the TOML format of the
   configuration file
+- ``settings`` command now uses TOML syntax
 
 Removed
 ^^^^^^^
 
 - Removed allow_style setting
 - Removed show command, settings does the same thing and is still available
--
+
 
 6.0.1 (2022-11-15)
 ------------------

@@ -200,7 +200,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Proxy property for timeout"""
         self.tomcat.timeout = value
 
-    def __init__(self):
+    def __init__(self, loadconfig=True):
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
         shortcuts = {"?": "help", "!": "shell", "$?": "exit_code"}
 
@@ -324,7 +324,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
 
         # load config file if it exists
-        self.load_config()
+        if loadconfig:
+            self.load_config()
+
         # give a friendly message if there is an old config file but not a
         # new one
         if self.config_file and not self.config_file.exists():  # pragma: nocover
@@ -900,6 +902,8 @@ change the value of one of this program's settings
             try:
                 with open(self.config_file, "r", encoding="utf-8") as fobj:
                     config = tomlkit.loads(fobj.read())
+            except tomlkit.exceptions.TOMLKitError as err:
+                self.perror(f"error loading configuration file: {err}")
             except FileNotFoundError:
                 pass
         try:

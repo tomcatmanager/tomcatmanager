@@ -60,6 +60,9 @@ def _build_parser():
     debug_help = "show additional debugging information while processing commands"
     parser.add_argument("-d", "--debug", action="store_true", help=debug_help)
 
+    noconfig_help = "don't load the configuration file on startup"
+    parser.add_argument("-n", "--noconfig", action="store_true", help=noconfig_help)
+
     version_help = "show the version information and exit"
     parser.add_argument(
         "-v",
@@ -100,7 +103,12 @@ def main(argv=None):
         print("--argv=" + str(argv), file=sys.stderr)
         print("--args=" + str(args), file=sys.stderr)
 
-    itm = tm.InteractiveTomcatManager()
+    loadconfig = True
+    if args.noconfig:
+        # our command line option is to skip loading the config, so we have
+        # to reverse the bool
+        loadconfig = not args.noconfig
+    itm = tm.InteractiveTomcatManager(loadconfig=loadconfig)
 
     # if we have command line switches, set those values
     # these override any user settings loaded from a config file

@@ -44,7 +44,7 @@ def get_itm(tms):
     """
     Using this as a fixture with capsys breaks capsys. So we use a function.
     """
-    itm = tm.InteractiveTomcatManager()
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
     itm.onecmd_plus_hooks(tms.connect_command)
     return itm
 
@@ -60,7 +60,7 @@ def itm_with_config(mocker, configstring):
     )
 
     # create an interactive tomcat manager object
-    itm = tm.InteractiveTomcatManager()
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
     # write the passed string to a temp file
     with tempfile.TemporaryDirectory() as tmpdir:
         configfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
@@ -95,8 +95,7 @@ def assert_connected_to(itm, url, capsys):
 @pytest.fixture
 def itm_nc(mocker):
     """Don't allow it to load a config file"""
-    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
-    itm = tm.InteractiveTomcatManager()
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
     return itm
 
 
@@ -583,6 +582,19 @@ def test_load_config_not_integer(itm_nc, mocker):
     # make sure the timeout setting is the same
     # as when we don't load a config file
     assert itm_nc.timeout == itm.timeout
+
+
+def test_load_config_syntax_error(itm_nc, mocker, capsys):
+    configstring = """
+        [settings]
+        prompt = "tm>
+        """
+    itm = itm_with_config(mocker, configstring)
+    out, err = capsys.readouterr()
+    assert "error loading configuration file" in err
+    # make sure that loading the broken configuration file didn't
+    # change the prompt
+    assert itm_nc.prompt == itm.prompt
 
 
 def test_show_invalid(capsys):
