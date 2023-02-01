@@ -221,7 +221,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
             "always_show_hint",
             "allow_style",
             "feedback_to_output",
-            "quiet" "debug",
+            "quiet",
+            "debug",
             "echo",
             "editor",
             "prompt",
@@ -595,13 +596,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
             self.exit_code = self.EXIT_SUCCESS
 
-    @staticmethod
-    def _help_add_header(help_: List, header: str) -> List:
-        help_.append("")
-        help_.append(header)
-        help_.append("=" * 60)
-        return help_
-
     ###
     #
     # user accessable commands for configuration and settings
@@ -765,27 +759,34 @@ class InteractiveTomcatManager(cmd2.Cmd):
             padding=(0, 3, 0, 0),
             show_header=False,
         )
+        # for the setting and it's value
+        otable.add_column(no_wrap=True)
+        # for the comment which contains the description of the setting
+        otable.add_column(no_wrap=True)
 
         for setting in sorted(self.settables):
             if (not args.setting) or (setting == args.setting):
-                ttable = tomlkit.table()
-                ttable.add(setting, getattr(self, setting))
+
                 styled_setting = rich.text.Text(setting, style="tm.setting.name")
                 styled_setting += " "
                 styled_setting += rich.text.Text("=", style="tm.setting.equals")
                 styled_setting += " "
+
+                ttable = tomlkit.table()
+                ttable.add(setting, getattr(self, setting))
                 value = tomlkit.dumps(ttable).split("=")[1].strip()
                 typ = type(getattr(self, setting))
+                styled_value = value
                 if typ == bool:
                     styled_value = rich.text.Text(value, style="tm.setting.bool")
                 elif typ == str:
                     styled_value = rich.text.Text(value, style="tm.setting.string")
                 elif typ == float:
                     styled_value = rich.text.Text(value, style="tm.setting.float")
-                elif typ == int:
-                    styled_value = rich.text.Text(value, style="tm.setting.int")
-                else:
-                    styled_value = value
+                # we have no integer settings, so no way to test this, but it's
+                # here for the future
+                # elif typ == int:
+                #    styled_value = rich.text.Text(value, style="tm.setting.int")
 
                 styled_setting += styled_value
                 styled_comment = rich.text.Text(
@@ -817,6 +818,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     else:
                         self.perror(f"unknown setting: '{param_name}'")
                         self.exit_code = self.EXIT_ERROR
+            except tomlkit.exceptions.TOMLKitError:
+                self.perror("invalid syntax: try 'set {setting} = {value}'")
+                self.exit_code = self.EXIT_ERROR
             except ValueError as err:
                 # this could be thrown by self._change_setting if we try to set a string
                 # value to a boolean parameter
@@ -824,9 +828,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     self.perror(None)
                 else:
                     self.perror(str(err))
-                self.exit_code = self.EXIT_ERROR
-            except tomlkit.exceptions.TOMLKitError:
-                self.perror("invalid syntax: try 'set {setting} = {value}'")
                 self.exit_code = self.EXIT_ERROR
         else:
             self.do_settings(args)
