@@ -813,7 +813,7 @@ PREFIXES = [
 @pytest.mark.parametrize("prefix, expected", PREFIXES)
 def test_status_prefix(tomcat_manager_server, prefix, expected, capsys):
     itm = tm.InteractiveTomcatManager()
-    itm.status_prefix = prefix
+    itm.feedback_prefix = prefix
     itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
     out, err = capsys.readouterr()
     assert err.startswith(expected)

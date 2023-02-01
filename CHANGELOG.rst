@@ -23,6 +23,7 @@ Changed
 - Output from the ``settings`` command now matches the TOML format of the
   configuration file
 - ``settings`` command now uses TOML syntax
+- ``status_prefix`` setting changed to ``feedback_prefix``
 
 Removed
 ^^^^^^^
