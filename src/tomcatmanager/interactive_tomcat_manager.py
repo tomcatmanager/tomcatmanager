@@ -1109,56 +1109,55 @@ change the value of one of this program's settings
             # when it's true, then we can override with cacert
             verify = cacert
 
-        with self.console.status("[bold blue]connecting", spinner="dots"):
-            try:
+        try:
+            statustxt = rich.text.Text("connecting", style="tm.status")
+            with self.console.status(statustxt, spinner="dots"):
                 r = self.tomcat.connect(url, user, password, verify=verify, cert=cert)
 
-                if r.ok:
-                    self.pfeedback(self._which_server())
-                    if r.server_info.tomcat_version:
-                        self.pfeedback(
-                            f"tomcat version: {r.server_info.tomcat_version}"
-                        )
-                    self.exit_code = self.EXIT_SUCCESS
-                else:
-                    if self.debug:
-                        # raise the exception and print the output
-                        try:
-                            r.raise_for_status()
-                        except (requests.HTTPError, tm.TomcatError):
-                            self.perror(None)
-                            self.exit_code = self.EXIT_ERROR
-                    else:
-                        # need to see whether we got an http error or whether
-                        # tomcat wasn't at the url
-                        if r.response.status_code == requests.codes.ok:
-                            # there was some problem with the request, but we
-                            # got http 200 OK. That means there was no tomcat
-                            # at the url
-                            self.perror(f"tomcat manager not found at {url}")
-                        elif r.response.status_code == requests.codes.not_found:
-                            # we connected, but the url was bad. No tomcat there
-                            self.perror(f"tomcat manager not found at {url}")
-                        else:
-                            self.perror(
-                                (
-                                    f"http error: {r.response.status_code}"
-                                    f" {http.client.responses[r.response.status_code]}"
-                                )
-                            )
+            if r.ok:
+                self.pfeedback(self._which_server())
+                if r.server_info.tomcat_version:
+                    self.pfeedback(f"tomcat version: {r.server_info.tomcat_version}")
+                self.exit_code = self.EXIT_SUCCESS
+            else:
+                if self.debug:
+                    # raise the exception and print the output
+                    try:
+                        r.raise_for_status()
+                    except (requests.HTTPError, tm.TomcatError):
+                        self.perror(None)
                         self.exit_code = self.EXIT_ERROR
-            except requests.exceptions.ConnectionError:
-                if self.debug:
-                    self.perror(None)
                 else:
-                    self.perror("connection error")
-                self.exit_code = self.EXIT_ERROR
-            except requests.exceptions.Timeout:
-                if self.debug:
-                    self.perror(None)
-                else:
-                    self.perror("connection timeout")
-                self.exit_code = self.EXIT_ERROR
+                    # need to see whether we got an http error or whether
+                    # tomcat wasn't at the url
+                    if r.response.status_code == requests.codes.ok:
+                        # there was some problem with the request, but we
+                        # got http 200 OK. That means there was no tomcat
+                        # at the url
+                        self.perror(f"tomcat manager not found at {url}")
+                    elif r.response.status_code == requests.codes.not_found:
+                        # we connected, but the url was bad. No tomcat there
+                        self.perror(f"tomcat manager not found at {url}")
+                    else:
+                        self.perror(
+                            (
+                                f"http error: {r.response.status_code}"
+                                f" {http.client.responses[r.response.status_code]}"
+                            )
+                        )
+                    self.exit_code = self.EXIT_ERROR
+        except requests.exceptions.ConnectionError:
+            if self.debug:
+                self.perror(None)
+            else:
+                self.perror("connection error")
+            self.exit_code = self.EXIT_ERROR
+        except requests.exceptions.Timeout:
+            if self.debug:
+                self.perror(None)
+            else:
+                self.perror("connection timeout")
+            self.exit_code = self.EXIT_ERROR
 
     def help_connect(self):
         """Show help for the 'connect' command."""
