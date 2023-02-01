@@ -37,7 +37,7 @@ classifiers = [
 keywords = ["java", "tomcat", "command line"]
 requires-python = ">=3.7"
 dependencies = [
-    "cmd2>=2,<3",
+    "cmd2>=2.4.3,<3",
     "requests>=2,<3",
     "appdirs",
     "importlib_metadata>=1.6.0; python_version<'3.8'",
