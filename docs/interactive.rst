@@ -346,11 +346,14 @@ You can change any of these settings using the ``set`` command:
 
 .. code-block:: text
 
-  tomcat-manager> set prompt='tm> '
+  tomcat-manager> set prompt = "tm> ""
   tm>
 
-Quotes around values are not required unless they contain spaces or other
-quotes.
+TODO
+* describe TOML syntax for settings
+* describe each setting and what it does
+* insert new list of settings
+
 
 
 Configuration File
