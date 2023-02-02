@@ -388,5 +388,5 @@ def test_usage_errors(cmdline, tomcat_manager_server, capsys):
     itm.onecmd_plus_hooks(cmdline)
     out, err = capsys.readouterr()
     assert not out
-    assert err.startswith("usage: ")
+    assert err.strip().startswith("usage: ")
     assert itm.exit_code == itm.EXIT_USAGE

@@ -51,6 +51,7 @@ def test_main_sys_argv(tomcat_manager_server, capsys, mocker, monkeypatch):
         "sys.argv",
         [
             "tomcat-manager",
+            "--noconfig",
             "-u",
             tomcat_manager_server.user,
             "-p",
@@ -62,12 +63,11 @@ def test_main_sys_argv(tomcat_manager_server, capsys, mocker, monkeypatch):
 
     exit_code = main()
     out, err = capsys.readouterr()
-    out = out.splitlines()
-    err = err.splitlines()
+    out = out.strip().splitlines()
     assert exit_code == 0
     assert "Path" in out[0]
     assert "Sessions" in out[0]
-    assert "connected to" in err[0]
+    assert "connected to" in err
 
 
 def test_main_user_password_url_command(tomcat_manager_server, mocker, capsys):
@@ -84,14 +84,13 @@ def test_main_user_password_url_command(tomcat_manager_server, mocker, capsys):
     exit_code = main(argv)
     out, err = capsys.readouterr()
     out = out.splitlines()
-    err = err.splitlines()
 
     # make sure it tried to load the config file
     assert loader.called
     assert exit_code == 0
     assert "Path" in out[0]
     assert "Sessions" in out[0]
-    assert "connected to" in err[0]
+    assert "connected to" in err
 
 
 def test_main_quiet(tomcat_manager_server, mocker, capsys):
@@ -108,7 +107,7 @@ def test_main_quiet(tomcat_manager_server, mocker, capsys):
     out = out.splitlines()
     assert exit_code == 0
     assert "Path" in out[0]
-    assert not err
+    assert not err.strip()
 
 
 def test_main_help(capsys):
@@ -155,13 +154,12 @@ def test_main_noconfig(tomcat_manager_server, capsys, mocker, monkeypatch):
     exit_code = main()
     out, err = capsys.readouterr()
     out = out.splitlines()
-    err = err.splitlines()
 
     assert not loader.called
     assert exit_code == 0
     assert "Path" in out[0]
     assert "Sessions" in out[0]
-    assert "connected to" in err[0]
+    assert "connected to" in err
 
 
 def test_main_debug(tomcat_manager_server, mocker, capsys):
@@ -219,11 +217,10 @@ def test_main_stdin(tomcat_manager_server, mocker, capsys):
 
     out, err = capsys.readouterr()
     out = out.splitlines()
-    err = err.splitlines()
     assert exit_code == 0
     assert "Path" in out[0]
     assert "Sessions" in out[0]
-    assert "connected to" in err[0]
+    assert "connected to" in err
 
 
 def test_main_echo(tomcat_manager_server, mocker, capsys):
@@ -245,12 +242,11 @@ def test_main_echo(tomcat_manager_server, mocker, capsys):
 
     out, err = capsys.readouterr()
     out = out.splitlines()
-    err = err.splitlines()
     assert exit_code == 0
     assert " list" in out[0]
     assert "Path" in out[1]
     assert "Sessions" in out[1]
-    assert "connected to" in err[0]
+    assert "connected to" in err
 
 
 def test_main_status_to_stdout(tomcat_manager_server, mocker, capsys):
@@ -267,11 +263,13 @@ def test_main_status_to_stdout(tomcat_manager_server, mocker, capsys):
     out, _ = capsys.readouterr()
     out = out.splitlines()
     assert exit_code == 0
-    assert "connected to" in out[0]
-    assert "tomcat version" in out[1]
-    # out[2] is a status message from the server
-    assert "Path" in out[3]
-    assert "Sessions" in out[3]
+    assert "connecting" in out[0]
+    assert "connected to" in out[1]
+    assert "tomcat version" in out[2]
+    assert "listing" in out[3]
+    # out[4] is a status message from the server
+    assert "Path" in out[5]
+    assert "Sessions" in out[5]
 
 
 def test_main_timeout(tomcat_manager_server, mocker, capsys):

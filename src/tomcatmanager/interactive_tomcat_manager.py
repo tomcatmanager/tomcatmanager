@@ -44,7 +44,9 @@ import cmd2
 import requests
 import rich
 import rich.console
+import rich.spinner
 import rich.syntax
+import rich.progress
 import tomlkit
 
 import tomcatmanager as tm
@@ -201,6 +203,22 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Proxy property for timeout"""
         self.tomcat.timeout = value
 
+    @property
+    def status_spinner(self) -> str:
+        """Validating property for spinner specification"""
+        return self._status_spinner
+
+    @status_spinner.setter
+    def status_spinner(self, value: str):
+        """Validating property for spinner specification"""
+        if value:
+            # this will throw a KeyError if the spinner doesn't exist
+            _ = rich.spinner.Spinner(value)
+            self._status_spinner = value
+        else:
+            # use empty string instead of None because TOML doesn't nave None or Nil
+            self._status_spinner = ""
+
     def __init__(self, loadconfig=True):
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
         shortcuts = {"?": "help", "!": "shell", "$?": "exit_code"}
@@ -284,16 +302,34 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 "timeout", float, "Seconds to wait for HTTP connections", self
             )
         )
+        self.add_settable(
+            cmd2.Settable(
+                "status_suffix", str, "Suffix to append to status messages", self
+            )
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "status_spinner", str, "Style of status spinner from rich.spinner", self
+            )
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "syntax_theme", str, "Pygments syntax highlighing theme", self
+            )
+        )
 
         self.tomcat = tm.TomcatManager()
 
         # set default values
         self.prompt = f"{self.app_name}> "
         self.debug = False
-        self.timeout = 10
+        self.timeout = 10.0
         self.feedback_prefix = "--"
         self.echo = False
         self.quiet = False
+        self.status_suffix = "..."
+        self.status_spinner = "bouncingBar"
+        self.syntax_theme = "monokai"
 
         # set up the rich theme and console
         tomcat_theme = rich.theme.Theme(
@@ -317,13 +353,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 "tm.setting.float": "royal_blue1",
             }
         )
-        # other theme-related settings
-        self._tomcat_theme_settings = {}
-        self._tomcat_theme_settings["tm.status.text"] = "..."
-        self._tomcat_theme_settings["tm.status.spinner"] = "bouncingBar"
-        # pygments theme to use for syntax highlighting
-        # see https://pygments.org/demo
-        self._tomcat_theme_settings["tm.syntax.theme"] = "monokai"
 
         self.console = rich.console.Console(
             theme=tomcat_theme, markup=False, emoji=False, highlight=False
@@ -358,11 +387,38 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # Theme and rendering helpers
     #
     ###
-    def _statustxt(self, message: str) -> rich.text.Text:
-        """Render a status message"""
-        statustxt = message + self._tomcat_theme_settings["tm.status.text"]
-        statustxt = rich.text.Text(statustxt, style="tm.status")
-        return statustxt
+    def _progressfactory(self, message: str) -> rich.progress.Progress:
+        """generate a progress object"""
+        if self.feedback_to_output:
+            cons = self.console
+        else:
+            cons = self.error_console
+        if self.quiet or not message:
+            # we still need the progress object so the context manager
+            # works, but this will disable all output from it
+            progress = rich.progress.Progress(
+                console=cons, transient=True, disable=True
+            )
+        else:
+            # create a custom status/progress display
+            msg = rich.text.Text(
+                f"{self.feedback_prefix}{message}{self.status_suffix}",
+                style="tm.status",
+            )
+            text_column = rich.progress.RenderableColumn(msg)
+            if self.status_spinner:
+                spinner_column = rich.progress.SpinnerColumn(
+                    spinner_name=self.status_spinner
+                )
+                progress = rich.progress.Progress(
+                    text_column, spinner_column, console=cons
+                )
+            else:
+                progress = rich.progress.Progress(text_column, console=cons)
+            # gotta have a task in order for the status spinner to render,
+            # but the name we use here doesn't matter
+            progress.add_task("notshown")
+        return progress
 
     def _apptag(self, path: str, version: str) -> str:
         """Render an message with an app tag"""
@@ -370,6 +426,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if version:
             apptag += f"##{version}"
         return apptag
+
+    def _spinner_kwargs(self) -> dict:
+        """return proper keyword arguments for the spinner setting"""
+        kwargs = {}
+        if self.status_spinner:
+            kwargs["spinner"] = self.status_spinner
+        return kwargs
 
     ###
     #
@@ -462,16 +525,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         self.exit_code = self.EXIT_ERROR
         try:
-            if statustxt:
-                # call the function (which will typically do network access)
-                # wrapped in a status spinner
-                smesg = self._statustxt(statustxt)
-                with self.console.status(
-                    smesg, spinner=self._tomcat_theme_settings["tm.status.spinner"]
-                ):
-                    r = func(*args, **kwargs)
-            else:
-                # no status message, so just call the function
+            with self._progressfactory(statustxt):
                 r = func(*args, **kwargs)
             r.raise_for_status()
             self.exit_code = self.EXIT_SUCCESS
@@ -1154,10 +1208,7 @@ change the value of one of this program's settings
             verify = cacert
 
         try:
-            statustxt = self._statustxt("connecting")
-            with self.console.status(
-                statustxt, spinner=self._tomcat_theme_settings["tm.status.spinner"]
-            ):
+            with self._progressfactory("connecting"):
                 r = self.tomcat.connect(url, user, password, verify=verify, cert=cert)
 
             if r.ok:
@@ -1592,7 +1643,7 @@ change the value of one of this program's settings
         syntax = rich.syntax.Syntax(
             root.toprettyxml(indent="   ").strip(),
             "xml",
-            theme=self._tomcat_theme_settings["tm.syntax.theme"],
+            theme=self.syntax_theme,
             background_color="default",
         )
         self.console.print(syntax)
