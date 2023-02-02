@@ -950,6 +950,7 @@ FAIL_MESSAGES = [
 
 
 @pytest.mark.parametrize("code, errmsg", FAIL_MESSAGES)
+# pylint: disable=too-many-arguments
 def test_connect_fail_ok(tomcat_manager_server, itm_nc, mocker, code, errmsg, capsys):
     itm_nc.debug = False
     itm_nc.quiet = True
