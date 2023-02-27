@@ -72,115 +72,6 @@ def requires_connection(func: Callable) -> Callable:
     return _requires_connection
 
 
-def _path_version_parser(cmdname: str, helpmsg: str) -> argparse.ArgumentParser:
-    """Construct an argparser using the given parameters"""
-    parser = argparse.ArgumentParser(
-        prog=cmdname,
-        description=helpmsg,
-        formatter_class=RichHelpFormatter,
-    )
-    parser.add_argument(
-        "-v",
-        "--version",
-        help=(
-            f"optional version string of the application to"
-            f" {cmdname}; if the application was deployed with"
-            f" a version string, it must be specified in order to"
-            f" {cmdname} the application"
-        ),
-    )
-    path_help = "the path part of the URL where the application is deployed"
-    parser.add_argument("path", help=path_help)
-    return parser
-
-
-def _deploy_parser(
-    name: str,
-    desc: str,
-    localfunc: Callable,
-    serverfunc: Callable,
-    contextfunc: Callable,
-) -> argparse.ArgumentParser:
-    """Construct a argument parser for the deploy or redeploy commands."""
-    deploy_parser = argparse.ArgumentParser(
-        prog=name,
-        description=desc,
-        formatter_class=RichHelpFormatter,
-    )
-    deploy_subparsers = deploy_parser.add_subparsers(
-        dest="method",
-        metavar="deployment_method",
-    )
-    # local subparser
-    deploy_local_parser = deploy_subparsers.add_parser(
-        "local",
-        description="transmit a war file from the local file system to the server",
-        help="transmit a war file from the local file system to the server",
-        formatter_class=deploy_parser.formatter_class,
-    )
-    deploy_local_parser.add_argument(
-        "-v",
-        "--version",
-        help="version string to associate with this deployment",
-    )
-    deploy_local_parser.add_argument(
-        "warfile",
-        help="path on the local file system of a war file which will be transmitted to the server and deployed",
-    )
-    deploy_local_parser.add_argument(
-        "path",
-        help="context path, including the leading slash, on the server where the application will be available",
-    )
-    deploy_local_parser.set_defaults(func=localfunc)
-    # server subparser
-    deploy_server_parser = deploy_subparsers.add_parser(
-        "server",
-        description="deploy a war file from the server file system",
-        help="deploy a war file from the server file system",
-        formatter_class=deploy_parser.formatter_class,
-    )
-    deploy_server_parser.add_argument(
-        "-v", "--version", help="version string to associate with this deployment"
-    )
-    deploy_server_parser.add_argument(
-        "warfile",
-        help="the java-style path (use slashes not backslashes) to the war file on the server file system; don't include 'file:' at the beginning",
-    )
-    deploy_server_parser.add_argument(
-        "path",
-        help="context path, including the leading slash, on the server where the application will be available",
-    )
-    deploy_server_parser.set_defaults(func=serverfunc)
-    # context subparser
-    deploy_context_parser = deploy_subparsers.add_parser(
-        "context",
-        description="deploy a context file from the server file system",
-        help="deploy a context file from the server file system",
-        formatter_class=deploy_parser.formatter_class,
-    )
-    deploy_context_parser.add_argument(
-        "-v",
-        "--version",
-        help="version string to associate with this deployment",
-    )
-    deploy_context_parser.add_argument(
-        "contextfile",
-        help="the java-style path (use slashes not backslashes) to the context file on the server file system; don't include 'file:' at the beginning",
-    )
-    deploy_context_parser.add_argument(
-        "warfile",
-        nargs="?",
-        help="the java-style path (use slashes not backslashes) to the war file on the server file system; don't include 'file:' at the beginning; overrides 'docBase' specified in the 'contextfile'",
-    )
-    # TODO tomcat docs say path is ignored, double check actual behavior
-    deploy_context_parser.add_argument(
-        "path",
-        help="context path, including the leading slash, on the server where the warfile will be available; overrides the context path in 'contextfile'.",
-    )
-    deploy_context_parser.set_defaults(func=contextfunc)
-    return deploy_parser
-
-
 # pylint: disable=too-many-public-methods, too-many-instance-attributes
 class InteractiveTomcatManager(cmd2.Cmd):
     """An interactive command line tool for the Tomcat Manager web application.
@@ -296,66 +187,74 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.add_settable(
             cmd2.Settable(
                 "quiet",
-                bool,
-                "Suppress all status output",
+                _to_bool,
+                "suppress all status output",
                 self,
             )
         )
         self.add_settable(
             cmd2.Settable(
                 "debug",
-                bool,
-                "Show stack trace for exceptions",
+                _to_bool,
+                "show stack trace for exceptions",
                 self,
             )
         )
         self.add_settable(
             cmd2.Settable(
                 "echo",
-                bool,
-                "For piped input, echo command to output",
+                _to_bool,
+                "ror piped input, echo command to output",
                 self,
             )
         )
         self.add_settable(
-            cmd2.Settable("editor", str, "Program used to edit files", self)
+            cmd2.Settable("editor", str, "program used to edit files", self)
         )
         self.add_settable(
             cmd2.Settable(
                 "status_to_stdout",
                 bool,
-                "Status information to stdout instead of stderr",
+                "status information to stdout instead of stderr",
                 self,
             )
         )
         self.add_settable(
             cmd2.Settable(
-                "feedback_prefix", str, "String to prepend to all feedback output", self
+                "feedback_prefix", str, "string to prepend to all feedback output", self
             )
         )
         self.add_settable(
             cmd2.Settable(
-                "prompt", str, "The prompt displayed before accepting user input", self
+                "prompt", str, "the prompt displayed before accepting user input", self
             )
         )
         self.add_settable(
             cmd2.Settable(
-                "timeout", float, "Seconds to wait for HTTP connections", self
+                "timing",
+                _to_bool,
+                "report execution time upon command completion",
+                self,
             )
         )
         self.add_settable(
             cmd2.Settable(
-                "status_suffix", str, "Suffix to append to status messages", self
+                "timeout", float, "seconds to wait for HTTP connections", self
             )
         )
         self.add_settable(
             cmd2.Settable(
-                "status_spinner", str, "Style of status spinner from rich.spinner", self
+                "status_suffix", str, "suffix to append to status messages", self
             )
         )
         self.add_settable(
             cmd2.Settable(
-                "syntax_theme", str, "Pygments syntax highlighing theme", self
+                "status_spinner", str, "style of status spinner from rich.spinner", self
+            )
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "syntax_theme", str, "pygments syntax highlighing theme", self
             )
         )
 
@@ -610,6 +509,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.exit_code = self.EXIT_SUCCESS
         # self.poutput(argparser.format_help())
         # TODO do this or console.pager()
+        #with self.console.pager(styles=True):
+        #    self.console.print(argparser.format_help())
         self.ppaged(argparser.format_help())
 
     def parse_args(
@@ -951,7 +852,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 ttable.add(setting, getattr(self, setting))
                 # now dump the table and peel off everything after
                 # the first equal sign for the value
-                value = tomlkit.dumps(ttable).split("=",1)[1].strip()
+                # this breaks on quoted keys that contain and equals sign
+                # but that shouldn't happen much
+                value = tomlkit.dumps(ttable).split("=", 1)[1].strip()
 
                 typ = type(getattr(self, setting))
                 styled_value = value
@@ -2111,6 +2014,8 @@ class EvaluatingConfigParser(configparser.ConfigParser):
     """Subclass of configparser.ConfigParser which evaluates values on get()."""
 
     # pylint: disable=arguments-differ
+    # we need this as long as we have the ability to convert the old config
+    # file format
     def get(self, section, option, **kwargs):
         val = super().get(section, option, **kwargs)
         if "'" in val or '"' in val:
@@ -2119,3 +2024,131 @@ class EvaluatingConfigParser(configparser.ConfigParser):
             except ValueError:  # pragma: nocover
                 pass
         return val
+
+
+def _to_bool(val: Any) -> bool:
+    """Converts anything to a boolean based on its value.
+
+    :param val: value being converted
+    :return: boolean value expressed in the passed in value
+    :raises: ValueError if the string does not contain a value corresponding to a boolean value
+    """
+    if isinstance(val, str):
+        if val == "true":
+            return True
+        elif val == "false":
+            return False
+        raise ValueError("syntax error: must be 'true' or 'false'")
+    elif isinstance(val, bool):
+        return val
+    else:
+        return bool(val)
+
+
+def _path_version_parser(cmdname: str, helpmsg: str) -> argparse.ArgumentParser:
+    """Construct an argparser using the given parameters"""
+    parser = argparse.ArgumentParser(
+        prog=cmdname,
+        description=helpmsg,
+        formatter_class=RichHelpFormatter,
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        help=(
+            f"optional version string of the application to"
+            f" {cmdname}; if the application was deployed with"
+            f" a version string, it must be specified in order to"
+            f" {cmdname} the application"
+        ),
+    )
+    path_help = "the path part of the URL where the application is deployed"
+    parser.add_argument("path", help=path_help)
+    return parser
+
+
+def _deploy_parser(
+    name: str,
+    desc: str,
+    localfunc: Callable,
+    serverfunc: Callable,
+    contextfunc: Callable,
+) -> argparse.ArgumentParser:
+    """Construct a argument parser for the deploy or redeploy commands."""
+    deploy_parser = argparse.ArgumentParser(
+        prog=name,
+        description=desc,
+        formatter_class=RichHelpFormatter,
+    )
+    deploy_subparsers = deploy_parser.add_subparsers(
+        dest="method",
+        metavar="deployment_method",
+    )
+    # local subparser
+    deploy_local_parser = deploy_subparsers.add_parser(
+        "local",
+        description="transmit a war file from the local file system to the server",
+        help="transmit a war file from the local file system to the server",
+        formatter_class=deploy_parser.formatter_class,
+    )
+    deploy_local_parser.add_argument(
+        "-v",
+        "--version",
+        help="version string to associate with this deployment",
+    )
+    deploy_local_parser.add_argument(
+        "warfile",
+        help="path on the local file system of a war file which will be transmitted to the server and deployed",
+    )
+    deploy_local_parser.add_argument(
+        "path",
+        help="context path, including the leading slash, on the server where the application will be available",
+    )
+    deploy_local_parser.set_defaults(func=localfunc)
+    # server subparser
+    deploy_server_parser = deploy_subparsers.add_parser(
+        "server",
+        description="deploy a war file from the server file system",
+        help="deploy a war file from the server file system",
+        formatter_class=deploy_parser.formatter_class,
+    )
+    deploy_server_parser.add_argument(
+        "-v", "--version", help="version string to associate with this deployment"
+    )
+    deploy_server_parser.add_argument(
+        "warfile",
+        help="the java-style path (use slashes not backslashes) to the war file on the server file system; don't include 'file:' at the beginning",
+    )
+    deploy_server_parser.add_argument(
+        "path",
+        help="context path, including the leading slash, on the server where the application will be available",
+    )
+    deploy_server_parser.set_defaults(func=serverfunc)
+    # context subparser
+    deploy_context_parser = deploy_subparsers.add_parser(
+        "context",
+        description="deploy a context file from the server file system",
+        help="deploy a context file from the server file system",
+        formatter_class=deploy_parser.formatter_class,
+    )
+    deploy_context_parser.add_argument(
+        "-v",
+        "--version",
+        help="version string to associate with this deployment",
+    )
+    deploy_context_parser.add_argument(
+        "contextfile",
+        help="the java-style path (use slashes not backslashes) to the context file on the server file system; don't include 'file:' at the beginning",
+    )
+    deploy_context_parser.add_argument(
+        "warfile",
+        nargs="?",
+        help="the java-style path (use slashes not backslashes) to the war file on the server file system; don't include 'file:' at the beginning; overrides 'docBase' specified in the 'contextfile'",
+    )
+    # TODO tomcat docs say path is ignored, double check actual behavior
+    deploy_context_parser.add_argument(
+        "path",
+        help="context path, including the leading slash, on the server where the warfile will be available; overrides the context path in 'contextfile'.",
+    )
+    deploy_context_parser.set_defaults(func=contextfunc)
+    return deploy_parser

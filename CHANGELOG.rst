@@ -14,9 +14,6 @@ Unreleased
 TODO
 ^^^^
 
-- remove and re-add settable timing so the input conversion function is ours so
-  the error message matches
-
 - put theme colors in settings file, one for dark, one for light
 - create dark and light theme and let you switch between using a setting
 
