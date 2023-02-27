@@ -152,6 +152,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self._status_spinner = ""
 
     def __init__(self, loadconfig=True):
+        # pylint: disable=too-many-statements
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
         shortcuts = {"?": "help", "!": "shell", "$?": "exit_code"}
 
@@ -509,7 +510,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.exit_code = self.EXIT_SUCCESS
         # self.poutput(argparser.format_help())
         # TODO do this or console.pager()
-        #with self.console.pager(styles=True):
+        # with self.console.pager(styles=True):
         #    self.console.print(argparser.format_help())
         self.ppaged(argparser.format_help())
 
@@ -581,11 +582,15 @@ class InteractiveTomcatManager(cmd2.Cmd):
         else:
             with self.console.pager(styles=True):
                 self.console.print("tomcat-manager", style="tm.help.command", end="")
-                self.console.print(" is a command line tool for managing a Tomcat server")
+                self.console.print(
+                    " is a command line tool for managing a Tomcat server"
+                )
                 self.console.print()
                 self.console.print("Type 'help [command]' for help on any command.")
                 self.console.print()
-                self.console.print("Here's a categorized list of all available commands:")
+                self.console.print(
+                    "Here's a categorized list of all available commands:"
+                )
 
                 cmds = self._help_section("Connecting to a Tomcat server")
                 self._help_command(cmds, "connect", self.do_connect.__doc__)
@@ -631,7 +636,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
                 cmds = self._help_section("Settings, configuration, and tools")
                 self._help_command(cmds, "config", self.do_config.__doc__)
-                self._help_command(cmds, "edit", "edit a file in the preferred text editor")
+                self._help_command(
+                    cmds, "edit", "edit a file in the preferred text editor"
+                )
                 self._help_command(cmds, "exit_code", self.do_exit_code.__doc__)
                 self._help_command(
                     cmds,
@@ -647,7 +654,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self._help_command(
                     cmds, "shell", "execute a command in the operating system shell"
                 )
-                self._help_command(cmds, "shortcuts", "show shortcuts for other commands")
+                self._help_command(
+                    cmds, "shortcuts", "show shortcuts for other commands"
+                )
                 self.console.print(cmds)
 
                 cmds = self._help_section("Other")
@@ -1098,14 +1107,17 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         # yes there are embedded spaces and linefeeds in this string
         # use markup using RichHelpFormatter native styles, which we keep
-        # updated according to our native styles
+        # updated according to the styles from our current theme
         # we also have to escape open brackets so they don't get interpreted
         # as markup by RichHelpFormatter
-        usagestr = textwrap.dedent(
-            """\
-            %(prog)s [argparse.args]\[-h][/]
-                   %(prog)s [argparse.args]config_name[/] [argparse.args]\[OPTIONS][/]
-                   %(prog)s [argparse.args]url[/] [argparse.args]\[user][/] [argparse.args]\[password][/] [argparse.args]\[OPTIONS][/]"""
+        usagestr = (
+            r"%(prog)s [argparse.args]\[-h][/]"
+            "\n"
+            r"       %(prog)s [argparse.args]config_name[/] [argparse.args]\[OPTIONS][/]"
+            "\n"
+            r"       %(prog)s [argparse.args]url[/] [argparse.args]\[user][/]"
+            r" [argparse.args]\[password][/] [argparse.args]\[OPTIONS][/]"
+            "\n"
         )
 
         parser = argparse.ArgumentParser(
@@ -1411,7 +1423,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     @requires_connection
     def do_redeploy(self, cmdline: cmd2.Statement):
-        """deploy an application to the tomcat server after undeploying any application at the given path"""
+        """deploy an application to the tomcat server after undeploying the given path"""
         args = self.parse_args(self.redeploy_parser, cmdline.argv)
         try:
             args.func(self, args, update=True)
@@ -1518,7 +1530,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         parser.add_argument(
             "-v",
             "--version",
-            help="""optional version string of the application from which to show sessions; if the application was deployed with a version string, it must be specified in order to show sessions""",
+            help=(
+                "optional version string of the application from which to show"
+                " sessions; if the application was deployed with a version string,"
+                " it must be specified in order to show sessions"
+            ),
         )
         return parser
 
@@ -1545,7 +1561,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         parser.add_argument(
             "-v",
             "--version",
-            help="""optional version string of the application from which to expire sessions; if the application was deployed with a version string, it must be specified in order to expire sessions.""",
+            help=(
+                "optional version string of the application from which to show"
+                " sessions; if the application was deployed with a version string,"
+                " it must be specified in order to show sessions"
+            ),
         )
         parser.add_argument(
             "path",
@@ -1992,9 +2012,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
             IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
             FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
             AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-            LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-            OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-            THE SOFTWARE.
+            LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+            FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+            DEALINGS IN THE SOFTWARE.
             """
         )
         self.poutput(mitlicense)
@@ -2026,18 +2046,19 @@ def _to_bool(val: Any) -> bool:
 
     :param val: value being converted
     :return: boolean value expressed in the passed in value
-    :raises: ValueError if the string does not contain a value corresponding to a boolean value
+    :raises: ValueError if the string can not be cast to a boolen
     """
     if isinstance(val, str):
         if val == "true":
             return True
-        elif val == "false":
+        if val == "false":
             return False
         raise ValueError("syntax error: must be 'true' or 'false'")
-    elif isinstance(val, bool):
+
+    if isinstance(val, bool):
         return val
-    else:
-        return bool(val)
+
+    return bool(val)
 
 
 def _path_version_parser(cmdname: str, helpmsg: str) -> argparse.ArgumentParser:
@@ -2093,11 +2114,17 @@ def _deploy_parser(
     )
     deploy_local_parser.add_argument(
         "warfile",
-        help="path on the local file system of a war file which will be transmitted to the server and deployed",
+        help=(
+            "path on the local file system of a war file which will be"
+            " transmitted to the server and deployed"
+        ),
     )
     deploy_local_parser.add_argument(
         "path",
-        help="context path, including the leading slash, on the server where the application will be available",
+        help=(
+            "context path, including the leading slash, on the server"
+            " where the application will be available"
+        ),
     )
     deploy_local_parser.set_defaults(func=localfunc)
     # server subparser
@@ -2112,11 +2139,18 @@ def _deploy_parser(
     )
     deploy_server_parser.add_argument(
         "warfile",
-        help="the java-style path (use slashes not backslashes) to the war file on the server file system; don't include 'file:' at the beginning",
+        help=(
+            "the java-style path (use slashes not backslashes) to the"
+            " war file on the server file system; don't include 'file:'"
+            " at the beginning"
+        ),
     )
     deploy_server_parser.add_argument(
         "path",
-        help="context path, including the leading slash, on the server where the application will be available",
+        help=(
+            "context path, including the leading slash, on the server"
+            " where the application will be available"
+        ),
     )
     deploy_server_parser.set_defaults(func=serverfunc)
     # context subparser
@@ -2133,17 +2167,30 @@ def _deploy_parser(
     )
     deploy_context_parser.add_argument(
         "contextfile",
-        help="the java-style path (use slashes not backslashes) to the context file on the server file system; don't include 'file:' at the beginning",
+        help=(
+            "the java-style path (use slashes not backslashes) to the"
+            " war file on the server file system; don't include 'file:'"
+            " at the beginning"
+        ),
     )
     deploy_context_parser.add_argument(
         "warfile",
         nargs="?",
-        help="the java-style path (use slashes not backslashes) to the war file on the server file system; don't include 'file:' at the beginning; overrides 'docBase' specified in the 'contextfile'",
+        help=(
+            "the java-style path (use slashes not backslashes) to the"
+            " war file on the server file system; don't include 'file:'"
+            " at the beginning; overrides 'docBase' specified in the"
+            " 'contextfile'"
+        ),
     )
     # TODO tomcat docs say path is ignored, double check actual behavior
     deploy_context_parser.add_argument(
         "path",
-        help="context path, including the leading slash, on the server where the warfile will be available; overrides the context path in 'contextfile'.",
+        help=(
+            "context path, including the leading slash, on the server where"
+            " the warfile will be available; overrides the context path in"
+            " 'contextfile'."
+        ),
     )
     deploy_context_parser.set_defaults(func=contextfunc)
     return deploy_parser
