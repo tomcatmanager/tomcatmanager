@@ -24,6 +24,7 @@ TODO
 - maybe have cmd2.Cmd call a pprompt() method when it needs to output a stylized
   prompt and have cmd.prompt contain the "ascii" rendered version of it
 
+- have docmd() put up a rich.spinner or rich.status like do_connect() does
 - check display output with debug on, make sure it formats with rich
 
 - cmd2.Cmd has async_alert(), and async_update_prompt(), and set_window_title()

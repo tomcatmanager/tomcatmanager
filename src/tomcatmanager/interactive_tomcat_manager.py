@@ -107,7 +107,10 @@ def _deploy_parser(
         description=desc,
         formatter_class=RichHelpFormatter,
     )
-    deploy_subparsers = deploy_parser.add_subparsers(title="methods", dest="method")
+    deploy_subparsers = deploy_parser.add_subparsers(
+        dest="method",
+        metavar="deployment_method",
+    )
     # local subparser
     deploy_local_parser = deploy_subparsers.add_parser(
         "local",
@@ -1781,14 +1784,18 @@ change the value of one of this program's settings
         """Show help for the 'vminfo' command"""
         self.show_help_from(self.vminfo_parser)
 
-    sslconnectorciphers_parser = argparse.ArgumentParser(
-        prog="sslconnectorciphers",
-        description="show SSL/TLS ciphers configured for each connector",
-    )
+    @property
+    def sslconnectorciphers_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the sslconnectorciphers command."""
+        return argparse.ArgumentParser(
+            prog="sslconnectorciphers",
+            description=self.do_sslconnectorciphers.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
     @requires_connection
     def do_sslconnectorciphers(self, cmdline: cmd2.Statement):
-        """Show SSL/TLS ciphers configured for each connector"""
+        """show SSL/TLS ciphers configured for each connector"""
         self.parse_args(self.sslconnectorciphers_parser, cmdline.argv)
         r = self.docmd("querying server", self.tomcat.ssl_connector_ciphers)
         self.poutput(r.ssl_connector_ciphers)
@@ -1797,14 +1804,18 @@ change the value of one of this program's settings
         """Show help for the 'sslconnectorciphers' command"""
         self.show_help_from(self.sslconnectorciphers_parser)
 
-    sslconnectorcerts_parser = argparse.ArgumentParser(
-        prog="sslconnectorcerts",
-        description="show SSL/TLS certificate chain for each connector",
-    )
+    @property
+    def sslconnectorcerts_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the sslconnectorcerts command."""
+        return argparse.ArgumentParser(
+            prog="sslconnectorcerts",
+            description=self.do_sslconnectorcerts.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
     @requires_connection
     def do_sslconnectorcerts(self, cmdline: cmd2.Statement):
-        """Show SSL/TLS certificate chain for each connector"""
+        """show SSL/TLS certificate chain for each connector"""
         self.parse_args(self.sslconnectorcerts_parser, cmdline.argv)
         r = self.docmd("querying server", self.tomcat.ssl_connector_certs)
         self.poutput(r.ssl_connector_certs)
@@ -1813,14 +1824,18 @@ change the value of one of this program's settings
         """Show help for the 'sslconnectorcerts' command"""
         self.show_help_from(self.sslconnectorcerts_parser)
 
-    sslconnectortrustedcerts_parser = argparse.ArgumentParser(
-        prog="sslconnectortrustedcerts",
-        description="show SSL/TLS trusted certificates for each connector",
-    )
+    @property
+    def sslconnectortrustedcerts_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the sslconnectortrustedcerts command."""
+        return argparse.ArgumentParser(
+            prog="sslconnectortrustedcerts",
+            description=self.do_sslconnectortrustedcerts.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
     @requires_connection
     def do_sslconnectortrustedcerts(self, cmdline: cmd2.Statement):
-        """Show SSL/TLS trusted certificates for each connector"""
+        """show SSL/TLS trusted certificates for each connector"""
         self.parse_args(self.sslconnectortrustedcerts_parser, cmdline.argv)
         r = self.docmd("querying server", self.tomcat.ssl_connector_trusted_certs)
         self.poutput(r.ssl_connector_trusted_certs)
@@ -1829,19 +1844,24 @@ change the value of one of this program's settings
         """Show help for the 'sslconnectortrustedcerts' command"""
         self.show_help_from(self.sslconnectortrustedcerts_parser)
 
-    sslreload_parser = argparse.ArgumentParser(
-        prog="sslreload",
-        description="reload SSL/TLS certificates and keys",
-    )
-    sslreload_parser.add_argument(
-        "host_name",
-        nargs="?",
-        help="Optional host name to reload SSL/TLS certificates and keys for.",
-    )
+    @property
+    def sslreload_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the sslreload command."""
+        parser = argparse.ArgumentParser(
+            prog="sslreload",
+            description=self.do_sslreload.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "host_name",
+            nargs="?",
+            help="Optional host name to reload SSL/TLS certificates and keys for.",
+        )
+        return parser
 
     @requires_connection
     def do_sslreload(self, cmdline: cmd2.Statement):
-        """Reload SSL/TLS certificates and keys"""
+        """reload SSL/TLS certificates and keys"""
         args = self.parse_args(self.sslreload_parser, cmdline.argv)
         self.docmd("reloading SSL/TLS", self.tomcat.ssl_reload, args.host_name)
 
