@@ -14,17 +14,20 @@ Unreleased
 TODO
 ^^^^
 
-- remove and re-add settable timing so the input conversion function is ours so the error message matches
+- remove and re-add settable timing so the input conversion function is ours so
+  the error message matches
 
 - put theme colors in settings file, one for dark, one for light
 - create dark and light theme and let you switch between using a setting
 
 - figure out out to style the prompt
-	- maybe have cmd2.Cmd call a pprompt() method when it needs to output a stylized prompt and have cmd.prompt contain the "ascii" rendered version of it
+- maybe have cmd2.Cmd call a pprompt() method when it needs to output a stylized
+  prompt and have cmd.prompt contain the "ascii" rendered version of it
 
 - check display output with debug on, make sure it formats with rich
 
-- cmd2.Cmd has async_alert(), and async_update_prompt(), and set_window_title() which we will need to accommodate, or replace with rich
+- cmd2.Cmd has async_alert(), and async_update_prompt(), and set_window_title()
+  which we will need to accommodate, or replace with rich
 
 
 Added

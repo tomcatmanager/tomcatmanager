@@ -1294,7 +1294,9 @@ def test_connect_with_connection_error(tomcat_manager_server, itm_nc, capsys, mo
     assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_connect_with_connection_error_debug(tomcat_manager_server, itm_nc, capsys, mocker):
+def test_connect_with_connection_error_debug(
+    tomcat_manager_server, itm_nc, capsys, mocker
+):
     connect_mock = mocker.patch("tomcatmanager.TomcatManager.connect")
     connect_mock.side_effect = requests.exceptions.ConnectionError()
     itm_nc.debug = True
