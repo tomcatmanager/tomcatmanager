@@ -1378,9 +1378,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Build an argument parser for the deploy command."""
         return _deploy_parser(
             "deploy",
-            # "deploy an application to the tomcat server",
-            # get the first line of the docstring
-            # TODO make all the parsers get the description this way
             self.do_deploy.__doc__,
             self.deploy_local,
             self.deploy_server,
@@ -1406,7 +1403,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Build an argument parser for the redeploy command."""
         return _deploy_parser(
             "redeploy",
-            "deploy an application to the tomcat server, undeploying any application at the given path",
+            self.do_redeploy.__doc__,
             self.deploy_local,
             self.deploy_server,
             self.deploy_context,
@@ -1414,7 +1411,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     @requires_connection
     def do_redeploy(self, cmdline: cmd2.Statement):
-        """redeploy an application to the tomcat server"""
+        """deploy an application to the tomcat server after undeploying any application at the given path"""
         args = self.parse_args(self.redeploy_parser, cmdline.argv)
         try:
             args.func(self, args, update=True)
@@ -1516,14 +1513,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         parser.add_argument(
             "path",
-            help="The path part of the URL where the application is deployed.",
+            help="the path part of the URL where the application is deployed",
         )
         parser.add_argument(
             "-v",
             "--version",
-            help="""Optional version string of the application from which to show sessions.
-                If the application was deployed with a version string, it must be specified
-                in order to show sessions.""",
+            help="""optional version string of the application from which to show sessions; if the application was deployed with a version string, it must be specified in order to show sessions""",
         )
         return parser
 
