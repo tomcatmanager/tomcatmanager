@@ -47,7 +47,7 @@ import rich.console
 import rich.spinner
 import rich.syntax
 import rich.progress
-from rich_argparse import RichHelpFormatter
+from rich_argparse import RichHelpFormatter, RawDescriptionRichHelpFormatter
 import tomlkit
 
 import tomcatmanager as tm
@@ -730,23 +730,23 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
             cmds = self._help_section("Settings, configuration, and tools")
             self._help_command(cmds, "config", self.do_config.__doc__)
-            self._help_command(cmds, "edit", "Edit a file in the preferred text editor")
+            self._help_command(cmds, "edit", "edit a file in the preferred text editor")
             self._help_command(cmds, "exit_code", self.do_exit_code.__doc__)
             self._help_command(
                 cmds,
                 "history",
-                "View, run, edit, and save previously entered commands",
+                "view, run, edit, and save previously entered commands",
             )
-            self._help_command(cmds, "py", "Run an interactive python shell")
+            self._help_command(cmds, "py", "run an interactive python shell")
             self._help_command(
-                cmds, "run_pyscript", "Run a file containing a python script"
+                cmds, "run_pyscript", "run a file containing a python script"
             )
             self._help_command(cmds, "settings", self.do_settings.__doc__)
             self._help_command(cmds, "set", self.do_set.__doc__)
             self._help_command(
-                cmds, "shell", "Execute a command in the operating system shell"
+                cmds, "shell", "execute a command in the operating system shell"
             )
-            self._help_command(cmds, "shortcuts", "Show shortcuts for other commands")
+            self._help_command(cmds, "shortcuts", "show shortcuts for other commands")
             self.console.print(cmds)
 
             cmds = self._help_section("Other")
@@ -764,22 +764,27 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # user accessable commands for configuration and settings
     #
     ###
-    config_parser = argparse.ArgumentParser(
-        prog="config",
-        description="Edit or show the location of the user configuration file.",
-    )
-    config_parser.add_argument(
-        "action",
-        choices=["edit", "file", "convert"],
-        help="""'file' shows the name of the configuration
-             file. 'edit' edits the configuration file
-             in your preferred editor. 'convert' writes a new .toml
+    @property
+    def config_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the config command."""
+        parser = argparse.ArgumentParser(
+            prog="config",
+            description=self.do_config.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "action",
+            choices=["edit", "file", "convert"],
+            help="""'file' shows the name of the configuration
+             file; 'edit' edits the configuration file
+             in your preferred editor; 'convert' writes a new .toml
              configuration file with the same settings as the old
-             .ini configuration file.""",
-    )
+             .ini configuration file""",
+        )
+        return parser
 
     def do_config(self, cmdline: cmd2.Statement):
-        """Edit or show the location of the user configuration file"""
+        """edit or show the location of the user configuration file"""
         args = self.parse_args(self.config_parser, cmdline.argv)
 
         if args.action == "file":
@@ -894,19 +899,24 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Override cmd2 builtin show command to be invalid"""
         self.default(cmdline)
 
-    settings_parser = argparse.ArgumentParser(
-        prog="settings",
-        description="Display program settings.",
-    )
-    settings_parser.add_argument(
-        "setting",
-        nargs="?",
-        help="""Name of the setting to show the value for.
-             If omitted show the values of all settings.""",
-    )
+    @property
+    def settings_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the settings command."""
+        parser = argparse.ArgumentParser(
+            prog="settings",
+            description=self.do_settings.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "setting",
+            nargs="?",
+            help="""name of the setting to show the value for;
+             if omitted show the values of all settings""",
+        )
+        return parser
 
     def do_settings(self, cmdline: cmd2.Statement):
-        """Display program settings"""
+        """display program settings"""
         args = self.parse_args(self.settings_parser, cmdline.argv)
 
         if args.setting and args.setting not in self.settables:
@@ -969,7 +979,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.show_help_from(self.settings_parser)
 
     def do_set(self, args: cmd2.Statement):
-        """Change a program setting"""
+        """change a program setting"""
         if args:
             try:
                 setting_string = f"[settings]\n{args}"
@@ -999,12 +1009,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Show help for the 'set' command"""
         self.exit_code = self.EXIT_SUCCESS
         self.poutput(
-            """usage: set {setting} = {value}
+            """usage: set [setting] = [value]
 
 change the value of one of this program's settings
 
-  setting  Name of the setting to modify. Use the 'show' command to see a
-           list of valid settings.
+  setting  name of the setting to modify; use the 'settings' command to see a
+           list of valid settings
   value    the value for the setting
 """
         )
@@ -1728,14 +1738,18 @@ change the value of one of this program's settings
     # information from the server.
     #
     ###
-    serverinfo_parser = argparse.ArgumentParser(
-        prog="serverinfo",
-        description="show information about the tomcat server",
-    )
+    @property
+    def serverinfo_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the serverinfo command."""
+        return argparse.ArgumentParser(
+            prog="serverinfo",
+            description=self.do_serverinfo.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
     @requires_connection
     def do_serverinfo(self, cmdline: cmd2.Statement):
-        """Show information about the tomcat server"""
+        """show information about the tomcat server"""
         self.parse_args(self.serverinfo_parser, cmdline.argv)
         r = self.docmd("querying server", self.tomcat.server_info)
         if r.ok:
@@ -1745,14 +1759,18 @@ change the value of one of this program's settings
         """Show help for the 'serverinfo' command"""
         self.show_help_from(self.serverinfo_parser)
 
-    status_parser = argparse.ArgumentParser(
-        prog="status",
-        description="show server status information in xml format",
-    )
+    @property
+    def status_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the status command."""
+        return argparse.ArgumentParser(
+            prog="status",
+            description=self.do_status.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
     @requires_connection
     def do_status(self, cmdline: cmd2.Statement):
-        """Show server status information in xml format"""
+        """show server status information in xml format"""
         self.parse_args(self.status_parser, cmdline.argv)
         r = self.docmd("querying server", self.tomcat.status_xml)
         root = xml.dom.minidom.parseString(r.status_xml)
@@ -1768,14 +1786,18 @@ change the value of one of this program's settings
         """Show help for the 'status' command"""
         self.show_help_from(self.status_parser)
 
-    vminfo_parser = argparse.ArgumentParser(
-        prog="vminfo",
-        description="show diagnostic information about the jvm",
-    )
+    @property
+    def vminfo_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the vminfo command."""
+        return argparse.ArgumentParser(
+            prog="vminfo",
+            description=self.do_vminfo.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
     @requires_connection
     def do_vminfo(self, cmdline: cmd2.Statement):
-        """Show diagnostic information about the jvm"""
+        """show diagnostic information about the jvm"""
         self.parse_args(self.vminfo_parser, cmdline.argv)
         r = self.docmd("querying server", self.tomcat.vm_info)
         self.poutput(r.vm_info)
@@ -1869,14 +1891,18 @@ change the value of one of this program's settings
         """Show help for the 'sslreload' command"""
         self.show_help_from(self.sslreload_parser)
 
-    threaddump_parser = argparse.ArgumentParser(
-        prog="threaddump",
-        description="show a jvm thread dump",
-    )
+    @property
+    def threaddump_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the threaddump command"""
+        return argparse.ArgumentParser(
+            prog="threaddump",
+            description=self.do_threaddump.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
     @requires_connection
     def do_threaddump(self, cmdline: cmd2.Statement):
-        """Show a jvm thread dump"""
+        """show a jvm thread dump"""
         self.parse_args(self.threaddump_parser, cmdline.argv)
         r = self.docmd("querying server", self.tomcat.thread_dump)
         self.poutput(r.thread_dump)
@@ -1885,19 +1911,24 @@ change the value of one of this program's settings
         """Show help for the 'threaddump' command"""
         self.show_help_from(self.threaddump_parser)
 
-    resources_parser = argparse.ArgumentParser(
-        prog="resources",
-        description="show global JNDI resources configured in tomcat",
-    )
-    resources_parser.add_argument(
-        "class_name",
-        nargs="?",
-        help="Optional fully qualified java class name of the resource type to show.",
-    )
+    @property
+    def resources_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the resources command"""
+        parser = argparse.ArgumentParser(
+            prog="resources",
+            description=self.do_resources.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "class_name",
+            nargs="?",
+            help="optional fully qualified java class name of the resource type to show",
+        )
+        return parser
 
     @requires_connection
     def do_resources(self, cmdline: cmd2.Statement):
-        """Show global JNDI resources configured in Tomcat"""
+        """show global JNDI resources configured in tomcat"""
         args = self.parse_args(self.resources_parser, cmdline.argv)
         r = self.docmd("querying server", self.tomcat.resources, args.class_name)
         if r.resources:
@@ -1910,16 +1941,20 @@ change the value of one of this program's settings
         """Show help for the 'resources' command"""
         self.show_help_from(self.resources_parser)
 
-    findleakers_parser = argparse.ArgumentParser(
-        prog="findleakers",
-        description="show tomcat applications that leak memory",
-        epilog="""WARNING: this triggers a full garbage collection on the server.
+    @property
+    def findleakers_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the findleakers command."""
+        return argparse.ArgumentParser(
+            prog="findleakers",
+            description=self.do_findleakers.__doc__,
+            epilog="""WARNING: this triggers a full garbage collection on the server.
                Use with extreme caution on production systems.""",
-    )
+            formatter_class=RichHelpFormatter,
+        )
 
     @requires_connection
     def do_findleakers(self, cmdline: cmd2.Statement):
-        """Show tomcat applications that leak memory"""
+        """show tomcat applications that leak memory"""
         self.parse_args(self.findleakers_parser, cmdline.argv)
         r = self.docmd("finding memory leaks", self.tomcat.find_leakers)
         for leaker in r.leakers:
@@ -1966,20 +2001,23 @@ change the value of one of this program's settings
         """Show help for the 'version' command"""
         self.show_help_from(self.version_parser)
 
-    exit_code_epilog = []
-    exit_code_epilog.append("The codes have the following meanings:")
-    for number, name in EXIT_CODES.items():
-        exit_code_epilog.append(f"    {number:3}  {name}")
+    @property
+    def exit_code_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the exit_code command."""
+        exit_code_epilog = []
+        exit_code_epilog.append("The codes have the following meanings:")
+        for number, name in self.EXIT_CODES.items():
+            exit_code_epilog.append(f"    {number:3}  {name}")
 
-    exit_code_parser = argparse.ArgumentParser(
-        prog="exit_code",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="show a number indicating the status of the previous command",
-        epilog="\n".join(exit_code_epilog),
-    )
+        return argparse.ArgumentParser(
+            prog="exit_code",
+            formatter_class=RawDescriptionRichHelpFormatter,
+            description=self.do_exit_code.__doc__,
+            epilog="\n".join(exit_code_epilog),
+        )
 
     def do_exit_code(self, _):
-        """Show a number indicating the status of the previous command"""
+        """show a number indicating the status of the previous command"""
         # we don't use exit_code_parser here because we don't want to generate
         # spurrious exit codes, i.e. if they have incorrect usage on the
         # exit_code command
