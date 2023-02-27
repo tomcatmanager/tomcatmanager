@@ -56,6 +56,10 @@ import tomcatmanager as tm
 def requires_connection(func: Callable) -> Callable:
     """Decorator for interactive methods which require a connection."""
 
+    # TODO - figure out how to do this but let the command run with only the -h
+    # command. Right now if you run 'sessions -h' it says you aren't connected.
+    # but 'help sessions' works whether you are connected or not.
+    # 'sessions -h' should work whether you are connected or not.
     def _requires_connection(self, *args, **kwargs):
         if self.tomcat and self.tomcat.is_connected:
             func(self, *args, **kwargs)
@@ -79,10 +83,10 @@ def _path_version_parser(cmdname: str, helpmsg: str) -> argparse.ArgumentParser:
         "-v",
         "--version",
         help=(
-            f"Optional version string of the application to"
-            f" {cmdname}. If the application was deployed with"
+            f"optional version string of the application to"
+            f" {cmdname}; if the application was deployed with"
             f" a version string, it must be specified in order to"
-            f" {cmdname} the application."
+            f" {cmdname} the application"
         ),
     )
     path_help = "the path part of the URL where the application is deployed"
@@ -692,7 +696,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self._help_command(cmds, "start", self.do_start.__doc__)
             self._help_command(cmds, "stop", self.do_stop.__doc__)
             self._help_command(cmds, "restart", self.do_restart.__doc__)
-            self._help_command(cmds, "  reload", "Synonym for 'restart'")
+            self._help_command(cmds, "  reload", "synonym for 'restart'")
             self._help_command(cmds, "sessions", self.do_sessions.__doc__)
             self._help_command(cmds, "expire", self.do_expire.__doc__)
             self.console.print(cmds)
@@ -1475,9 +1479,7 @@ change the value of one of this program's settings
     @property
     def undeploy_parser(self) -> argparse.ArgumentParser:
         """Build an argument parser for the undeploy command"""
-        return _path_version_parser(
-            "undeploy", self.do_undeploy.__doc__
-        )
+        return _path_version_parser("undeploy", self.do_undeploy.__doc__)
 
     @requires_connection
     def do_undeploy(self, cmdline: cmd2.Statement):
@@ -1492,13 +1494,14 @@ change the value of one of this program's settings
         """Show help for the 'undeploy' command"""
         self.show_help_from(self.undeploy_parser)
 
-    start_parser = _path_version_parser(
-        "start", "Start a tomcat application that has been deployed but isn't running."
-    )
+    @property
+    def start_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the start command."""
+        return _path_version_parser("start", self.do_start.__doc__)
 
     @requires_connection
     def do_start(self, cmdline: cmd2.Statement):
-        """Start a deployed tomcat application that isn't running"""
+        """start a deployed tomcat application that isn't running"""
         args = self.parse_args(self.start_parser, cmdline.argv)
         apptag = self._apptag(args.path, args.version)
         self.docmd(f"starting {apptag}", self.tomcat.start, args.path, args.version)
@@ -1507,13 +1510,14 @@ change the value of one of this program's settings
         """Show help for the 'start' command"""
         self.show_help_from(self.start_parser)
 
-    stop_parser = _path_version_parser(
-        "stop", "Stop a running tomcat application and leave it deployed on the server."
-    )
+    @property
+    def stop_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the stop command."""
+        return _path_version_parser("stop", self.do_stop.__doc__)
 
     @requires_connection
     def do_stop(self, cmdline: cmd2.Statement):
-        """Stop a tomcat application and leave it deployed on the server"""
+        """stop a tomcat application and leave it deployed on the server"""
         args = self.parse_args(self.stop_parser, cmdline.argv)
         apptag = self._apptag(args.path, args.version)
         self.docmd(f"stopping {apptag}", self.tomcat.stop, args.path, args.version)
@@ -1522,14 +1526,14 @@ change the value of one of this program's settings
         """Show help for the 'stop' command"""
         self.show_help_from(self.stop_parser)
 
-    reload_parser = _path_version_parser(
-        "reload",
-        "Stop and start a tomcat application. Synonym for 'restart'.",
-    )
+    @property
+    def reload_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the reload command."""
+        return _path_version_parser("reload", self.do_reload.__doc__)
 
     @requires_connection
     def do_reload(self, cmdline: cmd2.Statement):
-        """Stop and start a tomcat application"""
+        """stop and start a tomcat application; synonym for restart"""
         args = self.parse_args(self.reload_parser, cmdline.argv)
         apptag = self._apptag(args.path, args.version)
         self.docmd(f"reloading {apptag}", self.tomcat.reload, args.path, args.version)
@@ -1538,72 +1542,80 @@ change the value of one of this program's settings
         """Show help for the 'reload' command"""
         self.show_help_from(self.reload_parser)
 
-    restart_parser = _path_version_parser(
-        "restart",
-        "Stop and start a tomcat application.",
-    )
+    @property
+    def restart_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the restart command."""
+        return _path_version_parser("restart", self.do_restart.__doc__)
 
     @requires_connection
     def do_restart(self, cmdline: cmd2.Statement):
-        """Stop and start a tomcat application"""
+        """stop and start a tomcat application"""
         self.do_reload(cmdline)
 
     def help_restart(self):
         """Show help for the 'restart' command"""
         self.show_help_from(self.restart_parser)
 
-    sessions_parser = argparse.ArgumentParser(
-        prog="sessions",
-        description="Show active sessions for a tomcat application.",
-    )
-    sessions_parser.add_argument(
-        "path",
-        help="The path part of the URL where the application is deployed.",
-    )
-    sessions_parser.add_argument(
-        "-v",
-        "--version",
-        help="""Optional version string of the application from which to show sessions.
-             If the application was deployed with a version string, it must be specified
-             in order to show sessions.""",
-    )
+    @property
+    def sessions_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the sessions command."""
+        parser = argparse.ArgumentParser(
+            prog="sessions",
+            description=self.do_sessions.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "path",
+            help="The path part of the URL where the application is deployed.",
+        )
+        parser.add_argument(
+            "-v",
+            "--version",
+            help="""Optional version string of the application from which to show sessions.
+                If the application was deployed with a version string, it must be specified
+                in order to show sessions.""",
+        )
+        return parser
 
     @requires_connection
     def do_sessions(self, cmdline: cmd2.Statement):
-        """Show active sessions for a tomcat application"""
+        """show active sessions for a tomcat application"""
         args = self.parse_args(self.sessions_parser, cmdline.argv)
         r = self.docmd(None, self.tomcat.sessions, args.path, args.version)
         if r.ok:
             self.poutput(r.sessions)
 
     def help_sessions(self):
-        """Show help for the 'sessions' command"""
+        """Show help for the 'sessions' command."""
         self.show_help_from(self.sessions_parser)
 
-    expire_parser = argparse.ArgumentParser(
-        prog="expire",
-        description="expire idle sessions",
-    )
-    expire_parser.add_argument(
-        "-v",
-        "--version",
-        help="""Optional version string of the application from which to expire sessions.
-             If the application was deployed with a version string, it must be specified
-             in order to expire sessions.""",
-    )
-    expire_parser.add_argument(
-        "path",
-        help="The path part of the URL where the application is deployed.",
-    )
-    expire_parser.add_argument(
-        "idle",
-        help="""Expire sessions idle for more than this number of minutes. Use
-             0 to expire all sessions.""",
-    )
+    @property
+    def expire_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the expire command."""
+        parser = argparse.ArgumentParser(
+            prog="expire",
+            description=self.do_expire.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "-v",
+            "--version",
+            help="""optional version string of the application from which to expire sessions; if the application was deployed with a version string, it must be specified in order to expire sessions.""",
+        )
+        parser.add_argument(
+            "path",
+            help="the path part of the URL where the application is deployed",
+        )
+        parser.add_argument(
+            "idle",
+            help="""expire sessions idle for more than this number of minutes; use
+                0 to expire all sessions""",
+        )
+        return parser
 
     @requires_connection
     def do_expire(self, cmdline: cmd2.Statement):
-        """Expire idle sessions"""
+        """expire idle sessions"""
         args = self.parse_args(self.expire_parser, cmdline.argv)
         r = self.docmd(None, self.tomcat.expire, args.path, args.version, args.idle)
         if r.ok:
@@ -1619,7 +1631,6 @@ change the value of one of this program's settings
         parser = argparse.ArgumentParser(
             prog="list",
             description=self.do_list.__doc__,
-            add_help=False,
             formatter_class=RichHelpFormatter,
         )
         parser.add_argument(
