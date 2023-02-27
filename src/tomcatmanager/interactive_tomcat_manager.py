@@ -574,89 +574,89 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def do_help(self, args: str):
         """show available commands, or help on a specific command"""
         # pylint: disable=too-many-statements
-        # TODO page this output with console.pager() or self.ppaged()
         # TODO figure out how to make "help deploy local" work properly
         if args:
             # they want help on a specific command, use cmd2 for that
             super().do_help(args)
         else:
-            self.console.print("tomcat-manager", style="tm.help.command", end="")
-            self.console.print(" is a command line tool for managing a Tomcat server")
-            self.console.print()
-            self.console.print("Type 'help [command]' for help on any command.")
-            self.console.print()
-            self.console.print("Here's a categorized list of all available commands:")
+            with self.console.pager(styles=True):
+                self.console.print("tomcat-manager", style="tm.help.command", end="")
+                self.console.print(" is a command line tool for managing a Tomcat server")
+                self.console.print()
+                self.console.print("Type 'help [command]' for help on any command.")
+                self.console.print()
+                self.console.print("Here's a categorized list of all available commands:")
 
-            cmds = self._help_section("Connecting to a Tomcat server")
-            self._help_command(cmds, "connect", self.do_connect.__doc__)
-            self._help_command(cmds, "which", self.do_which.__doc__)
-            self.console.print(cmds)
+                cmds = self._help_section("Connecting to a Tomcat server")
+                self._help_command(cmds, "connect", self.do_connect.__doc__)
+                self._help_command(cmds, "which", self.do_which.__doc__)
+                self.console.print(cmds)
 
-            cmds = self._help_section("Managing applications")
-            self._help_command(cmds, "list", self.do_list.__doc__)
-            self._help_command(cmds, "deploy", self.do_deploy.__doc__)
-            self._help_command(cmds, "redeploy", self.do_redeploy.__doc__)
-            self._help_command(cmds, "undeploy", self.do_undeploy.__doc__)
-            self._help_command(cmds, "start", self.do_start.__doc__)
-            self._help_command(cmds, "stop", self.do_stop.__doc__)
-            self._help_command(cmds, "restart", self.do_restart.__doc__)
-            self._help_command(cmds, "  reload", "synonym for 'restart'")
-            self._help_command(cmds, "sessions", self.do_sessions.__doc__)
-            self._help_command(cmds, "expire", self.do_expire.__doc__)
-            self.console.print(cmds)
+                cmds = self._help_section("Managing applications")
+                self._help_command(cmds, "list", self.do_list.__doc__)
+                self._help_command(cmds, "deploy", self.do_deploy.__doc__)
+                self._help_command(cmds, "redeploy", self.do_redeploy.__doc__)
+                self._help_command(cmds, "undeploy", self.do_undeploy.__doc__)
+                self._help_command(cmds, "start", self.do_start.__doc__)
+                self._help_command(cmds, "stop", self.do_stop.__doc__)
+                self._help_command(cmds, "restart", self.do_restart.__doc__)
+                self._help_command(cmds, "  reload", "synonym for 'restart'")
+                self._help_command(cmds, "sessions", self.do_sessions.__doc__)
+                self._help_command(cmds, "expire", self.do_expire.__doc__)
+                self.console.print(cmds)
 
-            cmds = self._help_section("Server information")
-            self._help_command(cmds, "findleakers", self.do_findleakers.__doc__)
-            self._help_command(cmds, "resources", self.do_resources.__doc__)
-            self._help_command(cmds, "serverinfo", self.do_serverinfo.__doc__)
-            self._help_command(cmds, "status", self.do_status.__doc__)
-            self._help_command(cmds, "threaddump", self.do_threaddump.__doc__)
-            self._help_command(cmds, "vminfo", self.do_vminfo.__doc__)
-            self.console.print(cmds)
+                cmds = self._help_section("Server information")
+                self._help_command(cmds, "findleakers", self.do_findleakers.__doc__)
+                self._help_command(cmds, "resources", self.do_resources.__doc__)
+                self._help_command(cmds, "serverinfo", self.do_serverinfo.__doc__)
+                self._help_command(cmds, "status", self.do_status.__doc__)
+                self._help_command(cmds, "threaddump", self.do_threaddump.__doc__)
+                self._help_command(cmds, "vminfo", self.do_vminfo.__doc__)
+                self.console.print(cmds)
 
-            cmds = self._help_section("TLS configuration")
-            self._help_command(
-                cmds, "sslconnectorciphers", self.do_sslconnectorciphers.__doc__
-            )
-            self._help_command(
-                cmds, "sslconnectorcerts", self.do_sslconnectorcerts.__doc__
-            )
-            self._help_command(
-                cmds,
-                "sslconnectortrustedcerts",
-                self.do_sslconnectortrustedcerts.__doc__,
-            )
-            self._help_command(cmds, "sslreload", self.do_sslreload.__doc__)
-            self.console.print(cmds)
+                cmds = self._help_section("TLS configuration")
+                self._help_command(
+                    cmds, "sslconnectorciphers", self.do_sslconnectorciphers.__doc__
+                )
+                self._help_command(
+                    cmds, "sslconnectorcerts", self.do_sslconnectorcerts.__doc__
+                )
+                self._help_command(
+                    cmds,
+                    "sslconnectortrustedcerts",
+                    self.do_sslconnectortrustedcerts.__doc__,
+                )
+                self._help_command(cmds, "sslreload", self.do_sslreload.__doc__)
+                self.console.print(cmds)
 
-            cmds = self._help_section("Settings, configuration, and tools")
-            self._help_command(cmds, "config", self.do_config.__doc__)
-            self._help_command(cmds, "edit", "edit a file in the preferred text editor")
-            self._help_command(cmds, "exit_code", self.do_exit_code.__doc__)
-            self._help_command(
-                cmds,
-                "history",
-                "view, run, edit, and save previously entered commands",
-            )
-            self._help_command(cmds, "py", "run an interactive python shell")
-            self._help_command(
-                cmds, "run_pyscript", "run a file containing a python script"
-            )
-            self._help_command(cmds, "settings", self.do_settings.__doc__)
-            self._help_command(cmds, "set", self.do_set.__doc__)
-            self._help_command(
-                cmds, "shell", "execute a command in the operating system shell"
-            )
-            self._help_command(cmds, "shortcuts", "show shortcuts for other commands")
-            self.console.print(cmds)
+                cmds = self._help_section("Settings, configuration, and tools")
+                self._help_command(cmds, "config", self.do_config.__doc__)
+                self._help_command(cmds, "edit", "edit a file in the preferred text editor")
+                self._help_command(cmds, "exit_code", self.do_exit_code.__doc__)
+                self._help_command(
+                    cmds,
+                    "history",
+                    "view, run, edit, and save previously entered commands",
+                )
+                self._help_command(cmds, "py", "run an interactive python shell")
+                self._help_command(
+                    cmds, "run_pyscript", "run a file containing a python script"
+                )
+                self._help_command(cmds, "settings", self.do_settings.__doc__)
+                self._help_command(cmds, "set", self.do_set.__doc__)
+                self._help_command(
+                    cmds, "shell", "execute a command in the operating system shell"
+                )
+                self._help_command(cmds, "shortcuts", "show shortcuts for other commands")
+                self.console.print(cmds)
 
-            cmds = self._help_section("Other")
-            self._help_command(cmds, "exit", self.do_exit.__doc__)
-            self._help_command(cmds, "  quit", self.do_quit.__doc__)
-            self._help_command(cmds, "help", self.do_help.__doc__)
-            self._help_command(cmds, "version", self.do_version.__doc__)
-            self._help_command(cmds, "license", self.do_license.__doc__)
-            self.console.print(cmds)
+                cmds = self._help_section("Other")
+                self._help_command(cmds, "exit", self.do_exit.__doc__)
+                self._help_command(cmds, "  quit", self.do_quit.__doc__)
+                self._help_command(cmds, "help", self.do_help.__doc__)
+                self._help_command(cmds, "version", self.do_version.__doc__)
+                self._help_command(cmds, "license", self.do_license.__doc__)
+                self.console.print(cmds)
 
             self.exit_code = self.EXIT_SUCCESS
 
