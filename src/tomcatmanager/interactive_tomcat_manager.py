@@ -70,7 +70,11 @@ def requires_connection(func: Callable) -> Callable:
 
 def _path_version_parser(cmdname: str, helpmsg: str) -> argparse.ArgumentParser:
     """Construct an argparser using the given parameters"""
-    parser = argparse.ArgumentParser(prog=cmdname, description=helpmsg)
+    parser = argparse.ArgumentParser(
+        prog=cmdname,
+        description=helpmsg,
+        formatter_class=RichHelpFormatter,
+    )
     parser.add_argument(
         "-v",
         "--version",
@@ -81,7 +85,7 @@ def _path_version_parser(cmdname: str, helpmsg: str) -> argparse.ArgumentParser:
             f" {cmdname} the application."
         ),
     )
-    path_help = "The path part of the URL where the application is deployed."
+    path_help = "the path part of the URL where the application is deployed"
     parser.add_argument("path", help=path_help)
     return parser
 
@@ -97,46 +101,75 @@ def _deploy_parser(
     deploy_parser = argparse.ArgumentParser(
         prog=name,
         description=desc,
+        formatter_class=RichHelpFormatter,
     )
     deploy_subparsers = deploy_parser.add_subparsers(title="methods", dest="method")
     # local subparser
     deploy_local_parser = deploy_subparsers.add_parser(
         "local",
-        description="transmit a locally available warfile to the server",
-        help="transmit a locally available warfile to the server",
+        description="transmit a war file from the local file system to the server",
+        help="transmit a war file from the local file system to the server",
+        formatter_class=deploy_parser.formatter_class,
     )
     deploy_local_parser.add_argument(
-        "-v", "--version", help="version string to associate with this deployment"
+        "-v",
+        "--version",
+        help="version string to associate with this deployment",
     )
-    deploy_local_parser.add_argument("warfile")
-    deploy_local_parser.add_argument("path")
+    deploy_local_parser.add_argument(
+        "warfile",
+        help="path on the local file system of a war file which will be transmitted to the server and deployed",
+    )
+    deploy_local_parser.add_argument(
+        "path",
+        help="context path, including the leading slash, on the server where the application will be available",
+    )
     deploy_local_parser.set_defaults(func=localfunc)
     # server subparser
     deploy_server_parser = deploy_subparsers.add_parser(
         "server",
-        description="deploy a warfile already on the server",
-        help="deploy a warfile already on the server",
+        description="deploy a war file from the server file system",
+        help="deploy a war file from the server file system",
+        formatter_class=deploy_parser.formatter_class,
     )
     deploy_server_parser.add_argument(
         "-v", "--version", help="version string to associate with this deployment"
     )
-    deploy_server_parser.add_argument("warfile")
-    deploy_server_parser.add_argument("path")
+    deploy_server_parser.add_argument(
+        "warfile",
+        help="the java-style path (use slashes not backslashes) to the war file on the server file system; don't include 'file:' at the beginning",
+    )
+    deploy_server_parser.add_argument(
+        "path",
+        help="context path, including the leading slash, on the server where the application will be available",
+    )
     deploy_server_parser.set_defaults(func=serverfunc)
     # context subparser
     deploy_context_parser = deploy_subparsers.add_parser(
         "context",
-        description="deploy a contextfile already on the server",
-        help="deploy a contextfile already on the server",
+        description="deploy a context file from the server file system",
+        help="deploy a context file from the server file system",
+        formatter_class=deploy_parser.formatter_class,
     )
     deploy_context_parser.add_argument(
         "-v",
         "--version",
         help="version string to associate with this deployment",
     )
-    deploy_context_parser.add_argument("contextfile")
-    deploy_context_parser.add_argument("warfile", nargs="?")
-    deploy_context_parser.add_argument("path")
+    deploy_context_parser.add_argument(
+        "contextfile",
+        help="the java-style path (use slashes not backslashes) to the context file on the server file system; don't include 'file:' at the beginning",
+    )
+    deploy_context_parser.add_argument(
+        "warfile",
+        nargs="?",
+        help="the java-style path (use slashes not backslashes) to the war file on the server file system; don't include 'file:' at the beginning; overrides 'docBase' specified in the 'contextfile'",
+    )
+    # TODO tomcat docs say path is ignored, double check actual behavior
+    deploy_context_parser.add_argument(
+        "path",
+        help="context path, including the leading slash, on the server where the warfile will be available; overrides the context path in 'contextfile'.",
+    )
     deploy_context_parser.set_defaults(func=contextfunc)
     return deploy_parser
 
@@ -368,6 +401,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
         RichHelpFormatter.styles["argparse.text"] = self.theme["tm.usage.text"]
         RichHelpFormatter.styles["argparse.syntax"] = self.theme["tm.usage.syntax"]
         RichHelpFormatter.usage_markup = True
+        # default is str.title, which shows the groups in title case
+        # this shows the groups in all lower case
+        RichHelpFormatter.group_name_formatter = str.lower
 
         self.console = rich.console.Console(
             theme=rich.theme.Theme(self.theme),
@@ -565,7 +601,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def show_help_from(self, argparser: argparse.ArgumentParser):
         """Set exit code and output help from an argparser."""
         self.exit_code = self.EXIT_SUCCESS
-        #self.poutput(argparser.format_help())
+        # self.poutput(argparser.format_help())
         # TODO do this or console.pager()
         self.ppaged(argparser.format_help())
 
@@ -628,9 +664,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         table.add_row(rich.text.Text(command, style="tm.help.command"), desc)
 
     def do_help(self, args: str):
-        """Show available commands, or help on a specific command."""
+        """show available commands, or help on a specific command"""
         # pylint: disable=too-many-statements
         # TODO page this output with console.pager() or self.ppaged()
+        # TODO figure out how to make "help deploy local" work properly
         if args:
             # they want help on a specific command, use cmd2 for that
             super().do_help(args)
@@ -706,8 +743,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.console.print(cmds)
 
             cmds = self._help_section("Other")
-            self._help_command(cmds, "exit", "Exit this program")
-            self._help_command(cmds, "  quit", "Synonym for 'exit'")
+            self._help_command(cmds, "exit", self.do_exit.__doc__)
+            self._help_command(cmds, "  quit", self.do_quit.__doc__)
             self._help_command(cmds, "help", self.do_help.__doc__)
             self._help_command(cmds, "version", self.do_version.__doc__)
             self._help_command(cmds, "license", self.do_license.__doc__)
@@ -1110,67 +1147,69 @@ change the value of one of this program's settings
         # updated according to our native styles
         # we also have to escape open brackets so they don't get interpreted
         # as markup by RichHelpFormatter
-        usagestr = textwrap.dedent("""\
+        usagestr = textwrap.dedent(
+            """\
             %(prog)s [argparse.args]\[-h][/]
                    %(prog)s [argparse.args]config_name[/] [argparse.args]\[OPTIONS][/]
-                   %(prog)s [argparse.args]url[/] [argparse.args]\[user][/] [argparse.args]\[password][/] [argparse.args]\[OPTIONS][/]""")
+                   %(prog)s [argparse.args]url[/] [argparse.args]\[user][/] [argparse.args]\[password][/] [argparse.args]\[OPTIONS][/]"""
+        )
 
-        cparse = argparse.ArgumentParser(
+        parser = argparse.ArgumentParser(
             prog="connect",
-            description="connect to a tomcat manager instance",
+            description=self.do_connect.__doc__,
             usage=usagestr,
             epilog="""If you specify a user and no password, you will be prompted for the
                 password.""",
             formatter_class=RichHelpFormatter,
         )
-        cparse.add_argument(
+        parser.add_argument(
             "config_name",
             nargs="?",
             help="a section from the config file which contains at least a url",
         )
-        cparse.add_argument(
+        parser.add_argument(
             "url",
             nargs="?",
             help="the url where the tomcat manager web app is located",
         )
-        cparse.add_argument(
+        parser.add_argument(
             "user",
             nargs="?",
             help="optional user to use for authentication",
         )
-        cparse.add_argument(
+        parser.add_argument(
             "password",
             nargs="?",
             help="optional password to use for authentication",
         )
-        cparse.add_argument(
+        parser.add_argument(
             "--cert",
             action="store",
             help="""path to certificate for client side authentication;
             file can include private key, in which case --key is unnecessary""",
         )
-        cparse.add_argument(
+        parser.add_argument(
             "--key",
             action="store",
             help="path to private key for client side authentication",
         )
-        cparse.add_argument(
+        parser.add_argument(
             "--cacert",
             action="store",
             help="""path to certificate authority bundle or directory used to
             validate server SSL/TLS certificate""",
         )
-        cparse.add_argument(
+        parser.add_argument(
             "--noverify",
             # store_true makes the default False, aka default is to verify
             # server certificates
             action="store_true",
             help="don't validate server SSL certificates, overrides --cacert",
         )
-        return cparse
+        return parser
 
     def do_connect(self, cmdline: cmd2.Statement):
-        """Connect to a tomcat manager instance"""
+        """connect to a tomcat manager instance"""
         # pylint: disable=too-many-branches, too-many-statements
         # define some variables that we will either fill from a server shortcut
         # or from arguments
@@ -1303,16 +1342,17 @@ change the value of one of this program's settings
 
     @property
     def which_parser(self) -> argparse.ArgumentParser:
-        wparser = argparse.ArgumentParser(
+        """Build an argument parser for the which command."""
+        parser = argparse.ArgumentParser(
             prog="which",
-            description="show the url of the tomcat server you are connected to",
+            description=self.do_which.__doc__,
             formatter_class=RichHelpFormatter,
         )
-        return wparser
+        return parser
 
     @requires_connection
     def do_which(self, cmdline: cmd2.Statement):
-        """Show the url of the tomcat server you are connected to"""
+        """show the url of the tomcat server you are connected to"""
         self.parse_args(self.which_parser, cmdline.argv)
         self.poutput(self._which_server())
 
@@ -1379,17 +1419,23 @@ change the value of one of this program's settings
             update=update,
         )
 
-    deploy_parser = _deploy_parser(
-        "deploy",
-        "deploy an application to the tomcat server",
-        deploy_local,
-        deploy_server,
-        deploy_context,
-    )
+    @property
+    def deploy_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the deploy command."""
+        return _deploy_parser(
+            "deploy",
+            # "deploy an application to the tomcat server",
+            # get the first line of the docstring
+            # TODO make all the parsers get the description this way
+            self.do_deploy.__doc__,
+            self.deploy_local,
+            self.deploy_server,
+            self.deploy_context,
+        )
 
     @requires_connection
     def do_deploy(self, cmdline: cmd2.Statement):
-        """Deploy an application to the tomcat server"""
+        """deploy an application to the tomcat server"""
         args = self.parse_args(self.deploy_parser, cmdline.argv)
         try:
             args.func(self, args, update=False)
@@ -1401,17 +1447,20 @@ change the value of one of this program's settings
         """Show help for the 'deploy' command"""
         self.show_help_from(self.deploy_parser)
 
-    redeploy_parser = _deploy_parser(
-        "redeploy",
-        "deploy an application to the tomcat server, undeploying any application at the given path",
-        deploy_local,
-        deploy_server,
-        deploy_context,
-    )
+    @property
+    def redeploy_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the redeploy command."""
+        return _deploy_parser(
+            "redeploy",
+            "deploy an application to the tomcat server, undeploying any application at the given path",
+            self.deploy_local,
+            self.deploy_server,
+            self.deploy_context,
+        )
 
     @requires_connection
     def do_redeploy(self, cmdline: cmd2.Statement):
-        """Redeploy an application to the tomcat server"""
+        """redeploy an application to the tomcat server"""
         args = self.parse_args(self.redeploy_parser, cmdline.argv)
         try:
             args.func(self, args, update=True)
@@ -1423,13 +1472,16 @@ change the value of one of this program's settings
         """Show help for the 'redeploy' command"""
         self.show_help_from(self.redeploy_parser)
 
-    undeploy_parser = _path_version_parser(
-        "undeploy", "Remove an application at a given path from the tomcat server."
-    )
+    @property
+    def undeploy_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the undeploy command"""
+        return _path_version_parser(
+            "undeploy", self.do_undeploy.__doc__
+        )
 
     @requires_connection
     def do_undeploy(self, cmdline: cmd2.Statement):
-        """Remove an application from the tomcat server"""
+        """remove an application from the tomcat server"""
         args = self.parse_args(self.undeploy_parser, cmdline.argv)
         apptag = self._apptag(args.path, args.version)
         self.docmd(
@@ -1561,34 +1613,39 @@ change the value of one of this program's settings
         """Show help for the 'expire' command"""
         self.show_help_from(self.expire_parser)
 
-    list_parser = argparse.ArgumentParser(
-        prog="list",
-        description="Show all installed applications",
-        add_help=False,
-    )
-    list_parser.add_argument(
-        "-r",
-        "--raw",
-        action="store_true",
-        help="show apps without formatting",
-    )
-    list_parser.add_argument(
-        "-s",
-        "--state",
-        choices=["running", "stopped"],
-        help="only show apps in a given state",
-    )
-    list_parser.add_argument(
-        "-b",
-        "--by",
-        choices=["state", "path"],
-        default="state",
-        help="sort by state (default), or sort by path",
-    )
+    @property
+    def list_parser(self) -> argparse.ArgumentParser:
+        """Build the argument parser for the list command"""
+        parser = argparse.ArgumentParser(
+            prog="list",
+            description=self.do_list.__doc__,
+            add_help=False,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "-r",
+            "--raw",
+            action="store_true",
+            help="show apps without formatting",
+        )
+        parser.add_argument(
+            "-s",
+            "--state",
+            choices=["running", "stopped"],
+            help="only show apps in a given state",
+        )
+        parser.add_argument(
+            "-b",
+            "--by",
+            choices=["state", "path"],
+            default="state",
+            help="sort by state (default), or sort by path",
+        )
+        return parser
 
     @requires_connection
     def do_list(self, cmdline: cmd2.Statement):
-        """Show all installed tomcat applications"""
+        """show all installed tomcat applications"""
         args = self.parse_args(self.list_parser, cmdline.argv)
 
         response = self.docmd("listing applications", self.tomcat.list)
@@ -1847,29 +1904,30 @@ change the value of one of this program's settings
     #
     ###
     def do_exit(self, _):
-        """Exit the interactive command prompt"""
+        """exit the interactive command prompt"""
         self.exit_code = self.EXIT_SUCCESS
         return True
 
     def do_quit(self, cmdline: cmd2.Statement):
-        """Synonym for the 'exit' command"""
+        """synonym for the 'exit' command"""
         return self.do_exit(cmdline)
 
     def do_eof(self, cmdline: cmd2.Statement):
-        """Exit on the end-of-file character"""
+        """exit on the end-of-file character"""
         return self.do_exit(cmdline)
 
     @property
     def version_parser(self) -> argparse.ArgumentParser:
-        vparser = argparse.ArgumentParser(
+        """Build an argument parser for the version command."""
+        parser = argparse.ArgumentParser(
             prog="version",
-            description="show the version number of this program",
+            description=self.do_version.__doc__,
             formatter_class=RichHelpFormatter,
         )
-        return vparser
+        return parser
 
     def do_version(self, cmdline: cmd2.Statement):
-        """Show the version number of this program"""
+        """show the version number of this program"""
         self.parse_args(self.version_parser, cmdline.argv)
         self.poutput(tm.VERSION_STRING)
 
@@ -1904,15 +1962,16 @@ change the value of one of this program's settings
 
     @property
     def license_parser(self) -> argparse.ArgumentParser:
-        lparser = argparse.ArgumentParser(
+        """Build an argument parser for the license command."""
+        parser = argparse.ArgumentParser(
             prog="license",
-            description="show the software license for this program",
+            description=self.do_license.__doc__,
             formatter_class=RichHelpFormatter,
         )
-        return lparser
+        return parser
 
     def do_license(self, cmdline: cmd2.Statement):
-        """Show the software license for this program"""
+        """show the software license for this program"""
         self.parse_args(self.license_parser, cmdline.argv)
         mitlicense = textwrap.dedent(
             """\
