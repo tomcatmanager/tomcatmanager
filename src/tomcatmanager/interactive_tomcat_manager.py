@@ -945,9 +945,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 styled_setting += rich.text.Text("=", style="tm.setting.equals")
                 styled_setting += " "
 
+                # create a tomlkit table so we can have tomlkit worry about
+                # how render our python setting values as valid toml
                 ttable = tomlkit.table()
                 ttable.add(setting, getattr(self, setting))
-                value = tomlkit.dumps(ttable).split("=")[1].strip()
+                # now dump the table and peel off everything after
+                # the first equal sign for the value
+                value = tomlkit.dumps(ttable).split("=",1)[1].strip()
+
                 typ = type(getattr(self, setting))
                 styled_value = value
                 if typ == bool:
@@ -978,9 +983,48 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Show help for the 'settings' command"""
         self.show_help_from(self.settings_parser)
 
+    @property
+    def set_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the set command."""
+        # we don't actually parse input with this argument parser
+        # because it strips quotes off of the value, which we need
+        # to remain in place so they will be valid toml syntax
+        # we do use this argument parser to render help
+        desc = (
+            "change a program setting; "
+            "syntax must be valid TOML just like the config file"
+        )
+        parser = argparse.ArgumentParser(
+            prog="set",
+            description=desc,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "setting",
+            help="the name of the setting",
+        )
+        parser.add_argument(
+            "equals",
+            help="assignment operator",
+            metavar="=",
+        )
+        parser.add_argument(
+            "value",
+            help="the value for the setting ",
+        )
+        return parser
+
     def do_set(self, args: cmd2.Statement):
         """change a program setting"""
+        # we don't parse the input with self.set_parser() because
+        # argparse.ArgumentParser.parse_args() swallows the quotes around
+        # quoted arguments and we need those quotes to make valid TOML.
         if args:
+            # so we have to check manually for help flags
+            if args.arg_list[0] == "-h" or args.arg_list[0] == "--help":
+                self.help_set()
+                return
+
             try:
                 setting_string = f"[settings]\n{args}"
                 config = tomlkit.loads(setting_string)
@@ -992,7 +1036,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                         self.perror(f"unknown setting: '{param_name}'")
                         self.exit_code = self.EXIT_ERROR
             except tomlkit.exceptions.TOMLKitError:
-                self.perror("invalid syntax: try 'set {setting} = {value}'")
+                self.perror("invalid syntax: try 'set setting = value'")
                 self.exit_code = self.EXIT_ERROR
             except ValueError as err:
                 # this could be thrown by self._change_setting if we try to set a string
@@ -1007,17 +1051,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     def help_set(self):
         """Show help for the 'set' command"""
-        self.exit_code = self.EXIT_SUCCESS
-        self.poutput(
-            """usage: set [setting] = [value]
-
-change the value of one of this program's settings
-
-  setting  name of the setting to modify; use the 'settings' command to see a
-           list of valid settings
-  value    the value for the setting
-"""
-        )
+        self.show_help_from(self.set_parser)
 
     ###
     #
