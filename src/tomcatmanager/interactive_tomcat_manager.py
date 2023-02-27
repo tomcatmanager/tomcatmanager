@@ -47,6 +47,7 @@ import rich.console
 import rich.spinner
 import rich.syntax
 import rich.progress
+from rich_argparse import RichHelpFormatter
 import tomlkit
 
 import tomcatmanager as tm
@@ -332,33 +333,54 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.syntax_theme = "monokai"
 
         # set up the rich theme and console
-        tomcat_theme = rich.theme.Theme(
-            {
-                "tm.help.section": "gold1",
-                "tm.help.command": "magenta3",
-                "tm.feedback": "deep_sky_blue1",
-                "tm.error": "red3",
-                "tm.status": "deep_sky_blue1",
-                "tm.list.header": "bold deep_sky_blue1",
-                "tm.list.border": "bold deep_sky_blue1",
-                "tm.app.running": "green1",
-                "tm.app.stopped": "red3",
-                "tm.app.sessions": "cyan1",
-                "tm.setting.name": "dark_orange3",
-                "tm.setting.equals": "orchid1",
-                "tm.setting.comment": "pale_turquoise4",
-                "tm.setting.string": "green1",
-                "tm.setting.bool": "purple",
-                "tm.setting.int": "royal_blue1",
-                "tm.setting.float": "royal_blue1",
-            }
-        )
+        self.theme = {
+            "tm.help.section": "gold1",
+            "tm.help.command": "magenta3",
+            "tm.usage.prog": "magenta3",
+            "tm.usage.groups": "gold1",
+            "tm.usage.args": "cyan",
+            "tm.usage.metavar": "dark_cyan",
+            "tm.usage.help": "default",
+            "tm.usage.text": "default",
+            "tm.usage.syntax": "bold",
+            "tm.feedback": "deep_sky_blue1",
+            "tm.error": "red3",
+            "tm.status": "deep_sky_blue1",
+            "tm.list.header": "bold deep_sky_blue1",
+            "tm.list.border": "bold deep_sky_blue1",
+            "tm.app.running": "green1",
+            "tm.app.stopped": "red3",
+            "tm.app.sessions": "cyan1",
+            "tm.setting.name": "dark_orange3",
+            "tm.setting.equals": "orchid1",
+            "tm.setting.comment": "pale_turquoise4",
+            "tm.setting.string": "green1",
+            "tm.setting.bool": "purple",
+            "tm.setting.int": "royal_blue1",
+            "tm.setting.float": "royal_blue1",
+        }
+        # copy the usage styles to the RichHelpFormatter class
+        RichHelpFormatter.styles["argparse.prog"] = self.theme["tm.usage.prog"]
+        RichHelpFormatter.styles["argparse.groups"] = self.theme["tm.usage.groups"]
+        RichHelpFormatter.styles["argparse.args"] = self.theme["tm.usage.args"]
+        RichHelpFormatter.styles["argparse.metavar"] = self.theme["tm.usage.metavar"]
+        RichHelpFormatter.styles["argparse.help"] = self.theme["tm.usage.help"]
+        RichHelpFormatter.styles["argparse.text"] = self.theme["tm.usage.text"]
+        RichHelpFormatter.styles["argparse.syntax"] = self.theme["tm.usage.syntax"]
+        RichHelpFormatter.usage_markup = True
 
         self.console = rich.console.Console(
-            theme=tomcat_theme, markup=False, emoji=False, highlight=False
+            theme=rich.theme.Theme(self.theme),
+            markup=False,
+            emoji=False,
+            highlight=False,
         )
         self.error_console = rich.console.Console(
-            stderr=True, theme=tomcat_theme, markup=False, emoji=False, highlight=False
+            stderr=True,
+            theme=rich.theme.Theme(self.theme),
+            markup=False,
+            emoji=False,
+            highlight=False,
         )
 
         # load config file if it exists
@@ -543,7 +565,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def show_help_from(self, argparser: argparse.ArgumentParser):
         """Set exit code and output help from an argparser."""
         self.exit_code = self.EXIT_SUCCESS
-        self.poutput(argparser.format_help())
+        #self.poutput(argparser.format_help())
+        # TODO do this or console.pager()
+        self.ppaged(argparser.format_help())
 
     def parse_args(
         self, parser: argparse.ArgumentParser, argv: List
@@ -606,6 +630,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def do_help(self, args: str):
         """Show available commands, or help on a specific command."""
         # pylint: disable=too-many-statements
+        # TODO page this output with console.pager() or self.ppaged()
         if args:
             # they want help on a specific command, use cmd2 for that
             super().do_help(args)
@@ -1076,57 +1101,73 @@ change the value of one of this program's settings
     # Connecting to Tomcat
     #
     ###
-    connect_parser = argparse.ArgumentParser(
-        prog="connect",
-        description="connect to a tomcat manager instance",
-        usage="%(prog)s [-h] config_name\n       %(prog)s [-h] url [user] [password]",
-        epilog="""If you specify a user and no password, you will be prompted for the
-               password.""",
-    )
-    connect_parser.add_argument(
-        "config_name",
-        nargs="?",
-        help="a section from the config file which contains at least a url",
-    )
-    connect_parser.add_argument(
-        "url",
-        nargs="?",
-        help="the url where the tomcat manager web app is located",
-    )
-    connect_parser.add_argument(
-        "user",
-        nargs="?",
-        help="optional user to use for authentication",
-    )
-    connect_parser.add_argument(
-        "password",
-        nargs="?",
-        help="optional password to use for authentication",
-    )
-    connect_parser.add_argument(
-        "--cert",
-        action="store",
-        help="""path to certificate for client side authentication;
-        file can include private key, in which case --key is unnecessary""",
-    )
-    connect_parser.add_argument(
-        "--key",
-        action="store",
-        help="path to private key for client side authentication",
-    )
-    connect_parser.add_argument(
-        "--cacert",
-        action="store",
-        help="""path to certificate authority bundle or directory used to
-        validate server SSL/TLS certificate""",
-    )
-    connect_parser.add_argument(
-        "--noverify",
-        # store_true makes the default False, aka default is to verify
-        # server certificates
-        action="store_true",
-        help="don't validate server SSL certificates, overrides --cacert",
-    )
+    @property
+    def connect_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the connect command."""
+
+        # yes there are embedded spaces and linefeeds in this string
+        # use markup using RichHelpFormatter native styles, which we keep
+        # updated according to our native styles
+        # we also have to escape open brackets so they don't get interpreted
+        # as markup by RichHelpFormatter
+        usagestr = textwrap.dedent("""\
+            %(prog)s [argparse.args]\[-h][/]
+                   %(prog)s [argparse.args]config_name[/] [argparse.args]\[OPTIONS][/]
+                   %(prog)s [argparse.args]url[/] [argparse.args]\[user][/] [argparse.args]\[password][/] [argparse.args]\[OPTIONS][/]""")
+
+        cparse = argparse.ArgumentParser(
+            prog="connect",
+            description="connect to a tomcat manager instance",
+            usage=usagestr,
+            epilog="""If you specify a user and no password, you will be prompted for the
+                password.""",
+            formatter_class=RichHelpFormatter,
+        )
+        cparse.add_argument(
+            "config_name",
+            nargs="?",
+            help="a section from the config file which contains at least a url",
+        )
+        cparse.add_argument(
+            "url",
+            nargs="?",
+            help="the url where the tomcat manager web app is located",
+        )
+        cparse.add_argument(
+            "user",
+            nargs="?",
+            help="optional user to use for authentication",
+        )
+        cparse.add_argument(
+            "password",
+            nargs="?",
+            help="optional password to use for authentication",
+        )
+        cparse.add_argument(
+            "--cert",
+            action="store",
+            help="""path to certificate for client side authentication;
+            file can include private key, in which case --key is unnecessary""",
+        )
+        cparse.add_argument(
+            "--key",
+            action="store",
+            help="path to private key for client side authentication",
+        )
+        cparse.add_argument(
+            "--cacert",
+            action="store",
+            help="""path to certificate authority bundle or directory used to
+            validate server SSL/TLS certificate""",
+        )
+        cparse.add_argument(
+            "--noverify",
+            # store_true makes the default False, aka default is to verify
+            # server certificates
+            action="store_true",
+            help="don't validate server SSL certificates, overrides --cacert",
+        )
+        return cparse
 
     def do_connect(self, cmdline: cmd2.Statement):
         """Connect to a tomcat manager instance"""
@@ -1260,10 +1301,14 @@ change the value of one of this program's settings
         """Show help for the 'connect' command."""
         self.show_help_from(self.connect_parser)
 
-    which_parser = argparse.ArgumentParser(
-        prog="which",
-        description="show the url of the tomcat server you are connected to",
-    )
+    @property
+    def which_parser(self) -> argparse.ArgumentParser:
+        wparser = argparse.ArgumentParser(
+            prog="which",
+            description="show the url of the tomcat server you are connected to",
+            formatter_class=RichHelpFormatter,
+        )
+        return wparser
 
     @requires_connection
     def do_which(self, cmdline: cmd2.Statement):
@@ -1814,10 +1859,14 @@ change the value of one of this program's settings
         """Exit on the end-of-file character"""
         return self.do_exit(cmdline)
 
-    version_parser = argparse.ArgumentParser(
-        prog="version",
-        description="show the version number of this program",
-    )
+    @property
+    def version_parser(self) -> argparse.ArgumentParser:
+        vparser = argparse.ArgumentParser(
+            prog="version",
+            description="show the version number of this program",
+            formatter_class=RichHelpFormatter,
+        )
+        return vparser
 
     def do_version(self, cmdline: cmd2.Statement):
         """Show the version number of this program"""
@@ -1853,10 +1902,14 @@ change the value of one of this program's settings
         """Show help for the 'exit_code' command"""
         self.show_help_from(self.exit_code_parser)
 
-    license_parser = argparse.ArgumentParser(
-        prog="license",
-        description="show the software license for this program",
-    )
+    @property
+    def license_parser(self) -> argparse.ArgumentParser:
+        lparser = argparse.ArgumentParser(
+            prog="license",
+            description="show the software license for this program",
+            formatter_class=RichHelpFormatter,
+        )
+        return lparser
 
     def do_license(self, cmdline: cmd2.Statement):
         """Show the software license for this program"""
