@@ -169,7 +169,7 @@ def test_help_set(capsys):
     cmdline = "help set"
     itm.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
-    assert "change the value of one of this program's settings" in out
+    assert "change a program setting" in out
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
@@ -396,7 +396,7 @@ key = "~/keys/mykey"
 verify = false
 """
 
-    itm = tm.InteractiveTomcatManager()
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
 
     with tempfile.TemporaryDirectory() as tmpdir:
 
@@ -770,34 +770,35 @@ def test_timeout_property():
 
 
 SETTINGS_SUCCESSFUL = [
-    ("prompt = 'tm>'", "tm>"),
-    ("prompt = 'tm> '", "tm> "),
-    ('prompt = "t m>"', "t m>"),
-    ('prompt = "tm> "', "tm> "),
-    ('prompt = "tm> "   # some comment here', "tm> "),
-    ('prompt = "t\'m> "', "t'm> "),
-    ('prompt = """h\'i"""', "h'i"),
+    ("set prompt = 'tm>'", "tm>"),
+    ("set prompt = 'tm> '", "tm> "),
+    ('set prompt = "t m>"', "t m>"),
+    ('set prompt = "tm> "', "tm> "),
+    ('set prompt = "tm> "   # some comment here', "tm> "),
+    ('set prompt = "t\'m> "', "t'm> "),
+    # single quote embedded in triple quotes
+    ('set prompt = """h' + "'" + 'i"""', "h'i"),
 ]
 
 
 @pytest.mark.parametrize("arg, value", SETTINGS_SUCCESSFUL)
 def test_do_set_success(arg, value):
     itm = tm.InteractiveTomcatManager()
-    itm.do_set(arg)
+    itm.onecmd_plus_hooks(arg)
     assert itm.prompt == value
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 SETTINGS_FAILURE = [
-    "thisisntaparam=somevalue",
-    "thisisntaparam",
+    "set thisisntaparam=somevalue",
+    "set thisisntaparam",
 ]
 
 
 @pytest.mark.parametrize("arg", SETTINGS_FAILURE)
 def test_do_set_fail(arg):
     itm = tm.InteractiveTomcatManager()
-    itm.do_set(arg)
+    itm.onecmd_plus_hooks(arg)
     assert itm.exit_code == itm.EXIT_ERROR
 
 

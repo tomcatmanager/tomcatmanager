@@ -938,8 +938,16 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 return
 
             try:
-                setting_string = f"[settings]\n{args}"
+                # we need to use args.raw because args and arg.arg_list
+                # have had all the quotation marks processed, which can
+                # mess with our input -> TOML processing.
+                # so we use args.raw and get rid of the "set " at the
+                # beginning. TOML is tolerant of whitespace, so the
+                # rest should be fine
+                tomlstr = args.raw.replace("set ", "", 1)
+                setting_string = f"[settings]\n{tomlstr}"
                 config = tomlkit.loads(setting_string)
+
                 for param_name in config["settings"]:
                     if param_name in self.settables:
                         self._change_setting(param_name, config["settings"][param_name])
@@ -2047,11 +2055,14 @@ def _to_bool(val: Any) -> bool:
     :param val: value being converted
     :return: boolean value expressed in the passed in value
     :raises: ValueError if the string can not be cast to a boolen
+
+    This has to be able to accommodate TOML-style bools, as well as
+    ini-style bools. That's why we lowercase the input before testing.
     """
     if isinstance(val, str):
-        if val == "true":
+        if val.lower() == "true":
             return True
-        if val == "false":
+        if val.lower() == "false":
             return False
         raise ValueError("syntax error: must be 'true' or 'false'")
 
