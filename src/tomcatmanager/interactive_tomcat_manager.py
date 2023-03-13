@@ -508,10 +508,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def show_help_from(self, argparser: argparse.ArgumentParser):
         """Set exit code and output help from an argparser."""
         self.exit_code = self.EXIT_SUCCESS
-        # self.poutput(argparser.format_help())
-        # TODO do this or console.pager()
-        # with self.console.pager(styles=True):
-        #    self.console.print(argparser.format_help())
+        # we don't use self.console because this already has ansi color codes in
         self.ppaged(argparser.format_help())
 
     def parse_args(
@@ -572,13 +569,22 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Add a new command to a help table"""
         table.add_row(rich.text.Text(command, style="tm.help.command"), desc)
 
-    def do_help(self, args: str):
+    def do_help(self, args: cmd2.Statement):
         """show available commands, or help on a specific command"""
         # pylint: disable=too-many-statements
-        # TODO figure out how to make "help deploy local" work properly
         if args:
-            # they want help on a specific command, use cmd2 for that
-            super().do_help(args)
+            # cmd2 doesn't handle help for subparsers very well
+            # I want "help deploy local" to work. so....
+            if args.arg_list[0] in ["deploy", "redeploy"]:
+                self._do_help_deploy(args)
+            else:
+                # they want help on a specific command that's not deploy
+                # use cmd2 for that
+                super().do_help(args)
+                if self.last_result:
+                    self.exit_code = self.EXIT_SUCCESS
+                else:
+                    self.exit_code = self.EXIT_ERROR
         else:
             with self.console.pager(styles=True):
                 self.console.print("tomcat-manager", style="tm.help.command", end="")
@@ -586,7 +592,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     " is a command line tool for managing a Tomcat server"
                 )
                 self.console.print()
-                self.console.print("Type 'help [command]' for help on any command.")
+                helpcmd = rich.text.Text("Type '")
+                helpcmd.append("help", style="tm.help.command")
+                helpcmd.append(" ")
+                helpcmd.append("[command]", style="tm.usage.args")
+                helpcmd.append("' for help on any command.")
+                self.console.print(helpcmd)
                 self.console.print()
                 self.console.print(
                     "Here's a categorized list of all available commands:"
@@ -668,6 +679,49 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.console.print(cmds)
 
             self.exit_code = self.EXIT_SUCCESS
+
+    def _do_help_deploy(self, args: cmd2.Statement):
+        """do help for the deploy and redeploy commands"""
+        # if we get here we know args.arg_list[0] is deploy or redeploy
+        command = args.arg_list[0]
+        (parser, local_parser, server_parser, context_parser) = _deploy_parser(
+            command,
+            self.do_deploy.__doc__,
+            self.deploy_local,
+            self.deploy_server,
+            self.deploy_context,
+        )
+        if len(args.arg_list) == 2:
+            # help deploy local
+            subcommand = args.arg_list[1]
+            if subcommand in ["local", "server", "context"]:
+                # format help from subparser
+                (_, local_parser, server_parser, context_parser) = _deploy_parser(
+                    "deploy",
+                    self.do_deploy.__doc__,
+                    self.deploy_local,
+                    self.deploy_server,
+                    self.deploy_context,
+                )
+                # this output is already formatted and knows about the length of
+                # the non-printing ascii color sequences. don't write it to
+                # our console or it will get wrapped inappropriately
+                if subcommand == "local":
+                    print(local_parser.format_help(), file=self.stdout)
+                elif subcommand == "server":
+                    print(server_parser.format_help(), file=self.stdout)
+                elif subcommand == "context":
+                    print(context_parser.format_help(), file=self.stdout)
+                self.exit_code = self.EXIT_SUCCESS
+            else:
+                # they typed 'help deploy invalidcommand'
+                print(parser.format_help(), file=self.stdout)
+                self.exit_code = self.EXIT_SUCCESS
+        else:
+            # we have some wacko arguments, so just do help for deploy/redeploy
+            print(parser.format_help(), file=self.stdout)
+            self.exit_code = self.EXIT_SUCCESS
+
 
     ###
     #
@@ -1396,13 +1450,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
     @property
     def deploy_parser(self) -> argparse.ArgumentParser:
         """Build an argument parser for the deploy command."""
-        return _deploy_parser(
+        (parser, _, _, _) = _deploy_parser(
             "deploy",
             self.do_deploy.__doc__,
             self.deploy_local,
             self.deploy_server,
             self.deploy_context,
         )
+        return parser
 
     @requires_connection
     def do_deploy(self, cmdline: cmd2.Statement):
@@ -1421,13 +1476,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
     @property
     def redeploy_parser(self) -> argparse.ArgumentParser:
         """Build an argument parser for the redeploy command."""
-        return _deploy_parser(
+        (parser, _, _, _) = _deploy_parser(
             "redeploy",
-            self.do_redeploy.__doc__,
+            self.do_deploy.__doc__,
             self.deploy_local,
             self.deploy_server,
             self.deploy_context,
         )
+        return parser
 
     @requires_connection
     def do_redeploy(self, cmdline: cmd2.Statement):
@@ -2106,6 +2162,7 @@ def _deploy_parser(
         prog=name,
         description=desc,
         formatter_class=RichHelpFormatter,
+        epilog="type 'deploy \[deployment_method] -h' for more help",
     )
     deploy_subparsers = deploy_parser.add_subparsers(
         dest="method",
@@ -2204,4 +2261,9 @@ def _deploy_parser(
         ),
     )
     deploy_context_parser.set_defaults(func=contextfunc)
-    return deploy_parser
+    return (
+        deploy_parser,
+        deploy_local_parser,
+        deploy_server_parser,
+        deploy_context_parser,
+    )

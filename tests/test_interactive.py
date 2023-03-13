@@ -172,6 +172,44 @@ def test_help_set(capsys):
     assert "change a program setting" in out
     assert itm.exit_code == itm.EXIT_SUCCESS
 
+def test_help_deploy_local(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help deploy local"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert "local file system" in out
+    assert "warfile" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+def test_help_deploy_server(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help deploy server"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert "server file system" in out
+    assert "warfile" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+def test_help_deploy_context(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help deploy context"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert "server file system" in out
+    assert "warfile" in out
+    assert "contextfile" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+def test_help_deploy_invalid(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help deploy invalid"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert "deployment_method" in out
+    assert "local" in out
+    assert "server" in out
+    assert "context" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 def test_help(capsys):
     itm = tm.InteractiveTomcatManager()
@@ -183,6 +221,13 @@ def test_help(capsys):
     assert "Server information" in out
     assert "Settings, configuration, and tools" in out
     assert itm.exit_code == itm.EXIT_SUCCESS
+
+def test_help_invalid(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help invalidcommand"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_ERROR
 
 
 ###
