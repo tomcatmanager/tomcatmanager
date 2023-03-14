@@ -2162,7 +2162,7 @@ def _deploy_parser(
         prog=name,
         description=desc,
         formatter_class=RichHelpFormatter,
-        epilog="type 'deploy \[deployment_method] -h' for more help",
+        epilog=f"type '{name} \[deployment_method] -h' for more help",
     )
     deploy_subparsers = deploy_parser.add_subparsers(
         dest="method",
