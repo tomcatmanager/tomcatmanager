@@ -56,10 +56,6 @@ import tomcatmanager as tm
 def requires_connection(func: Callable) -> Callable:
     """Decorator for interactive methods which require a connection."""
 
-    # TODO - figure out how to do this but let the command run with only the -h
-    # command. Right now if you run 'sessions -h' it says you aren't connected.
-    # but 'help sessions' works whether you are connected or not.
-    # 'sessions -h' should work whether you are connected or not.
     def _requires_connection(self, *args, **kwargs):
         if self.tomcat and self.tomcat.is_connected:
             func(self, *args, **kwargs)
@@ -2159,7 +2155,7 @@ def _deploy_parser(
         prog=name,
         description=desc,
         formatter_class=RichHelpFormatter,
-        epilog=f"type '{name} \[deployment_method] -h' for more help",
+        epilog=f"type '{name} \\[deployment_method] -h' for more help",
     )
     deploy_subparsers = deploy_parser.add_subparsers(
         dest="method",
@@ -2248,7 +2244,6 @@ def _deploy_parser(
             " 'contextfile'"
         ),
     )
-    # TODO tomcat docs say path is ignored, double check actual behavior
     deploy_context_parser.add_argument(
         "path",
         help=(
