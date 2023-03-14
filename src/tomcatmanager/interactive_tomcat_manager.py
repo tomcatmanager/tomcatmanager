@@ -205,7 +205,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             cmd2.Settable(
                 "echo",
                 _to_bool,
-                "ror piped input, echo command to output",
+                "for piped input, echo command to output",
                 self,
             )
         )
@@ -391,13 +391,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if version:
             apptag += f"##{version}"
         return apptag
-
-    def _spinner_kwargs(self) -> dict:
-        """return proper keyword arguments for the spinner setting"""
-        kwargs = {}
-        if self.status_spinner:
-            kwargs["spinner"] = self.status_spinner
-        return kwargs
 
     ###
     #
@@ -721,7 +714,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
             # we have some wacko arguments, so just do help for deploy/redeploy
             print(parser.format_help(), file=self.stdout)
             self.exit_code = self.EXIT_SUCCESS
-
 
     ###
     #
@@ -1469,9 +1461,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.help_deploy()
             self.exit_code = self.EXIT_ERROR
 
-    def help_deploy(self):
-        """Show help for the 'deploy' command"""
-        self.show_help_from(self.deploy_parser)
+    # we intercept do_help to display this help using a different approach.
+    # leaving here, but commented out, so that if cmd2 gets
+    # subcommand help support in the future, we can put this
+    # back in.
+    # def help_deploy(self):
+    #     """Show help for the 'deploy' command"""
+    #     self.show_help_from(self.deploy_parser)
 
     @property
     def redeploy_parser(self) -> argparse.ArgumentParser:
@@ -1495,9 +1491,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.help_redeploy()
             self.exit_code = self.EXIT_ERROR
 
-    def help_redeploy(self):
-        """Show help for the 'redeploy' command"""
-        self.show_help_from(self.redeploy_parser)
+    # we intercept do_help to display this help using a different approach.
+    # leaving here, but commented out, so that if cmd2 gets
+    # subcommand help support in the future, we can put this
+    # back in.
+    # def help_redeploy(self):
+    #     """Show help for the 'redeploy' command"""
+    #     self.show_help_from(self.redeploy_parser)
 
     @property
     def undeploy_parser(self) -> argparse.ArgumentParser:

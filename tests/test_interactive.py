@@ -172,6 +172,7 @@ def test_help_set(capsys):
     assert "change a program setting" in out
     assert itm.exit_code == itm.EXIT_SUCCESS
 
+
 def test_help_deploy_local(capsys):
     itm = tm.InteractiveTomcatManager()
     cmdline = "help deploy local"
@@ -180,6 +181,7 @@ def test_help_deploy_local(capsys):
     assert "local file system" in out
     assert "warfile" in out
     assert itm.exit_code == itm.EXIT_SUCCESS
+
 
 def test_help_deploy_server(capsys):
     itm = tm.InteractiveTomcatManager()
@@ -190,6 +192,7 @@ def test_help_deploy_server(capsys):
     assert "warfile" in out
     assert itm.exit_code == itm.EXIT_SUCCESS
 
+
 def test_help_deploy_context(capsys):
     itm = tm.InteractiveTomcatManager()
     cmdline = "help deploy context"
@@ -199,6 +202,7 @@ def test_help_deploy_context(capsys):
     assert "warfile" in out
     assert "contextfile" in out
     assert itm.exit_code == itm.EXIT_SUCCESS
+
 
 def test_help_deploy_invalid(capsys):
     itm = tm.InteractiveTomcatManager()
@@ -211,6 +215,7 @@ def test_help_deploy_invalid(capsys):
     assert "context" in out
     assert itm.exit_code == itm.EXIT_SUCCESS
 
+
 def test_help(capsys):
     itm = tm.InteractiveTomcatManager()
     cmdline = "help"
@@ -221,6 +226,7 @@ def test_help(capsys):
     assert "Server information" in out
     assert "Settings, configuration, and tools" in out
     assert itm.exit_code == itm.EXIT_SUCCESS
+
 
 def test_help_invalid(capsys):
     itm = tm.InteractiveTomcatManager()
@@ -409,6 +415,8 @@ def test_config_convert(mocker, capsys):
 [settings]
 prompt='tm> '
 debug=True
+echo=False
+timing=false
 timeout=20.0
 editor=/usr/local/bin/zile
 
@@ -426,6 +434,8 @@ verify = False
     tomlconfig = """[settings]
 prompt = "tm> "
 debug = true
+echo = false
+timing = false
 timeout = 20.0
 editor = "/usr/local/bin/zile"
 
@@ -695,6 +705,14 @@ def test_set_noargs(capsys):
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
+def test_set_help(capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks("set -h")
+    out, _ = capsys.readouterr()
+    assert "change a program setting" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+
 def test_set_string():
     itm = tm.InteractiveTomcatManager()
     prompt = str(uuid.uuid1())
@@ -759,11 +777,19 @@ def test_set_float_invalid_debug():
     assert itm.exit_code == itm.EXIT_ERROR
 
 
-def test_set_boolean_valid():
+def test_set_boolean_true():
     itm = tm.InteractiveTomcatManager()
     itm.echo = False
     itm.onecmd_plus_hooks("set echo = true")
     assert itm.echo is True
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+
+def test_set_boolean_false():
+    itm = tm.InteractiveTomcatManager()
+    itm.echo = True
+    itm.onecmd_plus_hooks("set echo = false")
+    assert itm.echo is False
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
@@ -773,6 +799,14 @@ def test_set_boolean_invalid():
     itm.onecmd_plus_hooks("set echo = notaboolean")
     assert itm.echo is False
     assert itm.exit_code == itm.EXIT_ERROR
+
+
+def test_set_boolean_zero():
+    itm = tm.InteractiveTomcatManager()
+    itm.echo = True
+    itm.onecmd_plus_hooks("set echo = 0")
+    assert itm.echo is False
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 def test_set_debug_invalid():
@@ -864,6 +898,28 @@ def test_status_prefix(tomcat_manager_server, itm_nc, prefix, expected, capsys):
     out, err = capsys.readouterr()
     assert err.startswith(expected)
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+
+
+def test_status_spinner():
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks("set status_spinner = 'dots'")
+    assert itm.status_spinner == "dots"
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+
+def test_status_spinner_invalid(capsys):
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks("set status_spinner = 'invalid'")
+    _, err = capsys.readouterr()
+    assert "invalid" in err
+    assert itm.exit_code == itm.EXIT_ERROR
+
+
+def test_status_spinner_none():
+    itm = tm.InteractiveTomcatManager()
+    itm.onecmd_plus_hooks("set status_spinner = ''")
+    assert itm.status_spinner == ""
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 ###
@@ -1497,6 +1553,21 @@ def test_serverinfo(tomcat_manager_server, capsys):
 def test_status(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
     itm.exit_code = itm.EXIT_ERROR
+    itm.onecmd_plus_hooks("status")
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert "</status>" in out
+    assert "</jvm>" in out
+    assert "</connector>" in out
+
+
+def test_status_no_spinner(tomcat_manager_server, capsys):
+    # this is really to test no spinner, not status, but we gotta
+    # test it with something
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.EXIT_ERROR
+    itm.status_spinner = None
+    itm.quiet = False
     itm.onecmd_plus_hooks("status")
     out, _ = capsys.readouterr()
     assert itm.exit_code == itm.EXIT_SUCCESS
