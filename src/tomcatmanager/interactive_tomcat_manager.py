@@ -1389,7 +1389,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Deploy a local war file to the tomcat server"""
         warfile = pathlib.Path(args.warfile).expanduser()
         with open(warfile, "rb") as fileobj:
-            self.exit_code = self.EXIT_SUCCESS
             apptag = self._apptag(args.path, args.version)
             if update:
                 msg = f"redeploying {apptag}"
@@ -1406,7 +1405,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     def deploy_server(self, args: argparse.Namespace, update: bool = False):
         """Deploy a war file to the tomcat server"""
-        self.exit_code = self.EXIT_SUCCESS
         apptag = self._apptag(args.path, args.version)
         if update:
             msg = f"redeploying {apptag}"
@@ -1423,7 +1421,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     def deploy_context(self, args: argparse.Namespace, update: bool = False):
         """Deploy a context xml file to the tomcat server"""
-        self.exit_code = self.EXIT_SUCCESS
         apptag = self._apptag(args.path, args.version)
         if update:
             msg = f"redeploying {apptag}"
