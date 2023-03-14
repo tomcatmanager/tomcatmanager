@@ -1453,7 +1453,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """deploy an application to the tomcat server"""
         args = self.parse_args(self.deploy_parser, cmdline.argv)
         try:
-            args.func(self, args, update=False)
+            args.func(args, update=False)
         except AttributeError:  # pragma: nocover
             self.help_deploy()
             self.exit_code = self.EXIT_ERROR
@@ -1483,7 +1483,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """deploy an application to the tomcat server after undeploying the given path"""
         args = self.parse_args(self.redeploy_parser, cmdline.argv)
         try:
-            args.func(self, args, update=True)
+            args.func(args, update=True)
         except AttributeError:  # pragma: nocover
             self.help_redeploy()
             self.exit_code = self.EXIT_ERROR
