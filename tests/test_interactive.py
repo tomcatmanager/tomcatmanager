@@ -1018,6 +1018,7 @@ def test_apply_theme_file_parse_error(mocker, capsys):
         assert err
         assert not out
         assert not itm.theme
+        assert itm.theme == ""
 
 
 def test_apply_theme_permission_error(mocker, capsys):
@@ -1045,6 +1046,31 @@ def test_apply_theme_permission_error(mocker, capsys):
             assert err
             assert not out
             assert not itm.theme
+
+
+def test_apply_theme_invalid_theme_color(mocker, capsys):
+    theme = "someusertheme"
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    # get a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # write a theme file with a syntax error
+        tmppath = pathlib.Path(tmpdir)
+        themefile = tmppath / f"{theme}.toml"
+        with open(themefile, "w", encoding="utf-8") as file_var:
+            file_var.write("tm.error = 'dodget_blue2'\n")
+        # patch the temporary directory into user_theme_dir
+        mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+            new_callable=mock.PropertyMock,
+            return_value=tmppath,
+        )
+        # now that we are all set up, go try and load the theme
+        itm.onecmd_plus_hooks(f"set theme = '{theme}'")
+        out, err = capsys.readouterr()
+        assert err
+        assert not out
+        assert not itm.theme
+        assert itm.theme == ""
 
 
 ###

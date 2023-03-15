@@ -364,10 +364,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.perror(f"error loading theme: {err}")
                 return False
 
-            # if we get this far, then we know the theme is good
-            # set the value in the private variable
-            self._theme = theme
-
             # apply the new values from the theme to tvalues
             for scope in self.THEME_SCOPES:
                 parts = scope.split(".")
@@ -392,19 +388,23 @@ class InteractiveTomcatManager(cmd2.Cmd):
         RichHelpFormatter.group_name_formatter = str.lower
 
         # recreate our console objects using the new theme
-        self.console = rich.console.Console(
-            theme=rich.theme.Theme(tvalues),
-            markup=False,
-            emoji=False,
-            highlight=False,
-        )
-        self.error_console = rich.console.Console(
-            stderr=True,
-            theme=rich.theme.Theme(tvalues),
-            markup=False,
-            emoji=False,
-            highlight=False,
-        )
+        try:
+            self.console = rich.console.Console(
+                theme=rich.theme.Theme(tvalues),
+                markup=False,
+                emoji=False,
+                highlight=False,
+            )
+            self.error_console = rich.console.Console(
+                stderr=True,
+                theme=rich.theme.Theme(tvalues),
+                markup=False,
+                emoji=False,
+                highlight=False,
+            )
+        except (rich.errors.StyleError, rich.errors.ConsoleError) as err:
+            self.perror(f"error loading theme: {err}")
+            return False
         return True
 
     def _resolve_theme(self, name: str) -> pathlib.Path:
