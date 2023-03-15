@@ -31,6 +31,7 @@ import ast
 import configparser
 import getpass
 import http.client
+import importlib
 import os
 import pathlib
 import sys
@@ -183,8 +184,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
     @theme.setter
     def theme(self, value: str):
         """Validating property for theme specification"""
-        self._apply_theme(value)
-
+        if self._apply_theme(value):
+            self._theme = value
 
     def __init__(self, loadconfig=True):
         # pylint: disable=too-many-statements
@@ -293,11 +294,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 "syntax_theme", str, "pygments syntax highlighing theme", self
             )
         )
-        self.add_settable(
-            cmd2.Settable(
-                "theme", str, "color scheme", self
-            )
-        )
+        self.add_settable(cmd2.Settable("theme", str, "color scheme", self))
 
         self.tomcat = tm.TomcatManager()
 
@@ -314,10 +311,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         self.console = None
         self.error_console = None
-        # TODO not sure why we need the _theme assignment to make pylint happy
-        self._theme = ""
-        # but we need to assign to the property so it executes all the rest of the
-        # code
         self.theme = ""
 
         # load config file if it exists
@@ -346,50 +339,52 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # Theme and rendering helpers
     #
     ###
-    def _apply_theme(self, theme: str):
-        """Apply a given theme"""
-        self._theme = ""
+    def _apply_theme(self, theme: str) -> bool:
+        """Apply a given theme
+
+        :returns: True of the theme could be applied, False if not
+        """
         # the scopes have to be present in the theme, or else it generates
         # errors. Create a theme with all the scopes set to 'none', which
         # tells rich.style to apply no styling
         tvalues = {}
         for scope in self.THEME_SCOPES:
             tvalues[scope] = "none"
+        # if we have a theme name given
         if theme:
+            tfile = self._resolve_theme(theme)
+            if not tfile:
+                self.perror(f"theme '{theme}' not found")
+                return False
+
+            try:
+                with open(tfile, encoding="utf-8") as file_var:
+                    newvalues = tomlkit.load(file_var)
+            except (tomlkit.exceptions.TOMLKitError, OSError) as err:
+                self.perror(f"error loading theme: {err}")
+                return False
+
+            # if we get this far, then we know the theme is good
+            # set the value in the private variable
             self._theme = theme
-            # set up the rich theme and console
-            tvalues = {
-                "tm.help.section": "gold1",
-                "tm.help.command": "magenta3",
-                "tm.usage.prog": "magenta3",
-                "tm.usage.groups": "gold1",
-                "tm.usage.args": "cyan",
-                "tm.usage.metavar": "dark_cyan",
-                "tm.usage.help": "default",
-                "tm.usage.text": "default",
-                "tm.usage.syntax": "bold",
-                "tm.feedback": "deep_sky_blue1",
-                "tm.error": "red3",
-                "tm.status": "deep_sky_blue1",
-                "tm.list.header": "bold deep_sky_blue1",
-                "tm.list.border": "bold deep_sky_blue1",
-                "tm.app.running": "green1",
-                "tm.app.stopped": "red3",
-                "tm.app.sessions": "cyan1",
-                "tm.setting.name": "dark_orange3",
-                "tm.setting.equals": "orchid1",
-                "tm.setting.comment": "pale_turquoise4",
-                "tm.setting.string": "green1",
-                "tm.setting.bool": "purple",
-                "tm.setting.int": "royal_blue1",
-                "tm.setting.float": "royal_blue1",
-            }
+
+            # apply the new values from the theme to tvalues
+            for scope in self.THEME_SCOPES:
+                parts = scope.split(".")
+                style = ""
+                try:
+                    if len(parts) == 2:
+                        style = newvalues[parts[0]][parts[1]]
+                    elif len(parts) == 3:
+                        style = newvalues[parts[0]][parts[1]][parts[2]]
+                except tomlkit.exceptions.NonExistentKey:
+                    # the theme file doesn't define that scope
+                    pass
+                if style:
+                    tvalues[scope] = style
         # copy the usage styles to the RichHelpFormatter class
         for style in ["prog", "groups", "args", "metavar", "help", "text", "syntax"]:
-            try:
-                RichHelpFormatter.styles[f"argparse.{style}"] = tvalues[f"tm.usage.{style}"]
-            except KeyError:
-                RichHelpFormatter.styles[f"argparse.{style}"] = ""
+            RichHelpFormatter.styles[f"argparse.{style}"] = tvalues[f"tm.usage.{style}"]
         # set other RichHelpFormatter settings
         RichHelpFormatter.usage_markup = True
         # default is str.title, which shows the groups in title case
@@ -410,6 +405,30 @@ class InteractiveTomcatManager(cmd2.Cmd):
             emoji=False,
             highlight=False,
         )
+        return True
+
+    def _resolve_theme(self, name: str) -> pathlib.Path:
+        """
+        Find the path of the theme file for a given name.
+
+        :return: the path of the theme file for the given name, or None
+                 if no theme file for that name exists
+
+        Checks in the user theme directory first, which is located
+        in user configuration directory in a "themes" directory.
+        If not found, then it looks in the embedded themes included
+        as part of tomcatmanager.
+        """
+        # check user theme dir
+        tfile = self.user_theme_dir / f"{name}.toml"
+        if tfile.is_file():
+            return tfile
+        # check included themes
+        for path in importlib.resources.files("tomcatmanager.themes").iterdir():
+            if path.name == f"{name}.toml":
+                return path
+        # couldn't find it
+        return None
 
     def _progressfactory(self, message: str) -> rich.progress.Progress:
         """generate a progress object"""
@@ -1120,11 +1139,28 @@ class InteractiveTomcatManager(cmd2.Cmd):
         The location of the command history file.
 
         :return: The full path to the file where command history will be
-                saved and loaded, or None if self.appdirs has not been
-                defined.
+                 saved and loaded, or None if self.appdirs has not been
+                 defined.
         """
         if self.appdirs:
             return pathlib.Path(self.appdirs.user_config_dir).resolve() / "history.txt"
+        return None
+
+    @property
+    def user_theme_dir(self) -> pathlib.Path:
+        """
+        The directory containing user theme files.
+
+        tomcatmanager includes some themes as embedded resources which are not
+        user editable. Putting theme files in this directory allows a user to
+        create their own themes or override any of the included themes.
+
+        :return: The full path to the directory containing user theme files.
+                 This does not ensure the directory exists. Returns None if
+                 self.appdirs has not been defined.
+        """
+        if self.appdirs:
+            return pathlib.Path(self.appdirs.user_config_dir).resolve() / "themes"
         return None
 
     def load_config(self):

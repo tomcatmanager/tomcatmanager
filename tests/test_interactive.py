@@ -24,6 +24,7 @@
 # pylint: disable=protected-access, missing-function-docstring, too-many-lines
 # pylint: disable=missing-module-docstring, unused-variable, redefined-outer-name
 
+import importlib
 import pathlib
 import tempfile
 import textwrap
@@ -921,9 +922,129 @@ def test_status_spinner_none():
     assert itm.status_spinner == ""
     assert itm.exit_code == itm.EXIT_SUCCESS
 
+
 def test_theme_default_none():
     itm = tm.InteractiveTomcatManager(loadconfig=False)
     assert itm.theme == ""
+
+
+def test_theme_use_embedded():
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    theme = "dark"
+    itm.onecmd_plus_hooks(f"set theme = '{theme}'")
+    assert itm.theme == theme
+
+
+def test_theme_invalid(capsys):
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    theme = str(uuid.uuid1())
+    assert not itm.theme
+    itm.onecmd_plus_hooks(f"set theme = '{theme}'")
+    out, err = capsys.readouterr()
+    assert not itm.theme
+    assert err
+    assert not out
+
+
+def test_resolve_theme_builtin():
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    # this is one of our builtin themes
+    theme_name = "dark"
+    path = itm._resolve_theme(theme_name)
+    assert path
+    assert str(importlib.resources.files("tomcatmanager.themes")) in str(path)
+    assert theme_name in str(path)
+
+
+def test_resolve_theme_invalid_name():
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    # shouldn't find this random uuid as a theme
+    theme_name = str(uuid.uuid1())
+    path = itm._resolve_theme(theme_name)
+    assert not path
+
+
+def test_resolve_theme_user(mocker, capsys):
+    theme = "someusertheme"
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    # get a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # write a simple theme file into the directory
+        tmppath = pathlib.Path(tmpdir)
+        themefile = tmppath / f"{theme}.toml"
+        with open(themefile, "w", encoding="utf-8") as file_var:
+            file_var.write("tm.error = 'red'\n")
+        # patch the temporary directory into user_theme_dir
+        mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+            new_callable=mock.PropertyMock,
+            return_value=tmppath,
+        )
+        # now that we are all set up, go try and load the theme
+        itm.onecmd_plus_hooks(f"set theme = '{theme}'")
+        out, err = capsys.readouterr()
+        assert not err
+        assert not out
+        assert itm.theme == theme
+
+
+def test_user_theme_dir():
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    assert "themes" in str(itm.user_theme_dir)
+    # if appdirs doesn't exist, config_file shouldn't either
+    itm.appdirs = None
+    assert not itm.user_theme_dir
+
+
+def test_apply_theme_file_parse_error(mocker, capsys):
+    theme = "someusertheme"
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    # get a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # write a theme file with a syntax error
+        tmppath = pathlib.Path(tmpdir)
+        themefile = tmppath / f"{theme}.toml"
+        with open(themefile, "w", encoding="utf-8") as file_var:
+            file_var.write("tm.error = 'red\n")
+        # patch the temporary directory into user_theme_dir
+        mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+            new_callable=mock.PropertyMock,
+            return_value=tmppath,
+        )
+        # now that we are all set up, go try and load the theme
+        itm.onecmd_plus_hooks(f"set theme = '{theme}'")
+        out, err = capsys.readouterr()
+        assert err
+        assert not out
+        assert not itm.theme
+
+
+def test_apply_theme_permission_error(mocker, capsys):
+    theme = "someusertheme"
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    # get a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # write a theme file with a syntax error
+        tmppath = pathlib.Path(tmpdir)
+        themefile = tmppath / f"{theme}.toml"
+        with open(themefile, "w", encoding="utf-8") as file_var:
+            file_var.write("tm.error = 'red'\n")
+        # patch the temporary directory into user_theme_dir
+        mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+            new_callable=mock.PropertyMock,
+            return_value=tmppath,
+        )
+        # patch open to throw a permission error
+        with mock.patch("builtins.open", mock.mock_open()) as mocked_open:
+            mocked_open.side_effect = PermissionError()
+            # now that we are all set up, go try and load the theme
+            itm.onecmd_plus_hooks(f"set theme = '{theme}'")
+            out, err = capsys.readouterr()
+            assert err
+            assert not out
+            assert not itm.theme
 
 
 ###
