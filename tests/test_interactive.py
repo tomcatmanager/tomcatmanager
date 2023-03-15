@@ -921,6 +921,10 @@ def test_status_spinner_none():
     assert itm.status_spinner == ""
     assert itm.exit_code == itm.EXIT_SUCCESS
 
+def test_theme_default_none():
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    assert itm.theme == ""
+
 
 ###
 #

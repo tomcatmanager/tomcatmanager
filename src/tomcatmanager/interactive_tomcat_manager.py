@@ -106,6 +106,34 @@ class InteractiveTomcatManager(cmd2.Cmd):
         "off": False,
     }
 
+    # list of known scopes that themes can apply color to
+    THEME_SCOPES = [
+        "tm.feedback",
+        "tm.error",
+        "tm.status",
+        "tm.help.section",
+        "tm.help.command",
+        "tm.usage.prog",
+        "tm.usage.groups",
+        "tm.usage.args",
+        "tm.usage.metavar",
+        "tm.usage.help",
+        "tm.usage.text",
+        "tm.usage.syntax",
+        "tm.list.header",
+        "tm.list.border",
+        "tm.app.running",
+        "tm.app.stopped",
+        "tm.app.sessions",
+        "tm.setting.name",
+        "tm.setting.equals",
+        "tm.setting.comment",
+        "tm.setting.string",
+        "tm.setting.bool",
+        "tm.setting.int",
+        "tm.setting.float",
+    ]
+
     # for configuration
     app_name = "tomcat-manager"
     app_author = "tomcatmanager"
@@ -146,6 +174,17 @@ class InteractiveTomcatManager(cmd2.Cmd):
         else:
             # use empty string instead of None because TOML doesn't nave None or Nil
             self._status_spinner = ""
+
+    @property
+    def theme(self) -> str:
+        """Validating property for theme specification"""
+        return self._theme
+
+    @theme.setter
+    def theme(self, value: str):
+        """Validating property for theme specification"""
+        self._apply_theme(value)
+
 
     def __init__(self, loadconfig=True):
         # pylint: disable=too-many-statements
@@ -254,6 +293,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 "syntax_theme", str, "pygments syntax highlighing theme", self
             )
         )
+        self.add_settable(
+            cmd2.Settable(
+                "theme", str, "color scheme", self
+            )
+        )
 
         self.tomcat = tm.TomcatManager()
 
@@ -268,59 +312,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.status_spinner = "bouncingBar"
         self.syntax_theme = "monokai"
 
-        # set up the rich theme and console
-        self.theme = {
-            "tm.help.section": "gold1",
-            "tm.help.command": "magenta3",
-            "tm.usage.prog": "magenta3",
-            "tm.usage.groups": "gold1",
-            "tm.usage.args": "cyan",
-            "tm.usage.metavar": "dark_cyan",
-            "tm.usage.help": "default",
-            "tm.usage.text": "default",
-            "tm.usage.syntax": "bold",
-            "tm.feedback": "deep_sky_blue1",
-            "tm.error": "red3",
-            "tm.status": "deep_sky_blue1",
-            "tm.list.header": "bold deep_sky_blue1",
-            "tm.list.border": "bold deep_sky_blue1",
-            "tm.app.running": "green1",
-            "tm.app.stopped": "red3",
-            "tm.app.sessions": "cyan1",
-            "tm.setting.name": "dark_orange3",
-            "tm.setting.equals": "orchid1",
-            "tm.setting.comment": "pale_turquoise4",
-            "tm.setting.string": "green1",
-            "tm.setting.bool": "purple",
-            "tm.setting.int": "royal_blue1",
-            "tm.setting.float": "royal_blue1",
-        }
-        # copy the usage styles to the RichHelpFormatter class
-        RichHelpFormatter.styles["argparse.prog"] = self.theme["tm.usage.prog"]
-        RichHelpFormatter.styles["argparse.groups"] = self.theme["tm.usage.groups"]
-        RichHelpFormatter.styles["argparse.args"] = self.theme["tm.usage.args"]
-        RichHelpFormatter.styles["argparse.metavar"] = self.theme["tm.usage.metavar"]
-        RichHelpFormatter.styles["argparse.help"] = self.theme["tm.usage.help"]
-        RichHelpFormatter.styles["argparse.text"] = self.theme["tm.usage.text"]
-        RichHelpFormatter.styles["argparse.syntax"] = self.theme["tm.usage.syntax"]
-        RichHelpFormatter.usage_markup = True
-        # default is str.title, which shows the groups in title case
-        # this shows the groups in all lower case
-        RichHelpFormatter.group_name_formatter = str.lower
-
-        self.console = rich.console.Console(
-            theme=rich.theme.Theme(self.theme),
-            markup=False,
-            emoji=False,
-            highlight=False,
-        )
-        self.error_console = rich.console.Console(
-            stderr=True,
-            theme=rich.theme.Theme(self.theme),
-            markup=False,
-            emoji=False,
-            highlight=False,
-        )
+        self.console = None
+        self.error_console = None
+        # TODO not sure why we need the _theme assignment to make pylint happy
+        self._theme = ""
+        # but we need to assign to the property so it executes all the rest of the
+        # code
+        self.theme = ""
 
         # load config file if it exists
         if loadconfig:
@@ -348,6 +346,71 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # Theme and rendering helpers
     #
     ###
+    def _apply_theme(self, theme: str):
+        """Apply a given theme"""
+        self._theme = ""
+        # the scopes have to be present in the theme, or else it generates
+        # errors. Create a theme with all the scopes set to 'none', which
+        # tells rich.style to apply no styling
+        tvalues = {}
+        for scope in self.THEME_SCOPES:
+            tvalues[scope] = "none"
+        if theme:
+            self._theme = theme
+            # set up the rich theme and console
+            tvalues = {
+                "tm.help.section": "gold1",
+                "tm.help.command": "magenta3",
+                "tm.usage.prog": "magenta3",
+                "tm.usage.groups": "gold1",
+                "tm.usage.args": "cyan",
+                "tm.usage.metavar": "dark_cyan",
+                "tm.usage.help": "default",
+                "tm.usage.text": "default",
+                "tm.usage.syntax": "bold",
+                "tm.feedback": "deep_sky_blue1",
+                "tm.error": "red3",
+                "tm.status": "deep_sky_blue1",
+                "tm.list.header": "bold deep_sky_blue1",
+                "tm.list.border": "bold deep_sky_blue1",
+                "tm.app.running": "green1",
+                "tm.app.stopped": "red3",
+                "tm.app.sessions": "cyan1",
+                "tm.setting.name": "dark_orange3",
+                "tm.setting.equals": "orchid1",
+                "tm.setting.comment": "pale_turquoise4",
+                "tm.setting.string": "green1",
+                "tm.setting.bool": "purple",
+                "tm.setting.int": "royal_blue1",
+                "tm.setting.float": "royal_blue1",
+            }
+        # copy the usage styles to the RichHelpFormatter class
+        for style in ["prog", "groups", "args", "metavar", "help", "text", "syntax"]:
+            try:
+                RichHelpFormatter.styles[f"argparse.{style}"] = tvalues[f"tm.usage.{style}"]
+            except KeyError:
+                RichHelpFormatter.styles[f"argparse.{style}"] = ""
+        # set other RichHelpFormatter settings
+        RichHelpFormatter.usage_markup = True
+        # default is str.title, which shows the groups in title case
+        # this shows the groups in all lower case
+        RichHelpFormatter.group_name_formatter = str.lower
+
+        # recreate our console objects using the new theme
+        self.console = rich.console.Console(
+            theme=rich.theme.Theme(tvalues),
+            markup=False,
+            emoji=False,
+            highlight=False,
+        )
+        self.error_console = rich.console.Console(
+            stderr=True,
+            theme=rich.theme.Theme(tvalues),
+            markup=False,
+            emoji=False,
+            highlight=False,
+        )
+
     def _progressfactory(self, message: str) -> rich.progress.Progress:
         """generate a progress object"""
         if self.feedback_to_output:
