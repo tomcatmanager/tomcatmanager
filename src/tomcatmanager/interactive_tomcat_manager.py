@@ -225,7 +225,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             cmd2.Settable(
                 "quiet",
                 _to_bool,
-                "suppress all status output",
+                "suppress all feedback and status output",
                 self,
             )
         )
