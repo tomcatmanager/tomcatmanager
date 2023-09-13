@@ -1181,14 +1181,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.perror(f"error loading configuration file: {err}")
             except FileNotFoundError:
                 pass
-        try:
-            settings = config["settings"]
-            for key in settings:
+
+        settings = config["settings"]
+        for key in settings:
+            try:
                 self._change_setting(key, settings[key])
-        except tomlkit.exceptions.TOMLKitError:
-            pass
-        except ValueError:
-            pass
+            except ValueError as err:
+                # could be the setting name, or the setting value
+                self.perror(err)
         self.config = config
 
     def _change_setting(self, param_name: str, value: Any):
@@ -1208,8 +1208,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             settable = self.settables[param_name]
             # calling set_value should fire any on change callbacks
             settable.set_value(value)
-        except KeyError as keyerr:
-            raise ValueError(f"invalid setting: {param_name}") from keyerr
+        except KeyError as err:
+            raise ValueError(f'unknown setting: {param_name}') from err
+        except ValueError as err:
+            raise ValueError(f"error while trying to set {param_name}: {err}") from err
 
     @classmethod
     def convert_to_boolean(cls, value: Any):
