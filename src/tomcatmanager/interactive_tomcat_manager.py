@@ -1026,14 +1026,21 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # because it strips quotes off of the value, which we need
         # to remain in place so they will be valid toml syntax
         # we do use this argument parser to render help
-        desc = (
-            "change a program setting; "
-            "syntax must be valid TOML just like the config file"
-        )
+        desc = """\
+            change a program setting
+
+            The syntax must be valid TOML, just like the config file. Here's some
+            examples:
+
+              tomcat-manager> set theme = "dark"
+              tomcat-manager> set timing = true
+              tomcat-manager> set timeout = 5.0
+              tomcat-manager> set prompt = "tm> "
+            """
         parser = argparse.ArgumentParser(
             prog="set",
-            description=desc,
-            formatter_class=RichHelpFormatter,
+            description=textwrap.dedent(desc),
+            formatter_class=RawDescriptionRichHelpFormatter,
         )
         parser.add_argument(
             "setting",
