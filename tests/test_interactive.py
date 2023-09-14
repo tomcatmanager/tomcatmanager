@@ -1637,11 +1637,10 @@ def test_disconnect(tomcat_manager_server, capsys):
     # force this to ensure `which` sets it to SUCCESS
     itm.onecmd_plus_hooks("disconnect")
     _, err = capsys.readouterr()
-    assert 'disconnected' in err
+    assert "disconnected" in err
     assert itm.exit_code == itm.EXIT_SUCCESS
     itm.onecmd_plus_hooks("which")
     assert itm.exit_code == itm.EXIT_ERROR
-
 
 
 REQUIRES_CONNECTION = [

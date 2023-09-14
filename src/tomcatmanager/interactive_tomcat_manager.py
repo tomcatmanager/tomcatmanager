@@ -1219,7 +1219,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             # calling set_value should fire any on change callbacks
             settable.set_value(value)
         except KeyError as err:
-            raise ValueError(f'unknown setting: {param_name}') from err
+            raise ValueError(f"unknown setting: {param_name}") from err
         except ValueError as err:
             raise ValueError(f"error while trying to set {param_name}: {err}") from err
 
