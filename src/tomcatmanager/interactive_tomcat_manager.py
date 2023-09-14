@@ -169,8 +169,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def status_spinner(self, value: str):
         """Validating property for spinner specification"""
         if value:
-            # this will throw a KeyError if the spinner doesn't exist
-            _ = rich.spinner.Spinner(value)
+            try:
+                _ = rich.spinner.Spinner(value)
+            except KeyError as err:
+                # the spinner doesn't exist, rich throws a KeyError for this,
+                # we need a ValueError. KeyError puts the message in single quotes
+                # err.args[0] gets the message without the quotes
+                raise ValueError(err.args[0]) from err
             self._status_spinner = value
         else:
             # use empty string instead of None because TOML doesn't nave None or Nil
@@ -677,6 +682,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 cmds = self._help_section("Connecting to a Tomcat server")
                 self._help_command(cmds, "connect", self.do_connect.__doc__)
                 self._help_command(cmds, "which", self.do_which.__doc__)
+                self._help_command(cmds, "disconnect", self.do_disconnect.__doc__)
                 self.console.print(cmds)
 
                 cmds = self._help_section("Managing applications")
@@ -1182,13 +1188,17 @@ class InteractiveTomcatManager(cmd2.Cmd):
             except FileNotFoundError:
                 pass
 
-        settings = config["settings"]
-        for key in settings:
-            try:
-                self._change_setting(key, settings[key])
-            except ValueError as err:
-                # could be the setting name, or the setting value
-                self.perror(err)
+        try:
+            settings = config["settings"]
+            for key in settings:
+                try:
+                    self._change_setting(key, settings[key])
+                except ValueError as err:
+                    # could be the setting name, or the setting value
+                    self.perror(err)
+        except tomlkit.exceptions.NonExistentKey:
+            # we don't have a settings section, so there are no settings to load
+            pass
         self.config = config
 
     def _change_setting(self, param_name: str, value: Any):
@@ -1483,6 +1493,26 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def help_which(self):
         """Show help for the 'which' command"""
         self.show_help_from(self.which_parser)
+
+    @property
+    def disconnect_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the disconnect command."""
+        parser = argparse.ArgumentParser(
+            prog="disconnect",
+            description=self.do_disconnect.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        return parser
+
+    def do_disconnect(self, cmdline: cmd2.Statement):
+        """disconnect from a tomcat manager instance"""
+        self.parse_args(self.disconnect_parser, cmdline.argv)
+        self.tomcat.disconnect()
+        self.pfeedback("disconnected")
+
+    def help_disconnect(self):
+        """Show help for the 'disconnect' command"""
+        self.show_help_from(self.disconnect_parser)
 
     ###
     #

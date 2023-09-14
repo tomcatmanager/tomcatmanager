@@ -110,6 +110,7 @@ HELP_COMMANDS = [
     "settings",
     "connect",
     "which",
+    "disconnect",
     "deploy",
     "redeploy",
     "undeploy",
@@ -1075,7 +1076,7 @@ def test_apply_theme_invalid_theme_color(mocker, capsys):
 
 ###
 #
-# test connect and which commands
+# test connect, which, and disconnect commands
 #
 ###
 def test_connect(tomcat_manager_server, capsys):
@@ -1629,6 +1630,18 @@ def test_which_cert_key(tomcat_manager_server, capsys, mocker):
     itm.onecmd_plus_hooks("which")
     out, err = capsys.readouterr()
     assert "/tmp/mykey" in out
+
+
+def test_disconnect(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    # force this to ensure `which` sets it to SUCCESS
+    itm.onecmd_plus_hooks("disconnect")
+    _, err = capsys.readouterr()
+    assert 'disconnected' in err
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    itm.onecmd_plus_hooks("which")
+    assert itm.exit_code == itm.EXIT_ERROR
+
 
 
 REQUIRES_CONNECTION = [

@@ -518,6 +518,13 @@ class TomcatManager:
             self._clear_server_attrs()
             raise exc
 
+    def disconnect(self):
+        """Disconnect from the manager application running in a Tomcat server.
+
+        .. versionadded:: 7.0.0
+        """
+        self._clear_server_attrs()
+
     ###
     # managing applications
     ###
@@ -1112,7 +1119,7 @@ class TomcatManager:
         """
         Clear the private attributes describing the server.
 
-        Intended to be called from connect() and is_connected()
+        Intended to be called from connect() and disconnect()
         """
         self._user = None
         self._password = None

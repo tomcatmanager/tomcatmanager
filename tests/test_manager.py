@@ -247,3 +247,14 @@ def test_connect_sets_timeout(tomcat_manager_server):
 
 def test_is_connected_true(tomcat):
     assert tomcat.is_connected is True
+
+
+###
+#
+# disconnect
+#
+###
+def test_disconnect(tomcat):
+    assert tomcat.is_connected is True
+    tomcat.disconnect()
+    assert tomcat.is_connected is False
