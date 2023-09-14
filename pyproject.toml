@@ -41,6 +41,7 @@ dependencies = [
     "requests>=2,<3",
     "appdirs",
     "importlib_metadata>=1.6.0; python_version<'3.8'",
+    "importlib_resources>=5.0; python_version<'3.9'",
     "tomlkit",
     "rich",
     "rich_argparse",
