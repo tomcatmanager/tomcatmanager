@@ -31,7 +31,17 @@ import ast
 import configparser
 import getpass
 import http.client
-import importlib
+
+import importlib.resources as importlib_resources
+
+try:
+    _ = importlib_resources.files
+except AttributeError:  # pragma: nocover
+    # python < 3.8 doesn't have .files in the standard library importlib.resources
+    # we'll go get the one from pypi, which has it
+    # pylint: disable=import-error
+    import importlib_resources
+
 import os
 import pathlib
 import sys
@@ -429,7 +439,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if tfile.is_file():
             return tfile
         # check included themes
-        for path in importlib.resources.files("tomcatmanager.themes").iterdir():
+        for path in importlib_resources.files("tomcatmanager.themes").iterdir():
             if path.name == f"{name}.toml":
                 return path
         # couldn't find it

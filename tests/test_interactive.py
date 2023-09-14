@@ -24,7 +24,16 @@
 # pylint: disable=protected-access, missing-function-docstring, too-many-lines
 # pylint: disable=missing-module-docstring, unused-variable, redefined-outer-name
 
-import importlib
+import importlib.resources as importlib_resources
+
+try:
+    _ = importlib_resources.files
+except AttributeError:  # pragma: nocover
+    # python < 3.8 doesn't have .files in the standard library importlib.resources
+    # we'll go get the one from pypi, which has it
+    # pylint: disable=import-error
+    import importlib_resources
+
 import pathlib
 import tempfile
 import textwrap
@@ -953,7 +962,7 @@ def test_resolve_theme_builtin():
     theme_name = "dark"
     path = itm._resolve_theme(theme_name)
     assert path
-    assert str(importlib.resources.files("tomcatmanager.themes")) in str(path)
+    assert str(importlib_resources.files("tomcatmanager.themes")) in str(path)
     assert theme_name in str(path)
 
 
