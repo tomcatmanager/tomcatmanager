@@ -83,7 +83,7 @@ Table of Contents
 
    install
    configuretomcat
-   interactive
+   interactive/index.rst
    commandline
    package
    authentication
