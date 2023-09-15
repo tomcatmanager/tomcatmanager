@@ -521,9 +521,12 @@ class TomcatManager:
     def disconnect(self):
         """Disconnect from the manager application running in a Tomcat server.
 
+        :return:         always returns True
+
         .. versionadded:: 7.0.0
         """
         self._clear_server_attrs()
+        return True
 
     ###
     # managing applications
