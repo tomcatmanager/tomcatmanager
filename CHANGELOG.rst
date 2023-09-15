@@ -32,7 +32,10 @@ Added
 ^^^^^
 
 - Styled and colored output using ``rich``
-- New command line option ``--noconfig`` to prevent configuration loading on startup
+- New command line option ``--noconfig`` to prevent the configuration file from
+  being loading on startup
+- new method `TomcatManager.disconnect()
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.disconnect>`__
 
 Changed
 ^^^^^^^
