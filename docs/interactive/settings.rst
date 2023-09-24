@@ -14,7 +14,7 @@ of ``tomcat-manager``:
   echo = false                         # for piped input, echo command to output
   editor = "/opt/homebrew/bin/emacs"   # program used to edit files
   feedback_prefix = "--"               # string to prepend to all feedback output
-  prompt = "tm> "                      # the prompt displayed before accepting user input
+  prompt = "tm> "                      # displays before accepting user input
   quiet = false                        # suppress all feedback and status output
   status_spinner = "bouncingBar"       # style of status spinner from rich.spinner
   status_suffix = "..."                # suffix to append to status messages
@@ -35,7 +35,9 @@ You can change any of these settings using the ``set`` command:
   tomcat-manager> set prompt = "tm> "
   tm> set timeout = 3
 
-* describe TOML syntax for settings
+You can also change settings using the :doc:`configfile`.
+
+* TODO describe TOML syntax for settings
 
 
 debug

@@ -115,4 +115,4 @@ You can launch a python interpreter:
 
 As you can see, if you have connected to a Tomcat server, then you will have a
 ``self.tomcat`` object available which is an instance of :class:`.TomcatManager`.
-See :doc:`package` for more information about what you can do with this object.
+See :doc:`/package` for more information about what you can do with this object.

@@ -52,11 +52,11 @@ Now what?
 First you will need to :doc:`configuretomcat`.
 
 If you are in a hurry to :doc:`get started with the command line tool
-<interactive>`, type:
+<interactive/tomcatmanager>`, type:
 
 .. code-block:: text
 
    $ tomcat-manager -h
 
-Or, you can start :doc:`writing your own python code which imports the
-package <package>`.
+Or, you can start :doc:`writing your own python code which imports the package
+<package>`.

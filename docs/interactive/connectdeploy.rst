@@ -35,7 +35,7 @@ Or:
    tomcat-manager> connect http://localhost:8080/manager ace
    Password: {type your password here}
 
-See :doc:`authentication` for complete details on all supported authentication
+See :doc:`/authentication` for complete details on all supported authentication
 mechanisms.
 
 
@@ -60,7 +60,7 @@ For all of these examples, lets assume I have a Tomcat server running far away
 in a data center somewhere, accessible at ``https://www.example.com``. I'm
 running the command line ``tomcat-manager`` program on my laptop. We'll also
 assume that we have already connected to the Tomcat server, using one of the
-methods just described in :ref:`interactive:Connect To A Tomcat Server`.
+methods just described in :ref:`interactive/connectdeploy:Connect To A Tomcat Server`.
 
 For our first example, let's assume we have a WAR file already on our server,
 in ``/tmp/fancyapp.war``. To deploy this WAR file to

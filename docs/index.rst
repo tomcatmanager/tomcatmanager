@@ -49,7 +49,7 @@ And for the ultimate in flexibility, you can use the python package directly:
    >>> r.status_message
    'No context exists named /someapp'
 
-The following capabilites are supported from :doc:`interactive`, the :doc:`commandline`,
+The following capabilites are supported from :doc:`interactive use <interactive/tomcatmanager>`, the :doc:`commandline`,
 and from :doc:`python <api/index>`:
 
    - **deploy** - deploy a war file containing a tomcat application in the tomcat server

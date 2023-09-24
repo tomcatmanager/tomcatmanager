@@ -1,13 +1,13 @@
 Command Line
 ============
 
-You've already read about :ref:`interactive:Interactive Use` right? If not,
-this part will feel kind of hollow.
+You've already read about :doc:`interactive use <interactive/tomcatmanager>` right? If
+not, this part will feel kind of hollow.
 
-Any command described in :ref:`interactive:Available Commands` can be run from the
-command line. The first argument of ``tomcat-manager`` is the url of the server. The
-rest of the arguments are any commands and their arguments from
-:ref:`interactive:Interactive Use`. Here's a few examples:
+Any interactive command can be run from the command line. The first positional
+argument to ``tomcat-manager`` is the url of the server. The rest of the arguments are
+any commands and their arguments from :ref:`interactive/tomcatmanager:Available
+Commands`. Here's a few examples:
 
 .. code-block:: text
 
@@ -76,10 +76,10 @@ Save this script as ``~/bin/oldshiners.sh``, and then run it:
    6
 
 This script builds a ``tomcat-manager`` command which includes authentication
-credentials, the url where the Tomcat Manager web app is deployed, as well as
-the command from :doc:`Interactive Use <interactive>`. In this example, we
-used ``list`` as our command. Any command that works in the interactive mode
-works on the command line.
+credentials, the url where the Tomcat Manager web app is deployed, as well as the
+command from :ref:`Available Commands <interactive/tomcatmanager:Available Commands>`.
+In this example, we used ``list`` as our command. Any command that works in the
+interactive mode works on the command line.
 
 Note how we check the exit code in the shell. ``tomcat-manager`` knows whether
 the command to the tomcat server completed successfully or not, and sets the
@@ -96,14 +96,15 @@ Timeout
 -------
 
 By default, network operations timeout in 10 seconds. You can change this
-value:
+value in the :doc:`configuration file <interactive/configfile>`. You can
+also override it on the command line.
 
 .. code-block:: text
 
    $ tomcat-manager --timeout=2.5 http://localhost:8080/manager list
 
-This command line option is the same as the ``timeout`` :ref:`Setting
-<interactive:Settings>`.
+This command line option allows you to override the ``timeout`` :ref:`setting
+<interactive/settings:timeout>`.
 
 
 Authentication
@@ -129,14 +130,14 @@ the command line, but this is not secure:
 See :doc:`authentication` for complete details of all supported authentication
 mechanisms.
 
-If you want unattended authenticated access, server shortcuts are a better
+If you want unattended authenticated access, server definitions are a better
 option.
 
 
-Server Shortcuts
-----------------
+Server Definitions
+------------------
 
-You can use :ref:`interactive:Server Shortcuts` from the command line with or without
+You can use :ref:`interactive/configfile:Server Definitions` from the command line with or without
 commands:
 
 .. code-block:: text
@@ -161,8 +162,8 @@ Or:
    /manager                 running        0 manager
 
 This mechanism allows you to keep all authentication credentials out of your
-scripts. Simply define shortcut(s) with credentials for the server(s) you want
-to manage, and reference the shortcuts in your scripts. Instead of this:
+scripts. Simply create server definitions with credentials for the server(s) you want
+to manage, and reference the definitions in your scripts. Instead of this:
 
 .. code-block:: bash
 
@@ -217,9 +218,10 @@ them into a single stream:
 
 In addition to redirecting with the shell, there are several command line switches
 that change what's included in the output. These options correspond to :ref:`Setting
-<interactive:Settings>` you can change in :doc:`Interactive Use <interactive>`. All of
-the settings default to ``False``, but be aware that you may have altered them your
-:ref:`Interactive:Configuration File`, which is read on startup.
+<interactive/settings:Settings>` you can change in :doc:`interactive use
+<interactive/tomcatmanager>`. All of the settings default to ``False``, but be aware
+that you may have altered them your :doc:`configuration file
+<interactive/configfile>`, which is read on startup.
 
 ==========================  ====================  =====================================
 Option                      Setting                 Description
@@ -238,8 +240,8 @@ suppressed. If ``quiet=False`` then status information is sent to ``stderr``.
 If ``status_to_stdout=True`` then status information is sent to ``stdout``, as
 long as ``quiet=False``.
 
-Here's a couple of examples to demonstrate, using a :ref:`server shortcut
-<interactive:Server Shortcuts>` of ``localhost``, which we assume gets you
+Here's a couple of examples to demonstrate, using a :ref:`server definition
+<interactive/configfile:Server Definitions>` of ``localhost``, which we assume gets you
 authenticated to a Tomcat Server web application:
 
 These two commands yield the same output, but by different mechanisms: the

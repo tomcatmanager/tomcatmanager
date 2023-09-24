@@ -7,5 +7,5 @@ There is one new method in this release: :meth:`.TomcatManager.disconnect`.
 Nothing else in the API has changed, so you won't have to update your code
 to upgrade to this version.
 
-The :ref:`tomcat-manager <interactive:Interactive Use>` application
+The :doc:`tomcat-manager </interactive/tomcatmanager>` application
 has many improvements, but none of them impact the API.

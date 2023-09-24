@@ -5,7 +5,7 @@ Launching
 ---------
 
 After installation, you will have a new tool available called
-``tomcat-manager``. Run this with no command line arguments to invoke an
+``tomcat-manager``. Run it with no command line arguments to invoke an
 interactive, line-oriented command interpreter:
 
 .. code-block:: text
@@ -27,8 +27,6 @@ interactive, line-oriented command interpreter:
 
 Use the ``exit`` or ``quit`` command to exit the interpreter and return to your
 operating system shell.
-
-TODO document how to run interactive commands from the command line
 
 .. code-block:: text
 

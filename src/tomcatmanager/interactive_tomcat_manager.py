@@ -278,7 +278,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         self.add_settable(
             cmd2.Settable(
-                "prompt", str, "the prompt displayed before accepting user input", self
+                "prompt", str, "displays before accepting user input", self
             )
         )
         self.add_settable(
@@ -331,6 +331,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # load config file if it exists
         if loadconfig:
             self.load_config()
+        else:
+            self.pfeedback("skipping load of configuration file")
 
         # give a friendly message if there is an old config file but not a
         # new one
@@ -1355,7 +1357,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def do_connect(self, cmdline: cmd2.Statement):
         """connect to a tomcat manager instance"""
         # pylint: disable=too-many-branches, too-many-statements
-        # define some variables that we will either fill from a server shortcut
+        # define some variables that we will either fill from a server definition
         # or from arguments
         url = None
         user = None

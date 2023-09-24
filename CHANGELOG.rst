@@ -44,12 +44,14 @@ Changed
   configuration file
 - ``settings`` command now uses TOML syntax
 - ``status_prefix`` setting changed to ``feedback_prefix``
+- Server shortcuts are now called server definitions. There is no change to
+  the functionality, only a change to the name.
 
 Removed
 ^^^^^^^
 
 - Removed allow_style setting
-- Removed show command, settings does the same thing and is still available
+- Removed show command; settings does the same thing and is still available
 
 
 6.0.1 (2022-11-15)
