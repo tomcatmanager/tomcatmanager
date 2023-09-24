@@ -993,7 +993,9 @@ def test_resolve_theme_user(mocker, capsys):
         # now that we are all set up, go try and load the theme
         itm.onecmd_plus_hooks(f"set theme = '{theme}'")
         out, err = capsys.readouterr()
-        assert not err
+        errarray = err.rstrip("\n").split("\n")
+        assert len(errarray) == 1
+        assert "skipping load of configuration file" in errarray[0]
         assert not out
         assert itm.theme == theme
 

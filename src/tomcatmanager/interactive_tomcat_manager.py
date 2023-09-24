@@ -277,9 +277,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             )
         )
         self.add_settable(
-            cmd2.Settable(
-                "prompt", str, "displays before accepting user input", self
-            )
+            cmd2.Settable("prompt", str, "displays before accepting user input", self)
         )
         self.add_settable(
             cmd2.Settable(
