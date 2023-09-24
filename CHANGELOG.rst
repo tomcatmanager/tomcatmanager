@@ -14,14 +14,20 @@ Unreleased
 TODO
 ^^^^
 
-- put theme colors in settings file, one for dark, one for light
-- create dark and light theme and let you switch between using a setting
+- config edit has a bug where if you comment out a setting, it doesn't change that setting back to it's default value when it reloads the config
+
+- standardize on either status or feedback
+
+- spinners are in color even if no theme is set, see if we can change that
+
+- let people define their own themes
 
 - figure out out to style the prompt
 - maybe have cmd2.Cmd call a pprompt() method when it needs to output a stylized
   prompt and have cmd.prompt contain the "ascii" rendered version of it
 
 - have docmd() put up a rich.spinner or rich.status like do_connect() does
+
 - check display output with debug on, make sure it formats with rich
 
 - cmd2.Cmd has async_alert(), and async_update_prompt(), and set_window_title()
@@ -43,7 +49,6 @@ Changed
 - Output from the ``settings`` command now matches the TOML format of the
   configuration file
 - ``settings`` command now uses TOML syntax
-- ``status_prefix`` setting changed to ``feedback_prefix``
 - Server shortcuts are now called server definitions. There is no change to
   the functionality, only a change to the name.
 

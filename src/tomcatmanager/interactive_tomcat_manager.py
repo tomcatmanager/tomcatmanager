@@ -273,7 +273,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         self.add_settable(
             cmd2.Settable(
-                "feedback_prefix", str, "string to prepend to all feedback output", self
+                "status_prefix", str, "string to prepend to all status output", self
             )
         )
         self.add_settable(
@@ -315,7 +315,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.prompt = f"{self.app_name}> "
         self.debug = False
         self.timeout = 10.0
-        self.feedback_prefix = "--"
+        self.status_prefix = "--"
         self.echo = False
         self.quiet = False
         self.status_suffix = "..."
@@ -460,7 +460,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         else:
             # create a custom status/progress display
             msg = rich.text.Text(
-                f"{self.feedback_prefix}{message}{self.status_suffix}",
+                f"{self.status_prefix}{message}{self.status_suffix}",
                 style="tm.status",
             )
             text_column = rich.progress.RenderableColumn(msg)
@@ -549,7 +549,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         will be sent to sys.stderr.
         """
         if not self.quiet:
-            formatted_msg = f"{self.feedback_prefix}{msg}"
+            formatted_msg = f"{self.status_prefix}{msg}"
             if self.feedback_to_output:
                 self.console.print(formatted_msg, end=end, style="tm.feedback")
             else:
