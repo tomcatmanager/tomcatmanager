@@ -14,7 +14,8 @@ Unreleased
 TODO
 ^^^^
 
-- config edit has a bug where if you comment out a setting, it doesn't change that setting back to it's default value when it reloads the config
+- config edit has a bug where if you comment out a setting, it doesn't change
+  that setting back to it's default value when it reloads the config
 
 - standardize on either status or feedback
 

@@ -203,5 +203,6 @@ Or you could override the user and password:
 Some of these properties make no sense when combined together. For example, if your
 server authenticates with a certificate and key, it almost certainly doesn't use a
 user and password. If you don't want to verify server SSL/TLS certificates, then it
-makes no sense to provide a certificate authority bundle. See :ref:`authentication:Authentication`
-for complete details of all supported authentication mechanisms.
+makes no sense to provide a certificate authority bundle. See
+:ref:`authentication:Authentication` for complete details of all supported
+authentication mechanisms.

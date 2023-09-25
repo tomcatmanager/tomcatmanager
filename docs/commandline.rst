@@ -137,8 +137,8 @@ option.
 Server Definitions
 ------------------
 
-You can use :ref:`interactive/configfile:Server Definitions` from the command line with or without
-commands:
+You can use :ref:`interactive/configfile:Server Definitions` from the command line
+with or without commands:
 
 .. code-block:: text
 
