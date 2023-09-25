@@ -1206,7 +1206,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 except ValueError as err:
                     # could be the setting name, or the setting value
                     if first_error:
-                        self.perror("while loading the configuration file the following errors occured:")
+                        self.perror(
+                            "while loading the configuration file the following errors occured:"
+                        )
                         first_error = False
                     self.perror(err)
         except tomlkit.exceptions.NonExistentKey:
