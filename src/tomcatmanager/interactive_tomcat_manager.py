@@ -321,10 +321,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.status_suffix = "..."
         self.status_spinner = "bouncingBar"
         self.syntax_theme = "monokai"
-
-        self.console = None
-        self.error_console = None
         self.theme = ""
+        # go apply the empty theme, which sets
+        # self.console and self.error_console
+        self._apply_theme(self.theme)
 
         # load config file if it exists
         if loadconfig:
@@ -870,7 +870,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         os.system(cmd)
 
         # read it back in and apply it
-        self.pfeedback("reloading configuration")
+        self.pfeedback("reloading configuration file")
         self.load_config()
         self.exit_code = self.EXIT_SUCCESS
 
@@ -1197,6 +1197,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             except FileNotFoundError:
                 pass
 
+        first_error = True
         try:
             settings = config["settings"]
             for key in settings:
@@ -1204,6 +1205,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     self._change_setting(key, settings[key])
                 except ValueError as err:
                     # could be the setting name, or the setting value
+                    if first_error:
+                        self.perror("while loading the configuration file the following errors occured:")
+                        first_error = False
                     self.perror(err)
         except tomlkit.exceptions.NonExistentKey:
             # we don't have a settings section, so there are no settings to load

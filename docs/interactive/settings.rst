@@ -15,7 +15,7 @@ of ``tomcat-manager``:
   editor = "/opt/homebrew/bin/emacs"   # program used to edit files
   prompt = "tm> "                      # displays before accepting user input
   quiet = false                        # suppress all feedback and status output
-  status_prefix = "--"               # string to prepend to all feedback output
+  status_prefix = "--"                 # string to prepend to all feedback output
   status_spinner = "bouncingBar"       # style of status spinner from rich.spinner
   status_suffix = "..."                # suffix to append to status messages
   status_to_stdout = false             # status information to stdout instead of stderr
