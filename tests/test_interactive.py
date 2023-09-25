@@ -45,6 +45,7 @@ import requests
 
 import tomcatmanager as tm
 
+
 ###
 #
 # helper functions and fixtures
@@ -143,6 +144,8 @@ HELP_COMMANDS = [
     "version",
     "license",
 ]
+
+
 # exit_code omitted because it doesn't respond
 # to -h or --help
 @pytest.mark.parametrize("command", HELP_COMMANDS)
@@ -398,7 +401,6 @@ def test_config_convert_no_config(mocker, capsys):
     itm = tm.InteractiveTomcatManager()
 
     with tempfile.TemporaryDirectory() as tmpdir:
-
         inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
         tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
 
@@ -465,7 +467,6 @@ verify = false
     itm = tm.InteractiveTomcatManager(loadconfig=False)
 
     with tempfile.TemporaryDirectory() as tmpdir:
-
         inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
         tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
 
@@ -520,7 +521,6 @@ verify = False
     itm = tm.InteractiveTomcatManager()
 
     with tempfile.TemporaryDirectory() as tmpdir:
-
         inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
         tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
 
@@ -551,7 +551,6 @@ def test_config_convert_both_exist(mocker, capsys):
     itm = tm.InteractiveTomcatManager()
 
     with tempfile.TemporaryDirectory() as tmpdir:
-
         inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
         inifile.touch()
         tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"

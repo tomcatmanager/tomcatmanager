@@ -989,7 +989,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         for setting in sorted(self.settables):
             if (not args.setting) or (setting == args.setting):
-
                 styled_setting = rich.text.Text(setting, style="tm.setting.name")
                 styled_setting += " "
                 styled_setting += rich.text.Text("=", style="tm.setting.equals")

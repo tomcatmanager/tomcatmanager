@@ -45,6 +45,7 @@ from .models import (
     TomcatNotConnected,
 )
 
+
 # pylint: disable=too-many-public-methods
 class TomcatManager:
     """
