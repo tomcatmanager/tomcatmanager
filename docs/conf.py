@@ -22,9 +22,14 @@ author = ""
 html_show_copyright = False
 
 # get the version and release via setuptools_scm
-from pkg_resources import get_distribution
+try:
+    # for python 3.8+
+    import importlib.metadata as importlib_metadata
+except ImportError:  # pragma: nocover
+    # for python < 3.8
+    import importlib_metadata
 
-release = get_distribution("tomcatmanager").version
+release = importlib_metadata.version("tomcatmanager")
 version = ".".join(release.split(".")[:2])
 
 import sphinx_rtd_theme
