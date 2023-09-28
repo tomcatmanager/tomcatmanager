@@ -64,21 +64,6 @@ import tomlkit
 import tomcatmanager as tm
 
 
-def requires_connection(func: Callable) -> Callable:
-    """Decorator for interactive methods which require a connection."""
-
-    def _requires_connection(self, *args, **kwargs):
-        if self.tomcat and self.tomcat.is_connected:
-            func(self, *args, **kwargs)
-        else:
-            # print the message
-            self.exit_code = self.EXIT_ERROR
-            self.perror("not connected")
-
-    _requires_connection.__doc__ = func.__doc__
-    return _requires_connection
-
-
 # pylint: disable=too-many-public-methods, too-many-instance-attributes
 class InteractiveTomcatManager(cmd2.Cmd):
     """An interactive command line tool for the Tomcat Manager web application.
@@ -616,6 +601,17 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # no usage error, assume success
         self.exit_code = self.EXIT_SUCCESS
         return args
+
+    def raise_if_not_connected(self):
+        """Print an error and throw an exception if we are not connected"""
+        if self.tomcat and self.tomcat.is_connected:
+            return
+        # we aren't connected, so make a fuss
+        self.exit_code = self.EXIT_ERROR
+        self.perror("not connected")
+        # this exception tells cmd2 to skip the post command hooks and
+        # just prompt for more input
+        raise cmd2.Cmd2ArgparseError
 
     def _which_server(self):
         """
@@ -1499,10 +1495,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         return parser
 
-    @requires_connection
     def do_which(self, cmdline: cmd2.Statement):
         """show the url of the tomcat server you are connected to"""
         self.parse_args(self.which_parser, cmdline.argv)
+        self.raise_if_not_connected()
         self.poutput(self._which_server())
 
     def help_which(self):
@@ -1597,10 +1593,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         return parser
 
-    @requires_connection
     def do_deploy(self, cmdline: cmd2.Statement):
         """deploy an application to the tomcat server"""
         args = self.parse_args(self.deploy_parser, cmdline.argv)
+        self.raise_if_not_connected()
         try:
             args.func(args, update=False)
         except AttributeError:  # pragma: nocover
@@ -1627,10 +1623,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         return parser
 
-    @requires_connection
     def do_redeploy(self, cmdline: cmd2.Statement):
         """deploy an application to the tomcat server after undeploying the given path"""
         args = self.parse_args(self.redeploy_parser, cmdline.argv)
+        self.raise_if_not_connected()
         try:
             args.func(args, update=True)
         except AttributeError:  # pragma: nocover
@@ -1650,10 +1646,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Build an argument parser for the undeploy command"""
         return _path_version_parser("undeploy", self.do_undeploy.__doc__)
 
-    @requires_connection
     def do_undeploy(self, cmdline: cmd2.Statement):
         """remove an application from the tomcat server"""
         args = self.parse_args(self.undeploy_parser, cmdline.argv)
+        self.raise_if_not_connected()
         apptag = self._apptag(args.path, args.version)
         self.docmd(
             f"undeploying {apptag}", self.tomcat.undeploy, args.path, args.version
@@ -1668,10 +1664,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Build an argument parser for the start command."""
         return _path_version_parser("start", self.do_start.__doc__)
 
-    @requires_connection
     def do_start(self, cmdline: cmd2.Statement):
         """start a deployed tomcat application that isn't running"""
         args = self.parse_args(self.start_parser, cmdline.argv)
+        self.raise_if_not_connected()
         apptag = self._apptag(args.path, args.version)
         self.docmd(f"starting {apptag}", self.tomcat.start, args.path, args.version)
 
@@ -1684,10 +1680,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Build an argument parser for the stop command."""
         return _path_version_parser("stop", self.do_stop.__doc__)
 
-    @requires_connection
     def do_stop(self, cmdline: cmd2.Statement):
         """stop a tomcat application and leave it deployed on the server"""
         args = self.parse_args(self.stop_parser, cmdline.argv)
+        self.raise_if_not_connected()
         apptag = self._apptag(args.path, args.version)
         self.docmd(f"stopping {apptag}", self.tomcat.stop, args.path, args.version)
 
@@ -1700,10 +1696,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Build an argument parser for the reload command."""
         return _path_version_parser("reload", self.do_reload.__doc__)
 
-    @requires_connection
     def do_reload(self, cmdline: cmd2.Statement):
         """stop and start a tomcat application; synonym for restart"""
         args = self.parse_args(self.reload_parser, cmdline.argv)
+        self.raise_if_not_connected()
         apptag = self._apptag(args.path, args.version)
         self.docmd(f"reloading {apptag}", self.tomcat.reload, args.path, args.version)
 
@@ -1716,7 +1712,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Build an argument parser for the restart command."""
         return _path_version_parser("restart", self.do_restart.__doc__)
 
-    @requires_connection
     def do_restart(self, cmdline: cmd2.Statement):
         """stop and start a tomcat application"""
         self.do_reload(cmdline)
@@ -1748,10 +1743,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         return parser
 
-    @requires_connection
     def do_sessions(self, cmdline: cmd2.Statement):
         """show active sessions for a tomcat application"""
         args = self.parse_args(self.sessions_parser, cmdline.argv)
+        self.raise_if_not_connected()
         r = self.docmd(None, self.tomcat.sessions, args.path, args.version)
         if r.ok:
             self.poutput(r.sessions)
@@ -1788,10 +1783,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         return parser
 
-    @requires_connection
     def do_expire(self, cmdline: cmd2.Statement):
         """expire idle sessions"""
         args = self.parse_args(self.expire_parser, cmdline.argv)
+        self.raise_if_not_connected()
         r = self.docmd(None, self.tomcat.expire, args.path, args.version, args.idle)
         if r.ok:
             self.poutput(r.sessions)
@@ -1829,10 +1824,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         return parser
 
-    @requires_connection
     def do_list(self, cmdline: cmd2.Statement):
         """show all installed tomcat applications"""
         args = self.parse_args(self.list_parser, cmdline.argv)
+        self.raise_if_not_connected()
 
         response = self.docmd("listing applications", self.tomcat.list)
         if response.ok:
@@ -1909,10 +1904,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             formatter_class=RichHelpFormatter,
         )
 
-    @requires_connection
     def do_serverinfo(self, cmdline: cmd2.Statement):
         """show information about the tomcat server"""
         self.parse_args(self.serverinfo_parser, cmdline.argv)
+        self.raise_if_not_connected()
         r = self.docmd("querying server", self.tomcat.server_info)
         if r.ok:
             self.poutput(r.result)
@@ -1930,10 +1925,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             formatter_class=RichHelpFormatter,
         )
 
-    @requires_connection
     def do_status(self, cmdline: cmd2.Statement):
         """show server status information in xml format"""
         self.parse_args(self.status_parser, cmdline.argv)
+        self.raise_if_not_connected()
         r = self.docmd("querying server", self.tomcat.status_xml)
         root = xml.dom.minidom.parseString(r.status_xml)
         syntax = rich.syntax.Syntax(
@@ -1957,10 +1952,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             formatter_class=RichHelpFormatter,
         )
 
-    @requires_connection
     def do_vminfo(self, cmdline: cmd2.Statement):
         """show diagnostic information about the jvm"""
         self.parse_args(self.vminfo_parser, cmdline.argv)
+        self.raise_if_not_connected()
         r = self.docmd("querying server", self.tomcat.vm_info)
         self.poutput(r.vm_info)
 
@@ -1977,10 +1972,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             formatter_class=RichHelpFormatter,
         )
 
-    @requires_connection
     def do_sslconnectorciphers(self, cmdline: cmd2.Statement):
         """show SSL/TLS ciphers configured for each connector"""
         self.parse_args(self.sslconnectorciphers_parser, cmdline.argv)
+        self.raise_if_not_connected()
         r = self.docmd("querying server", self.tomcat.ssl_connector_ciphers)
         self.poutput(r.ssl_connector_ciphers)
 
@@ -1997,10 +1992,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             formatter_class=RichHelpFormatter,
         )
 
-    @requires_connection
     def do_sslconnectorcerts(self, cmdline: cmd2.Statement):
         """show SSL/TLS certificate chain for each connector"""
         self.parse_args(self.sslconnectorcerts_parser, cmdline.argv)
+        self.raise_if_not_connected()
         r = self.docmd("querying server", self.tomcat.ssl_connector_certs)
         self.poutput(r.ssl_connector_certs)
 
@@ -2017,10 +2012,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             formatter_class=RichHelpFormatter,
         )
 
-    @requires_connection
     def do_sslconnectortrustedcerts(self, cmdline: cmd2.Statement):
         """show SSL/TLS trusted certificates for each connector"""
         self.parse_args(self.sslconnectortrustedcerts_parser, cmdline.argv)
+        self.raise_if_not_connected()
         r = self.docmd("querying server", self.tomcat.ssl_connector_trusted_certs)
         self.poutput(r.ssl_connector_trusted_certs)
 
@@ -2043,10 +2038,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         return parser
 
-    @requires_connection
     def do_sslreload(self, cmdline: cmd2.Statement):
         """reload SSL/TLS certificates and keys"""
         args = self.parse_args(self.sslreload_parser, cmdline.argv)
+        self.raise_if_not_connected()
         self.docmd("reloading SSL/TLS", self.tomcat.ssl_reload, args.host_name)
 
     def help_sslreload(self):
@@ -2062,10 +2057,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             formatter_class=RichHelpFormatter,
         )
 
-    @requires_connection
     def do_threaddump(self, cmdline: cmd2.Statement):
         """show a jvm thread dump"""
         self.parse_args(self.threaddump_parser, cmdline.argv)
+        self.raise_if_not_connected()
         r = self.docmd("querying server", self.tomcat.thread_dump)
         self.poutput(r.thread_dump)
 
@@ -2088,10 +2083,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         return parser
 
-    @requires_connection
     def do_resources(self, cmdline: cmd2.Statement):
         """show global JNDI resources configured in tomcat"""
         args = self.parse_args(self.resources_parser, cmdline.argv)
+        self.raise_if_not_connected()
         r = self.docmd("querying server", self.tomcat.resources, args.class_name)
         if r.resources:
             for resource, classname in iter(sorted(r.resources.items())):
@@ -2114,10 +2109,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             formatter_class=RichHelpFormatter,
         )
 
-    @requires_connection
     def do_findleakers(self, cmdline: cmd2.Statement):
         """show tomcat applications that leak memory"""
         self.parse_args(self.findleakers_parser, cmdline.argv)
+        self.raise_if_not_connected()
         r = self.docmd("finding memory leaks", self.tomcat.find_leakers)
         for leaker in r.leakers:
             self.poutput(leaker)
@@ -2312,6 +2307,7 @@ def _deploy_parser(
     )
     deploy_subparsers = deploy_parser.add_subparsers(
         dest="method",
+        required=True,
         metavar="deployment_method",
     )
     # local subparser

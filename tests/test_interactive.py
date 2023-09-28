@@ -112,9 +112,49 @@ def itm_nc():
 
 ###
 #
-# test help
+# test usage and help
 #
 ###
+
+#
+# all of these comands should generate a usage message
+USAGE_COMMANDS = [
+    "config",
+    "connect",
+    "deploy",
+    "deploy unknown",
+    "deploy local",
+    "deploy server",
+    "deploy context",
+    "deploy local /tmp/warfile.war",
+    "deploy server /tmp/warfile.war",
+    "deploy context /tmp/contextfile.xml",
+    "redeploy",
+    "redeploy unknown",
+    "redeploy local",
+    "redeploy server",
+    "redeploy context",
+    "redeploy local /tmp/warfile.war",
+    "redeploy server /tmp/warfile.war",
+    "redeploy context /tmp/contextfile.xml",
+    "start",
+    "stop",
+    "reload",
+    "restart",
+    "sessions",
+    "expire",
+    "expire /tmp/somepath",
+]
+
+
+@pytest.mark.parametrize("command", USAGE_COMMANDS)
+def test_command_usage(tomcat_manager_server, command):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.EXIT_ERROR
+    itm.onecmd_plus_hooks(command)
+    assert itm.exit_code == itm.EXIT_USAGE
+
+
 HELP_COMMANDS = [
     "config",
     "settings",
@@ -1655,15 +1695,18 @@ def test_disconnect(tomcat_manager_server, capsys):
 
 REQUIRES_CONNECTION = [
     "which",
-    "deploy",
-    "redeploy",
-    "undeploy",
-    "start",
-    "stop",
-    "reload",
-    "restart",
-    "sessions",
-    "expire",
+    "deploy local file.war /path",
+    "deploy server file.war /path",
+    "deploy context context.xml /path",
+    "redeploy local file.war /path",
+    "redeploy server file.war /path",
+    "redeploy context context.xml /path" "undeploy /path",
+    "start /path",
+    "stop /path",
+    "reload path",
+    "restart /path",
+    "sessions /path",
+    "expire /path 3600",
     "list",
     "serverinfo",
     "status",
