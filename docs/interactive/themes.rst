@@ -30,8 +30,8 @@ TODO
 
 - [x] ``theme directory`` command to show the directory where you can put custom themes
 - [x] ``theme list`` command to list all available themes, builtins in the first group, custom in the second group
-- ``theme clone {builtin theme]`` to copy a built-in theme to the theme directory
+- [x] ``theme clone {builtin theme]`` to copy a built-in theme to the theme directory
+- ``theme edit`` edit a theme, current theme, or specified theme
 - ``theme create {theme name}`` create a new theme
-- ``theme edit`` edit the current theme, if it's not a built in theme
 - ``theme test`` show all the elements of the current theme
 

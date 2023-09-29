@@ -1184,12 +1184,25 @@ class InteractiveTomcatManager(cmd2.Cmd):
             "new_name", nargs="?", default="", help="new name of the theme"
         )
 
+        # edit a user theme
+        edit_parser = main_subparsers.add_parser(
+            "edit",
+            description="edit a user theme",
+            help="edit a user theme",
+            formatter_class=main_parser.formatter_class,
+        )
+        edit_parser.set_defaults(func=self.theme_edit)
+        edit_parser.add_argument(
+            "name", nargs="?", default="", help="name of theme to edit"
+        )
+
         # package all the parsers into a dictionary
         parsers = {}
         parsers["theme"] = main_parser
         parsers["dir"] = dir_parser
         parsers["list"] = list_parser
         parsers["clone"] = clone_parser
+        parsers["edit"] = edit_parser
         return parsers
 
     @property
@@ -1255,7 +1268,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     def theme_clone(self, args: argparse.Namespace):
         """clone a built-in theme to the user theme directory"""
-        self.poutput(f"theme clone name={args.name}< new_name={args.new_name}<")
         # see if the built-in theme exists, error message if it doesn't
         from_path = None
         for path in importlib_resources.files("tomcatmanager.themes").iterdir():
@@ -1281,9 +1293,37 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.pfeedback(
             f"cloning built-in theme '{args.name}' to user theme '{new_name}'"
         )
+        self.ensure_user_theme_dir()
         shutil.copy(from_path, new_path)
         self.exit_code = self.EXIT_SUCCESS
         return
+
+    def theme_edit(self, args: argparse.Namespace):
+        """edit a user theme file"""
+        self.poutput("TODO edit a theme")
+        self.poutput(f"theme edit name={args.name}<")
+
+        if not self.editor:
+            self.perror("no editor: use 'set editor = \"{path}\"' to specify one")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        # if args.name is empty, try the name of the current theme
+        name = args.name
+
+        # get the file to edit
+        theme_file = self.user_theme_dir / f"{name}.toml"
+        if not theme_file.is_file():
+            self.perror(f"unknown theme: '{name}'")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        # go edit the file
+        cmd = f'"{self.editor}" "{theme_file}"'
+        self.pfeedback(f"executing {cmd}")
+        os.system(cmd)
+
+        # reapply the theme if necessary
 
     ###
     #
@@ -1350,6 +1390,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if self.appdirs:
             return pathlib.Path(self.appdirs.user_config_dir).resolve() / "themes"
         return None
+
+    def ensure_user_theme_dir(self):
+        """Create the user theme directory if it doesn't exist.
+
+        throws an exception if the directory doesn't exist and we can't create it
+        """
+        if not self.user_theme_dir.exists():  # pragma: nocover
+            self.user_theme_dir.mkdir(parents=True, exist_ok=True)
 
     def load_config(self):
         """Open and parse the user config file and set self.config."""
