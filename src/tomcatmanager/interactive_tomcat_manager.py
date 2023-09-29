@@ -44,6 +44,7 @@ except AttributeError:  # pragma: nocover
 
 import os
 import pathlib
+import shutil
 import sys
 import textwrap
 import traceback
@@ -753,9 +754,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self._help_command(
                     cmds, "shortcuts", "show shortcuts for other commands"
                 )
-                self._help_command(
-                    cmds, "theme", self.do_theme.__doc__
-                )
+                self._help_command(cmds, "theme", self.do_theme.__doc__)
                 self.console.print(cmds)
 
                 cmds = self._help_section("Other")
@@ -1169,11 +1168,28 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         list_parser.set_defaults(func=self.theme_list)
 
+        # clone a built-in theme
+        clone_parser = main_subparsers.add_parser(
+            "clone",
+            description="clone a built-in theme",
+            help="clone a built-in theme",
+            formatter_class=main_parser.formatter_class,
+        )
+        clone_parser.set_defaults(func=self.theme_clone)
+        clone_parser.add_argument(
+            "name",
+            help="name of built-in theme to clone to user theme directory",
+        )
+        clone_parser.add_argument(
+            "new_name", nargs="?", default="", help="new name of the theme"
+        )
+
         # package all the parsers into a dictionary
         parsers = {}
         parsers["theme"] = main_parser
         parsers["dir"] = dir_parser
         parsers["list"] = list_parser
+        parsers["clone"] = clone_parser
         return parsers
 
     @property
@@ -1182,15 +1198,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
         parsers = self._build_theme_parsers()
         return parsers["theme"]
 
-
     def do_theme(self, cmdline: cmd2.Statement):
         """manage themes"""
         args = self.parse_args(self.theme_parser, cmdline.argv)
-        try:
-            args.func(args)
-        except AttributeError:  # pragma: nocover
+        if not args.func:
             self.help_theme()
             self.exit_code = self.EXIT_ERROR
+
+        args.func(args)
 
     def help_theme(self):
         """Show help for the 'theme' command"""
@@ -1237,6 +1252,38 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.console.print("")
             self.console.print("No user themes found.")
             self.console.print("TODO add message about how to create")
+
+    def theme_clone(self, args: argparse.Namespace):
+        """clone a built-in theme to the user theme directory"""
+        self.poutput(f"theme clone name={args.name}< new_name={args.new_name}<")
+        # see if the built-in theme exists, error message if it doesn't
+        from_path = None
+        for path in importlib_resources.files("tomcatmanager.themes").iterdir():
+            if path.name == f"{args.name}.toml":
+                from_path = path
+                break
+        if not from_path:
+            self.perror(f"'{args.name}' is not a built-in theme")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        # see if new theme already exists, error message if it does
+        new_name = args.new_name
+        if new_name == "":
+            new_name = args.name
+        new_path = self.user_theme_dir / f"{new_name}.toml"
+        if new_path.is_file():
+            self.perror(f"clone aborted: '{new_name}' is already a user theme")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        # copy built-in theme to user theme dir
+        self.pfeedback(
+            f"cloning built-in theme '{args.name}' to user theme '{new_name}'"
+        )
+        shutil.copy(from_path, new_path)
+        self.exit_code = self.EXIT_SUCCESS
+        return
 
     ###
     #
@@ -2532,4 +2579,3 @@ def _deploy_parser(
         deploy_server_parser,
         deploy_context_parser,
     )
-
