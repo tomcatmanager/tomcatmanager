@@ -48,7 +48,7 @@ import sys
 import textwrap
 import traceback
 import xml.dom.minidom
-from typing import Callable, Any, List
+from typing import Callable, Any, List, Dict
 
 import appdirs
 import cmd2
@@ -128,6 +128,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         "tm.setting.bool",
         "tm.setting.int",
         "tm.setting.float",
+        "tm.theme.section",
     ]
 
     # for configuration
@@ -659,9 +660,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             # I want "help deploy local" to work. so....
             if args.arg_list[0] in ["deploy", "redeploy"]:
                 self._do_help_deploy(args)
+            elif args.arg_list[0] == "theme":
+                self._do_help_theme(args)
             else:
-                # they want help on a specific command that's not deploy
-                # use cmd2 for that
+                # use cmd2 for commands without subparsers
                 super().do_help(args)
                 if self.last_result:
                     self.exit_code = self.EXIT_SUCCESS
@@ -751,6 +753,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self._help_command(
                     cmds, "shortcuts", "show shortcuts for other commands"
                 )
+                self._help_command(
+                    cmds, "theme", self.do_theme.__doc__
+                )
                 self.console.print(cmds)
 
                 cmds = self._help_section("Other")
@@ -803,6 +808,24 @@ class InteractiveTomcatManager(cmd2.Cmd):
         else:
             # we have some wacko arguments, so just do help for deploy/redeploy
             print(parser.format_help(), file=self.stdout)
+            self.exit_code = self.EXIT_SUCCESS
+
+    def _do_help_theme(self, args: cmd2.Statement):
+        """do help for the deploy and redeploy commands"""
+        # if we get here we know args.arg_list[0] is 'theme'
+        parsers = self._build_theme_parsers()
+        if len(args.arg_list) == 2:
+            subcommand = args.arg_list[1]
+            if subcommand in parsers:
+                print(parsers[subcommand].format_help(), file=self.stdout)
+                self.exit_code = self.EXIT_SUCCESS
+            else:
+                # they typed 'help theme invalidaction'
+                print(parsers["theme"].format_help(), file=self.stdout)
+                self.exit_code = self.EXIT_SUCCESS
+        else:
+            # we have some wacko arguments, so just do help for the main command
+            print(parsers["theme"].format_help(), file=self.stdout)
             self.exit_code = self.EXIT_SUCCESS
 
     ###
@@ -1114,6 +1137,106 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def help_set(self):
         """Show help for the 'set' command"""
         self.show_help_from(self.set_parser)
+
+    def _build_theme_parsers(self) -> Dict:
+        """Construct all the argument parsers for the theme command."""
+        main_parser = argparse.ArgumentParser(
+            prog="theme",
+            description="manage themes",
+            formatter_class=RichHelpFormatter,
+        )
+        main_subparsers = main_parser.add_subparsers(
+            dest="action",
+            required=True,
+            metavar="action",
+        )
+
+        # dir or directory
+        dir_parser = main_subparsers.add_parser(
+            "dir",
+            description="show the theme directory",
+            help="show the theme directory",
+            formatter_class=main_parser.formatter_class,
+        )
+        dir_parser.set_defaults(func=self.theme_dir)
+
+        # list available themes
+        list_parser = main_subparsers.add_parser(
+            "list",
+            description="list all themes",
+            help="list all themes",
+            formatter_class=main_parser.formatter_class,
+        )
+        list_parser.set_defaults(func=self.theme_list)
+
+        # package all the parsers into a dictionary
+        parsers = {}
+        parsers["theme"] = main_parser
+        parsers["dir"] = dir_parser
+        parsers["list"] = list_parser
+        return parsers
+
+    @property
+    def theme_parser(self) -> argparse.ArgumentParser:
+        """Get the main argument parser for the theme command."""
+        parsers = self._build_theme_parsers()
+        return parsers["theme"]
+
+
+    def do_theme(self, cmdline: cmd2.Statement):
+        """manage themes"""
+        args = self.parse_args(self.theme_parser, cmdline.argv)
+        try:
+            args.func(args)
+        except AttributeError:  # pragma: nocover
+            self.help_theme()
+            self.exit_code = self.EXIT_ERROR
+
+    def help_theme(self):
+        """Show help for the 'theme' command"""
+        self.show_help_from(self.theme_parser)
+
+    def theme_dir(self, args: argparse.Namespace):
+        """show the theme directory"""
+        self.poutput(self.user_theme_dir)
+
+    def theme_list(self, args: argparse.Namespace):
+        """list all available themes"""
+        self.console.print("Built in Themes", style="tm.theme.section")
+        self.console.print("─" * 72, style="tm.theme.section")
+        themelist = rich.table.Table(
+            show_edge=False,
+            box=None,
+            padding=(0, 3, 0, 0),
+            show_header=False,
+        )
+        for path in importlib_resources.files("tomcatmanager.themes").iterdir():
+            if path.suffix == ".toml":
+                themelist.add_row(path.stem)
+        self.console.print(themelist)
+
+        have_user_themes = False
+        themelist = rich.table.Table(
+            show_edge=False,
+            box=None,
+            padding=(0, 3, 0, 0),
+            show_header=False,
+        )
+        if self.user_theme_dir.exists():
+            for path in self.user_theme_dir.iterdir():
+                if path.suffix == ".toml":
+                    themelist.add_row(path.stem)
+                    have_user_themes = True
+
+        if have_user_themes:
+            self.console.print("")
+            self.console.print("User Themes", style="tm.theme.section")
+            self.console.print("─" * 72, style="tm.theme.section")
+            self.console.print(themelist)
+        else:
+            self.console.print("")
+            self.console.print("No user themes found.")
+            self.console.print("TODO add message about how to create")
 
     ###
     #
@@ -1624,7 +1747,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         return parser
 
     def do_redeploy(self, cmdline: cmd2.Statement):
-        """deploy an application to the tomcat server after undeploying the given path"""
+        """undeploy then deploy an application to the tomcat server"""
         args = self.parse_args(self.redeploy_parser, cmdline.argv)
         self.raise_if_not_connected()
         try:
@@ -2299,6 +2422,7 @@ def _deploy_parser(
     contextfunc: Callable,
 ) -> argparse.ArgumentParser:
     """Construct a argument parser for the deploy or redeploy commands."""
+    # TODO make this all work like _do_help_theme and _build_theme_parsers
     deploy_parser = argparse.ArgumentParser(
         prog=name,
         description=desc,
@@ -2408,3 +2532,4 @@ def _deploy_parser(
         deploy_server_parser,
         deploy_context_parser,
     )
+

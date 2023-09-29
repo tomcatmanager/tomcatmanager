@@ -39,3 +39,6 @@ string =  "green1"
 bool =  "purple"
 int =  "royal_blue1"
 float =  "royal_blue1"
+
+[tm.theme]
+section = "gold1"
