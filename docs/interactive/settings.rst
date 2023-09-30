@@ -16,7 +16,7 @@ of ``tomcat-manager``:
   prompt = "tm> "                      # displays before accepting user input
   quiet = false                        # suppress all feedback and status output
   status_prefix = "--"                 # string to prepend to all feedback output
-  status_spinner = "bouncingBar"       # style of status spinner from rich.spinner
+  status_animation = "bouncingBar"     # style of activity spinner from rich.spinner
   status_suffix = "..."                # suffix to append to status messages
   status_to_stdout = false             # status information to stdout instead of stderr
   syntax_theme = "monokai"             # pygments syntax highlighing theme
@@ -131,15 +131,15 @@ eliminate the prefix value by setting ``status_prefix``. You might change it to:
 Set ``status_prefix`` to an empty string to display the status messages with no prefix.
 
 
-status_spinner
---------------
+status_animation
+----------------
 
 Commands which run on the remote Tomcat server can take some time to finish. For
 example, if you are deploying a large application, it may take several seconds for
 that application to be transmitted to the server and deployed. ``tomcat-manager``
-displays a live progress indicator for these actions. This setting allows you to
-choose the style of the progress indicator. There are several dozen options available.
-You can view all the progress indicator styles by:
+displays an animated activity indicator for these actions. This setting allows you to
+choose the style of the animation. There are several dozen options available.
+You can view all the animation styles by:
 
 .. code-block:: bash
 
@@ -147,11 +147,11 @@ You can view all the progress indicator styles by:
 
 Press ``Control-C`` to exit the demo.
 
-To disable the live progress display:
+To disable the animated progress display:
 
 .. code-block:: text
 
-  tomcat-manager> set status_spinner = ""
+  tomcat-manager> set status_animation = ""
 
 
 status_suffix

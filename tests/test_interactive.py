@@ -950,25 +950,25 @@ def test_status_prefix(tomcat_manager_server, itm_nc, prefix, expected, capsys):
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_status_spinner():
+def test_status_animation():
     itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("set status_spinner = 'dots'")
-    assert itm.status_spinner == "dots"
+    itm.onecmd_plus_hooks("set status_animation = 'dots'")
+    assert itm.status_animation == "dots"
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
-def test_status_spinner_invalid(capsys):
+def test_status_animation_invalid(capsys):
     itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("set status_spinner = 'invalid'")
+    itm.onecmd_plus_hooks("set status_animation = 'invalid'")
     _, err = capsys.readouterr()
     assert "invalid" in err
     assert itm.exit_code == itm.EXIT_ERROR
 
 
-def test_status_spinner_none():
+def test_status_animation_none():
     itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("set status_spinner = ''")
-    assert itm.status_spinner == ""
+    itm.onecmd_plus_hooks("set status_animation = ''")
+    assert itm.status_animation == ""
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
@@ -1778,11 +1778,11 @@ def test_status(tomcat_manager_server, capsys):
 
 
 def test_status_no_spinner(tomcat_manager_server, capsys):
-    # this is really to test no spinner, not status, but we gotta
-    # test it with something
+    # this is really to test no activity spinner, not status,
+    # but we gotta test it with something
     itm = get_itm(tomcat_manager_server)
     itm.exit_code = itm.EXIT_ERROR
-    itm.status_spinner = None
+    itm.status_animation = None
     itm.quiet = False
     itm.onecmd_plus_hooks("status")
     out, _ = capsys.readouterr()

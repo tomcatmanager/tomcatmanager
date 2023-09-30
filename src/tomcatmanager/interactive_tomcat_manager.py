@@ -108,7 +108,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     THEME_SCOPES = [
         "tm.error",
         "tm.status",
-        "tm.activity",
+        "tm.animation",
         "tm.help.section",
         "tm.help.command",
         "tm.usage.prog",
@@ -163,13 +163,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.tomcat.timeout = value
 
     @property
-    def status_spinner(self) -> str:
-        """Validating property for spinner specification"""
-        return self._status_spinner
+    def status_animation(self) -> str:
+        """Validating property for activity animation type"""
+        return self._status_animation
 
-    @status_spinner.setter
-    def status_spinner(self, value: str):
-        """Validating property for spinner specification"""
+    @status_animation.setter
+    def status_animation(self, value: str):
+        """Validating property for activity animation type"""
         if value:
             try:
                 _ = rich.spinner.Spinner(value)
@@ -178,10 +178,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 # we need a ValueError. KeyError puts the message in single quotes
                 # err.args[0] gets the message without the quotes
                 raise ValueError(err.args[0]) from err
-            self._status_spinner = value
+            self._status_animation = value
         else:
             # use empty string instead of None because TOML doesn't nave None or Nil
-            self._status_spinner = ""
+            self._status_animation = ""
 
     @property
     def theme(self) -> str:
@@ -291,7 +291,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         self.add_settable(
             cmd2.Settable(
-                "status_spinner", str, "style of status spinner from rich.spinner", self
+                "status_animation", str, "style of activity animation from rich.spinner", self
             )
         )
         self.add_settable(
@@ -311,7 +311,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.echo = False
         self.quiet = False
         self.status_suffix = "..."
-        self.status_spinner = "bouncingBar"
+        self.status_animation = "bouncingBar"
         self.syntax_theme = "monokai"
         self.theme = ""
         # go apply the empty theme, which sets
@@ -459,10 +459,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 style="tm.status",
             )
             text_column = rich.progress.RenderableColumn(msg)
-            if self.status_spinner:
+            if self.status_animation:
                 spinner_column = rich.progress.SpinnerColumn(
-                    spinner_name=self.status_spinner,
-                    style="tm.activity",
+                    spinner_name=self.status_animation,
+                    style="tm.animation",
                 )
                 progress = rich.progress.Progress(
                     text_column, spinner_column, console=cons
