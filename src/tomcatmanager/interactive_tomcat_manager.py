@@ -1205,6 +1205,19 @@ class InteractiveTomcatManager(cmd2.Cmd):
             "name", nargs="?", default="", help="name of theme to edit"
         )
 
+        # create a new user theme
+        create_parser = main_subparsers.add_parser(
+            "create",
+            description="create a new user theme",
+            help="create a new user theme",
+            formatter_class=main_parser.formatter_class,
+        )
+        create_parser.set_defaults(func=self.theme_create)
+        create_parser.add_argument(
+            "name",
+            help="name for the new theme",
+        )
+
         # package all the parsers into a dictionary
         parsers = {}
         parsers["theme"] = main_parser
@@ -1212,6 +1225,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         parsers["list"] = list_parser
         parsers["clone"] = clone_parser
         parsers["edit"] = edit_parser
+        parsers["create"] = create_parser
         return parsers
 
     @property
@@ -1239,7 +1253,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     def theme_list(self, args: argparse.Namespace):
         """list all available themes"""
-        self.console.print("Built in Themes", style="tm.theme.section")
+        self.console.print("Built-in Themes", style="tm.theme.section")
         self.console.print("─" * 72, style="tm.theme.section")
         themelist = rich.table.Table(
             show_edge=False,
@@ -1353,6 +1367,31 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.exit_code = self.EXIT_ERROR
 
         self.exit_code = self.EXIT_SUCCESS
+        return
+
+    def theme_create(self, args: argparse.Namespace):
+        """create a user theme file from a template"""
+
+        # see if requested new name already exists, error message if it does
+        name = args.name
+        new_path = self.user_theme_dir / f"{name}.toml"
+        if new_path.is_file():
+            self.perror(f"create aborted: '{name}' is already a user theme")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        try:
+            with importlib_resources.path("tomcatmanager.templates", "theme.toml") as template_path:
+                self.pfeedback(
+                    f"copying theme template to '{name}'"
+                )
+                self.ensure_user_theme_dir()
+                shutil.copy(template_path, new_path)
+                self.exit_code = self.EXIT_SUCCESS
+        except FileNotFoundError:
+            with open(new_path, 'w') as outfile:
+                 outfile.write('#\n# tomcat-manager theme\n')
+                 self.exit_code = self.EXIT_SUCCESS
         return
 
     ###

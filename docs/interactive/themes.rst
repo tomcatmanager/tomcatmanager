@@ -33,6 +33,8 @@ TODO
   first group, custom in the second group
 - [x] ``theme clone {builtin theme]`` to copy a built-in theme to the theme directory
 - [x] ``theme edit`` edit a theme, current theme, or specified theme
-- ``theme create {theme name}`` create a new theme
+- [x] ``theme create {theme name}`` create a new theme
 - ``theme test`` show all the elements of the current theme
-
+- fix all importlib_resources to use a context manager like
+  with importlib_resources.path("tomcatmanager.templates", "theme.toml") as
+  template_path:
