@@ -286,7 +286,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         self.add_settable(
             cmd2.Settable(
-                "status_animation", str, "style of activity animation from rich.spinner", self
+                "status_animation",
+                str,
+                "style of activity animation from rich.spinner",
+                self,
             )
         )
         self.add_settable(
@@ -1329,11 +1332,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if location == tm.models.ThemeLocation.BUILTIN:
             # this means no user theme with this name exists, but a builtin one does
             self.pfeedback(f"built in theme: '{name}'")
-            self.pfeedback(f"use \"theme clone {name}\" to make an editable user theme")
+            self.pfeedback(f'use "theme clone {name}" to make an editable user theme')
             self.perror(f"theme is not editable: '{name}'")
             self.exit_code = self.EXIT_ERROR
             return
-        elif location == None:
+        if location is None:
             self.perror(f"unknown theme: '{name}'")
             self.exit_code = self.EXIT_ERROR
             return

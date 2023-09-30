@@ -70,8 +70,11 @@ class TomcatNotConnected(Exception):
 
 
 class ThemeLocation(enum.Enum):
-    BUILTIN = 'builtin'
-    USER = 'user'
+    """An enumeration of the types of theme locations"""
+
+    BUILTIN = "builtin"
+    USER = "user"
+
 
 @enum.unique
 class StatusCode(enum.Enum):
