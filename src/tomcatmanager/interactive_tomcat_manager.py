@@ -42,7 +42,6 @@ except AttributeError:  # pragma: nocover
     # pylint: disable=import-error
     import importlib_resources
 
-import enum
 import os
 import pathlib
 import shutil
@@ -132,10 +131,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         "tm.setting.float",
         "tm.theme.section",
     ]
-
-    class ThemeLocation(enum.Enum):
-        BUILTIN = 'builtin'
-        USER = 'user'
 
     # for configuration
     app_name = "tomcat-manager"
@@ -432,11 +427,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # check user theme dir
         tfile = self.user_theme_dir / f"{name}.toml"
         if tfile.is_file():
-            return self.ThemeLocation.USER, tfile
+            return tm.models.ThemeLocation.USER, tfile
         # check included themes
         for path in importlib_resources.files("tomcatmanager.themes").iterdir():
             if path.name == f"{name}.toml":
-                return self.ThemeLocation.BUILTIN, path
+                return tm.models.ThemeLocation.BUILTIN, path
         # couldn't find it
         return None, None
 
@@ -1331,7 +1326,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         # get the file to edit
         location, theme_file = self._resolve_theme(name)
-        if location == self.ThemeLocation.BUILTIN:
+        if location == tm.models.ThemeLocation.BUILTIN:
             # this means no user theme with this name exists, but a builtin one does
             self.pfeedback(f"built in theme: '{name}'")
             self.pfeedback(f"use \"theme clone {name}\" to make an editable user theme")

@@ -999,7 +999,8 @@ def test_resolve_theme_builtin():
     itm = tm.InteractiveTomcatManager(loadconfig=False)
     # this is one of our builtin themes
     theme_name = "dark"
-    path = itm._resolve_theme(theme_name)
+    location, path = itm._resolve_theme(theme_name)
+    assert location == tm.models.ThemeLocation.BUILTIN
     assert path
     assert str(importlib_resources.files("tomcatmanager.themes")) in str(path)
     assert theme_name in str(path)
@@ -1009,7 +1010,8 @@ def test_resolve_theme_invalid_name():
     itm = tm.InteractiveTomcatManager(loadconfig=False)
     # shouldn't find this random uuid as a theme
     theme_name = str(uuid.uuid1())
-    path = itm._resolve_theme(theme_name)
+    location, path = itm._resolve_theme(theme_name)
+    assert not location
     assert not path
 
 
