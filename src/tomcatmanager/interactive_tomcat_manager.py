@@ -42,6 +42,7 @@ except AttributeError:  # pragma: nocover
     # pylint: disable=import-error
     import importlib_resources
 
+import enum
 import os
 import pathlib
 import shutil
@@ -131,6 +132,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         "tm.setting.float",
         "tm.theme.section",
     ]
+
+    class ThemeLocation(enum.Enum):
+        BUILTIN = 'builtin'
+        USER = 'user'
 
     # for configuration
     app_name = "tomcat-manager"
@@ -354,7 +359,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
             tvalues[scope] = "none"
         # if we have a theme name given
         if theme:
-            tfile = self._resolve_theme(theme)
+            # find the ThemeLocation and path, we discard the former
+            # here, because we don't care
+            _, tfile = self._resolve_theme(theme)
             if not tfile:
                 self.perror(f"theme '{theme}' not found")
                 return False
@@ -413,8 +420,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         Find the path of the theme file for a given name.
 
-        :return: the path of the theme file for the given name, or None
-                 if no theme file for that name exists
+        :return: a tuple of ThemeLocation, and the path of the theme file for
+                 the given name, or None, None if no theme file for that
+                 name exists
 
         Checks in the user theme directory first, which is located
         in user configuration directory in a "themes" directory.
@@ -424,13 +432,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # check user theme dir
         tfile = self.user_theme_dir / f"{name}.toml"
         if tfile.is_file():
-            return tfile
+            return self.ThemeLocation.USER, tfile
         # check included themes
         for path in importlib_resources.files("tomcatmanager.themes").iterdir():
             if path.name == f"{name}.toml":
-                return path
+                return self.ThemeLocation.BUILTIN, path
         # couldn't find it
-        return None
+        return None, None
 
     def _progressfactory(self, message: str) -> rich.progress.Progress:
         """generate a progress object"""
@@ -1121,7 +1129,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
                         self.perror(f"unknown setting: '{param_name}'")
                         self.exit_code = self.EXIT_ERROR
             except tomlkit.exceptions.TOMLKitError:
-                self.perror("invalid syntax: try 'set setting = value'")
+                self.perror(
+                    "invalid syntax: use 'help set' to view syntax and examples"
+                )
                 self.exit_code = self.EXIT_ERROR
             except ValueError as err:
                 # this could be thrown by self._change_setting if we try to set a string
@@ -1301,8 +1311,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     def theme_edit(self, args: argparse.Namespace):
         """edit a user theme file"""
-        self.poutput("TODO edit a theme")
-        self.poutput(f"theme edit name={args.name}<")
 
         if not self.editor:
             self.perror("no editor: use 'set editor = \"{path}\"' to specify one")
@@ -1310,11 +1318,27 @@ class InteractiveTomcatManager(cmd2.Cmd):
             return
 
         # if args.name is empty, try the name of the current theme
-        name = args.name
+        if args.name:
+            name = args.name
+        else:
+            if self.theme:
+                self.pfeedback(f"no theme given, editing current theme '{self.theme}'")
+                name = self.theme
+            else:
+                self.perror("syntax error: no theme given")
+                self.exit_code = self.EXIT_ERROR
+                return
 
         # get the file to edit
-        theme_file = self.user_theme_dir / f"{name}.toml"
-        if not theme_file.is_file():
+        location, theme_file = self._resolve_theme(name)
+        if location == self.ThemeLocation.BUILTIN:
+            # this means no user theme with this name exists, but a builtin one does
+            self.pfeedback(f"built in theme: '{name}'")
+            self.pfeedback(f"use \"theme clone {name}\" to make an editable user theme")
+            self.perror(f"theme is not editable: '{name}'")
+            self.exit_code = self.EXIT_ERROR
+            return
+        elif location == None:
             self.perror(f"unknown theme: '{name}'")
             self.exit_code = self.EXIT_ERROR
             return
@@ -1325,6 +1349,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
         os.system(cmd)
 
         # reapply the theme if necessary
+        if self.theme == name:
+            self.pfeedback(f"reloading theme: '{self.theme}'")
+            if not self._apply_theme(name):
+                self.exit_code = self.EXIT_ERROR
+
+        self.exit_code = self.EXIT_SUCCESS
+        return
 
     ###
     #
