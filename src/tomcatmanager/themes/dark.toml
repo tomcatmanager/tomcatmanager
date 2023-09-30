@@ -5,9 +5,9 @@
 # for supported list of color names
 
 [tm]
-feedback =  "deep_sky_blue1"
 error =  "red3"
 status =  "deep_sky_blue1"
+activity = "cyan1"
 
 [tm.help]
 section =  "gold1"

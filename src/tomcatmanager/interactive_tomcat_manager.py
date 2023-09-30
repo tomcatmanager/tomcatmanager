@@ -105,9 +105,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     # list of known scopes that themes can apply color to
     THEME_SCOPES = [
-        "tm.feedback",
         "tm.error",
         "tm.status",
+        "tm.activity",
         "tm.help.section",
         "tm.help.command",
         "tm.usage.prog",
@@ -453,7 +453,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
             text_column = rich.progress.RenderableColumn(msg)
             if self.status_spinner:
                 spinner_column = rich.progress.SpinnerColumn(
-                    spinner_name=self.status_spinner
+                    spinner_name=self.status_spinner,
+                    style="tm.activity",
                 )
                 progress = rich.progress.Progress(
                     text_column, spinner_column, console=cons
@@ -538,9 +539,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if not self.quiet:
             formatted_msg = f"{self.status_prefix}{msg}"
             if self.feedback_to_output:
-                self.console.print(formatted_msg, end=end, style="tm.feedback")
+                self.console.print(formatted_msg, end=end, style="tm.status")
             else:
-                self.error_console.print(formatted_msg, end=end, style="tm.feedback")
+                self.error_console.print(formatted_msg, end=end, style="tm.status")
 
     def emptyline(self):
         """Do nothing on an empty line"""
