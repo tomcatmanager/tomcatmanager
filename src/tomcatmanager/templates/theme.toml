@@ -64,40 +64,40 @@
 
 
 [tm]
-feedback =  "deep_sky_blue1"
-error =  "red3"
-status =  "deep_sky_blue1"
+error =  "default"
+status =  "default"
+animation = "default"
 
 [tm.help]
-section =  "gold1"
-command =  "magenta3"
+section =  "default"
+command =  "default"
 
 [tm.usage]
-prog =  "magenta3"
-groups =  "gold1"
-args =  "cyan"
-metavar =  "dark_cyan"
+prog =  "default"
+groups =  "default"
+args =  "default"
+metavar =  "default"
 help =  "default"
 text =  "default"
-syntax =  "bold"
+syntax =  "default"
 
 [tm.list]
-header =  "bold deep_sky_blue1"
-border =  "bold deep_sky_blue1"
+header =  "default"
+border =  "default"
 
 [tm.app]
-running =  "green1"
-stopped =  "red3"
-sessions =  "cyan1"
+running =  "default"
+stopped =  "default"
+sessions =  "default"
 
 [tm.setting]
-name =  "dark_orange3"
-equals =  "orchid1"
-comment =  "pale_turquoise4"
-string =  "green1"
-bool =  "purple"
-int =  "royal_blue1"
-float =  "royal_blue1"
+name =  "default"
+equals =  "default"
+comment =  "default"
+string =  "default"
+bool =  "default"
+int =  "default"
+float =  "default"
 
 [tm.theme]
-section = "gold1"
+section = "default"

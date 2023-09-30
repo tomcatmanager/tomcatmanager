@@ -5,9 +5,9 @@
 # for supported list of color names
 
 [tm]
-feedback =  "deep_sky_blue4"
 error =  "dark_red"
 status =  "deep_sky_blue4"
+animation = "dark_turquoise"
 
 [tm.help]
 section = "gold3"
@@ -37,5 +37,8 @@ equals =  "medium_orchid1"
 comment =  "pale_turquoise4"
 string =  "green4"
 bool =  "purple"
-int =  "dodger_blue2"
-float = "dodger_blue2"
+int =  "dark_turquoise"
+float = "dark_turquoise" # "dodger_blue2"
+
+[tm.theme]
+section = "gold3"

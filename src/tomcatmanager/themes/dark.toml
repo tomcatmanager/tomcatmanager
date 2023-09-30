@@ -7,7 +7,7 @@
 [tm]
 error =  "red3"
 status =  "deep_sky_blue1"
-activity = "cyan1"
+animation = "cyan1"
 
 [tm.help]
 section =  "gold1"
@@ -37,8 +37,8 @@ equals =  "orchid1"
 comment =  "pale_turquoise4"
 string =  "green1"
 bool =  "purple"
-int =  "royal_blue1"
-float =  "royal_blue1"
+int =  "cyan1"
+float =  "cyan1"
 
 [tm.theme]
 section = "gold1"
