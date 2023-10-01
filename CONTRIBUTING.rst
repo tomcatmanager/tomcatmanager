@@ -27,21 +27,21 @@ creation of these environments.
 If you prefer to create these virtual envs by hand, do the following::
 
    $ cd tomcatmanager
-   $ pyenv install 3.11.0
-   $ pyenv virtualenv -p python3.11 3.11.0 tomcatmanager-3.11
-   $ pyenv install 3.10.7
-   $ pyenv virtualenv -p python3.10 3.10.0 tomcatmanager-3.10
-   $ pyenv install 3.9.14
-   $ pyenv virtualenv -p python3.9 3.9.7 tomcatmanager-3.9
-   $ pyenv install 3.8.14
-   $ pyenv virtualenv -p python3.8 3.8.12 tomcatmanager-3.8
-   $ pyenv install 3.7.14
-   $ pyenv virtualenv -p python3.7 3.7.12 tomcatmanager-3.7
+   $ pyenv install 3.12.0
+   $ pyenv virtualenv -p python3.12 3.12.0 tomcatmanager-3.12
+   $ pyenv install 3.11.5
+   $ pyenv virtualenv -p python3.11 3.11.5 tomcatmanager-3.11
+   $ pyenv install 3.10.13
+   $ pyenv virtualenv -p python3.10 3.10.13 tomcatmanager-3.10
+   $ pyenv install 3.9.18
+   $ pyenv virtualenv -p python3.9 3.9.18 tomcatmanager-3.9
+   $ pyenv install 3.8.18
+   $ pyenv virtualenv -p python3.8 3.8.18 tomcatmanager-3.8
 
 
 Now set pyenv to make all five of those available at the same time::
 
-   $ pyenv local tomcatmanager-3.11 tomcatmanager-3.10 tomcatmanager-3.9 tomcatmanager-3.8 tomcatmanager-3.7
+   $ pyenv local tomcatmanager-3.12 tomcatmanager-3.11 tomcatmanager-3.10 tomcatmanager-3.9 tomcatmanager-3.8
 
 Whether you ran the script, or did it by hand, you now have isolated virtualenvs for
 each of the minor python versions. This table shows various python commands, the
@@ -50,20 +50,19 @@ version of python which will be executed, and the virtualenv it will utilize.
 ==============  =======  ==================
 Command         python   virtualenv
 ==============  =======  ==================
-``python``      3.11.0   tomcatmanager-3.11
-``python3``     3.11.0   tomcatmanager-3.11
-``python3.11``  3.11.0   tomcatmanager-3.11
-``python3.10``  3.10.7   tomcatmanager-3.10
-``python3.9``   3.9.14   tomcatmanager-3.9
-``python3.8``   3.8.14   tomcatmanager-3.8
-``python3.7``   3.7.14   tomcatmanager-3.7
-``pip``         3.11.0   tomcatmanager-3.11
-``pip3``        3.11.0   tomcatmanager-3.11
-``pip3.11``     3.11.0   tomcatmanager-3.11
-``pip3.10``     3.10.7   tomcatmanager-3.10
-``pip3.9``      3.9.14   tomcatmanager-3.9
-``pip3.8``      3.8.14   tomcatmanager-3.8
-``pip3.7``      3.7.14   tomcatmanager-3.7
+``python``       3.12.0  tomcatmanager-3.12
+``python3``      3.12.0  tomcatmanager-3.12
+``python3.12``   3.12.0  tomcatmanager-3.12
+``python3.11``   3.11.5  tomcatmanager-3.11
+``python3.10``  3.10.13  tomcatmanager-3.10
+``python3.9``    3.9.18  tomcatmanager-3.9
+``python3.8``    3.8.18  tomcatmanager-3.8
+``pip``          3.11.5  tomcatmanager-3.11
+``pip3``         3.11.5  tomcatmanager-3.11
+``pip3.11``      3.11.5  tomcatmanager-3.11
+``pip3.10``     3.10.13  tomcatmanager-3.10
+``pip3.9``       3.9.18  tomcatmanager-3.9
+``pip3.8``       3.8.18  tomcatmanager-3.8
 ==============  =======  ==================
 
 
@@ -77,11 +76,11 @@ Now install all the development dependencies::
 This installs the tomcatmanager package "in-place", so the package points to the
 source code instead of copying files to the python ``site-packages`` folder.
 
-All the dependencies now have been installed in the ``tomcatmanager-3.11`` virtualenv.
+All the dependencies now have been installed in the ``tomcatmanager-3.12`` virtualenv.
 If you want to work in other virtualenvs, you'll need to manually select it, and
 install again::
 
-   $ pyenv shell tomcatmanager-3.9
+   $ pyenv shell tomcatmanager-3.10
    $ pip install -e .[dev]
 
 

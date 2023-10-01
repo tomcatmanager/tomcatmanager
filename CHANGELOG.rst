@@ -34,6 +34,7 @@ TODO
 Added
 ^^^^^
 
+- Support for Python 3.12
 - Support for themes in ``tomcat-manager``, which can produce styled and colored output
 
   - New ``theme`` setting to choose which theme to use
@@ -62,6 +63,7 @@ Changed
 Removed
 ^^^^^^^
 
+- Drop support for Python 3.7, which was EOL 2023-06-27
 - Removed allow_style setting
 - Removed show command; settings does the same thing and is still available
 

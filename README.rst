@@ -137,7 +137,7 @@ coming up in the next release.
 Installation
 ------------
 
-You'll need Python >= 3.7. Install using pip:
+You'll need Python >= 3.8. Install using pip:
 
 .. code-block:: text
 

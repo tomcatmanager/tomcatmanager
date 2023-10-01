@@ -4,7 +4,7 @@ Installation
 System Requirements
 -------------------
 
-You'll need Python 3.7 or higher on macOS, Windows, or Linux.
+You'll need Python 3.8 or higher on macOS, Windows, or Linux.
 
 The following Tomcat versions are supported:
 
@@ -21,7 +21,7 @@ You can double check the list of versions supported by:
 .. code-block:: text
 
    $ tomcat-manager -v
-   6.0.0 (works with Tomcat >= 8.5 and <= 10.1)
+   7.0.0 (works with Tomcat >= 8.5 and <= 10.1)
 
 or:
 
@@ -29,7 +29,7 @@ or:
 
    $ tomcat-manager
    tomcat-manager> version
-   6.0.0 (works with Tomcat >= 8.5 and <= 10.1)
+   7.0.0 (works with Tomcat >= 8.5 and <= 10.1)
 
 These tools should work with newer versions of Tomcat than the ones officially
 supported. The Tomcat Manager web application that is part of Tomcat has been
