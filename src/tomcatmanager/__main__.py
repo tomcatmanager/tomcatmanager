@@ -25,6 +25,7 @@
 Entry point for 'tomcat-manager' command line program.
 """
 import argparse
+import os
 import sys
 
 import tomcatmanager as tm
@@ -63,6 +64,9 @@ def _build_parser():
 
     noconfig_help = "don't load the configuration file on startup"
     parser.add_argument("-n", "--noconfig", action="store_true", help=noconfig_help)
+
+    theme_help = "load a theme, overriding the theme setting"
+    parser.add_argument("-m", "--theme", help=theme_help)
 
     configfile_help = "show the full path to the configuration file and then exit"
     parser.add_argument("--config-file", action="store_true", help=configfile_help)
@@ -142,6 +146,18 @@ def main(argv=None):
     # to false, and in this case 0 is a valid timeout that we want to set
     if args.timeout is not None:
         itm.timeout = args.timeout
+    # check for command line and environment variable theme specification
+    if args.theme is not None:
+        itm.theme = args.theme
+    else:
+        try:
+            env_theme = os.environ["TOMCATMANAGER_THEME"]
+            # even though the value could be empty, that's a signal
+            # for us to load no theme
+            itm.theme = env_theme
+        except KeyError:
+            # no environment variable, so do nothing
+            pass
 
     if args.manager_url:
         # try and connect

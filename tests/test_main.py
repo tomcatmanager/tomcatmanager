@@ -25,12 +25,49 @@
 # pylint: disable=missing-module-docstring, unused-variable
 
 import io
+import os
 import sys
 
 import pytest
 
 import tomcatmanager as tm
 from tomcatmanager.__main__ import main
+
+
+def test_main_config_file(mocker, capsys):
+    mock_cmdloop = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.cmdloop", autospec=True
+    )
+
+    cmdline = "--config-file"
+    argv = cmdline.split(" ")
+    exit_code = main(argv)
+    out, _ = capsys.readouterr()
+    out = out.splitlines()
+    assert exit_code == 0
+    # we aren't going to test what is output, that's tested elsewhere
+    # we just need to make sure we got something, and we didn't enter
+    # the command loop
+    assert out[0]
+    assert mock_cmdloop.call_count == 0
+
+
+def test_main_theme_dir(mocker, capsys):
+    mock_cmdloop = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.cmdloop", autospec=True
+    )
+
+    cmdline = "--theme-dir"
+    argv = cmdline.split(" ")
+    exit_code = main(argv)
+    out, _ = capsys.readouterr()
+    out = out.splitlines()
+    assert exit_code == 0
+    # we aren't going to test what is output, that's tested elsewhere
+    # we just need to make sure we got something, and we didn't enter
+    # the command loop
+    assert out[0]
+    assert mock_cmdloop.call_count == 0
 
 
 def test_main_noargs(mocker):
@@ -304,3 +341,42 @@ def test_main_timeout_zero(tomcat_manager_server, mocker, capsys):
     out = out.splitlines()
     assert exit_code == 0
     assert "timeout = 0.0" in out[0]
+
+
+def test_main_theme_command_line(tomcat_manager_server, mocker, monkeypatch, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+    # make sure there is an environment variable, which the command line should
+    # override
+    monkeypatch.setenv("TOMCATMANAGER_THEME", "dark")
+
+    cmdline = (
+        f"-m light -u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
+        f" settings theme"
+    )
+    argv = cmdline.split(" ")
+    exit_code = main(argv)
+    out, _ = capsys.readouterr()
+    out = out.splitlines()
+    assert exit_code == 0
+    assert 'theme = "light"' in out[0]
+
+
+def test_main_theme_env(tomcat_manager_server, mocker, monkeypatch, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+    # set our desired theme in the environment variable
+    monkeypatch.setenv("TOMCATMANAGER_THEME", "dark")
+
+    cmdline = (
+        f"-u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
+        f" settings theme"
+    )
+    argv = cmdline.split(" ")
+    exit_code = main(argv)
+    out, _ = capsys.readouterr()
+    out = out.splitlines()
+    assert exit_code == 0
+    assert 'theme = "dark"' in out[0]
