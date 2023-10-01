@@ -57,7 +57,7 @@ The interactive shell has a built-in list of all available commands:
   ────────────────────────────────────────────────────────────────────────
   list       show all installed tomcat applications
   deploy     deploy an application to the tomcat server
-  redeploy   deploy an application to the tomcat server after undeploying the given path
+  redeploy   undeploy then deploy an application to the tomcat server
   undeploy   remove an application from the tomcat server
   start      start a deployed tomcat application that isn't running
   stop       stop a tomcat application and leave it deployed on the server
@@ -94,6 +94,7 @@ The interactive shell has a built-in list of all available commands:
   set            change a program setting
   shell          execute a command in the operating system shell
   shortcuts      show shortcuts for other commands
+  theme          manage themes
 
   Other
   ────────────────────────────────────────────────────────────────────────
@@ -104,26 +105,59 @@ The interactive shell has a built-in list of all available commands:
   license   show the software license for this program
 
 
-
-As well as help for each command:
+As well as help for each command. Help is avaialble in two ways:
 
 .. code-block:: text
 
-   tomcat-manager> help stop
-   usage: stop [-h] [-v VERSION] path
+  tomcat-manager> help config
+  ...
+  tomcat-manager> connect -h
+  ...
 
-   Stop a running tomcat application and leave it deployed on the server.
+Here's some examples:
 
-   positional arguments:
-     path                  The path part of the URL where the application is
-                           deployed.
+.. code-block:: text
 
-   optional arguments:
-     -h, --help            show this help message and exit
-     -v VERSION, --version VERSION
-                           Optional version string of the application to stop. If
-                           the application was deployed with a version string, it
-                           must be specified in order to stop the application.
+  tomcat-manager> help stop
+  usage: stop [-h] [-v VERSION] path
+
+  Stop a running tomcat application and leave it deployed on the server.
+
+  positional arguments:
+    path                  The path part of the URL where the application is
+                          deployed.
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    -v VERSION, --version VERSION
+                          Optional version string of the application to stop. If
+                          the application was deployed with a version string, it
+                          must be specified in order to stop the application.
+
+Some commands, like ``deploy``, ``config``, and ``theme`` have multiple
+sub-commands. Each sub-command also has help:
+
+.. code-block:: text
+
+  tomcat-manager> deploy context -h
+  usage: deploy context [-h] [-v VERSION] contextfile [warfile] path
+
+  deploy a context file from the server file system
+
+  positional arguments:
+    contextfile           the java-style path (use slashes not backslashes) to the war file on the
+                          server file system; don't include 'file:' at the beginning
+    warfile               the java-style path (use slashes not backslashes) to the war file on the
+                          server file system; don't include 'file:' at the beginning; overrides
+                          'docBase' specified in the 'contextfile'
+    path                  context path, including the leading slash, on the server where the warfile
+                          will be available; overrides the context path in 'contextfile'.
+
+  options:
+    -h, --help            show this help message and exit
+    -v, --version VERSION
+                          version string to associate with this deployment
+
 
 This document does not include detailed explanations of every command. It does
 show how to connect to a Tomcat server and deploy a war file, since there are
