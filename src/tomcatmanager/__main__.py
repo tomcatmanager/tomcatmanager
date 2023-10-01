@@ -63,6 +63,9 @@ def _build_parser():
     noconfig_help = "don't load the configuration file on startup"
     parser.add_argument("-n", "--noconfig", action="store_true", help=noconfig_help)
 
+    configfile_help = "show the full path to the configuration file and then exit"
+    parser.add_argument("--config-file", action="store_true", help=configfile_help)
+
     version_help = "show the version information and exit"
     parser.add_argument(
         "-v",
@@ -109,6 +112,11 @@ def main(argv=None):
         # to reverse the bool
         loadconfig = not args.noconfig
     itm = tm.InteractiveTomcatManager(loadconfig=loadconfig)
+
+    # process our args that just exit
+    if args.config_file:
+        print(itm.config_file)
+        return itm.EXIT_SUCCESS
 
     # if we have command line switches, set those values
     # these override any user settings loaded from a config file
