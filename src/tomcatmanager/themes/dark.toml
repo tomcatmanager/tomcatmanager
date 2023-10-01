@@ -10,8 +10,10 @@ status =  "deep_sky_blue1"
 animation = "cyan1"
 
 [tm.help]
-section =  "gold1"
+category =  "gold1"
+border = "gold1"
 command =  "magenta3"
+args = "cyan"
 
 [tm.usage]
 prog =  "magenta3"
@@ -41,4 +43,5 @@ int =  "cyan1"
 float =  "cyan1"
 
 [tm.theme]
-section = "gold1"
+category = "gold1"
+border = "gold1"

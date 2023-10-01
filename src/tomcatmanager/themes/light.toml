@@ -10,8 +10,10 @@ status =  "deep_sky_blue4"
 animation = "dark_turquoise"
 
 [tm.help]
-section = "gold3"
+category = "gold3"
+border = "gold3"
 command = "medium_violet_red"
+args = "cyan"
 
 [tm.usage]
 prog =  "medium_violet_red"
@@ -38,7 +40,8 @@ comment =  "pale_turquoise4"
 string =  "green4"
 bool =  "purple"
 int =  "dark_turquoise"
-float = "dark_turquoise" # "dodger_blue2"
+float = "dark_turquoise"
 
 [tm.theme]
-section = "gold3"
+category = "gold3"
+border = "gold3"

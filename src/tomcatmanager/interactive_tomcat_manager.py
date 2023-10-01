@@ -108,8 +108,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         "tm.error",
         "tm.status",
         "tm.animation",
-        "tm.help.section",
+        "tm.help.category",
+        "tm.help.border",
         "tm.help.command",
+        "tm.help.args",
         "tm.usage.prog",
         "tm.usage.groups",
         "tm.usage.args",
@@ -646,8 +648,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def _help_section(self, title: str):
         """Start a new help section and return a table for commands in that section"""
         self.console.print("")
-        self.console.print(title, style="tm.help.section")
-        self.console.print("─" * 72, style="tm.help.section")
+        self.console.print(title, style="tm.help.category")
+        self.console.print("─" * 72, style="tm.help.border")
         cmds = rich.table.Table(
             show_edge=False,
             box=None,
@@ -687,7 +689,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 helpcmd = rich.text.Text("Type '")
                 helpcmd.append("help", style="tm.help.command")
                 helpcmd.append(" ")
-                helpcmd.append("[command]", style="tm.usage.args")
+                helpcmd.append("[command]", style="tm.help.args")
                 helpcmd.append("' for help on any command.")
                 self.console.print(helpcmd)
                 self.console.print()
@@ -1240,7 +1242,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if not args.func:
             self.help_theme()
             self.exit_code = self.EXIT_ERROR
-
+        # call the function for the subcommand, which was set on the argparser
         args.func(args)
 
     def help_theme(self):
@@ -1250,11 +1252,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def theme_dir(self, args: argparse.Namespace):
         """show the theme directory"""
         self.poutput(self.user_theme_dir)
+        self.exit_code = self.EXIT_SUCCESS
 
     def theme_list(self, args: argparse.Namespace):
         """list all available themes"""
-        self.console.print("Built-in Themes", style="tm.theme.section")
-        self.console.print("─" * 72, style="tm.theme.section")
+        self.console.print("Built-in Themes", style="tm.theme.category")
+        self.console.print("─" * 72, style="tm.theme.border")
         themelist = rich.table.Table(
             show_edge=False,
             box=None,
@@ -1281,8 +1284,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         if have_user_themes:
             self.console.print("")
-            self.console.print("User Themes", style="tm.theme.section")
-            self.console.print("─" * 72, style="tm.theme.section")
+            self.console.print("User Themes", style="tm.theme.category")
+            self.console.print("─" * 72, style="tm.theme.border")
             self.console.print(themelist)
         else:
             self.console.print("")
@@ -1381,17 +1384,17 @@ class InteractiveTomcatManager(cmd2.Cmd):
             return
 
         try:
-            with importlib_resources.path("tomcatmanager.templates", "theme.toml") as template_path:
-                self.pfeedback(
-                    f"copying theme template to '{name}'"
-                )
+            with importlib_resources.path(
+                "tomcatmanager.templates", "theme.toml"
+            ) as template_path:
+                self.pfeedback(f"copying theme template to '{name}'")
                 self.ensure_user_theme_dir()
                 shutil.copy(template_path, new_path)
                 self.exit_code = self.EXIT_SUCCESS
         except FileNotFoundError:
-            with open(new_path, 'w') as outfile:
-                 outfile.write('#\n# tomcat-manager theme\n')
-                 self.exit_code = self.EXIT_SUCCESS
+            with open(new_path, "w") as outfile:
+                outfile.write("#\n# tomcat-manager theme\n")
+                self.exit_code = self.EXIT_SUCCESS
         return
 
     ###

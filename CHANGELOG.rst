@@ -17,31 +17,37 @@ TODO
 - config edit has a bug where if you comment out a setting, it doesn't change
   that setting back to it's default value when it reloads the config
 
-- standardize on either status or feedback
-
-- spinners are in color even if no theme is set, see if we can change that
-
-- let people define their own themes
-
 - figure out out to style the prompt
 - maybe have cmd2.Cmd call a pprompt() method when it needs to output a stylized
   prompt and have cmd.prompt contain the "ascii" rendered version of it
-
-- have docmd() put up a rich.spinner or rich.status like do_connect() does
 
 - check display output with debug on, make sure it formats with rich
 
 - cmd2.Cmd has async_alert(), and async_update_prompt(), and set_window_title()
   which we will need to accommodate, or replace with rich
 
+- fix all importlib_resources to use a context manager like
+  with importlib_resources.path("tomcatmanager.templates", "theme.toml") as
+  template_path:
+  or use importlib_resources.path("tomcatmanager.templates", "theme.toml").read_text()
 
 Added
 ^^^^^
 
-- Styled and colored output using ``rich``
+- Support for themes in ``tomcat-manager``, which can produce styled and colored output
+
+  - New ``theme`` setting to choose which theme to use
+  - New ``theme`` command for users to list, create, and edit themes
+  - Two built-in themes, ``light``, and ``dark``
+  - New command line option ``--theme-dir`` to show the full path to the user
+    theme directory
+
 - New command line option ``--noconfig`` to prevent the configuration file from
   being loading on startup
-- new method `TomcatManager.disconnect()
+- New command line option ``--config-file`` to show the full path to the
+  configuration file
+- New command ``disconnect`` to disconnect from a Tomcat server
+- New method `TomcatManager.disconnect()
   <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.disconnect>`__
 
 Changed
@@ -50,7 +56,7 @@ Changed
 - Output from the ``settings`` command now matches the TOML format of the
   configuration file
 - ``settings`` command now uses TOML syntax
-- Server shortcuts are now called server definitions. There is no change to
+- Server shortcuts have been renamed to server definitions. There is no change to
   the functionality, only a change to the name.
 
 Removed
