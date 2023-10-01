@@ -379,6 +379,8 @@ We encourage references to other methods and classes in docstrings, and choose t
 optimize docstrings for clarity and usefulness in the rendered output rather than ease
 of reading in the source code.
 
+The documentation is indented using four spaces, the same as the python code.
+
 The code includes type hints as a convenience, but does not provide stub files nor do
 we use mypy to check for proper static typing. Our philosophy is that the dynamic
 nature of Python is a benefit and we shouldn't impose static type checking, but
