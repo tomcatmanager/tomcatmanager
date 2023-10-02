@@ -65,7 +65,7 @@ def _build_parser():
     noconfig_help = "don't load the configuration file on startup"
     parser.add_argument("-n", "--noconfig", action="store_true", help=noconfig_help)
 
-    theme_help = "load a theme, overriding the theme setting"
+    theme_help = "load a theme on startup, overriding the theme setting"
     parser.add_argument("-m", "--theme", help=theme_help)
 
     configfile_help = "show the full path to the configuration file and then exit"
