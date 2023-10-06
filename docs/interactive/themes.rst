@@ -4,6 +4,43 @@ Themes
 When a theme is loaded, ``tomcat-manager`` displays certain output using the
 styles defined in theme.
 
+``tomcat-manager`` comes with several built-in themes which use can use. Built-in
+themes can not be edited or modified. You can create your own user themes, either
+from scratch or by cloning a built-in theme.
+
+A theme is defined in a file using the `TOML <https://toml.io/en/>`_ format. The file
+contains a set of scope definitions, and the style to use when rendering each scope.
+Here's a simple example showing several scopes and their associated styles:
+
+.. code-block:: toml
+
+    [tm]
+    error =  "#d70000"
+    status =  "#00afff"
+
+    [tm.help]
+    category =  "gold1"
+    border = "gold1"
+
+For convenience, we use the `table <https://toml.io/en/v1.0.0#table>`_ features of
+TOML. Those same four scopes could also be defined as:
+
+.. code-block:: toml
+
+    tm.error = "#d70000"
+    tm.status =  "#00afff"
+    tm.help.category =  "gold1"
+    tm.help.border = "gold1"
+
+All scopes and a description of how they are used are listed in
+`Theme Scopes`_. A style specifies colors and attributes (like bold or italic)
+to use when rendering the scope. See `Styles`_ for more information
+
+By default, no theme is applied; all output is displayed using the default
+style of your terminal emulator. Apply a theme by changing the ``theme``
+:doc:`setting <settings>`.
+
+
 Listing Themes
 --------------
 
