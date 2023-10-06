@@ -1221,6 +1221,25 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help="name for the new theme",
         )
 
+        # delete a user theme
+        delete_parser = main_subparsers.add_parser(
+            "delete",
+            description="delete a user theme",
+            help="delete a user theme",
+            formatter_class=main_parser.formatter_class,
+        )
+        delete_parser.set_defaults(func=self.theme_delete)
+        delete_parser.add_argument(
+            "name",
+            help="name of the theme to delete",
+        )
+        delete_parser.add_argument(
+            "-f",
+            "--force",
+            action="store_true",
+            help="don't prompt for confirmation before deleting"
+        )
+
         # package all the parsers into a dictionary
         parsers = {}
         parsers["theme"] = main_parser
@@ -1229,6 +1248,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         parsers["clone"] = clone_parser
         parsers["edit"] = edit_parser
         parsers["create"] = create_parser
+        parsers["delete"] = delete_parser
         return parsers
 
     @property
@@ -1396,6 +1416,28 @@ class InteractiveTomcatManager(cmd2.Cmd):
             with open(new_path, "w", encoding="utf-8") as outfile:
                 outfile.write("#\n# tomcat-manager theme\n")
                 self.exit_code = self.EXIT_SUCCESS
+        return
+
+    def theme_delete(self, args: argparse.Namespace):
+        """delete a user theme"""
+        name = args.name
+        path = self.user_theme_dir / f"{name}.toml"
+
+        if not path.is_file():
+            self.perror(f"unknown theme: '{name}'")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        if not args.force:
+            confirm = input(f"Type 'y' or 'yes' to delete theme '{name}': ")
+            if confirm not in ['y', 'yes']:
+                self.perror(f"no confirmation: theme not deleted")
+                self.exit_code = self.EXIT_ERROR
+                return
+
+        path.unlink(missing_ok=True)
+        self.pfeedback(f"theme deleted: '{name}'")
+        self.exit_code = self.EXIT_SUCCESS
         return
 
     ###
