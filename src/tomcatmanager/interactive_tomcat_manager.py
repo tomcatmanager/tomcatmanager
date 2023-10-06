@@ -131,7 +131,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         "tm.setting.bool",
         "tm.setting.int",
         "tm.setting.float",
-        "tm.theme.section",
+        "tm.theme.category",
+        "tm.theme.border",
     ]
 
     # for configuration
