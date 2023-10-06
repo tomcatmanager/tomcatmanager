@@ -19,8 +19,8 @@ from tests.mock_server_8_5 import start_mock_server_8_5
 # helper class
 #
 ###
+# pylint: disable=too-few-public-methods
 class TomcatServer:
-    # pylint: disable=too-few-public-methods
     def __init__(self):
         self.url = None
         self.user = None

@@ -192,8 +192,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if self._apply_theme(value):
             self._theme = value
 
+    # pylint: disable=too-many-statements
     def __init__(self, loadconfig=True):
-        # pylint: disable=too-many-statements
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
         shortcuts = {"?": "help", "!": "shell", "$?": "exit_code"}
 
@@ -663,9 +663,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Add a new command to a help table"""
         table.add_row(rich.text.Text(command, style="tm.help.command"), desc)
 
+    # pylint: disable=too-many-statements
     def do_help(self, args: cmd2.Statement):
         """show available commands, or help on a specific command"""
-        # pylint: disable=too-many-statements
         if args:
             # cmd2 doesn't handle help for subparsers very well
             # I want "help deploy local" to work. so....
@@ -1393,7 +1393,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 shutil.copy(template_path, new_path)
                 self.exit_code = self.EXIT_SUCCESS
         except FileNotFoundError:
-            with open(new_path, "w") as outfile:
+            with open(new_path, "w", encoding="utf-8") as outfile:
                 outfile.write("#\n# tomcat-manager theme\n")
                 self.exit_code = self.EXIT_SUCCESS
         return
@@ -1644,9 +1644,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
         )
         return parser
 
+    # pylint: disable=too-many-branches, too-many-statements
     def do_connect(self, cmdline: cmd2.Statement):
         """connect to a tomcat manager instance"""
-        # pylint: disable=too-many-branches, too-many-statements
         # define some variables that we will either fill from a server definition
         # or from arguments
         url = None
@@ -2524,9 +2524,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
 class EvaluatingConfigParser(configparser.ConfigParser):
     """Subclass of configparser.ConfigParser which evaluates values on get()."""
 
-    # pylint: disable=arguments-differ
     # we need this as long as we have the ability to convert the old config
     # file format
+    # pylint: disable=arguments-differ
     def get(self, section, option, **kwargs):
         val = super().get(section, option, **kwargs)
         if "'" in val or '"' in val:

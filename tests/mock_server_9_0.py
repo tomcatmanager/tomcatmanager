@@ -50,10 +50,6 @@ JVM Vendor: [Private Build]"""
         )
 
 
-###
-#
-#
-###
 def start_mock_server_9_0(tms):
     """Start a mock Tomcat Manager application
 
@@ -63,7 +59,7 @@ def start_mock_server_9_0(tms):
     # go find an unused port
     sock = socket.socket(socket.AF_INET, type=socket.SOCK_STREAM)
     sock.bind(("localhost", 0))
-    address, port = sock.getsockname()
+    _, port = sock.getsockname()
     sock.close()
 
     tms.url = f"http://localhost:{port}/manager"

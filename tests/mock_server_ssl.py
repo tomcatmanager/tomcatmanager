@@ -78,9 +78,9 @@ class MockRequestHandlerSSL(BaseHTTPRequestHandler):
     DEPLOY_PATTERN = re.compile(r"^/manager/text/deploy($|\?.*$)")
     UNDEPLOY_PATTERN = re.compile(r"^/manager/text/undeploy($|\?.*$)")
 
+    # pylint: disable=arguments-differ,unused-argument
     def log_message(self, format_, *args):
         """no logging for our mockup"""
-        # pylint: disable=arguments-differ,unused-argument
         return
 
     # pylint: disable=too-many-branches, invalid-name

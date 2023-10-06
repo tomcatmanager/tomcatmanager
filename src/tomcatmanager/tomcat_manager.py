@@ -78,6 +78,7 @@ class TomcatManager:
            print("not connected")
     """
 
+    # pylint: disable=invalid-name, too-few-public-methods, inconsistent-return-statements
     class _implemented_by:
         """Decorator to show which versions of tomcat implement this method.
 
@@ -106,7 +107,6 @@ class TomcatManager:
 
         """
 
-        # pylint: disable=invalid-name, too-few-public-methods, inconsistent-return-statements
 
         matrix = {}
 
@@ -343,6 +343,7 @@ class TomcatManager:
         """
         return (self._url is not None) and (self._tomcat_major_minor is not None)
 
+    # pylint: disable=too-many-arguments
     def connect(
         self,
         url: str,
@@ -624,6 +625,7 @@ class TomcatManager:
         r = self._get("deploy", params)
         return r
 
+    # pylint: disable=too-many-arguments
     @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def deploy_servercontext(
         self,
@@ -652,7 +654,6 @@ class TomcatManager:
         :return:             :class:`.TomcatManagerResponse` object
         :raises ValueError:  if no path is given or if no contextfile is given
         """
-        # pylint: disable=too-many-arguments
 
         params = {}
         if path:

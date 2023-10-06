@@ -25,7 +25,6 @@
 # pylint: disable=missing-module-docstring, unused-variable
 
 import io
-import os
 import sys
 
 import pytest
