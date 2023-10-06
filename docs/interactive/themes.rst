@@ -5,8 +5,10 @@ When a theme is loaded, ``tomcat-manager`` displays certain output using the
 styles defined in theme.
 
 ``tomcat-manager`` comes with several built-in themes which use can use. Built-in
-themes can not be edited or modified. You can create your own user themes, either
-from scratch or by cloning a built-in theme.
+themes can not be edited or modified. You can create yourown user themes, either
+from scratch or by cloning a built-in theme. If connected to the internet, you
+can view a list of themes available online, and install one or more of them as
+user themes on your computer.
 
 A theme is defined in a file using the `TOML <https://toml.io/en/>`_ format. The file
 contains a set of scope definitions, and the style to use when rendering each scope.
@@ -36,19 +38,23 @@ All scopes and a description of how they are used are listed in
 `Theme Scopes`_. A style specifies colors and attributes (like bold or italic)
 to use when rendering the scope. See `Styles`_ for more information
 
-By default, no theme is applied; all output is displayed using the default
-style of your terminal emulator. Apply a theme by changing the ``theme``
-:doc:`setting <settings>`.
-
 
 Listing Themes
 --------------
 
 
+Creating a User Theme
+---------------------
+
+clone (built-in or gallery), or create
+
+
 Loading a Theme
 ---------------
 
-You can load or apply a theme using the ``set`` command. Set the ``theme`` setting
+By default, no theme is applied; all output is displayed using the default
+style of your terminal emulator. Apply a theme by changing the ``theme``
+:doc:`setting <settings>` using the ``set`` command. Set the ``theme`` setting
 to the name of the theme you want to load, and ``tomcat-manager`` will load and
 apply that theme. Any future output will now be generated using the styles specified
 in the loaded theme.
@@ -67,7 +73,7 @@ loaded instead of the built-in theme with the same name.
 Location of Theme Files
 -----------------------
 
-User created themes are stored in a configuration directory. The location of this
+User themes are stored in a configuration directory. The location of this
 directory is different depending on the operating system. You can see the exact
 directory for your setup by typing the following from your operating system shell
 prompt:
@@ -85,16 +91,37 @@ You can get the same information from within ``tomcat-manager`` by typing:
     /Users/kotfu/Library/Application Support/tomcat-manager/themes
 
 
-Creating a Theme
-----------------
-
-clone or create
-
-
 Editing a Theme
 ---------------
 
-``theme edit``
+Built-in themes are read-only. Gallery themes are not available to edit either, but
+you can edit user themes. See :ref:`interactive/themes:Listing Themes` above to learn
+how to display a list of available themes.
+
+Edit any user theme by:
+
+.. code-block:: text
+
+    tomcat-manager> theme edit [name]
+
+replacing ``[name]`` with the name of the user theme. The theme file
+will open in your editor of choice (see :ref:`interactive/settings:editor`
+setting). If you edit the currently loaded theme, it will be reloaded after
+the editor exits.
+
+
+Deleting a Theme
+----------------
+
+You can delete any user theme:
+
+.. code-block:: text
+
+    tomcat-manager> theme delete [name]
+
+replacing ``[name]`` with the name of the user theme you would like to delete. You
+will be prompted to confirm the deletion unless you provide the ``-f`` option.
+
 
 Theme Scopes
 ------------
@@ -203,4 +230,74 @@ If a theme contains unknown scopes, they will be ignored.
 Styles
 ------
 
+You can set a style for each theme scope. If you set the style
+to ``default`` or if the scope is not present in the theme file,
+no codes will be sent to your terminal emulator to style that scope.
+That means that text in that scope will be displayed in the default
+colors of your terminal emulator.
 
+A style can specify colors and attributes (like bold or italic). Ancient terminals are
+monochrome, really old terminals could display 16 colors, old terminals can display
+256 colors, most modern terminals can display 16.7 million colors.
+
+Specify a color using any of the following:
+
+.. list-table::
+    :widths: 40 60
+    :header-rows: 1
+
+    * - Color Specification
+      - Description
+    * - ``#8700af``
+      - CSS-style hex notation
+    * - ``rgb(135,0,175)``
+      - RGB form using three integers
+    * - ``dark_magenta``
+      - color names
+    * - ``color(91)``
+      - color numbers
+
+Color names and numbers are shown at
+https://rich.readthedocs.io/en/stable/appendix/colors.html
+
+All of the above forms produce the exact same color.
+
+When only one color is specified in the style, it will set the foreground color. To
+set the background color, preceed the color with the word "on".
+
+- ``white on rgb(135,0,75)``
+- ``#ffffff on dark_magenta``
+
+As shown above, you can mix and match the color specification format in a single style.
+For consistency, I recommend that you pick one color specification format and use it.
+The built-in themes use color names for two reasons:
+
+- The color names limit you to the 256 color space, making the theme work on a larger
+  variety of terminal emulators
+- For those of us who can't intuitively translate hex into colors, the names give you
+  some idea of what the color is.
+
+Specify additional text attributes by adding additional words to the style:
+
+- ``#ffffff on #8700af bold strike``
+- ``color(91) underline``
+
+The most useful text attributes are:
+
+.. list-table::
+    :widths: 40 60
+    :header-rows: 1
+
+    * - Attribute
+      - Description
+    * - ``bold``
+      - bold or heavy text
+    * - ``italic``
+      - italic text (not supported on Windows)
+    * - ``strike``
+      - text with a strikethrough line
+    * - ``underline``
+      - underlined text
+
+For more examples and additional documentation on styles, see
+https://rich.readthedocs.io/en/stable/style.html
