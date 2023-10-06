@@ -995,29 +995,39 @@ def test_theme_invalid(capsys):
     assert not out
 
 
-def test_resolve_theme_builtin():
+def test_resolve_theme_builtin(mocker):
     itm = tm.InteractiveTomcatManager(loadconfig=False)
     # this is one of our builtin themes
     theme_name = "dark"
-    location, path = itm._resolve_theme(theme_name)
-    assert location == tm.models.ThemeLocation.BUILTIN
-    assert path
-    assert str(importlib_resources.files("tomcatmanager.themes")) in str(path)
-    assert theme_name in str(path)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # patch the empty temporary directory into user_theme_dir
+        # this avoids the test failing if the user running the test
+        # happens to have cloned one of the built-in themes
+        tmppath = pathlib.Path(tmpdir)
+        mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+            new_callable=mock.PropertyMock,
+            return_value=tmppath,
+        )
+        location, path = itm._resolve_theme(theme_name)
+        assert location == tm.models.ThemeLocation.BUILTIN
+        assert path
+        assert str(importlib_resources.files("tomcatmanager.themes")) in str(path)
+        assert theme_name in str(path)
 
 
 def test_resolve_theme_invalid_name():
     itm = tm.InteractiveTomcatManager(loadconfig=False)
     # shouldn't find this random uuid as a theme
-    theme_name = str(uuid.uuid1())
-    location, path = itm._resolve_theme(theme_name)
+    theme = str(uuid.uuid1())
+    location, path = itm._resolve_theme(theme)
     assert not location
     assert not path
 
 
 def test_resolve_theme_user(mocker, capsys):
-    theme = "someusertheme"
     itm = tm.InteractiveTomcatManager(loadconfig=False)
+    theme = str(uuid.uuid1())
     # get a temporary directory
     with tempfile.TemporaryDirectory() as tmpdir:
         # write a simple theme file into the directory
