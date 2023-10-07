@@ -1237,7 +1237,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             "-f",
             "--force",
             action="store_true",
-            help="don't prompt for confirmation before deleting"
+            help="don't prompt for confirmation before deleting",
         )
 
         # package all the parsers into a dictionary
@@ -1430,7 +1430,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         if not args.force:
             confirm = input(f"Type 'y' or 'yes' to delete theme '{name}': ")
-            if confirm not in ['y', 'yes']:
+            if confirm not in ["y", "yes"]:
                 self.perror(f"no confirmation: theme not deleted")
                 self.exit_code = self.EXIT_ERROR
                 return

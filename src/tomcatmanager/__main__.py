@@ -30,6 +30,7 @@ import sys
 
 import tomcatmanager as tm
 
+
 # pylint: disable=too-many-locals
 def _build_parser():
     """Build the argument parser"""

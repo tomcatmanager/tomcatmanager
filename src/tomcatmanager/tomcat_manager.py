@@ -107,7 +107,6 @@ class TomcatManager:
 
         """
 
-
         matrix = {}
 
         def __init__(self, tomcats):
