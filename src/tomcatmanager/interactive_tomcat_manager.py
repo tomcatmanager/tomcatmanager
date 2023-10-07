@@ -364,7 +364,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             # here, because we don't care
             _, tfile = self._resolve_theme(theme)
             if not tfile:
-                self.perror(f"theme '{theme}' not found")
+                self.perror(f"unknown theme: '{theme}'")
                 return False
 
             try:
