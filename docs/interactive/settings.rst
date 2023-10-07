@@ -20,7 +20,7 @@ of ``tomcat-manager``:
   status_suffix = "..."                # suffix to append to status messages
   status_to_stdout = false             # status information to stdout instead of stderr
   syntax_theme = "monokai"             # pygments syntax highlighing theme
-  theme = "dark"                       # color scheme
+  theme = "default-dark"               # color scheme
   timeout = 10.0                       # seconds to wait for HTTP connections
   timing = false                       # report execution time upon command completion
 

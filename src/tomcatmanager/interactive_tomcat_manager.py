@@ -1075,7 +1075,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             The syntax must be valid TOML, just like the config file. Here's some
             examples:
 
-              tomcat-manager> set theme = "dark"
+              tomcat-manager> set theme = "default-dark"
               tomcat-manager> set timing = true
               tomcat-manager> set timeout = 5.0
               tomcat-manager> set prompt = "tm> "

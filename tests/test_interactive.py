@@ -977,11 +977,20 @@ def test_theme_default_none():
     assert itm.theme == ""
 
 
-def test_theme_use_embedded():
+def test_theme_use_embedded(mocker):
     itm = tm.InteractiveTomcatManager(loadconfig=False)
-    theme = "dark"
-    itm.onecmd_plus_hooks(f"set theme = '{theme}'")
-    assert itm.theme == theme
+    theme = "default-dark"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # patch the empty temporary directory into user_theme_dir
+        # to make sure we are loading the built-in theme
+        tmppath = pathlib.Path(tmpdir)
+        mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+            new_callable=mock.PropertyMock,
+            return_value=tmppath,
+        )
+        itm.onecmd_plus_hooks(f"set theme = '{theme}'")
+        assert itm.theme == theme
 
 
 def test_theme_invalid(capsys):
@@ -998,7 +1007,7 @@ def test_theme_invalid(capsys):
 def test_resolve_theme_builtin(mocker):
     itm = tm.InteractiveTomcatManager(loadconfig=False)
     # this is one of our builtin themes
-    theme_name = "dark"
+    theme_name = "default-dark"
     with tempfile.TemporaryDirectory() as tmpdir:
         # patch the empty temporary directory into user_theme_dir
         # this avoids the test failing if the user running the test

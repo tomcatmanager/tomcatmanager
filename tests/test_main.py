@@ -347,10 +347,10 @@ def test_main_theme_command_line(tomcat_manager_server, mocker, monkeypatch, cap
     mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
     # make sure there is an environment variable, which the command line should
     # override
-    monkeypatch.setenv("TOMCATMANAGER_THEME", "dark")
+    monkeypatch.setenv("TOMCATMANAGER_THEME", "default-dark")
 
     cmdline = (
-        f"-m light -u {tomcat_manager_server.user}"
+        f"-m default-light -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
         f" settings theme"
     )
@@ -359,14 +359,14 @@ def test_main_theme_command_line(tomcat_manager_server, mocker, monkeypatch, cap
     out, _ = capsys.readouterr()
     out = out.splitlines()
     assert exit_code == 0
-    assert 'theme = "light"' in out[0]
+    assert 'theme = "default-light"' in out[0]
 
 
 def test_main_theme_env(tomcat_manager_server, mocker, monkeypatch, capsys):
     # don't let it load a config file
     mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
     # set our desired theme in the environment variable
-    monkeypatch.setenv("TOMCATMANAGER_THEME", "dark")
+    monkeypatch.setenv("TOMCATMANAGER_THEME", "default-dark")
 
     cmdline = (
         f"-u {tomcat_manager_server.user}"
@@ -378,4 +378,4 @@ def test_main_theme_env(tomcat_manager_server, mocker, monkeypatch, capsys):
     out, _ = capsys.readouterr()
     out = out.splitlines()
     assert exit_code == 0
-    assert 'theme = "dark"' in out[0]
+    assert 'theme = "default-dark"' in out[0]
