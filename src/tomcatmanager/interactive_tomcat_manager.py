@@ -29,6 +29,7 @@ Classes and functions for the 'tomcat-manager' command line program.
 import argparse
 import ast
 import configparser
+import enum
 import getpass
 import http.client
 
@@ -433,11 +434,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # check user theme dir
         tfile = self.user_theme_dir / f"{name}.toml"
         if tfile.is_file():
-            return tm.models.ThemeLocation.USER, tfile
+            return ThemeLocation.USER, tfile
         # check included themes
         for path in importlib_resources.files("tomcatmanager.themes").iterdir():
             if path.name == f"{name}.toml":
-                return tm.models.ThemeLocation.BUILTIN, path
+                return ThemeLocation.BUILTIN, path
         # couldn't find it
         return None, None
 
@@ -1281,68 +1282,79 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # TODO add progress and feedback
         # TODO make command line options to only display gallery, or built-in, or user themes
         # default is all
-        have_gallery_themes = False
-        gallery_themes = rich.table.Table(
-            show_edge=False,
-            box=None,
-            padding=(0, 3, 0, 0),
-            show_header=False,
-        )
-        #
+        gallery_themes = []
         response = requests.get(
             "https://raw.githubusercontent.com/tomcatmanager/themes/main/themes.toml",
             timeout=self.timeout,
         )
         if response.status_code == 200:
-            gallery = tomlkit.loads(response.text)
-            have_gallery_themes = True
-            for theme in gallery:
-                gallery_themes.add_row(theme)
+            gallery_dir = tomlkit.loads(response.text)
+            for theme_name in gallery_dir:
+                theme = Theme(
+                    location=ThemeLocation.GALLERY,
+                    file=pathlib.Path(gallery_dir[theme_name]["file"]),
+                    description=gallery_dir[theme_name]["description"],
+                )
+                gallery_themes.append(theme)
 
-        if have_gallery_themes:
+        if gallery_themes:
+            gallery_table = rich.table.Table(
+                show_edge=False,
+                box=None,
+                padding=(0, 3, 0, 0),
+                show_header=False,
+            )
+            gallery_table.add_column("Name")
+            gallery_table.add_column("Location")
+            gallery_table.add_column("Description")
+            for theme in gallery_themes:
+                gallery_table.add_row(
+                    theme.name, theme.location.value, theme.description
+                )
             self.console.print("")
             self.console.print("Gallery Themes", style="tm.theme.category")
             self.console.print("─" * 72, style="tm.theme.border")
-            self.console.print(gallery_themes)
+            self.console.print(gallery_table)
 
         # built-in themes
-        self.console.print("Built-in Themes", style="tm.theme.category")
-        self.console.print("─" * 72, style="tm.theme.border")
-        user_themes = rich.table.Table(
+        user_themes = {}
+        user_table = rich.table.Table(
             show_edge=False,
             box=None,
             padding=(0, 3, 0, 0),
             show_header=False,
         )
+        user_table.add_column("Name")
+        user_table.add_column("Location")
+        user_table.add_column("Description")
+        # add the built-in themes
         for path in importlib_resources.files("tomcatmanager.themes").iterdir():
             if path.suffix == ".toml":
-                user_themes.add_row(path.stem)
-        self.console.print(user_themes)
-
-
-        # user themes
-        have_user_themes = False
-        user_themes = rich.table.Table(
-            show_edge=False,
-            box=None,
-            padding=(0, 3, 0, 0),
-            show_header=False,
-        )
+                theme = Theme(
+                    location=ThemeLocation.BUILTIN,
+                    file=pathlib.Path(path.name),
+                    description="built-in theme description",
+                )
+                user_themes[theme.name] = theme
+        # add the user themes
         if self.user_theme_dir.exists():
             for path in self.user_theme_dir.iterdir():
                 if path.suffix == ".toml":
-                    user_themes.add_row(path.stem)
-                    have_user_themes = True
+                    theme = Theme(
+                        location=ThemeLocation.USER,
+                        file=pathlib.Path(path.name),
+                        description="user theme description",
+                    )
+                    user_themes[theme.name] = theme
 
-        if have_user_themes:
-            self.console.print("")
-            self.console.print("User Themes", style="tm.theme.category")
-            self.console.print("─" * 72, style="tm.theme.border")
-            self.console.print(user_themes)
-        else:
-            self.console.print("")
-            self.console.print("No user themes found.")
-            self.console.print("TODO add message about how to create")
+        for theme in list(user_themes.values()):
+            user_table.add_row(theme.name, theme.location.value, theme.description)
+        self.console.print("User Themes", style="tm.theme.category")
+        self.console.print("─" * 72, style="tm.theme.border")
+        self.console.print(user_table)
+
+        self.exit_code = self.EXIT_SUCCESS
+        return
 
     def theme_clone(self, args: argparse.Namespace):
         """clone a gallery theme to the user theme directory"""
@@ -1373,8 +1385,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
             #     if path.name == f"{args.name}.toml":
             #         from_path = path
             #         break
-            path = importlib_resources.files("tomcatmanager.themes").joinpath(f"{args.name}.toml")
-            with path.open('r', encoding="utf-8") as theme_fobj:
+            path = importlib_resources.files("tomcatmanager.themes").joinpath(
+                f"{args.name}.toml"
+            )
+            with path.open("r", encoding="utf-8") as theme_fobj:
                 theme_str = theme_fobj.read()
 
         if not theme_str:
@@ -1398,7 +1412,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             f"cloning built-in theme '{args.name}' to user theme '{new_name}'"
         )
         self.ensure_user_theme_dir()
-        with new_path.open('w', encoding="utf-8") as fobj:
+        with new_path.open("w", encoding="utf-8") as fobj:
             # shutil.copy(from_path, new_path)
             fobj.write(theme_str)
         self.exit_code = self.EXIT_SUCCESS
@@ -1426,7 +1440,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         # get the file to edit
         location, theme_file = self._resolve_theme(name)
-        if location == tm.models.ThemeLocation.BUILTIN:
+        if location == ThemeLocation.BUILTIN:
             # this means no user theme with this name exists, but a builtin one does
             self.pfeedback(f"built in theme: '{name}'")
             self.pfeedback(f'use "theme clone {name}" to make an editable user theme')
@@ -2619,6 +2633,36 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def help_license(self):
         """Show help for the 'license' command"""
         self.show_help_from(self.license_parser)
+
+
+class ThemeLocation(enum.Enum):
+    """An enumeration of the types of theme locations"""
+
+    BUILTIN = "built-in"
+    USER = "user"
+    GALLERY = "gallery"
+
+
+class Theme:
+    """Store information about a theme."""
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize from the plain text response from a Tomcat server.
+
+        :param result: the plain text from the server, minus the first
+        line with the status info
+        """
+        self.file = kwargs.pop("file", None)
+        self.description = kwargs.pop("description", None)
+        self.location = kwargs.pop("location", None)
+
+    @property
+    def name(self):
+        if self.file:
+            return self.file.stem
+        else:
+            return None
 
 
 # pylint: disable=too-many-ancestors

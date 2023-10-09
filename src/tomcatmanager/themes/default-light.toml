@@ -4,6 +4,9 @@
 # see https://rich.readthedocs.io/en/stable/appendix/colors.html#appendix-colors
 # for supported list of color names
 
+# theme metadata
+description = "tomcat-manager default theme for use on light backgrounds"
+
 [tm]
 error =  "dark_red"
 status =  "deep_sky_blue4"
