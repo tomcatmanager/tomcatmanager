@@ -193,8 +193,7 @@ def itm_nc():
     our tests to load whatever config file the person running
     the tests happens to have
     """
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
-    return itm
+    return tm.InteractiveTomcatManager(loadconfig=False)
 
 
 @pytest.fixture

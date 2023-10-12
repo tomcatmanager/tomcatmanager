@@ -191,163 +191,154 @@ HELP_ARGPARSERS = list(HELP_COMMANDS)
 # there is an argparser for exit_code, but it's only used
 # to generate the help
 HELP_ARGPARSERS.append("exit_code")
+# remove subcommand argparsers from this list, they will be
+# tested separately below
+HELP_ARGPARSERS.remove("deploy")
+HELP_ARGPARSERS.remove("redeploy")
+HELP_ARGPARSERS.remove("theme")
 
 
 @pytest.mark.parametrize("command", HELP_ARGPARSERS)
-def test_help_matches_argparser(command, capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_matches_argparser(itm_nc, command, capsys):
     cmdline = f"help {command}"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
-    parser_func = getattr(itm, f"{command}_parser")
+    parser_func = getattr(itm_nc, f"{command}_parser")
     assert out.strip() == parser_func.format_help().strip()
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_set(capsys):
+def test_help_set(itm_nc, capsys):
     # set gets it's own testing mechanism because it doesn't use argparser
     # it needs to preserve quotes and such so toml parsing works as expected
-    itm = tm.InteractiveTomcatManager()
     cmdline = "help set"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "change a program setting" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_deploy_local(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_deploy_local(itm_nc, capsys):
     cmdline = "help deploy local"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "local file system" in out
     assert "warfile" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_deploy_server(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_deploy_server(itm_nc, capsys):
     cmdline = "help deploy server"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "server file system" in out
     assert "warfile" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_deploy_context(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_deploy_context(itm_nc, capsys):
     cmdline = "help deploy context"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "server file system" in out
     assert "warfile" in out
     assert "contextfile" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_deploy_invalid(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_deploy_invalid(itm_nc, capsys):
     cmdline = "help deploy invalid"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "deployment_method" in out
     assert "local" in out
     assert "server" in out
     assert "context" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_theme_list(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_theme_list(itm_nc, capsys):
     cmdline = "help theme list"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "list all themes" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_theme_clone(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_theme_clone(itm_nc, capsys):
     cmdline = "help theme clone"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "clone a theme" in out
     assert "name" in out
     assert "new_name" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_theme_edit(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_theme_edit(itm_nc, capsys):
     cmdline = "help theme edit"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "edit a user theme" in out
     assert "name" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_theme_create(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_theme_create(itm_nc, capsys):
     cmdline = "help theme create"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "create a new user theme" in out
     assert "name" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_theme_delete(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_theme_delete(itm_nc, capsys):
     cmdline = "help theme delete"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "delete a user theme" in out
     assert "name" in out
     assert "--force" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_theme_dir(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_theme_dir(itm_nc, capsys):
     cmdline = "help theme dir"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "theme directory" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_theme_invalid(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_theme_invalid(itm_nc, capsys):
     cmdline = "help theme invalid"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "manage themes" in out
     assert "list" in out
     assert "dir" in out
     assert "create" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help(itm_nc, capsys):
     cmdline = "help"
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "Connecting to a Tomcat server" in out
     assert "Managing applications" in out
     assert "Server information" in out
     assert "Settings, configuration, and tools" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_invalid(capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_help_invalid(itm_nc, capsys):
     cmdline = "help invalidcommand"
-    itm.onecmd_plus_hooks(cmdline)
-    out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_ERROR
+    itm_nc.onecmd_plus_hooks(cmdline)
+    _, err = capsys.readouterr()
+    assert err
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
 ###
@@ -388,9 +379,8 @@ BOOLEANS = [
 
 
 @pytest.mark.parametrize("param, value", BOOLEANS)
-def test_convert_to_boolean_valid(param, value):
-    itm = tm.InteractiveTomcatManager()
-    assert itm.convert_to_boolean(param) == value
+def test_convert_to_boolean_valid(itm_nc, param, value):
+    assert itm_nc.convert_to_boolean(param) == value
 
 
 NOT_BOOLEANS = [
@@ -402,10 +392,9 @@ NOT_BOOLEANS = [
 
 
 @pytest.mark.parametrize("param", NOT_BOOLEANS)
-def test_convert_to_boolean_invalid(param):
-    itm = tm.InteractiveTomcatManager()
+def test_convert_to_boolean_invalid(itm_nc, param):
     with pytest.raises(ValueError):
-        itm.convert_to_boolean(param)
+        itm_nc.convert_to_boolean(param)
 
 
 LITERALS = [
@@ -700,7 +689,7 @@ def test_load_config_bogus_setting(mocker):
     itm_with_config(mocker, configstring)
 
 
-def test_load_config_not_boolean(itm, mocker):
+def test_load_config_not_boolean(itm_nc, mocker):
     configstring = """
         [settings]
         echo = "not a boolean"
@@ -709,7 +698,7 @@ def test_load_config_not_boolean(itm, mocker):
     itm = itm_with_config(mocker, configstring)
     # make sure the echo setting is the same
     # as when we don't load a config file
-    assert itm.echo == itm.echo
+    assert itm.echo == itm_nc.echo
 
 
 def test_load_config_echo_false(mocker):

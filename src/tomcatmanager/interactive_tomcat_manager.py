@@ -806,37 +806,37 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 # the non-printing ascii color sequences. don't write it to
                 # our console or it will get wrapped inappropriately
                 if subcommand == "local":
-                    print(local_parser.format_help(), file=self.stdout)
+                    self.console.print(local_parser.format_help())
                 elif subcommand == "server":
-                    print(server_parser.format_help(), file=self.stdout)
+                    self.console.print(server_parser.format_help())
                 elif subcommand == "context":
-                    print(context_parser.format_help(), file=self.stdout)
+                    self.console.print(context_parser.format_help())
                 self.exit_code = self.EXIT_SUCCESS
             else:
                 # they typed 'help deploy invalidcommand'
-                print(parser.format_help(), file=self.stdout)
+                self.console.print(parser.format_help())
                 self.exit_code = self.EXIT_SUCCESS
         else:
             # we have some wacko arguments, so just do help for deploy/redeploy
-            print(parser.format_help(), file=self.stdout)
+            self.console.print(parser.format_help())
             self.exit_code = self.EXIT_SUCCESS
 
     def _do_help_theme(self, args: cmd2.Statement):
-        """do help for the deploy and redeploy commands"""
+        """do help for the theme command"""
         # if we get here we know args.arg_list[0] is 'theme'
         parsers = self._build_theme_parsers()
         if len(args.arg_list) == 2:
             subcommand = args.arg_list[1]
             if subcommand in parsers:
-                print(parsers[subcommand].format_help(), file=self.stdout)
+                self.console.print(parsers[subcommand].format_help())
                 self.exit_code = self.EXIT_SUCCESS
             else:
                 # they typed 'help theme invalidaction'
-                print(parsers["theme"].format_help(), file=self.stdout)
+                self.console.print(parsers["theme"].format_help())
                 self.exit_code = self.EXIT_SUCCESS
         else:
             # we have some wacko arguments, so just do help for the main command
-            print(parsers["theme"].format_help(), file=self.stdout)
+            self.console.print(parsers["theme"].format_help())
             self.exit_code = self.EXIT_SUCCESS
 
     ###
