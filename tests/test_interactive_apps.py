@@ -32,16 +32,6 @@ import cmd2
 import tomcatmanager as tm
 
 
-def get_itm(tms):
-    """
-    Using this as a fixture with capsys breaks capsys. So we use a function.
-    """
-    itm = tm.InteractiveTomcatManager()
-    args = tms.connect_command
-    itm.onecmd_plus_hooks(args)
-    return itm
-
-
 VERSION_STRINGS = ["", "-v 42"]
 
 
@@ -51,8 +41,7 @@ VERSION_STRINGS = ["", "-v 42"]
 #
 ###
 @pytest.mark.parametrize("version", VERSION_STRINGS)
-def test_deploy_local(tomcat_manager_server, localwar_file, safe_path, version):
-    itm = get_itm(tomcat_manager_server)
+def test_deploy_local(itm, localwar_file, safe_path, version):
     itm.onecmd_plus_hooks(f"redeploy local {version} {localwar_file} {safe_path}")
     assert itm.exit_code == itm.EXIT_SUCCESS
 
@@ -61,8 +50,7 @@ def test_deploy_local(tomcat_manager_server, localwar_file, safe_path, version):
 
 
 @pytest.mark.parametrize("version", VERSION_STRINGS)
-def test_redeploy_local(tomcat_manager_server, localwar_file, safe_path, version):
-    itm = get_itm(tomcat_manager_server)
+def test_redeploy_local(itm, localwar_file, safe_path, version):
     itm.onecmd_plus_hooks(f"deploy local {version} {localwar_file} {safe_path}")
     assert itm.exit_code == itm.EXIT_SUCCESS
 
@@ -74,8 +62,7 @@ def test_redeploy_local(tomcat_manager_server, localwar_file, safe_path, version
 
 
 @pytest.mark.parametrize("version", VERSION_STRINGS)
-def test_deploy_server(tomcat_manager_server, safe_path, version):
-    itm = get_itm(tomcat_manager_server)
+def test_deploy_server(itm, tomcat_manager_server, safe_path, version):
     itm.onecmd_plus_hooks(
         f"deploy server {version} {tomcat_manager_server.warfile} {safe_path}"
     )
@@ -86,8 +73,7 @@ def test_deploy_server(tomcat_manager_server, safe_path, version):
 
 
 @pytest.mark.parametrize("version", VERSION_STRINGS)
-def test_redeploy_server(tomcat_manager_server, safe_path, version):
-    itm = get_itm(tomcat_manager_server)
+def test_redeploy_server(itm, tomcat_manager_server, safe_path, version):
     itm.onecmd_plus_hooks(
         f"deploy server {version} {tomcat_manager_server.warfile} {safe_path}"
     )
@@ -103,8 +89,7 @@ def test_redeploy_server(tomcat_manager_server, safe_path, version):
 
 
 @pytest.mark.parametrize("version", VERSION_STRINGS)
-def test_deploy_context(tomcat_manager_server, safe_path, version):
-    itm = get_itm(tomcat_manager_server)
+def test_deploy_context(itm, tomcat_manager_server, safe_path, version):
     itm.onecmd_plus_hooks(
         f"deploy context {version} {tomcat_manager_server.contextfile} {safe_path}"
     )
@@ -115,8 +100,7 @@ def test_deploy_context(tomcat_manager_server, safe_path, version):
 
 
 @pytest.mark.parametrize("version", VERSION_STRINGS)
-def test_redeploy_context(tomcat_manager_server, safe_path, version):
-    itm = get_itm(tomcat_manager_server)
+def test_redeploy_context(itm, tomcat_manager_server, safe_path, version):
     itm.onecmd_plus_hooks(
         f"deploy context {version} {tomcat_manager_server.contextfile} {safe_path}"
     )
@@ -132,8 +116,7 @@ def test_redeploy_context(tomcat_manager_server, safe_path, version):
 
 
 @pytest.mark.parametrize("version", VERSION_STRINGS)
-def test_deploy_context_warfile(tomcat_manager_server, safe_path, version):
-    itm = get_itm(tomcat_manager_server)
+def test_deploy_context_warfile(itm, tomcat_manager_server, safe_path, version):
     itm.onecmd_plus_hooks(
         (
             f"deploy context {version} {tomcat_manager_server.contextfile}"
@@ -147,8 +130,7 @@ def test_deploy_context_warfile(tomcat_manager_server, safe_path, version):
 
 
 @pytest.mark.parametrize("version", VERSION_STRINGS)
-def test_redeploy_context_warfile(tomcat_manager_server, safe_path, version):
-    itm = get_itm(tomcat_manager_server)
+def test_redeploy_context_warfile(itm, tomcat_manager_server, safe_path, version):
     itm.onecmd_plus_hooks(
         (
             f"deploy context {version} {tomcat_manager_server.contextfile}"
@@ -175,8 +157,7 @@ def test_redeploy_context_warfile(tomcat_manager_server, safe_path, version):
 #
 ###
 @pytest.mark.parametrize("version", VERSION_STRINGS)
-def test_stop_start(tomcat_manager_server, localwar_file, safe_path, version):
-    itm = get_itm(tomcat_manager_server)
+def test_stop_start(itm, localwar_file, safe_path, version):
     itm.onecmd_plus_hooks(f"deploy local {version} {localwar_file} {safe_path}")
     assert itm.exit_code == itm.EXIT_SUCCESS
 
@@ -195,8 +176,7 @@ COMMANDS = ["restart", "reload", "sessions"]
 
 @pytest.mark.parametrize("command", COMMANDS)
 @pytest.mark.parametrize("version", VERSION_STRINGS)
-def test_commands(tomcat_manager_server, localwar_file, safe_path, command, version):
-    itm = get_itm(tomcat_manager_server)
+def test_commands(itm, localwar_file, safe_path, command, version):
     itm.onecmd_plus_hooks(f"deploy local {version} {localwar_file} {safe_path}")
     assert itm.exit_code == itm.EXIT_SUCCESS
 
@@ -208,8 +188,7 @@ def test_commands(tomcat_manager_server, localwar_file, safe_path, command, vers
 
 
 @pytest.mark.parametrize("version", VERSION_STRINGS)
-def test_expire(tomcat_manager_server, localwar_file, safe_path, version):
-    itm = get_itm(tomcat_manager_server)
+def test_expire(itm, localwar_file, safe_path, version):
     itm.onecmd_plus_hooks(f"deploy local {version} {localwar_file} {safe_path}")
     assert itm.exit_code == itm.EXIT_SUCCESS
 
@@ -256,8 +235,7 @@ LIST_CMDLINE_BAD = [
 
 
 @pytest.mark.parametrize("cmdline", LIST_CMDLINE_BAD)
-def test_list_parse_args_failure(cmdline):
-    itm = tm.InteractiveTomcatManager()
+def test_list_parse_args_failure(itm, cmdline):
     statement = itm.statement_parser.parse(cmdline)
     with pytest.raises(cmd2.Cmd2ArgparseError):
         itm.parse_args(itm.list_parser, statement.argv)
@@ -273,15 +251,14 @@ def test_list_parse_args_failure(cmdline):
     "sort",
     ["", "-b state", "-b path", "--by=state", "--by=path"],
 )
-def test_list_parse_args(raw, state, sort):
-    itm = tm.InteractiveTomcatManager()
+def test_list_parse_args(itm_nc, raw, state, sort):
     cmdline = f"list {raw} {state} {sort}"
-    statement = itm.statement_parser.parse(cmdline)
-    itm.parse_args(itm.list_parser, statement.argv)
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    statement = itm_nc.statement_parser.parse(cmdline)
+    itm_nc.parse_args(itm_nc.list_parser, statement.argv)
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_list_sort_by_state(tomcat_manager_server, mocker, capsys):
+def test_list_sort_by_state(itm, mocker, capsys):
     raw_apps = """/shiny:stopped:0:shiny##v2.0.6
 /:running:0:ROOT
 /shiny:running:15:shiny##v2.0.7
@@ -294,7 +271,6 @@ def test_list_sort_by_state(tomcat_manager_server, mocker, capsys):
 /shiny:running:15:shiny##v2.0.7
 /shiny:stopped:0:shiny##v2.0.6
 """
-    interactive_tomcat = get_itm(tomcat_manager_server)
     # have to mock this here because it messes up prior commands
     # if we do it sooner
     mock_apps = mocker.patch(
@@ -303,12 +279,12 @@ def test_list_sort_by_state(tomcat_manager_server, mocker, capsys):
         new_callable=mock.PropertyMock,
     )
     mock_apps.return_value = raw_apps
-    interactive_tomcat.onecmd_plus_hooks("list --raw -b state")
+    itm.onecmd_plus_hooks("list --raw -b state")
     out, _ = capsys.readouterr()
     assert out == expected
 
 
-def test_list_sort_by_path(tomcat_manager_server, mocker, capsys):
+def test_list_sort_by_path(itm, mocker, capsys):
     raw_apps = """/:running:0:ROOT
 /shiny:stopped:0:shiny##v2.0.6
 /shiny:running:15:shiny##v2.0.7
@@ -321,7 +297,6 @@ def test_list_sort_by_path(tomcat_manager_server, mocker, capsys):
 /shiny:stopped:0:shiny##v2.0.6
 /shiny:running:15:shiny##v2.0.7
 """
-    interactive_tomcat = get_itm(tomcat_manager_server)
     # have to mock this here because it messes up prior commands
     # if we do it sooner
     mock_apps = mocker.patch(
@@ -330,12 +305,12 @@ def test_list_sort_by_path(tomcat_manager_server, mocker, capsys):
         new_callable=mock.PropertyMock,
     )
     mock_apps.return_value = raw_apps
-    interactive_tomcat.onecmd_plus_hooks("list --raw -b path")
+    itm.onecmd_plus_hooks("list --raw -b path")
     out, _ = capsys.readouterr()
     assert out == expected
 
 
-def test_list_state_running(tomcat_manager_server, mocker, capsys):
+def test_list_state_running(itm, mocker, capsys):
     raw_apps = """/:running:0:ROOT
 /shiny:stopped:17:shiny##v2.0.6
 /shiny:running:15:shiny##v2.0.7
@@ -346,7 +321,6 @@ def test_list_state_running(tomcat_manager_server, mocker, capsys):
 /manager:running:0:/usr/share/tomcat8-admin/manager
 /shiny:running:15:shiny##v2.0.7
 """
-    interactive_tomcat = get_itm(tomcat_manager_server)
     # have to mock this here because it messes up prior commands
     # if we do it sooner
     mock_apps = mocker.patch(
@@ -355,7 +329,7 @@ def test_list_state_running(tomcat_manager_server, mocker, capsys):
         new_callable=mock.PropertyMock,
     )
     mock_apps.return_value = raw_apps
-    interactive_tomcat.onecmd_plus_hooks("list --raw -s running")
+    itm.onecmd_plus_hooks("list --raw -s running")
     out, _ = capsys.readouterr()
     assert out == expected
 
@@ -382,10 +356,9 @@ USAGE_ERRORS = [
 
 
 @pytest.mark.parametrize("cmdline", USAGE_ERRORS)
-def test_usage_errors(cmdline, tomcat_manager_server, capsys):
-    itm = tm.InteractiveTomcatManager()
+def test_usage_errors(itm, cmdline, capsys):
+    # suppress feedback because we are checking for usage
     itm.quiet = True
-    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
     itm.onecmd_plus_hooks(cmdline)
     out, err = capsys.readouterr()
     assert not out

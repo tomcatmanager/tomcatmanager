@@ -40,15 +40,6 @@ import tomcatmanager as tm
 # helper functions and fixtures
 #
 ###
-def get_itm(tms):
-    """
-    Using this as a fixture with capsys breaks capsys. So we use a function.
-    """
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
-    itm.onecmd_plus_hooks(tms.connect_command)
-    return itm
-
-
 def itm_with_config(mocker, configstring):
     """Return an InteractiveTomcatManager object with the config set from the passed string."""
 
@@ -607,8 +598,7 @@ def test_connect_with_timeout_debug(tomcat_manager_server, itm, capsys, mocker):
     assert itm.exit_code == itm.EXIT_ERROR
 
 
-def test_which(tomcat_manager_server, capsys):
-    itm = get_itm(tomcat_manager_server)
+def test_which(itm, tomcat_manager_server, capsys):
     # force this to ensure `which` sets it to SUCCESS
     itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("which")
@@ -618,41 +608,37 @@ def test_which(tomcat_manager_server, capsys):
     assert tomcat_manager_server.user in out
 
 
-def test_which_cert(tomcat_manager_server, capsys, mocker):
+def test_which_cert(itm, capsys, mocker):
     # the mock tomcat server can't authenticate using a certificate
     # so we connect as normal, then mock it so it appears
     # like we authenticated with a certificate
-    itm = get_itm(tomcat_manager_server)
-    itm.debug = False
-    itm.quiet = True
     cert_mock = mocker.patch(
         "tomcatmanager.TomcatManager.cert",
         new_callable=mock.PropertyMock,
     )
     cert_mock.return_value = "/tmp/mycert"
     itm.onecmd_plus_hooks("which")
-    out, err = capsys.readouterr()
+    out, _ = capsys.readouterr()
     assert "/tmp/mycert" in out
 
 
-def test_which_cert_key(tomcat_manager_server, capsys, mocker):
+def test_which_cert_key(itm, capsys, mocker):
     # the mock tomcat erver can't authenticate using a certificate
     # so we connect as normal, then mock it so it appears
     # like we authenticated with a certificate
-    itm = get_itm(tomcat_manager_server)
     cert_mock = mocker.patch(
         "tomcatmanager.TomcatManager.cert",
         new_callable=mock.PropertyMock,
     )
     cert_mock.return_value = ("/tmp/mycert", "/tmp/mykey")
     itm.onecmd_plus_hooks("which")
-    out, err = capsys.readouterr()
+    out, _ = capsys.readouterr()
     assert "/tmp/mykey" in out
 
 
-def test_disconnect(tomcat_manager_server, capsys):
-    itm = get_itm(tomcat_manager_server)
+def test_disconnect(itm, capsys):
     # force this to ensure `which` sets it to SUCCESS
+    itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks("disconnect")
     _, err = capsys.readouterr()
     assert "disconnected" in err
