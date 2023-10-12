@@ -182,10 +182,31 @@ def tomcat(tomcat_manager_server):
 
 
 @pytest.fixture
-def itm():
-    """InteractiveTomcatManager with no config file loaded"""
+def itm_nc():
+    """InteractiveTomcatManager with no config file loaded
+    and not connected to a server
+
+    nc = not connected
+    nc = no config
+
+    Unless we have a good reason to do otherwise, we never want
+    our tests to load whatever config file the person running
+    the tests happens to have
+    """
     itm = tm.InteractiveTomcatManager(loadconfig=False)
     return itm
+
+
+@pytest.fixture
+def itm(itm_nc, tomcat_manager_server):
+    """InteractiveTomcatManager instance with no config file loaded
+    and connected to a tomcat server
+
+    This has the shortest name because it's the test fixture used
+    most frequently
+    """
+    itm_nc.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    return itm_nc
 
 
 @pytest.fixture

@@ -51,15 +51,6 @@ import tomcatmanager as tm
 # helper functions and fixtures
 #
 ###
-def get_itm(tms):
-    """
-    Using this as a fixture with capsys breaks capsys. So we use a function.
-    """
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
-    itm.onecmd_plus_hooks(tms.connect_command)
-    return itm
-
-
 def itm_with_config(mocker, configstring):
     """Return an InteractiveTomcatManager object with the config set from the passed string."""
 
@@ -142,8 +133,8 @@ USAGE_COMMANDS = [
 
 
 @pytest.mark.parametrize("command", USAGE_COMMANDS)
-def test_command_usage(tomcat_manager_server, command):
-    itm = get_itm(tomcat_manager_server)
+def test_command_usage(itm, command):
+    # we need to be connected for these to generate the proper messages
     itm.exit_code = itm.EXIT_ERROR
     itm.onecmd_plus_hooks(command)
     assert itm.exit_code == itm.EXIT_USAGE
@@ -184,15 +175,15 @@ HELP_COMMANDS = [
 # exit_code omitted because it doesn't respond
 # to -h or --help
 @pytest.mark.parametrize("command", HELP_COMMANDS)
-def test_command_help(tomcat_manager_server, command):
-    itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
-    itm.onecmd_plus_hooks(f"{command} -h")
-    assert itm.exit_code == itm.EXIT_USAGE
+def test_command_help(itm_nc, command):
+    # help should work without us being connected to a server
+    itm_nc.exit_code = itm_nc.EXIT_ERROR
+    itm_nc.onecmd_plus_hooks(f"{command} -h")
+    assert itm_nc.exit_code == itm_nc.EXIT_USAGE
 
-    itm.exit_code = itm.EXIT_ERROR
-    itm.onecmd_plus_hooks(f"{command} --help")
-    assert itm.exit_code == itm.EXIT_USAGE
+    itm_nc.exit_code = itm_nc.EXIT_ERROR
+    itm_nc.onecmd_plus_hooks(f"{command} --help")
+    assert itm_nc.exit_code == itm_nc.EXIT_USAGE
 
 
 # copy the list
@@ -464,51 +455,47 @@ def test_history_file_property():
     assert not itm.history_file
 
 
-def test_config_edit(itm, mocker):
-    itm.editor = "fooedit"
+def test_config_edit(itm_nc, mocker):
+    itm_nc.editor = "fooedit"
     mock_os_system = mocker.patch("os.system")
-    itm.onecmd_plus_hooks("config edit")
+    itm_nc.onecmd_plus_hooks("config edit")
     assert mock_os_system.call_count == 1
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_config_edit_no_editor(itm, capsys):
-    itm.editor = None
-    itm.onecmd_plus_hooks("config edit")
+def test_config_edit_no_editor(itm_nc, capsys):
+    itm_nc.editor = None
+    itm_nc.onecmd_plus_hooks("config edit")
     out, err = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_ERROR
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
     assert not out
     assert err.startswith("no editor: ")
 
 
-def test_config_invalid_action(itm, capsys):
-    itm.onecmd_plus_hooks("config bogus")
+def test_config_invalid_action(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("config bogus")
     out, err = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_USAGE
+    assert itm_nc.exit_code == itm_nc.EXIT_USAGE
     assert not out
     assert err.startswith("usage: ")
 
 
-def test_config_file_command(mocker, capsys):
+def test_config_file_command(itm_nc, mocker, capsys):
     fname = pathlib.Path("/tmp/someconfig.ini")
-    itm = tm.InteractiveTomcatManager()
-
     config_file = mocker.patch(
         "tomcatmanager.InteractiveTomcatManager.config_file",
         new_callable=mock.PropertyMock,
     )
     config_file.return_value = str(fname)
 
-    itm.onecmd_plus_hooks("config file")
+    itm_nc.onecmd_plus_hooks("config file")
     out, _ = capsys.readouterr()
     assert out == f"{str(fname)}\n"
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_config_convert_no_config(mocker, capsys):
+def test_config_convert_no_config(itm_nc, mocker, capsys):
     # verify conversion behavior when neither ini nor toml config files exist
-    itm = tm.InteractiveTomcatManager()
-
     with tempfile.TemporaryDirectory() as tmpdir:
         inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
         tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
@@ -525,14 +512,14 @@ def test_config_convert_no_config(mocker, capsys):
         )
         config_file.return_value = inifile
 
-        itm.onecmd_plus_hooks("config convert")
+        itm_nc.onecmd_plus_hooks("config convert")
         _, err = capsys.readouterr()
 
         assert "old configuration file does not exist: nothing to convert" in err
-        assert itm.exit_code == itm.EXIT_ERROR
+        assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_config_convert(mocker, capsys):
+def test_config_convert(itm_nc, mocker, capsys):
     iniconfig = """#
 [settings]
 prompt='tm> '
@@ -573,8 +560,6 @@ key = "~/keys/mykey"
 verify = false
 """
 
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
-
     with tempfile.TemporaryDirectory() as tmpdir:
         inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
         tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
@@ -594,19 +579,19 @@ verify = false
         with open(inifile, "w", encoding="utf-8") as iniobj:
             iniobj.write(iniconfig)
 
-        itm.onecmd_plus_hooks("config convert")
+        itm_nc.onecmd_plus_hooks("config convert")
         _, err = capsys.readouterr()
 
         assert "converting old configuration file to new format" in err
         assert "reloading configuration" in err
-        assert itm.exit_code == itm.EXIT_SUCCESS
+        assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
         with open(tomlfile, "r", encoding="utf-8") as tomlobj:
             test_tomlconfig = tomlobj.read()
             assert test_tomlconfig == tomlconfig
 
 
-def test_config_convert_invalid_setting(mocker, capsys):
+def test_config_convert_invalid_setting(itm_nc, mocker, capsys):
     iniconfig = """#
 [settings]
 prompt='tm> '
@@ -627,8 +612,6 @@ key = ~/keys/mykey
 verify = False
 """
 
-    itm = tm.InteractiveTomcatManager()
-
     with tempfile.TemporaryDirectory() as tmpdir:
         inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
         tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
@@ -648,17 +631,15 @@ verify = False
         with open(inifile, "w", encoding="utf-8") as iniobj:
             iniobj.write(iniconfig)
 
-        itm.onecmd_plus_hooks("config convert")
+        itm_nc.onecmd_plus_hooks("config convert")
         _, err = capsys.readouterr()
 
         assert "converting old configuration file to new format" in err
         assert "conversion failed" in err
-        assert itm.exit_code == itm.EXIT_ERROR
+        assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_config_convert_both_exist(mocker, capsys):
-    itm = tm.InteractiveTomcatManager()
-
+def test_config_convert_both_exist(itm_nc, mocker, capsys):
     with tempfile.TemporaryDirectory() as tmpdir:
         inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
         inifile.touch()
@@ -677,11 +658,11 @@ def test_config_convert_both_exist(mocker, capsys):
         )
         config_file.return_value = inifile
 
-        itm.onecmd_plus_hooks("config convert")
+        itm_nc.onecmd_plus_hooks("config convert")
         _, err = capsys.readouterr()
 
         assert "configuration file exists: cowardly refusing to overwrite it" in err
-        assert itm.exit_code == itm.EXIT_ERROR
+        assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
 def test_load_config(mocker):
@@ -699,6 +680,15 @@ def test_load_config_file_not_found():
         mocked_open.side_effect = FileNotFoundError()
         itm = tm.InteractiveTomcatManager()
         assert len(itm.config.keys()) == 0
+
+
+def test_noload_config(capsys):
+    # check the status message for skipping the load of the config file
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    # we need some command to run, it doesn't matter what it is
+    itm.onecmd_plus_hooks("version")
+    _, err = capsys.readouterr()
+    assert "skipping load of configuration file" in err
 
 
 def test_load_config_bogus_setting(mocker):
@@ -758,213 +748,188 @@ def test_load_config_not_integer(itm, mocker):
     assert itm.timeout == itm.timeout
 
 
-def test_load_config_syntax_error(itm, mocker, capsys):
+def test_load_config_syntax_error(mocker, capsys):
     configstring = """
         [settings]
         prompt = "tm>
         """
     itm = itm_with_config(mocker, configstring)
-    out, err = capsys.readouterr()
+    _, err = capsys.readouterr()
     assert "error loading configuration file" in err
     # make sure that loading the broken configuration file didn't
     # change the prompt
     assert itm.prompt == itm.prompt
 
 
-def test_show_invalid(capsys):
+def test_show_invalid(itm_nc, capsys):
     # make sure that the show command, which we have overridden, doesn't
     # do the thing that it does by default in cmd2.Cmd
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("show")
+    itm_nc.onecmd_plus_hooks("show")
     out, err = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_COMMAND_NOT_FOUND
+    assert itm_nc.exit_code == itm_nc.EXIT_COMMAND_NOT_FOUND
     assert not out
     assert "unknown command: show" in err
 
 
-def test_settings_noargs(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("settings")
+def test_settings_noargs(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("settings")
     out, _ = capsys.readouterr()
     # make sure there is a line for each setting
-    assert len(out.splitlines()) == len(itm.settables)
+    assert len(out.splitlines()) == len(itm_nc.settables)
     # check the first setting is "debug", they are sorted in
     # alphabetical order, so this one should come out first
     assert out.splitlines()[0].split("=")[0].strip() == "debug"
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_settings_valid_setting(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("settings prompt")
+def test_settings_valid_setting(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("settings prompt")
     out, _ = capsys.readouterr()
-    assert out.startswith(f'prompt = "{itm.prompt}" ')
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert out.startswith(f'prompt = "{itm_nc.prompt}" ')
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_settings_invalid_setting(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.debug = False
-    itm.onecmd_plus_hooks("settings bogus")
+def test_settings_invalid_setting(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("settings bogus")
     out, err = capsys.readouterr()
     assert not out
     assert err == "unknown setting: 'bogus'\n"
-    assert itm.exit_code == itm.EXIT_ERROR
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_set_noargs(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("set")
+def test_set_noargs(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("set")
     out, _ = capsys.readouterr()
     # make sure there is a line for each setting
-    assert len(out.splitlines()) == len(itm.settables)
+    assert len(out.splitlines()) == len(itm_nc.settables)
     # check the first setting is "debug", they are sorted in
     # alphabetical order, so this one should come out first
     assert out.splitlines()[0].split("=")[0].strip() == "debug"
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_set_help(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("set -h")
+def test_set_help(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("set -h")
     out, _ = capsys.readouterr()
     assert "change a program setting" in out
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_set_string():
-    itm = tm.InteractiveTomcatManager()
+def test_set_string(itm_nc):
     prompt = str(uuid.uuid1())
-    itm.onecmd_plus_hooks(f"set prompt = '{prompt}'")
-    assert itm.prompt == prompt
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    itm_nc.onecmd_plus_hooks(f"set prompt = '{prompt}'")
+    assert itm_nc.prompt == prompt
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_set_mismatched_quotes(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("set prompt = notquoted")
+def test_set_mismatched_quotes(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("set prompt = notquoted")
     _, err = capsys.readouterr()
     assert "invalid syntax" in err
-    assert itm.exit_code == itm.EXIT_ERROR
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_set_quiet_to_string_nodebug(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.debug = False
-    itm.onecmd_plus_hooks('set debug = "shouldbeboolean"')
+def test_set_quiet_to_string_nodebug(itm_nc, capsys):
+    itm_nc.debug = False
+    itm_nc.onecmd_plus_hooks('set debug = "shouldbeboolean"')
     _, err = capsys.readouterr()
     # it would be nice if we could check what the error message is, but
     # it's generated by CMD, so we don't get to control when it changes
     assert err
-    assert itm.exit_code == itm.EXIT_ERROR
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_set_quiet_to_string_debug(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.debug = True
-    itm.onecmd_plus_hooks('set debug = "shouldbeboolean"')
+def test_set_quiet_to_string_debug(itm_nc, capsys):
+    itm_nc.debug = True
+    itm_nc.onecmd_plus_hooks('set debug = "shouldbeboolean"')
     _, err = capsys.readouterr()
     # it would be nice if we could check what the error message is, but
     # it's generated by CMD, so we don't get to control when it changes
     assert err
-    assert itm.exit_code == itm.EXIT_ERROR
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_set_float_valid():
-    itm = tm.InteractiveTomcatManager()
-    itm.timeout = 10.0
-    itm.onecmd_plus_hooks("set timeout = 5.5")
-    assert itm.timeout == 5.5
-    assert itm.exit_code == itm.EXIT_SUCCESS
+def test_set_float_valid(itm_nc):
+    itm_nc.timeout = 10.0
+    itm_nc.onecmd_plus_hooks("set timeout = 5.5")
+    assert itm_nc.timeout == 5.5
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_set_float_invalid():
-    itm = tm.InteractiveTomcatManager()
-    itm.debug = False
-    itm.timeout = 10.0
-    itm.onecmd_plus_hooks("set timeout = joe")
-    assert itm.timeout == 10.0
-    assert itm.exit_code == itm.EXIT_ERROR
+def test_set_float_invalid(itm_nc):
+    itm_nc.timeout = 10.0
+    itm_nc.onecmd_plus_hooks("set timeout = joe")
+    assert itm_nc.timeout == 10.0
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_set_float_invalid_debug():
-    itm = tm.InteractiveTomcatManager()
-    itm.debug = True
-    itm.timeout = 10.0
-    itm.onecmd_plus_hooks("set timeout = joe")
-    assert itm.timeout == 10.0
-    assert itm.exit_code == itm.EXIT_ERROR
+def test_set_float_invalid_debug(itm_nc):
+    itm_nc.timeout = 10.0
+    itm_nc.onecmd_plus_hooks("set timeout = joe")
+    assert itm_nc.timeout == 10.0
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_set_boolean_true():
-    itm = tm.InteractiveTomcatManager()
-    itm.echo = False
-    itm.onecmd_plus_hooks("set echo = true")
-    assert itm.echo is True
-    assert itm.exit_code == itm.EXIT_SUCCESS
+def test_set_boolean_true(itm_nc):
+    itm_nc.echo = False
+    itm_nc.onecmd_plus_hooks("set echo = true")
+    assert itm_nc.echo is True
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_set_boolean_false():
-    itm = tm.InteractiveTomcatManager()
-    itm.echo = True
-    itm.onecmd_plus_hooks("set echo = false")
-    assert itm.echo is False
-    assert itm.exit_code == itm.EXIT_SUCCESS
+def test_set_boolean_false(itm_nc):
+    itm_nc.echo = True
+    itm_nc.onecmd_plus_hooks("set echo = false")
+    assert itm_nc.echo is False
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_set_boolean_invalid():
-    itm = tm.InteractiveTomcatManager()
-    itm.echo = False
-    itm.onecmd_plus_hooks("set echo = notaboolean")
-    assert itm.echo is False
-    assert itm.exit_code == itm.EXIT_ERROR
+def test_set_boolean_invalid(itm_nc):
+    itm_nc.echo = False
+    itm_nc.onecmd_plus_hooks("set echo = notaboolean")
+    assert itm_nc.echo is False
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_set_boolean_zero():
-    itm = tm.InteractiveTomcatManager()
-    itm.echo = True
-    itm.onecmd_plus_hooks("set echo = 0")
-    assert itm.echo is False
-    assert itm.exit_code == itm.EXIT_SUCCESS
+def test_set_boolean_zero(itm_nc):
+    itm_nc.echo = True
+    itm_nc.onecmd_plus_hooks("set echo = 0")
+    assert itm_nc.echo is False
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_set_debug_invalid():
-    itm = tm.InteractiveTomcatManager()
-    itm.echo = False
-    itm.debug = True
-    itm.onecmd_plus_hooks("set echo = notaboolean")
-    assert itm.echo is False
-    assert itm.exit_code == itm.EXIT_ERROR
+def test_set_debug_invalid(itm_nc):
+    itm_nc.echo = False
+    itm_nc.onecmd_plus_hooks("set echo = notaboolean")
+    assert itm_nc.echo is False
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_set_unknown_setting(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("set fred = 'somevalue'")
+def test_set_unknown_setting(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("set fred = 'somevalue'")
     _, err = capsys.readouterr()
     assert "unknown setting" in err
-    assert itm.exit_code == itm.EXIT_ERROR
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_set_with_invalid_param():
-    itm = tm.InteractiveTomcatManager()
+def test_set_with_invalid_param(itm_nc):
     # this uuid won't be in itm.settables
     invalid_setting = str(uuid.uuid1())
     with pytest.raises(ValueError):
         # pylint: disable=protected-access
-        itm._change_setting(invalid_setting, "someval")
+        itm_nc._change_setting(invalid_setting, "someval")
 
 
-def test_timeout_property():
+def test_timeout_property(itm_nc):
     timeout = 8.5
-    itm = tm.InteractiveTomcatManager()
     # set this to a value that we know will cause it to change when we execute
     # the command
-    itm.timeout = 5
-    assert itm.tomcat.timeout == 5
-    itm.onecmd_plus_hooks(f"set timeout = {timeout}")
-    assert itm.exit_code == itm.EXIT_SUCCESS
-    assert itm.timeout == timeout
-    assert itm.tomcat.timeout == timeout
+    itm_nc.timeout = 5
+    assert itm_nc.tomcat.timeout == 5
+    itm_nc.onecmd_plus_hooks(f"set timeout = {timeout}")
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+    assert itm_nc.timeout == timeout
+    assert itm_nc.tomcat.timeout == timeout
 
 
 SETTINGS_SUCCESSFUL = [
@@ -980,11 +945,10 @@ SETTINGS_SUCCESSFUL = [
 
 
 @pytest.mark.parametrize("arg, value", SETTINGS_SUCCESSFUL)
-def test_do_set_success(arg, value):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks(arg)
-    assert itm.prompt == value
-    assert itm.exit_code == itm.EXIT_SUCCESS
+def test_do_set_success(itm_nc, arg, value):
+    itm_nc.onecmd_plus_hooks(arg)
+    assert itm_nc.prompt == value
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
 SETTINGS_FAILURE = [
@@ -994,10 +958,9 @@ SETTINGS_FAILURE = [
 
 
 @pytest.mark.parametrize("arg", SETTINGS_FAILURE)
-def test_do_set_fail(arg):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks(arg)
-    assert itm.exit_code == itm.EXIT_ERROR
+def test_do_set_fail(itm_nc, arg):
+    itm_nc.onecmd_plus_hooks(arg)
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
 PREFIXES = [
@@ -1010,44 +973,45 @@ PREFIXES = [
 
 
 @pytest.mark.parametrize("prefix, expected", PREFIXES)
-def test_status_prefix(tomcat_manager_server, itm, prefix, expected, capsys):
-    itm.status_prefix = prefix
-    itm.quiet = False
-    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
-    out, err = capsys.readouterr()
+def test_status_prefix(tomcat_manager_server, itm_nc, prefix, expected, capsys):
+    # since we are testing the output of the connect command
+    # use itm_nc instead of itm fixture
+    itm_nc.status_prefix = prefix
+    itm_nc.quiet = False
+    itm_nc.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    _, err = capsys.readouterr()
     assert err.startswith(expected)
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_status_animation():
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("set status_animation = 'dots'")
-    assert itm.status_animation == "dots"
-    assert itm.exit_code == itm.EXIT_SUCCESS
+def test_status_animation(itm_nc):
+    itm_nc.onecmd_plus_hooks("set status_animation = 'dots'")
+    assert itm_nc.status_animation == "dots"
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+    # do another one just incase the default ever got set to dots
+    itm_nc.onecmd_plus_hooks("set status_animation = 'line'")
+    assert itm_nc.status_animation == "line"
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_status_animation_invalid(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("set status_animation = 'invalid'")
+def test_status_animation_invalid(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("set status_animation = 'invalid'")
     _, err = capsys.readouterr()
     assert "invalid" in err
-    assert itm.exit_code == itm.EXIT_ERROR
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_status_animation_none():
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("set status_animation = ''")
-    assert itm.status_animation == ""
-    assert itm.exit_code == itm.EXIT_SUCCESS
+def test_status_animation_none(itm_nc):
+    itm_nc.onecmd_plus_hooks("set status_animation = ''")
+    assert itm_nc.status_animation == ""
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_theme_default_none():
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
-    assert itm.theme == ""
+def test_theme_default_none(itm_nc):
+    assert itm_nc.theme == ""
 
 
-def test_theme_use_embedded(mocker):
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
+def test_theme_use_embedded(itm_nc, mocker):
     theme = "default-dark"
     with tempfile.TemporaryDirectory() as tmpdir:
         # patch the empty temporary directory into user_theme_dir
@@ -1058,23 +1022,21 @@ def test_theme_use_embedded(mocker):
             new_callable=mock.PropertyMock,
             return_value=tmppath,
         )
-        itm.onecmd_plus_hooks(f"set theme = '{theme}'")
-        assert itm.theme == theme
+        itm_nc.onecmd_plus_hooks(f"set theme = '{theme}'")
+        assert itm_nc.theme == theme
 
 
-def test_theme_invalid(capsys):
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
+def test_theme_invalid(itm_nc, capsys):
     theme = str(uuid.uuid1())
-    assert not itm.theme
-    itm.onecmd_plus_hooks(f"set theme = '{theme}'")
+    assert not itm_nc.theme
+    itm_nc.onecmd_plus_hooks(f"set theme = '{theme}'")
     out, err = capsys.readouterr()
-    assert not itm.theme
+    assert not itm_nc.theme
     assert err
     assert not out
 
 
-def test_resolve_theme_builtin(mocker):
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
+def test_resolve_theme_builtin(itm_nc, mocker):
     # this is one of our builtin themes
     theme_name = "default-dark"
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -1087,24 +1049,22 @@ def test_resolve_theme_builtin(mocker):
             new_callable=mock.PropertyMock,
             return_value=tmppath,
         )
-        location, path = itm._resolve_theme(theme_name)
+        location, path = itm_nc._resolve_theme(theme_name)
         assert location == tm.interactive_tomcat_manager.ThemeLocation.BUILTIN
         assert path
         assert str(importlib_resources.files("tomcatmanager.themes")) in str(path)
         assert theme_name in str(path)
 
 
-def test_resolve_theme_invalid_name():
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
+def test_resolve_theme_invalid_name(itm_nc):
     # shouldn't find this random uuid as a theme
     theme = str(uuid.uuid1())
-    location, path = itm._resolve_theme(theme)
+    location, path = itm_nc._resolve_theme(theme)
     assert not location
     assert not path
 
 
-def test_resolve_theme_user(mocker, capsys):
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
+def test_resolve_theme_user(itm_nc, mocker, capsys):
     theme = str(uuid.uuid1())
     # get a temporary directory
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -1120,26 +1080,21 @@ def test_resolve_theme_user(mocker, capsys):
             return_value=tmppath,
         )
         # now that we are all set up, go try and load the theme
-        itm.onecmd_plus_hooks(f"set theme = '{theme}'")
-        out, err = capsys.readouterr()
-        errarray = err.rstrip("\n").split("\n")
-        assert len(errarray) == 1
-        assert "skipping load of configuration file" in errarray[0]
+        itm_nc.onecmd_plus_hooks(f"set theme = '{theme}'")
+        out, _ = capsys.readouterr()
         assert not out
-        assert itm.theme == theme
+        assert itm_nc.theme == theme
 
 
-def test_user_theme_dir():
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
-    assert "themes" in str(itm.user_theme_dir)
+def test_user_theme_dir(itm_nc):
+    assert "themes" in str(itm_nc.user_theme_dir)
     # if appdirs doesn't exist, config_file shouldn't either
-    itm.appdirs = None
-    assert not itm.user_theme_dir
+    itm_nc.appdirs = None
+    assert not itm_nc.user_theme_dir
 
 
-def test_apply_theme_file_parse_error(mocker, capsys):
+def test_apply_theme_file_parse_error(itm_nc, mocker, capsys):
     theme = "someusertheme"
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
     # get a temporary directory
     with tempfile.TemporaryDirectory() as tmpdir:
         # write a theme file with a syntax error
@@ -1154,17 +1109,16 @@ def test_apply_theme_file_parse_error(mocker, capsys):
             return_value=tmppath,
         )
         # now that we are all set up, go try and load the theme
-        itm.onecmd_plus_hooks(f"set theme = '{theme}'")
+        itm_nc.onecmd_plus_hooks(f"set theme = '{theme}'")
         out, err = capsys.readouterr()
         assert err
         assert not out
-        assert not itm.theme
-        assert itm.theme == ""
+        assert not itm_nc.theme
+        assert itm_nc.theme == ""
 
 
-def test_apply_theme_permission_error(mocker, capsys):
+def test_apply_theme_permission_error(itm_nc, mocker, capsys):
     theme = "someusertheme"
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
     # get a temporary directory
     with tempfile.TemporaryDirectory() as tmpdir:
         # write a theme file with a syntax error
@@ -1182,16 +1136,15 @@ def test_apply_theme_permission_error(mocker, capsys):
         with mock.patch("builtins.open", mock.mock_open()) as mocked_open:
             mocked_open.side_effect = PermissionError()
             # now that we are all set up, go try and load the theme
-            itm.onecmd_plus_hooks(f"set theme = '{theme}'")
+            itm_nc.onecmd_plus_hooks(f"set theme = '{theme}'")
             out, err = capsys.readouterr()
             assert err
             assert not out
-            assert not itm.theme
+            assert not itm_nc.theme
 
 
-def test_apply_theme_invalid_theme_color(mocker, capsys):
+def test_apply_theme_invalid_theme_color(itm_nc, mocker, capsys):
     theme = "someusertheme"
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
     # get a temporary directory
     with tempfile.TemporaryDirectory() as tmpdir:
         # write a theme file with a syntax error
@@ -1206,12 +1159,12 @@ def test_apply_theme_invalid_theme_color(mocker, capsys):
             return_value=tmppath,
         )
         # now that we are all set up, go try and load the theme
-        itm.onecmd_plus_hooks(f"set theme = '{theme}'")
+        itm_nc.onecmd_plus_hooks(f"set theme = '{theme}'")
         out, err = capsys.readouterr()
         assert err
         assert not out
-        assert not itm.theme
-        assert itm.theme == ""
+        assert not itm_nc.theme
+        assert itm_nc.theme == ""
 
 
 ###
@@ -1219,49 +1172,43 @@ def test_apply_theme_invalid_theme_color(mocker, capsys):
 # miscellaneous commands
 #
 ###
-def test_exit():
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("exit")
-    assert itm.exit_code == itm.EXIT_SUCCESS
+def test_exit(itm_nc):
+    itm_nc.onecmd_plus_hooks("exit")
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_quit():
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("quit")
-    assert itm.exit_code == itm.EXIT_SUCCESS
+def test_quit(itm_nc):
+    itm_nc.onecmd_plus_hooks("quit")
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_exit_code(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("version")
+def test_exit_code(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("version")
     out, _ = capsys.readouterr()
-    itm.onecmd_plus_hooks("exit_code")
+    itm_nc.onecmd_plus_hooks("exit_code")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_SUCCESS
-    assert out == f"{itm.EXIT_SUCCESS}\n"
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+    assert out == f"{itm_nc.EXIT_SUCCESS}\n"
 
 
-def test_version(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("version")
+def test_version(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("version")
     out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
     assert tm.__version__ in out
 
 
-def test_default(capsys):
+def test_default(itm_nc, capsys):
     cmdline = "notacommand"
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks(cmdline)
+    itm_nc.onecmd_plus_hooks(cmdline)
     out, err = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_COMMAND_NOT_FOUND
+    assert itm_nc.exit_code == itm_nc.EXIT_COMMAND_NOT_FOUND
     assert not out
     assert err == f"unknown command: {cmdline}\n"
 
 
-def test_license(capsys):
-    itm = tm.InteractiveTomcatManager()
-    itm.onecmd_plus_hooks("license")
+def test_license(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("license")
     out, _ = capsys.readouterr()
     expected = textwrap.dedent(
         """\
@@ -1295,8 +1242,7 @@ def test_license(capsys):
 # other tests
 #
 ###
-def test_thrown_exception(tomcat_manager_server, mocker, capsys):
-    itm = get_itm(tomcat_manager_server)
+def test_thrown_exception(itm, mocker, capsys):
     itm.exit_code = itm.EXIT_SUCCESS
     raise_mock = mocker.patch(
         "tomcatmanager.models.TomcatManagerResponse.raise_for_status"

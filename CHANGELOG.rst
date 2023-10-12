@@ -31,6 +31,11 @@ TODO
   template_path:
   or use importlib_resources.path("tomcatmanager.templates", "theme.toml").read_text()
 
+- switch quiet setting to be called verbose, default is true
+
+- use tmp_path pytest fixture instead of creating our own temporary directories
+
+
 Added
 ^^^^^
 
