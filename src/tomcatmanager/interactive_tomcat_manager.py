@@ -1284,10 +1284,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # TODO make command line options to only display gallery, or built-in, or user themes
         # default is all
         gallery_themes = []
-        response = requests.get(
-            "https://raw.githubusercontent.com/tomcatmanager/themes/main/themes.toml",
-            timeout=self.timeout,
-        )
+        with self._progressfactory("retrieving themes from gallery"):
+            response = requests.get(
+                "https://raw.githubusercontent.com/tomcatmanager/themes/main/themes.toml",
+                timeout=self.timeout,
+            )
         if response.status_code == 200:
             gallery_dir = tomlkit.loads(response.text)
             for theme_name in gallery_dir:
@@ -1399,15 +1400,16 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # there first
         # TODO add progress display and status information and error checking
         theme_str = None
-        response = requests.get(
-            f"https://raw.githubusercontent.com/tomcatmanager/themes/main/themes/{args.name}.toml",
-            timeout=self.timeout,
-        )
+        with self._progressfactory("retrieving themes from gallery"):
+            response = requests.get(
+                f"https://raw.githubusercontent.com/tomcatmanager/themes/main/themes/{args.name}.toml",
+                timeout=self.timeout,
+            )
         if response.status_code == 200:
             theme_str = response.text
         else:
             # some error messaging
-            pass
+            self.pfeedback(f"theme '{args.name}' not found in gallery")
 
         if not theme_str:
             # go see if it's a built-in theme
@@ -1420,7 +1422,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             except FileNotFoundError:
                 # swallow this error silently
                 # it's neither in the gallery or built-in
-                pass
+                self.pfeedback(f"theme '{args.name}' is not a built-in theme")
 
         if not theme_str:
             self.perror(f"unknown theme: '{args.name}'")
