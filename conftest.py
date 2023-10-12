@@ -217,5 +217,5 @@ def localwar_file():
 
 @pytest.fixture
 def safe_path():
-    """a safe path we can deploy apps to"""
+    """a safe path we can deploy apps to in a tomcat server"""
     return "/tomcat-manager-test-app"
