@@ -48,3 +48,4 @@ float = "dark_turquoise"
 [tm.theme]
 category = "gold3"
 border = "gold3"
+name = "medium_violet_red"

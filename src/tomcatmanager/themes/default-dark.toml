@@ -48,3 +48,4 @@ float =  "cyan1"
 [tm.theme]
 category = "gold1"
 border = "gold1"
+name = "magenta3"

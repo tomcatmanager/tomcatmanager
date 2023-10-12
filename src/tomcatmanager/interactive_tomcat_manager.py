@@ -134,6 +134,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         "tm.setting.float",
         "tm.theme.category",
         "tm.theme.border",
+        "tm.theme.name",
     ]
 
     # for configuration
@@ -1279,7 +1280,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def theme_list(self, args: argparse.Namespace):
         """list all available themes"""
         # gallery themes
-        # TODO add progress and feedback
+        # TODO add progress and feedback and error checking
         # TODO make command line options to only display gallery, or built-in, or user themes
         # default is all
         gallery_themes = []
@@ -1305,13 +1306,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 show_header=False,
             )
             gallery_table.add_column("Name")
-            gallery_table.add_column("Location")
             gallery_table.add_column("Description")
             for theme in gallery_themes:
                 gallery_table.add_row(
-                    theme.name, theme.location.value, theme.description
+                    rich.text.Text(theme.name, style="tm.theme.name"), theme.description
                 )
-            self.console.print("")
             self.console.print("Gallery Themes", style="tm.theme.category")
             self.console.print("─" * 72, style="tm.theme.border")
             self.console.print(gallery_table)
@@ -1325,33 +1324,67 @@ class InteractiveTomcatManager(cmd2.Cmd):
             show_header=False,
         )
         user_table.add_column("Name")
-        user_table.add_column("Location")
         user_table.add_column("Description")
         # add the built-in themes
         for path in importlib_resources.files("tomcatmanager.themes").iterdir():
             if path.suffix == ".toml":
+                # go read the theme in to get the description
+                with path.open("r", encoding="utf-8") as theme_fobj:
+                    theme_def = tomlkit.load(theme_fobj)
+                    # TODO totally need more error checking here
+                    try:
+                        tdesc = theme_def["description"]
+                    except tomlkit.exceptions.TOMLKitError:
+                        tdesc = ""
                 theme = Theme(
                     location=ThemeLocation.BUILTIN,
                     file=pathlib.Path(path.name),
-                    description="built-in theme description",
+                    description=tdesc,
                 )
                 user_themes[theme.name] = theme
         # add the user themes
         if self.user_theme_dir.exists():
             for path in self.user_theme_dir.iterdir():
                 if path.suffix == ".toml":
+                    with path.open("r", encoding="utf-8") as theme_fobj:
+                        theme_def = tomlkit.load(theme_fobj)
+                        # TODO totally need more error checking here
+                        try:
+                            tdesc = theme_def["description"]
+                        except tomlkit.exceptions.TOMLKitError:
+                            tdesc = ""
                     theme = Theme(
                         location=ThemeLocation.USER,
                         file=pathlib.Path(path.name),
-                        description="user theme description",
+                        description=tdesc,
                     )
                     user_themes[theme.name] = theme
 
+        have_builtin = False
         for theme in list(user_themes.values()):
-            user_table.add_row(theme.name, theme.location.value, theme.description)
+            if theme.location == ThemeLocation.BUILTIN:
+                user_table.add_row(
+                    rich.text.Text(f"{theme.name}*", style="tm.theme.name"),
+                    theme.description,
+                )
+                have_builtin = True
+            else:
+                user_table.add_row(
+                    rich.text.Text(theme.name, style="tm.theme.name"), theme.description
+                )
+        self.console.print("")
         self.console.print("User Themes", style="tm.theme.category")
         self.console.print("─" * 72, style="tm.theme.border")
         self.console.print(user_table)
+        if have_builtin:
+            self.console.print()
+            self.console.print("'*' indicates a read-only built-in theme.")
+            self.console.print(
+                "Make your own copy of a built-in or gallery theme with 'theme clone'."
+            )
+            self.console.print(
+                "You can then edit your copy of the theme with 'theme edit'."
+            )
 
         self.exit_code = self.EXIT_SUCCESS
         return
@@ -1364,7 +1397,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         # the online theme gallery can override the built-in themes, so check
         # there first
-        # TODO add progress display and status information
+        # TODO add progress display and status information and error checking
         theme_str = None
         response = requests.get(
             f"https://raw.githubusercontent.com/tomcatmanager/themes/main/themes/{args.name}.toml",
@@ -1378,22 +1411,19 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         if not theme_str:
             # go see if it's a built-in theme
-
-            # this is a wordy way to accomplish the task, but has the advantage of working
-            # if the package is installed as a zip file
-            # for path in importlib_resources.files("tomcatmanager.themes").iterdir():
-            #     if path.name == f"{args.name}.toml":
-            #         from_path = path
-            #         break
             path = importlib_resources.files("tomcatmanager.themes").joinpath(
                 f"{args.name}.toml"
             )
-            with path.open("r", encoding="utf-8") as theme_fobj:
-                theme_str = theme_fobj.read()
+            try:
+                with path.open("r", encoding="utf-8") as theme_fobj:
+                    theme_str = theme_fobj.read()
+            except FileNotFoundError:
+                # swallow this error silently
+                # it's neither in the gallery or built-in
+                pass
 
         if not theme_str:
-            # TODO fix this error message
-            self.perror(f"'{args.name}' is not a built-in theme")
+            self.perror(f"unknown theme: '{args.name}'")
             self.exit_code = self.EXIT_ERROR
             return
 
@@ -1408,9 +1438,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             return
 
         # copy theme to user theme dir
-        self.pfeedback(
-            f"cloning built-in theme '{args.name}' to user theme '{new_name}'"
-        )
+        self.pfeedback(f"cloning '{args.name}' to user theme '{new_name}'")
         self.ensure_user_theme_dir()
         with new_path.open("w", encoding="utf-8") as fobj:
             # shutil.copy(from_path, new_path)
