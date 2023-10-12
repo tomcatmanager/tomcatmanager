@@ -45,6 +45,38 @@ def get_itm(tms):
 
 ###
 #
+# misc tests
+#
+###
+def test_notimplemented(tomcat_manager_server, capsys, mocker):
+    # if the server doesn't implement a command, make sure
+    # we get the error message
+    connect_mock = mocker.patch("tomcatmanager.TomcatManager.list")
+    connect_mock.side_effect = tm.TomcatNotImplementedError
+    itm = get_itm(tomcat_manager_server)
+    itm.onecmd_plus_hooks("list")
+    _, err = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_ERROR
+    assert "command not implemented by server" in err
+
+
+def test_status_no_spinner(tomcat_manager_server, capsys):
+    # this is really to test no activity spinner, not status,
+    # but we gotta test it with something
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.EXIT_ERROR
+    itm.status_animation = None
+    itm.quiet = False
+    itm.onecmd_plus_hooks("status")
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert "</status>" in out
+    assert "</jvm>" in out
+    assert "</connector>" in out
+
+
+###
+#
 # test informational commands
 #
 ###
@@ -89,21 +121,6 @@ def test_status(tomcat_manager_server, capsys):
     assert "</connector>" in out
 
 
-def test_status_no_spinner(tomcat_manager_server, capsys):
-    # this is really to test no activity spinner, not status,
-    # but we gotta test it with something
-    itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
-    itm.status_animation = None
-    itm.quiet = False
-    itm.onecmd_plus_hooks("status")
-    out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_SUCCESS
-    assert "</status>" in out
-    assert "</jvm>" in out
-    assert "</connector>" in out
-
-
 def test_vminfo(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
     itm.exit_code = itm.EXIT_ERROR
@@ -115,6 +132,50 @@ def test_vminfo(tomcat_manager_server, capsys):
     assert "System properties:" in out
 
 
+def test_threaddump(tomcat_manager_server, capsys):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.EXIT_ERROR
+    itm.onecmd_plus_hooks("threaddump")
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert "java.lang.Thread.State" in out
+
+
+def test_resources(tomcat_manager_server, itm, capsys):
+    itm.exit_code = itm.EXIT_ERROR
+    itm.debug = False
+    itm.quiet = True
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    itm.onecmd_plus_hooks("resources")
+    out, _ = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_SUCCESS
+    assert "UserDatabase: " in out
+
+
+def test_resources_class_name(tomcat_manager_server, itm, capsys):
+    itm.exit_code = itm.EXIT_SUCCESS
+    itm.debug = False
+    itm.quiet = True
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    # this class has to be hand coded in the mock server
+    itm.onecmd_plus_hooks("resources com.example.Nothing")
+    out, err = capsys.readouterr()
+    assert itm.exit_code == itm.EXIT_ERROR
+    assert not out.strip()
+
+
+def test_findleakers(tomcat_manager_server):
+    itm = get_itm(tomcat_manager_server)
+    itm.exit_code = itm.EXIT_ERROR
+    itm.onecmd_plus_hooks("findleakers")
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+
+###
+#
+# test ssl related commands
+#
+###
 def test_sslconnectorciphers(tomcat_manager_server, capsys):
     itm = get_itm(tomcat_manager_server)
     itm.onecmd_plus_hooks("sslconnectorciphers")
@@ -192,54 +253,3 @@ def test_sslreload_host(tomcat_manager_server, capsys):
         assert "load" in out or "load" in err
         assert "TLS" in out or "TLS" in err
         assert "www.example.com" in out or "www.example.com" in err
-
-
-def test_notimplemented(tomcat_manager_server, capsys, mocker):
-    # if the server doesn't implement a command, make sure
-    # we get the error message
-    connect_mock = mocker.patch("tomcatmanager.TomcatManager.list")
-    connect_mock.side_effect = tm.TomcatNotImplementedError
-    itm = get_itm(tomcat_manager_server)
-    itm.onecmd_plus_hooks("list")
-    _, err = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_ERROR
-    assert "command not implemented by server" in err
-
-
-def test_threaddump(tomcat_manager_server, capsys):
-    itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
-    itm.onecmd_plus_hooks("threaddump")
-    out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_SUCCESS
-    assert "java.lang.Thread.State" in out
-
-
-def test_resources(tomcat_manager_server, itm, capsys):
-    itm.exit_code = itm.EXIT_ERROR
-    itm.debug = False
-    itm.quiet = True
-    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
-    itm.onecmd_plus_hooks("resources")
-    out, _ = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_SUCCESS
-    assert "UserDatabase: " in out
-
-
-def test_resources_class_name(tomcat_manager_server, itm, capsys):
-    itm.exit_code = itm.EXIT_SUCCESS
-    itm.debug = False
-    itm.quiet = True
-    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
-    # this class has to be hand coded in the mock server
-    itm.onecmd_plus_hooks("resources com.example.Nothing")
-    out, err = capsys.readouterr()
-    assert itm.exit_code == itm.EXIT_ERROR
-    assert not out.strip()
-
-
-def test_findleakers(tomcat_manager_server):
-    itm = get_itm(tomcat_manager_server)
-    itm.exit_code = itm.EXIT_ERROR
-    itm.onecmd_plus_hooks("findleakers")
-    assert itm.exit_code == itm.EXIT_SUCCESS
