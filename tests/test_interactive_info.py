@@ -43,13 +43,6 @@ def get_itm(tms):
     return itm
 
 
-@pytest.fixture
-def itm_nc():
-    """Don't allow it to load a config file"""
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
-    return itm
-
-
 ###
 #
 # test informational commands
@@ -222,26 +215,26 @@ def test_threaddump(tomcat_manager_server, capsys):
     assert "java.lang.Thread.State" in out
 
 
-def test_resources(tomcat_manager_server, itm_nc, capsys):
-    itm_nc.exit_code = itm_nc.EXIT_ERROR
-    itm_nc.debug = False
-    itm_nc.quiet = True
-    itm_nc.onecmd_plus_hooks(tomcat_manager_server.connect_command)
-    itm_nc.onecmd_plus_hooks("resources")
+def test_resources(tomcat_manager_server, itm, capsys):
+    itm.exit_code = itm.EXIT_ERROR
+    itm.debug = False
+    itm.quiet = True
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    itm.onecmd_plus_hooks("resources")
     out, _ = capsys.readouterr()
-    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+    assert itm.exit_code == itm.EXIT_SUCCESS
     assert "UserDatabase: " in out
 
 
-def test_resources_class_name(tomcat_manager_server, itm_nc, capsys):
-    itm_nc.exit_code = itm_nc.EXIT_SUCCESS
-    itm_nc.debug = False
-    itm_nc.quiet = True
-    itm_nc.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+def test_resources_class_name(tomcat_manager_server, itm, capsys):
+    itm.exit_code = itm.EXIT_SUCCESS
+    itm.debug = False
+    itm.quiet = True
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
     # this class has to be hand coded in the mock server
-    itm_nc.onecmd_plus_hooks("resources com.example.Nothing")
+    itm.onecmd_plus_hooks("resources com.example.Nothing")
     out, err = capsys.readouterr()
-    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert itm.exit_code == itm.EXIT_ERROR
     assert not out.strip()
 
 

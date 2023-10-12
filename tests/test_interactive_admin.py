@@ -103,13 +103,6 @@ def assert_connected_to(itm, url, capsys):
     assert url in out
 
 
-@pytest.fixture
-def itm_nc():
-    """Don't allow it to load a config file"""
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
-    return itm
-
-
 ###
 #
 # test usage and help
@@ -471,27 +464,27 @@ def test_history_file_property():
     assert not itm.history_file
 
 
-def test_config_edit(itm_nc, mocker):
-    itm_nc.editor = "fooedit"
+def test_config_edit(itm, mocker):
+    itm.editor = "fooedit"
     mock_os_system = mocker.patch("os.system")
-    itm_nc.onecmd_plus_hooks("config edit")
+    itm.onecmd_plus_hooks("config edit")
     assert mock_os_system.call_count == 1
-    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
-def test_config_edit_no_editor(itm_nc, capsys):
-    itm_nc.editor = None
-    itm_nc.onecmd_plus_hooks("config edit")
+def test_config_edit_no_editor(itm, capsys):
+    itm.editor = None
+    itm.onecmd_plus_hooks("config edit")
     out, err = capsys.readouterr()
-    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert itm.exit_code == itm.EXIT_ERROR
     assert not out
     assert err.startswith("no editor: ")
 
 
-def test_config_invalid_action(itm_nc, capsys):
-    itm_nc.onecmd_plus_hooks("config bogus")
+def test_config_invalid_action(itm, capsys):
+    itm.onecmd_plus_hooks("config bogus")
     out, err = capsys.readouterr()
-    assert itm_nc.exit_code == itm_nc.EXIT_USAGE
+    assert itm.exit_code == itm.EXIT_USAGE
     assert not out
     assert err.startswith("usage: ")
 
@@ -717,7 +710,7 @@ def test_load_config_bogus_setting(mocker):
     itm_with_config(mocker, configstring)
 
 
-def test_load_config_not_boolean(itm_nc, mocker):
+def test_load_config_not_boolean(itm, mocker):
     configstring = """
         [settings]
         echo = "not a boolean"
@@ -726,7 +719,7 @@ def test_load_config_not_boolean(itm_nc, mocker):
     itm = itm_with_config(mocker, configstring)
     # make sure the echo setting is the same
     # as when we don't load a config file
-    assert itm_nc.echo == itm.echo
+    assert itm.echo == itm.echo
 
 
 def test_load_config_echo_false(mocker):
@@ -753,7 +746,7 @@ def test_load_config_echo_true(mocker):
     assert itm.echo is True
 
 
-def test_load_config_not_integer(itm_nc, mocker):
+def test_load_config_not_integer(itm, mocker):
     configstring = """
         [settings]
         timeout = "notaninteger"
@@ -762,10 +755,10 @@ def test_load_config_not_integer(itm_nc, mocker):
     itm = itm_with_config(mocker, configstring)
     # make sure the timeout setting is the same
     # as when we don't load a config file
-    assert itm_nc.timeout == itm.timeout
+    assert itm.timeout == itm.timeout
 
 
-def test_load_config_syntax_error(itm_nc, mocker, capsys):
+def test_load_config_syntax_error(itm, mocker, capsys):
     configstring = """
         [settings]
         prompt = "tm>
@@ -775,7 +768,7 @@ def test_load_config_syntax_error(itm_nc, mocker, capsys):
     assert "error loading configuration file" in err
     # make sure that loading the broken configuration file didn't
     # change the prompt
-    assert itm_nc.prompt == itm.prompt
+    assert itm.prompt == itm.prompt
 
 
 def test_show_invalid(capsys):
@@ -1017,13 +1010,13 @@ PREFIXES = [
 
 
 @pytest.mark.parametrize("prefix, expected", PREFIXES)
-def test_status_prefix(tomcat_manager_server, itm_nc, prefix, expected, capsys):
-    itm_nc.status_prefix = prefix
-    itm_nc.quiet = False
-    itm_nc.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+def test_status_prefix(tomcat_manager_server, itm, prefix, expected, capsys):
+    itm.status_prefix = prefix
+    itm.quiet = False
+    itm.onecmd_plus_hooks(tomcat_manager_server.connect_command)
     out, err = capsys.readouterr()
     assert err.startswith(expected)
-    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+    assert itm.exit_code == itm.EXIT_SUCCESS
 
 
 def test_status_animation():

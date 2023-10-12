@@ -186,6 +186,14 @@ def tomcat(tomcat_manager_server):
     return tmcat
 
 
+
+@pytest.fixture
+def itm():
+    """InteractiveTomcatManager with no config file loaded"""
+    itm = tm.InteractiveTomcatManager(loadconfig=False)
+    return itm
+
+
 @pytest.fixture
 def localwar_file():
     """return the path to a valid war file"""
