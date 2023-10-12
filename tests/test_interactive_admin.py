@@ -483,32 +483,31 @@ def test_config_file_command(itm_nc, mocker, capsys):
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_config_convert_no_config(itm_nc, mocker, capsys):
+def test_config_convert_no_config(itm_nc, tmp_path, mocker, capsys):
     # verify conversion behavior when neither ini nor toml config files exist
-    with tempfile.TemporaryDirectory() as tmpdir:
-        inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
-        tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
+    inifile = tmp_path / "tomcat-manager.ini"
+    tomlfile = tmp_path / "tomcat-manager.toml"
 
-        config_file = mocker.patch(
-            "tomcatmanager.InteractiveTomcatManager.config_file",
-            new_callable=mock.PropertyMock,
-        )
-        config_file.return_value = tomlfile
+    config_file = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+    )
+    config_file.return_value = tomlfile
 
-        config_file = mocker.patch(
-            "tomcatmanager.InteractiveTomcatManager.config_file_old",
-            new_callable=mock.PropertyMock,
-        )
-        config_file.return_value = inifile
+    config_file = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file_old",
+        new_callable=mock.PropertyMock,
+    )
+    config_file.return_value = inifile
 
-        itm_nc.onecmd_plus_hooks("config convert")
-        _, err = capsys.readouterr()
+    itm_nc.onecmd_plus_hooks("config convert")
+    _, err = capsys.readouterr()
 
-        assert "old configuration file does not exist: nothing to convert" in err
-        assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert "old configuration file does not exist: nothing to convert" in err
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_config_convert(itm_nc, mocker, capsys):
+def test_config_convert(itm_nc, tmp_path, mocker, capsys):
     iniconfig = """#
 [settings]
 prompt='tm> '
@@ -548,39 +547,37 @@ cert = "~/certs/my.cert"
 key = "~/keys/mykey"
 verify = false
 """
+    inifile = tmp_path / "tomcat-manager.ini"
+    tomlfile = tmp_path / "tomcat-manager.toml"
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
-        tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
+    config_file = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+    )
+    config_file.return_value = tomlfile
 
-        config_file = mocker.patch(
-            "tomcatmanager.InteractiveTomcatManager.config_file",
-            new_callable=mock.PropertyMock,
-        )
-        config_file.return_value = tomlfile
+    config_file = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file_old",
+        new_callable=mock.PropertyMock,
+    )
+    config_file.return_value = inifile
 
-        config_file = mocker.patch(
-            "tomcatmanager.InteractiveTomcatManager.config_file_old",
-            new_callable=mock.PropertyMock,
-        )
-        config_file.return_value = inifile
+    with open(inifile, "w", encoding="utf-8") as iniobj:
+        iniobj.write(iniconfig)
 
-        with open(inifile, "w", encoding="utf-8") as iniobj:
-            iniobj.write(iniconfig)
+    itm_nc.onecmd_plus_hooks("config convert")
+    _, err = capsys.readouterr()
 
-        itm_nc.onecmd_plus_hooks("config convert")
-        _, err = capsys.readouterr()
+    assert "converting old configuration file to new format" in err
+    assert "reloading configuration" in err
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
-        assert "converting old configuration file to new format" in err
-        assert "reloading configuration" in err
-        assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
-
-        with open(tomlfile, "r", encoding="utf-8") as tomlobj:
-            test_tomlconfig = tomlobj.read()
-            assert test_tomlconfig == tomlconfig
+    with open(tomlfile, "r", encoding="utf-8") as tomlobj:
+        test_tomlconfig = tomlobj.read()
+        assert test_tomlconfig == tomlconfig
 
 
-def test_config_convert_invalid_setting(itm_nc, mocker, capsys):
+def test_config_convert_invalid_setting(itm_nc, tmp_path, mocker, capsys):
     iniconfig = """#
 [settings]
 prompt='tm> '
@@ -600,58 +597,55 @@ cert = ~/certs/my.cert
 key = ~/keys/mykey
 verify = False
 """
+    inifile = tmp_path / "tomcat-manager.ini"
+    tomlfile = tmp_path / "tomcat-manager.toml"
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
-        tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
+    config_file = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+    )
+    config_file.return_value = tomlfile
 
-        config_file = mocker.patch(
-            "tomcatmanager.InteractiveTomcatManager.config_file",
-            new_callable=mock.PropertyMock,
-        )
-        config_file.return_value = tomlfile
+    config_file = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file_old",
+        new_callable=mock.PropertyMock,
+    )
+    config_file.return_value = inifile
 
-        config_file = mocker.patch(
-            "tomcatmanager.InteractiveTomcatManager.config_file_old",
-            new_callable=mock.PropertyMock,
-        )
-        config_file.return_value = inifile
+    with open(inifile, "w", encoding="utf-8") as iniobj:
+        iniobj.write(iniconfig)
 
-        with open(inifile, "w", encoding="utf-8") as iniobj:
-            iniobj.write(iniconfig)
+    itm_nc.onecmd_plus_hooks("config convert")
+    _, err = capsys.readouterr()
 
-        itm_nc.onecmd_plus_hooks("config convert")
-        _, err = capsys.readouterr()
-
-        assert "converting old configuration file to new format" in err
-        assert "conversion failed" in err
-        assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert "converting old configuration file to new format" in err
+    assert "conversion failed" in err
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_config_convert_both_exist(itm_nc, mocker, capsys):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        inifile = pathlib.Path(tmpdir) / "tomcat-manager.ini"
-        inifile.touch()
-        tomlfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
-        tomlfile.touch()
+def test_config_convert_both_exist(itm_nc, tmp_path, mocker, capsys):
+    inifile = tmp_path / "tomcat-manager.ini"
+    inifile.touch()
+    tomlfile = tmp_path / "tomcat-manager.toml"
+    tomlfile.touch()
 
-        config_file = mocker.patch(
-            "tomcatmanager.InteractiveTomcatManager.config_file",
-            new_callable=mock.PropertyMock,
-        )
-        config_file.return_value = tomlfile
+    config_file = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+    )
+    config_file.return_value = tomlfile
 
-        config_file = mocker.patch(
-            "tomcatmanager.InteractiveTomcatManager.config_file_old",
-            new_callable=mock.PropertyMock,
-        )
-        config_file.return_value = inifile
+    config_file = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file_old",
+        new_callable=mock.PropertyMock,
+    )
+    config_file.return_value = inifile
 
-        itm_nc.onecmd_plus_hooks("config convert")
-        _, err = capsys.readouterr()
+    itm_nc.onecmd_plus_hooks("config convert")
+    _, err = capsys.readouterr()
 
-        assert "configuration file exists: cowardly refusing to overwrite it" in err
-        assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert "configuration file exists: cowardly refusing to overwrite it" in err
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
 def test_load_config(mocker):
