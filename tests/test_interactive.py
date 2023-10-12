@@ -158,6 +158,7 @@ def test_command_usage(tomcat_manager_server, command):
 HELP_COMMANDS = [
     "config",
     "settings",
+    "theme",
     "connect",
     "which",
     "disconnect",
@@ -219,6 +220,8 @@ def test_help_matches_argparser(command, capsys):
 
 
 def test_help_set(capsys):
+    # set gets it's own testing mechanism because it doesn't use argparser
+    # it needs to preserve quotes and such so toml parsing works as expected
     itm = tm.InteractiveTomcatManager()
     cmdline = "help set"
     itm.onecmd_plus_hooks(cmdline)
@@ -267,6 +270,78 @@ def test_help_deploy_invalid(capsys):
     assert "local" in out
     assert "server" in out
     assert "context" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+
+def test_help_theme_list(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help theme list"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert "list all themes" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+
+def test_help_theme_clone(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help theme clone"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert "clone a theme" in out
+    assert "name" in out
+    assert "new_name" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+
+def test_help_theme_edit(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help theme edit"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert "edit a user theme" in out
+    assert "name" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+
+def test_help_theme_create(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help theme create"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert "create a new user theme" in out
+    assert "name" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+
+def test_help_theme_delete(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help theme delete"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert "delete a user theme" in out
+    assert "name" in out
+    assert "--force" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+
+def test_help_theme_dir(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help theme dir"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert "theme directory" in out
+    assert itm.exit_code == itm.EXIT_SUCCESS
+
+
+def test_help_theme_invalid(capsys):
+    itm = tm.InteractiveTomcatManager()
+    cmdline = "help theme invalid"
+    itm.onecmd_plus_hooks(cmdline)
+    out, _ = capsys.readouterr()
+    assert "manage themes" in out
+    assert "list" in out
+    assert "dir" in out
+    assert "create" in out
     assert itm.exit_code == itm.EXIT_SUCCESS
 
 
@@ -1019,7 +1094,7 @@ def test_resolve_theme_builtin(mocker):
             return_value=tmppath,
         )
         location, path = itm._resolve_theme(theme_name)
-        assert location == tm.models.ThemeLocation.BUILTIN
+        assert location == tm.interactive_tomcat_manager.ThemeLocation.BUILTIN
         assert path
         assert str(importlib_resources.files("tomcatmanager.themes")) in str(path)
         assert theme_name in str(path)

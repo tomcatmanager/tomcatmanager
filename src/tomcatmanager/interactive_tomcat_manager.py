@@ -1164,15 +1164,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
             metavar="action",
         )
 
-        # dir or directory
-        dir_parser = main_subparsers.add_parser(
-            "dir",
-            description="show the theme directory",
-            help="show the theme directory",
-            formatter_class=main_parser.formatter_class,
-        )
-        dir_parser.set_defaults(func=self.theme_dir)
-
         # list available themes
         list_parser = main_subparsers.add_parser(
             "list",
@@ -1185,14 +1176,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # clone a built-in theme
         clone_parser = main_subparsers.add_parser(
             "clone",
-            description="clone a built-in theme",
-            help="clone a built-in theme",
+            description="clone a theme from the gallery or from one of the built-in themes",
+            help="clone a theme from the gallery or from one of the built-in themes",
             formatter_class=main_parser.formatter_class,
         )
         clone_parser.set_defaults(func=self.theme_clone)
         clone_parser.add_argument(
             "name",
-            help="name of built-in theme to clone to user theme directory",
+            help="name of the gallery or built-in theme to clone to user theme directory",
         )
         clone_parser.add_argument(
             "new_name", nargs="?", default="", help="new name of the theme"
@@ -1242,15 +1233,24 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help="don't prompt for confirmation before deleting",
         )
 
+        # dir or directory
+        dir_parser = main_subparsers.add_parser(
+            "dir",
+            description="show the theme directory",
+            help="show the theme directory",
+            formatter_class=main_parser.formatter_class,
+        )
+        dir_parser.set_defaults(func=self.theme_dir)
+
         # package all the parsers into a dictionary
         parsers = {}
         parsers["theme"] = main_parser
-        parsers["dir"] = dir_parser
         parsers["list"] = list_parser
         parsers["clone"] = clone_parser
         parsers["edit"] = edit_parser
         parsers["create"] = create_parser
         parsers["delete"] = delete_parser
+        parsers["dir"] = dir_parser
         return parsers
 
     @property
