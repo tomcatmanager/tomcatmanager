@@ -124,11 +124,6 @@ def assert_tomcatresponse():
     return AssertResponse()
 
 
-###
-#
-# fixtures for testing TomcatManager()
-#
-###
 @pytest.fixture(scope="session")
 def tomcat_manager_server(request):
     """start a local http server which provides a similar interface to a
@@ -186,7 +181,6 @@ def tomcat(tomcat_manager_server):
     return tmcat
 
 
-
 @pytest.fixture
 def itm():
     """InteractiveTomcatManager with no config file loaded"""
@@ -205,14 +199,3 @@ def localwar_file():
 def safe_path():
     """a safe path we can deploy apps to"""
     return "/tomcat-manager-test-app"
-
-
-@pytest.fixture
-def server_info():
-    return """Tomcat Version: Apache Tomcat/8.5.82 (Ubuntu)
-OS Name: Linux
-OS Version: 4.4.0-89-generic
-OS Architecture: amd64
-JVM Version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
-JVM Vendor: Oracle Corporation
-"""
