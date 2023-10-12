@@ -744,7 +744,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self.console.print(cmds)
 
                 cmds = self._help_section("Settings, configuration, and tools")
+                self._help_command(cmds, "settings", self.do_settings.__doc__)
+                self._help_command(cmds, "set", self.do_set.__doc__)
                 self._help_command(cmds, "config", self.do_config.__doc__)
+                self._help_command(cmds, "theme", self.do_theme.__doc__)
                 self._help_command(
                     cmds, "edit", "edit a file in the preferred text editor"
                 )
@@ -758,15 +761,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 self._help_command(
                     cmds, "run_pyscript", "run a file containing a python script"
                 )
-                self._help_command(cmds, "settings", self.do_settings.__doc__)
-                self._help_command(cmds, "set", self.do_set.__doc__)
                 self._help_command(
                     cmds, "shell", "execute a command in the operating system shell"
                 )
                 self._help_command(
                     cmds, "shortcuts", "show shortcuts for other commands"
                 )
-                self._help_command(cmds, "theme", self.do_theme.__doc__)
                 self.console.print(cmds)
 
                 cmds = self._help_section("Other")
@@ -1267,10 +1267,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.exit_code = self.EXIT_ERROR
         # call the function for the subcommand, which was set on the argparser
         args.func(args)
-
-    def help_theme(self):
-        """Show help for the 'theme' command"""
-        self.show_help_from(self.theme_parser)
 
     def theme_dir(self, args: argparse.Namespace):
         """show the theme directory"""
