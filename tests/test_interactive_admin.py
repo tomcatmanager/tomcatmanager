@@ -115,6 +115,7 @@ USAGE_COMMANDS = [
     "deploy context /tmp/contextfile.xml",
     "redeploy",
     "redeploy unknown",
+    "redeploy unknown unknown",
     "redeploy local",
     "redeploy server",
     "redeploy context",
@@ -218,6 +219,26 @@ def test_help_set(itm_nc, capsys):
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
+DEPLOY_USAGE_COMMANDS = [
+    "help deploy",
+    "help deploy invalid",
+    "help deploy invalid invalid",
+    "help redeploy",
+    "help redeploy invalid",
+    "help redeploy invalid invalid",]
+
+
+@pytest.mark.parametrize("command", DEPLOY_USAGE_COMMANDS)
+def test_help_deploy(itm_nc, command, capsys):
+    itm_nc.onecmd_plus_hooks(command)
+    out, _ = capsys.readouterr()
+    assert "deployment_method" in out
+    assert "local" in out
+    assert "server" in out
+    assert "context" in out
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+
+
 def test_help_deploy_local(itm_nc, capsys):
     cmdline = "help deploy local"
     itm_nc.onecmd_plus_hooks(cmdline)
@@ -246,14 +267,21 @@ def test_help_deploy_context(itm_nc, capsys):
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_help_deploy_invalid(itm_nc, capsys):
-    cmdline = "help deploy invalid"
-    itm_nc.onecmd_plus_hooks(cmdline)
+THEME_USAGE_COMMANDS = [
+    "help theme",
+    "help theme invalid",
+    "help theme invalid invalid",
+]
+
+
+@pytest.mark.parametrize("command", THEME_USAGE_COMMANDS)
+def test_help_theme(itm_nc, command, capsys):
+    itm_nc.onecmd_plus_hooks(command)
     out, _ = capsys.readouterr()
-    assert "deployment_method" in out
-    assert "local" in out
-    assert "server" in out
-    assert "context" in out
+    assert "action" in out
+    assert "list" in out
+    assert "create" in out
+    assert "dir" in out
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
@@ -308,17 +336,6 @@ def test_help_theme_dir(itm_nc, capsys):
     itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
     assert "theme directory" in out
-    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
-
-
-def test_help_theme_invalid(itm_nc, capsys):
-    cmdline = "help theme invalid"
-    itm_nc.onecmd_plus_hooks(cmdline)
-    out, _ = capsys.readouterr()
-    assert "manage themes" in out
-    assert "list" in out
-    assert "dir" in out
-    assert "create" in out
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
