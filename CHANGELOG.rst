@@ -18,6 +18,7 @@ TODO
   that setting back to it's default value when it reloads the config
 
 - figure out out to style the prompt
+-
 - maybe have cmd2.Cmd call a pprompt() method when it needs to output a stylized
   prompt and have cmd.prompt contain the "ascii" rendered version of it
 
@@ -26,14 +27,7 @@ TODO
 - cmd2.Cmd has async_alert(), and async_update_prompt(), and set_window_title()
   which we will need to accommodate, or replace with rich
 
-- fix all importlib_resources to use a context manager like
-  with importlib_resources.path("tomcatmanager.templates", "theme.toml") as
-  template_path:
-  or use importlib_resources.path("tomcatmanager.templates", "theme.toml").read_text()
-
-- switch quiet setting to be called verbose, default is true
-
-- use tmp_path pytest fixture instead of creating our own temporary directories
+- switch quiet setting to be called verbose, default is true?
 
 
 Added

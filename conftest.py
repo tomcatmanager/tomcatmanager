@@ -5,6 +5,8 @@
 
 import pathlib
 import pytest
+import tempfile
+from unittest import mock
 
 import tomcatmanager as tm
 
@@ -206,6 +208,59 @@ def itm(itm_nc, tomcat_manager_server):
     """
     itm_nc.onecmd_plus_hooks(tomcat_manager_server.connect_command)
     return itm_nc
+
+
+@pytest.fixture
+def itm_with_config(mocker, tmp_path):
+    # make this fixture return a function we can call
+    # the config string may need to be dynamically created in a test
+    # so we can't use @pytest.mark to attach the data to the test
+    #
+    # use it like this:
+    #
+    # def test_mytest(itm_with_config):
+    #     config_string = f"""
+    #         [settings]
+    #         prompt = "$ "
+    #         """
+    #     itm = itm_with_config(config_string)
+    #
+    # itm will now contain an InteractiveTomcatManager instance that has loaded
+    # the configuration in `config_string`
+    #
+    def func(config_string):
+        # prevent notification of conversion from old to new format
+        mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file_old",
+            new_callable=mock.PropertyMock,
+            return_value=None,
+        )
+
+        # create an interactive tomcat manager object
+        itm = tm.InteractiveTomcatManager(loadconfig=False)
+        # write the passed string to a temp file
+        configfile = tmp_path / "tomcat-manager.toml"
+        with open(configfile, "w", encoding="utf-8") as fobj:
+            fobj.write(config_string)
+
+        # itm aleady tried to load a config file, which it may or may not
+        # have found, depending on if you have one or not
+        # we are now going to patch up the config_file to point to
+        # a known file, and the reload the config from that
+        mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file",
+            new_callable=mock.PropertyMock,
+            return_value=configfile,
+        )
+        # this has to be inside the context manager for tmpdir because
+        # the config file will get deleted when the context manager is
+        # no longer in scope
+        itm.load_config()
+        # this just verifies that our patch worked
+        assert itm.config_file == configfile
+        return itm
+
+    return func
 
 
 @pytest.fixture

@@ -35,13 +35,11 @@ except AttributeError:  # pragma: nocover
     import importlib_resources
 
 import pathlib
-import tempfile
 import textwrap
 from unittest import mock
 import uuid
 
 import pytest
-import requests
 
 import tomcatmanager as tm
 
@@ -51,42 +49,6 @@ import tomcatmanager as tm
 # helper functions and fixtures
 #
 ###
-def itm_with_config(mocker, configstring):
-    """Return an InteractiveTomcatManager object with the config set from the passed string."""
-
-    # prevent notification of conversion from old to new format
-    mocker.patch(
-        "tomcatmanager.InteractiveTomcatManager.config_file_old",
-        new_callable=mock.PropertyMock,
-        return_value=None,
-    )
-
-    # create an interactive tomcat manager object
-    itm = tm.InteractiveTomcatManager(loadconfig=False)
-    # write the passed string to a temp file
-    with tempfile.TemporaryDirectory() as tmpdir:
-        configfile = pathlib.Path(tmpdir) / "tomcat-manager.toml"
-        with open(configfile, "w", encoding="utf-8") as fobj:
-            fobj.write(configstring)
-
-        # itm aleady tried to load a config file, which it may or may not
-        # have found, depending on if you have one or not
-        # we are now going to patch up the config_file to point to
-        # a known file, and the reload the config from that
-        mocker.patch(
-            "tomcatmanager.InteractiveTomcatManager.config_file",
-            new_callable=mock.PropertyMock,
-            return_value=configfile,
-        )
-        # this has to be inside the context manager for tmpdir because
-        # the config file will get deleted when the context manager is
-        # no longer in scope
-        itm.load_config()
-        # this just verifies that our patch worked
-        assert itm.config_file == configfile
-    return itm
-
-
 def assert_connected_to(itm, url, capsys):
     itm.onecmd_plus_hooks("which")
     out, _ = capsys.readouterr()
@@ -225,7 +187,8 @@ DEPLOY_USAGE_COMMANDS = [
     "help deploy invalid invalid",
     "help redeploy",
     "help redeploy invalid",
-    "help redeploy invalid invalid",]
+    "help redeploy invalid invalid",
+]
 
 
 @pytest.mark.parametrize("command", DEPLOY_USAGE_COMMANDS)
@@ -665,13 +628,13 @@ def test_config_convert_both_exist(itm_nc, tmp_path, mocker, capsys):
     assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
-def test_load_config(mocker):
+def test_load_config(itm_with_config):
     prompt = str(uuid.uuid1())
-    configstring = f"""
+    config_string = f"""
         [settings]
         prompt = "{prompt}"
         """
-    itm = itm_with_config(mocker, configstring)
+    itm = itm_with_config(config_string)
     assert itm.prompt == prompt
 
 
@@ -691,74 +654,71 @@ def test_noload_config(capsys):
     assert "skipping load of configuration file" in err
 
 
-def test_load_config_bogus_setting(mocker):
-    configstring = """
+def test_load_config_bogus_setting(itm_with_config):
+    config_string = """
         [settings]
         bogus = true
         """
     # this shouldn't throw any exceptions
-    itm_with_config(mocker, configstring)
+    _ = itm_with_config(config_string)
 
 
-def test_load_config_not_boolean(itm_nc, mocker):
-    configstring = """
+def test_load_config_not_boolean(itm_nc, itm_with_config):
+    config_string = """
         [settings]
         echo = "not a boolean"
         """
     # this shouldn't throw any exceptions
-    itm = itm_with_config(mocker, configstring)
-    # make sure the echo setting is the same
-    # as when we don't load a config file
+    itm = itm_with_config(config_string)
+    # make sure echo didn't change
     assert itm.echo == itm_nc.echo
 
 
-def test_load_config_echo_false(mocker):
-    configstring = """
+def test_load_config_echo_false(itm_with_config):
+    config_string = """
         [settings]
         echo = false
         """
     # this shouldn't throw any exceptions
-    itm = itm_with_config(mocker, configstring)
-    # make sure the echo setting is the same
-    # as when we don't load a config file
+    itm = itm_with_config(config_string)
     assert itm.echo is False
 
 
-def test_load_config_echo_true(mocker):
-    configstring = """
+def test_load_config_echo_true(itm_with_config):
+    config_string = """
         [settings]
         echo = true
         """
     # this shouldn't throw any exceptions
-    itm = itm_with_config(mocker, configstring)
+    itm = itm_with_config(config_string)
     # make sure the echo setting is the same
     # as when we don't load a config file
     assert itm.echo is True
 
 
-def test_load_config_not_integer(itm, mocker):
-    configstring = """
+def test_load_config_not_integer(itm_nc, itm_with_config):
+    config_string = """
         [settings]
         timeout = "notaninteger"
         """
     # this shouldn't throw any exceptions
-    itm = itm_with_config(mocker, configstring)
+    itm = itm_with_config(config_string)
     # make sure the timeout setting is the same
     # as when we don't load a config file
-    assert itm.timeout == itm.timeout
+    assert itm.timeout == itm_nc.timeout
 
 
-def test_load_config_syntax_error(mocker, capsys):
-    configstring = """
+def test_load_config_syntax_error(itm_nc, itm_with_config, capsys):
+    config_string = """
         [settings]
         prompt = "tm>
         """
-    itm = itm_with_config(mocker, configstring)
+    itm = itm_with_config(config_string)
     _, err = capsys.readouterr()
     assert "error loading configuration file" in err
     # make sure that loading the broken configuration file didn't
     # change the prompt
-    assert itm.prompt == itm.prompt
+    assert itm.prompt == itm_nc.prompt
 
 
 def test_show_invalid(itm_nc, capsys):
