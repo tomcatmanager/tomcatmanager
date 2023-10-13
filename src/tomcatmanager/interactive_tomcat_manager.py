@@ -41,7 +41,7 @@ except AttributeError:  # pragma: nocover
     # python < 3.8 doesn't have .files in the standard library importlib.resources
     # we'll go get the one from pypi, which has it
     # pylint: disable=import-error
-    import importlib_resources
+    import importlib_resources  # type: ignore
 
 import os
 import pathlib
@@ -136,6 +136,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         "tm.theme.border",
         "tm.theme.name",
     ]
+
+    THEME_URL = "https://raw.githubusercontent.com/tomcatmanager/themes/main"
 
     # for configuration
     app_name = "tomcat-manager"
@@ -1262,9 +1264,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def do_theme(self, cmdline: cmd2.Statement):
         """manage themes"""
         args = self.parse_args(self.theme_parser, cmdline.argv)
-        if not args.func:
-            self.help_theme()
-            self.exit_code = self.EXIT_ERROR
+        # TODO I don't think we need these next 3 lines, argparse
+        # will bomb and print usage if they choose an invalid command
+        #
+        # if not args.func:
+        #    self.help_theme()
+        #    self.exit_code = self.EXIT_ERROR
         # call the function for the subcommand, which was set on the argparser
         args.func(args)
 
@@ -1282,7 +1287,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         gallery_themes = []
         with self._progressfactory("retrieving themes from gallery"):
             response = requests.get(
-                "https://raw.githubusercontent.com/tomcatmanager/themes/main/themes.toml",
+                f"{self.THEME_URL}/themes.toml",
                 timeout=self.timeout,
             )
         if response.status_code == 200:
@@ -1384,7 +1389,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
             )
 
         self.exit_code = self.EXIT_SUCCESS
-        return
 
     def theme_clone(self, args: argparse.Namespace):
         """clone a gallery theme to the user theme directory"""
@@ -1398,7 +1402,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         theme_str = None
         with self._progressfactory("retrieving themes from gallery"):
             response = requests.get(
-                f"https://raw.githubusercontent.com/tomcatmanager/themes/main/themes/{args.name}.toml",
+                f"{self.THEME_URL}/themes/{args.name}.toml",
                 timeout=self.timeout,
             )
         if response.status_code == 200:
@@ -1530,7 +1534,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if not args.force:
             confirm = input(f"Type 'y' or 'yes' to delete theme '{name}': ")
             if confirm not in ["y", "yes"]:
-                self.perror(f"no confirmation: theme not deleted")
+                self.perror("no confirmation: theme not deleted")
                 self.exit_code = self.EXIT_ERROR
                 return
 
@@ -2669,10 +2673,11 @@ class ThemeLocation(enum.Enum):
     GALLERY = "gallery"
 
 
+# pylint: disable=too-few-public-methods
 class Theme:
     """Store information about a theme."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         """
         Initialize from the plain text response from a Tomcat server.
 
@@ -2685,10 +2690,10 @@ class Theme:
 
     @property
     def name(self):
+        """name of the theme"""
         if self.file:
             return self.file.stem
-        else:
-            return None
+        return None
 
 
 # pylint: disable=too-many-ancestors

@@ -32,7 +32,7 @@ except AttributeError:  # pragma: nocover
     # python < 3.8 doesn't have .files in the standard library importlib.resources
     # we'll go get the one from pypi, which has it
     # pylint: disable=import-error
-    import importlib_resources
+    import importlib_resources  # type: ignore
 
 import pathlib
 import textwrap
@@ -89,6 +89,7 @@ USAGE_COMMANDS = [
     "reload",
     "restart",
     "sessions",
+    "theme",
     "theme invalid",
     "expire",
     "expire /tmp/somepath",
@@ -967,6 +968,11 @@ def test_status_animation_none(itm_nc):
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
+###
+#
+# test theme setting, loading, and commands
+#
+###
 def test_theme_default_none(itm_nc):
     assert itm_nc.theme == ""
 
@@ -980,6 +986,7 @@ def test_theme_use_embedded(itm_nc, tmp_path, mocker):
         new_callable=mock.PropertyMock,
         return_value=tmp_path,
     )
+    assert not itm_nc.theme
     itm_nc.onecmd_plus_hooks(f"set theme = '{theme}'")
     assert itm_nc.theme == theme
 
@@ -995,12 +1002,10 @@ def test_theme_invalid(itm_nc, capsys):
 
 
 def test_resolve_theme_builtin(itm_nc, tmp_path, mocker):
-    # this is one of our builtin themes
     theme_name = "default-dark"
     # patch the empty temporary directory into user_theme_dir
     # this avoids the test failing if the user running the test
     # happens to have cloned one of the built-in themes
-
     mocker.patch(
         "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
         new_callable=mock.PropertyMock,
@@ -1038,13 +1043,6 @@ def test_resolve_theme_user(itm_nc, tmp_path, mocker, capsys):
     out, _ = capsys.readouterr()
     assert not out
     assert itm_nc.theme == theme
-
-
-def test_user_theme_dir(itm_nc):
-    assert "themes" in str(itm_nc.user_theme_dir)
-    # if appdirs doesn't exist, config_file shouldn't either
-    itm_nc.appdirs = None
-    assert not itm_nc.user_theme_dir
 
 
 def test_apply_theme_file_parse_error(itm_nc, tmp_path, mocker, capsys):
@@ -1110,6 +1108,20 @@ def test_apply_theme_invalid_theme_color(itm_nc, tmp_path, mocker, capsys):
     assert not out
     assert not itm_nc.theme
     assert itm_nc.theme == ""
+
+
+def test_user_theme_dir(itm_nc):
+    assert "themes" in str(itm_nc.user_theme_dir)
+    # if appdirs doesn't exist, config_file shouldn't either
+    itm_nc.appdirs = None
+    assert not itm_nc.user_theme_dir
+
+
+def test_theme_dir(itm_nc, capsys):
+    itm_nc.onecmd_plus_hooks("theme dir")
+    out, err = capsys.readouterr()
+    assert out.rstrip() == str(itm_nc.user_theme_dir)
+    assert not err
 
 
 ###
