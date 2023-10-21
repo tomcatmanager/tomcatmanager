@@ -1124,6 +1124,14 @@ def test_theme_dir(itm_nc, capsys):
     assert not err
 
 
+def test_theme_list(itm_nc, capsys):
+    # turn off the status output
+    itm_nc.quiet=True
+    itm_nc.onecmd_plus_hooks("theme list")
+    out, err = capsys.readouterr()
+    assert not err
+
+
 ###
 #
 # miscellaneous commands

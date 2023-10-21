@@ -29,6 +29,7 @@ Classes and functions for the 'tomcat-manager' command line program.
 import argparse
 import ast
 import configparser
+import contextlib
 import enum
 import getpass
 import http.client
@@ -447,36 +448,34 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
     def _progressfactory(self, message: str) -> rich.progress.Progress:
         """generate a progress object"""
+        if self.quiet or not message:
+            # return a no-op context manager (that means we won't get any output)
+            return contextlib.nullcontext()
+
         if self.feedback_to_output:
             cons = self.console
         else:
             cons = self.error_console
-        if self.quiet or not message:
-            # we still need the progress object so the context manager
-            # works, but this will disable all output from it
+
+        # create a custom status/progress display
+        msg = rich.text.Text(
+            f"{self.status_prefix}{message}{self.status_suffix}",
+            style="tm.status",
+        )
+        text_column = rich.progress.RenderableColumn(msg)
+        if self.status_animation:
+            spinner_column = rich.progress.SpinnerColumn(
+                spinner_name=self.status_animation,
+                style="tm.animation",
+            )
             progress = rich.progress.Progress(
-                console=cons, transient=True, disable=True
+                text_column, spinner_column, console=cons
             )
         else:
-            # create a custom status/progress display
-            msg = rich.text.Text(
-                f"{self.status_prefix}{message}{self.status_suffix}",
-                style="tm.status",
-            )
-            text_column = rich.progress.RenderableColumn(msg)
-            if self.status_animation:
-                spinner_column = rich.progress.SpinnerColumn(
-                    spinner_name=self.status_animation,
-                    style="tm.animation",
-                )
-                progress = rich.progress.Progress(
-                    text_column, spinner_column, console=cons
-                )
-            else:
-                progress = rich.progress.Progress(text_column, console=cons)
-            # gotta have a task in order for the status spinner to render,
-            # but the name we use here doesn't matter
-            progress.add_task("notshown")
+            progress = rich.progress.Progress(text_column, console=cons)
+        # gotta have a task in order for the status spinner to render,
+        # but the name we use here doesn't matter
+        progress.add_task("notshown")
         return progress
 
     def _apptag(self, path: str, version: str) -> str:
