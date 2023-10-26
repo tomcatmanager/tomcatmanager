@@ -1125,6 +1125,14 @@ def test_theme_dir(itm_nc, capsys):
     assert not err
 
 
+def test_theme_list(itm_nc, capsys):
+    # turn off the status output
+    itm_nc.quiet=True
+    itm_nc.onecmd_plus_hooks("theme list")
+    out, err = capsys.readouterr()
+    assert not err
+
+
 def test_theme_edit_current_theme(itm_nc, tmp_path, mocker):
     # set an editor so we are sure cmd2 will try and call the editor
     itm_nc.editor = "fooedit"
