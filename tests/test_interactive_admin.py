@@ -1111,8 +1111,9 @@ def test_apply_theme_invalid_theme_color(itm_nc, tmp_path, mocker, capsys):
 
 
 def test_user_theme_dir(itm_nc):
+    # there should be a theme dir...
     assert "themes" in str(itm_nc.user_theme_dir)
-    # if appdirs doesn't exist, config_file shouldn't either
+    # unless appdirs doesn't exist
     itm_nc.appdirs = None
     assert not itm_nc.user_theme_dir
 
@@ -1122,6 +1123,135 @@ def test_theme_dir(itm_nc, capsys):
     out, err = capsys.readouterr()
     assert out.rstrip() == str(itm_nc.user_theme_dir)
     assert not err
+
+
+def test_theme_edit_current_theme(itm_nc, tmp_path, mocker):
+    # set an editor so we are sure cmd2 will try and call the editor
+    itm_nc.editor = "fooedit"
+    # point the user theme dir to our temporary directory
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    # prevent the system call
+    mock_os_system = mocker.patch("os.system")
+    itm_nc.onecmd_plus_hooks("theme clone default-dark")
+    itm_nc.onecmd_plus_hooks("set theme='default-dark'")
+    itm_nc.onecmd_plus_hooks("theme edit")
+    # but let's check to make sure the editor was called
+    assert mock_os_system.call_count == 1
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+
+def test_theme_edit_named_theme(itm_nc, tmp_path, mocker):
+    # set an editor so we are sure cmd2 will try and call the editor
+    itm_nc.editor = "fooedit"
+    # point the user theme dir to our temporary directory
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    # prevent the system call
+    mock_os_system = mocker.patch("os.system")
+    itm_nc.onecmd_plus_hooks("theme clone default-light")
+    itm_nc.onecmd_plus_hooks("theme edit default-light")
+    # but let's check to make sure the editor was called
+    assert mock_os_system.call_count == 1
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+
+def test_theme_edit_builtin(itm_nc, tmp_path, mocker, capsys):
+    # set an editor so we are sure cmd2 will try and call the editor
+    itm_nc.editor = "fooedit"
+    # point the user theme dir to our temporary directory
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    # prevent the system call
+    mock_os_system = mocker.patch("os.system")
+    itm_nc.onecmd_plus_hooks("theme edit default-light")
+    # but let's check to make sure the editor was not called
+    assert mock_os_system.call_count == 0
+    out, err = capsys.readouterr()
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert "theme is not editable" in err
+    assert not out
+
+def test_theme_edit_unknown_theme(itm_nc, tmp_path, mocker, capsys):
+    # set an editor so we are sure cmd2 will try and call the editor
+    itm_nc.editor = "fooedit"
+    # point the user theme dir to our temporary directory
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    # prevent the system call
+    mock_os_system = mocker.patch("os.system")
+    itm_nc.onecmd_plus_hooks("theme edit bogus")
+    # but let's check to make sure the editor was not called
+    assert mock_os_system.call_count == 0
+    out, err = capsys.readouterr()
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert "unknown theme" in err
+    assert not out
+
+def test_theme_edit_no_theme(itm_nc, tmp_path, mocker, capsys):
+    # set an editor so we are sure cmd2 will try and call the editor
+    itm_nc.editor = "fooedit"
+    # point the user theme dir to our temporary directory
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    # prevent the system call
+    mock_os_system = mocker.patch("os.system")
+    itm_nc.onecmd_plus_hooks("theme edit")
+    # but let's check to make sure the editor was not called
+    assert mock_os_system.call_count == 0
+    out, err = capsys.readouterr()
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert "syntax error: no theme given" in err
+    assert not out
+
+def test_theme_edit_no_editor(itm_nc, capsys):
+    # make sure we have no editor, which will trigger the desired error
+    itm_nc.editor = ""
+    itm_nc.onecmd_plus_hooks("theme edit")
+    out, err = capsys.readouterr()
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert "no editor:" in err
+    assert not out
+
+
+def test_theme_edit_error_applying(itm_nc, tmp_path, mocker):
+    # if we edit the current theme, we have to reapply it after the editor
+    # closes. Simulate an error in applying the theme (i.e. like one that would)
+    # be generated if you had a toml syntax error
+    # set an editor so we are sure cmd2 will try and call the editor
+    itm_nc.editor = "fooedit"
+    # point the user theme dir to our temporary directory
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    itm_nc.onecmd_plus_hooks("theme clone default-dark")
+    itm_nc.onecmd_plus_hooks("set theme='default-dark'")
+    # prevent the system call for the edit
+    mock_os_system = mocker.patch("os.system")
+    # and make sure we can't apply the theme
+    apply_mock = mocker.patch("tomcatmanager.InteractiveTomcatManager._apply_theme")
+    apply_mock.return_value = False
+    itm_nc.onecmd_plus_hooks("theme edit")
+    # but let's check to make sure the editor was called
+    assert mock_os_system.call_count == 1
+    # we don't check error messages, because those all get generated in _apply_theme
+    # but we should have an error for our exit code
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
 
 
 ###

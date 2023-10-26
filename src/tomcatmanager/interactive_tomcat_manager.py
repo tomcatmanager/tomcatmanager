@@ -1492,6 +1492,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.pfeedback(f"reloading theme: '{self.theme}'")
             if not self._apply_theme(name):
                 self.exit_code = self.EXIT_ERROR
+                return
 
         self.exit_code = self.EXIT_SUCCESS
         return
