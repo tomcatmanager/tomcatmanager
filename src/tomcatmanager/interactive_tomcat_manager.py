@@ -468,9 +468,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 spinner_name=self.status_animation,
                 style="tm.animation",
             )
-            progress = rich.progress.Progress(
-                text_column, spinner_column, console=cons
-            )
+            progress = rich.progress.Progress(text_column, spinner_column, console=cons)
         else:
             progress = rich.progress.Progress(text_column, console=cons)
         # gotta have a task in order for the status spinner to render,

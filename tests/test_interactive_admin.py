@@ -1127,7 +1127,7 @@ def test_theme_dir(itm_nc, capsys):
 
 def test_theme_list(itm_nc, capsys):
     # turn off the status output
-    itm_nc.quiet=True
+    itm_nc.quiet = True
     itm_nc.onecmd_plus_hooks("theme list")
     out, err = capsys.readouterr()
     assert not err
@@ -1151,6 +1151,7 @@ def test_theme_edit_current_theme(itm_nc, tmp_path, mocker):
     assert mock_os_system.call_count == 1
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
+
 def test_theme_edit_named_theme(itm_nc, tmp_path, mocker):
     # set an editor so we are sure cmd2 will try and call the editor
     itm_nc.editor = "fooedit"
@@ -1167,6 +1168,7 @@ def test_theme_edit_named_theme(itm_nc, tmp_path, mocker):
     # but let's check to make sure the editor was called
     assert mock_os_system.call_count == 1
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+
 
 def test_theme_edit_builtin(itm_nc, tmp_path, mocker, capsys):
     # set an editor so we are sure cmd2 will try and call the editor
@@ -1187,6 +1189,7 @@ def test_theme_edit_builtin(itm_nc, tmp_path, mocker, capsys):
     assert "theme is not editable" in err
     assert not out
 
+
 def test_theme_edit_unknown_theme(itm_nc, tmp_path, mocker, capsys):
     # set an editor so we are sure cmd2 will try and call the editor
     itm_nc.editor = "fooedit"
@@ -1206,6 +1209,7 @@ def test_theme_edit_unknown_theme(itm_nc, tmp_path, mocker, capsys):
     assert "unknown theme" in err
     assert not out
 
+
 def test_theme_edit_no_theme(itm_nc, tmp_path, mocker, capsys):
     # set an editor so we are sure cmd2 will try and call the editor
     itm_nc.editor = "fooedit"
@@ -1224,6 +1228,7 @@ def test_theme_edit_no_theme(itm_nc, tmp_path, mocker, capsys):
     assert itm_nc.exit_code == itm_nc.EXIT_ERROR
     assert "syntax error: no theme given" in err
     assert not out
+
 
 def test_theme_edit_no_editor(itm_nc, capsys):
     # make sure we have no editor, which will trigger the desired error
