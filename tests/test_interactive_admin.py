@@ -40,6 +40,7 @@ from unittest import mock
 import uuid
 
 import pytest
+import tomlkit
 
 import tomcatmanager as tm
 
@@ -1132,6 +1133,44 @@ def test_theme_list(itm_nc, capsys):
     out, err = capsys.readouterr()
     assert not err
 
+
+def test_theme_list_open_err(itm_nc, tmp_path, mocker):
+    # point the user theme dir to our temporary directory
+    # to make sure there are no user themes
+    mock_theme_dir = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    mock_theme_dir.return_value = tmp_path
+
+    # generate errors when opening files for built-in themes
+    mock_open = mocker.patch("pathlib.Path.open")
+    mock_open.side_effect = FileNotFoundError()
+    itm_nc.onecmd_plus_hooks("theme list")
+    # we have two built-in themes, so the mock should have been called
+    # twice
+    assert mock_open.call_count == 2
+
+def test_theme_list_toml_err_builtin(itm_nc, tmp_path, mocker, capsys):
+    # make sure there are no user themes
+    mock_theme_dir = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    mock_theme_dir.return_value = tmp_path
+
+    # generate errors when loading built-in themes
+    mock_load = mocker.patch("tomlkit.load")
+    mock_load.side_effect = tomlkit.exceptions.TOMLKitError()
+    # suppress feedback
+    itm_nc.quiet = True
+    itm_nc.onecmd_plus_hooks("theme list")
+    # we have two built-in themes, so the mock should have been called
+    # twice
+    assert mock_load.call_count == 2
+    out, err = capsys.readouterr()
+    assert not err
+    assert "No built-in or user themes available." in out
 
 def test_theme_edit_current_theme(itm_nc, tmp_path, mocker):
     # set an editor so we are sure cmd2 will try and call the editor

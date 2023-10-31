@@ -1328,13 +1328,20 @@ class InteractiveTomcatManager(cmd2.Cmd):
         for path in importlib_resources.files("tomcatmanager.themes").iterdir():
             if path.suffix == ".toml":
                 # go read the theme in to get the description
-                with path.open("r", encoding="utf-8") as theme_fobj:
-                    theme_def = tomlkit.load(theme_fobj)
-                    # TODO totally need more error checking here
-                    try:
+                tdesc = ""
+                try:
+                    with path.open("r", encoding="utf-8") as theme_fobj:
+                        theme_def = tomlkit.load(theme_fobj)
                         tdesc = theme_def["description"]
-                    except tomlkit.exceptions.TOMLKitError:
-                        tdesc = ""
+                except OSError:
+                    # this really shouldn't happen so much for the built-in themes
+                    # but if it doesn, don't show it in the list
+                    continue
+                except tomlkit.exceptions.TOMLKitError:
+                    # this really shouldnt' happen either, because we should ship
+                    # valid built-in themes. But if it does, skipt it because
+                    # the user can't load it and they can't edit it
+                    continue
                 theme = Theme(
                     location=ThemeLocation.BUILTIN,
                     file=pathlib.Path(path.name),
@@ -1345,13 +1352,20 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if self.user_theme_dir.exists():
             for path in self.user_theme_dir.iterdir():
                 if path.suffix == ".toml":
-                    with path.open("r", encoding="utf-8") as theme_fobj:
-                        theme_def = tomlkit.load(theme_fobj)
-                        # TODO totally need more error checking here
-                        try:
+                    tdesc = ""
+                    try:
+                        with path.open("r", encoding="utf-8") as theme_fobj:
+                            theme_def = tomlkit.load(theme_fobj)
                             tdesc = theme_def["description"]
-                        except tomlkit.exceptions.TOMLKitError:
-                            tdesc = ""
+                    except OSError:
+                        # file couldn't be opened, or an error occured reading
+                        # it. best not show this one in the list, so we skip over it
+                        continue
+                    except tomlkit.exceptions.TOMLKitError:
+                        # badly formed toml, or no description field
+                        # but the file exists, so show it in the list but
+                        # with no description
+                        pass
                     theme = Theme(
                         location=ThemeLocation.USER,
                         file=pathlib.Path(path.name),
@@ -1374,7 +1388,10 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.console.print("")
         self.console.print("User Themes", style="tm.theme.category")
         self.console.print("─" * 72, style="tm.theme.border")
-        self.console.print(user_table)
+        if user_themes:
+            self.console.print(user_table)
+        else:
+            self.console.print("No built-in or user themes available.")
         if have_builtin:
             self.console.print()
             self.console.print("'*' indicates a read-only built-in theme.")
