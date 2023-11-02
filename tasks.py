@@ -90,22 +90,20 @@ def pylint(context):
 namespace_check.add_task(pylint)
 
 
-@invoke.task(name="black")
-def black_check(context):
-    """Check if code is properly formatted using black"""
-    context.run("black --check *.py tests src docs", echo=True)
+@invoke.task(name="format")
+def format_check(context):
+    """Check if code is properly formatted using ruff"""
+    context.run("ruff format --check *.py tests src docs", echo=True)
 
 
-namespace_check.add_task(black_check)
+namespace_check.add_task(format_check)
 
 
 @invoke.task
-def black(context):
-    """Format code using black"""
-    context.run("black *.py tests src docs", echo=True)
+def format(context):
+    """Format code using ruff"""
+    context.run("ruff format *.py tests src docs", echo=True)
 
-
-namespace.add_task(black)
 
 #####
 #

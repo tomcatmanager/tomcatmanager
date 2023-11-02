@@ -69,8 +69,8 @@ dev = [
     "tox",
     "codecov",
     "pytest-cov",
+    "ruff",
     "pylint",
-    "black",
     "setuptools_scm",
     "wheel",
     "twine",
@@ -101,6 +101,5 @@ where = ["src"]
 tomcatmanager = ["py.typed"]
 
 
-[tool.black]
+[tool.ruff]
 line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312']

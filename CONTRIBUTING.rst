@@ -313,22 +313,22 @@ the code, but pull requests containing these directives will be carefully scruti
 Code Formatting
 ---------------
 
-Use `black <https://black.readthedocs.io/en/stable/index.html>`_ to format your code.
+Use `ruff <https://docs.astral.sh/ruff/>`_ to format your code.
 We use the default configuration, including a line length of 88 characters.
 
-To format all the code in the project using ``black``, do::
+To format all the code in the project using ``ruff``, do::
 
-   $ black *.py tests src docs
+   $ ruff format *.py tests src docs
 
-You can check whether ``black`` would make any changes to the source code by::
+You can check whether ``ruff`` would make any formatting changes to the source code by::
 
-   $ black --check *.py tests src docs
+   $ ruff format --check *.py tests src docs
 
-Black integrates with many common editors and IDE's, that's the easiest way to ensure
+Ruff integrates with many common editors and IDE's, that's the easiest way to ensure
 that your code is always formatted.
 
-Please format the code in your PR using ``black`` before submitting it, this project
-is configured to not allow merges if ``black`` would change anything.
+Please format the code in your PR using ``ruff`` before submitting it, this project
+is configured to not allow merges if ``ruff format`` would change anything.
 
 
 Punctuation and Capitalization for Users

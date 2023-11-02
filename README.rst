@@ -19,9 +19,9 @@ tomcatmanager
 .. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/main?token=3YbxJ1PKwJ
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
-.. image:: https://img.shields.io/badge/code%20style-black-000000
-      :target: https://github.com/psf/black
-      :alt: code style black
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+      :target: https://github.com/astral-sh/ruff
+      :alt: Ruff
 .. image:: https://img.shields.io/github/actions/workflow/status/tomcatmanager/tomcatmanager/doctest.yml?branch=main&label=docs%20%28main%29
       :target: http://tomcatmanager.readthedocs.io/en/stable
       :alt: main branch documentation status
