@@ -5,8 +5,9 @@
 
 import pathlib
 import pytest
-import tempfile
 from unittest import mock
+
+import requests
 
 import tomcatmanager as tm
 
@@ -18,7 +19,7 @@ from tests.mock_server_8_5 import start_mock_server_8_5
 
 ###
 #
-# helper class
+# helper classes
 #
 ###
 # pylint: disable=too-few-public-methods
@@ -274,3 +275,32 @@ def localwar_file():
 def safe_path():
     """a safe path we can deploy apps to in a tomcat server"""
     return "/tomcat-manager-test-app"
+
+
+@pytest.fixture
+def response_with():
+    # make this fixture return a function we can call to create
+    # a requests.Response object suitable for returning from
+    # mocked requests.get() calls
+    #
+    # use it like this:
+    #
+    # def test_mytest(response_with):
+    #     response_str = f"""
+    #         [settings]
+    #         prompt = "$ "
+    #         """
+    #     response = response_with(200, response_string)
+    #
+    # response will now contain a requests.Response() instance that has
+    # a status_code of 200 and a .text attribute containing response_string
+    #
+    def func(status_code, response_str):
+        """make a requests.Response object containing the passed string content"""
+        resp = requests.Response()
+        resp.status_code = status_code
+        resp.encoding = "utf-8"
+        resp._content = bytes(response_str, resp.encoding)
+        return resp
+
+    return func

@@ -1185,7 +1185,7 @@ def test_theme_list_toml_err(itm_nc, tmp_path, mocker, capsys):
     assert out
 
 
-def test_theme_edit_current_theme(itm_nc, tmp_path, mocker):
+def test_theme_edit_current_theme(itm_nc, tmp_path, mocker, response_with):
     # set an editor so we are sure cmd2 will try and call the editor
     itm_nc.editor = "fooedit"
     # point the user theme dir to our temporary directory
@@ -1196,6 +1196,10 @@ def test_theme_edit_current_theme(itm_nc, tmp_path, mocker):
     theme_dir_mock.return_value = tmp_path
     # prevent the system call
     mock_os_system = mocker.patch("os.system")
+    # mock the network request to the gallery
+    response = response_with(404, "")
+    mocker.patch("requests.get", return_value=response)
+
     itm_nc.onecmd_plus_hooks("theme clone default-dark")
     itm_nc.onecmd_plus_hooks("set theme='default-dark'")
     itm_nc.onecmd_plus_hooks("theme edit")
@@ -1204,7 +1208,7 @@ def test_theme_edit_current_theme(itm_nc, tmp_path, mocker):
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
 
-def test_theme_edit_named_theme(itm_nc, tmp_path, mocker):
+def test_theme_edit_named_theme(itm_nc, tmp_path, mocker, response_with):
     # set an editor so we are sure cmd2 will try and call the editor
     itm_nc.editor = "fooedit"
     # point the user theme dir to our temporary directory
@@ -1215,6 +1219,10 @@ def test_theme_edit_named_theme(itm_nc, tmp_path, mocker):
     theme_dir_mock.return_value = tmp_path
     # prevent the system call
     mock_os_system = mocker.patch("os.system")
+    # mock the network request to the gallery
+    response = response_with(404, "")
+    mocker.patch("requests.get", return_value=response)
+
     itm_nc.onecmd_plus_hooks("theme clone default-light")
     itm_nc.onecmd_plus_hooks("theme edit default-light")
     # but let's check to make sure the editor was called
@@ -1292,7 +1300,7 @@ def test_theme_edit_no_editor(itm_nc, capsys):
     assert not out
 
 
-def test_theme_edit_error_applying(itm_nc, tmp_path, mocker):
+def test_theme_edit_error_applying(itm_nc, tmp_path, mocker, response_with):
     # if we edit the current theme, we have to reapply it after the editor
     # closes. Simulate an error in applying the theme (i.e. like one that would)
     # be generated if you had a toml syntax error
@@ -1304,6 +1312,10 @@ def test_theme_edit_error_applying(itm_nc, tmp_path, mocker):
         new_callable=mock.PropertyMock,
     )
     theme_dir_mock.return_value = tmp_path
+    # mock the network request to the gallery
+    response = response_with(404, "")
+    mocker.patch("requests.get", return_value=response)
+
     itm_nc.onecmd_plus_hooks("theme clone default-dark")
     itm_nc.onecmd_plus_hooks("set theme='default-dark'")
     # prevent the system call for the edit
@@ -1317,6 +1329,68 @@ def test_theme_edit_error_applying(itm_nc, tmp_path, mocker):
     # we don't check error messages, because those all get generated in _apply_theme
     # but we should have an error for our exit code
     assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+
+
+def test_theme_clone_from_gallery(itm_nc, tmp_path, mocker, response_with):
+    # mock a theme coming from the gallery
+    theme_name = "mockedtheme"
+    theme_str = """
+    description="noop"
+    """
+    response = response_with(200, theme_str)
+    get_mock = mocker.patch("requests.get", return_value=response)
+    # patch the user theme dir
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+
+    itm_nc.onecmd_plus_hooks(f"theme clone {theme_name}")
+    assert get_mock.call_count == 1
+    new_theme_path = tmp_path / f"{theme_name}.toml"
+    assert new_theme_path.is_file()
+
+
+def test_theme_clone_unknown(itm_nc, tmp_path, mocker, response_with):
+    # mock no theme in the gallery
+    theme_name = "unknowntheme"
+    response = response_with(404, "")
+    get_mock = mocker.patch("requests.get", return_value=response)
+    # patch the user theme dir
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+
+    itm_nc.onecmd_plus_hooks(f"theme clone {theme_name}")
+    assert get_mock.call_count == 1
+    new_theme_path = tmp_path / f"{theme_name}.toml"
+    assert not new_theme_path.is_file()
+
+
+def test_theme_clone_wont_overwrite(itm_nc, capsys, tmp_path, mocker, response_with):
+    # mock no theme in the gallery
+    theme_name = "default-dark"
+    response = response_with(404, "")
+    get_mock = mocker.patch("requests.get", return_value=response)
+    # patch the user theme dir
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    # write a theme with the name into the user theme dir
+    new_theme_path = tmp_path / f"{theme_name}.toml"
+    open(new_theme_path, "w")
+
+    itm_nc.onecmd_plus_hooks(f"theme clone {theme_name}")
+    out, err = capsys.readouterr()
+    assert get_mock.call_count == 1
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert not out
+    assert "clone aborted" in err
 
 
 ###
