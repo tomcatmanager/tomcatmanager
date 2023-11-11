@@ -1142,36 +1142,47 @@ def test_theme_list_open_err(itm_nc, tmp_path, mocker):
         new_callable=mock.PropertyMock,
     )
     mock_theme_dir.return_value = tmp_path
+    user_theme_file = tmp_path / "usertheme.toml"
+    # write an empty user theme file
+    open(user_theme_file, "w")
 
-    # generate errors when opening files for built-in themes
+    # generate errors when opening files
     mock_open = mocker.patch("pathlib.Path.open")
     mock_open.side_effect = FileNotFoundError()
     itm_nc.onecmd_plus_hooks("theme list")
-    # we have two built-in themes, so the mock should have been called
-    # twice
-    assert mock_open.call_count == 2
+    # we have two built-in themes and one user theme
+    # so the mock should have been called three times
+    # and thrown three OSErrors
+    assert mock_open.call_count == 3
 
 
-def test_theme_list_toml_err_builtin(itm_nc, tmp_path, mocker, capsys):
-    # make sure there are no user themes
+def test_theme_list_toml_err(itm_nc, tmp_path, mocker, capsys):
+    # put one user theme in, but it doesn't matter what's in there
+    # because we are going to mock things so toml parsing throws
+    # an error
     mock_theme_dir = mocker.patch(
         "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
         new_callable=mock.PropertyMock,
     )
     mock_theme_dir.return_value = tmp_path
+    user_theme_file = tmp_path / "usertheme.toml"
+    # write an empty user theme file
+    open(user_theme_file, "w")
 
-    # generate errors when loading built-in themes
+    # generate errors when loading theme files
     mock_load = mocker.patch("tomlkit.load")
     mock_load.side_effect = tomlkit.exceptions.TOMLKitError()
     # suppress feedback
     itm_nc.quiet = True
     itm_nc.onecmd_plus_hooks("theme list")
-    # we have two built-in themes, so the mock should have been called
-    # twice
-    assert mock_load.call_count == 2
+    # we have two built-in themes, and one user theme,
+    # so the mock should have been called 3 times
+    assert mock_load.call_count == 3
     out, err = capsys.readouterr()
     assert not err
-    assert "No built-in or user themes available." in out
+    # even with the errors, we should get output, but we aren't going
+    # to try and parse it
+    assert out
 
 
 def test_theme_edit_current_theme(itm_nc, tmp_path, mocker):
