@@ -34,6 +34,7 @@ except AttributeError:  # pragma: nocover
     # pylint: disable=import-error
     import importlib_resources  # type: ignore
 
+import io
 import pathlib
 import textwrap
 from unittest import mock
@@ -1449,6 +1450,88 @@ def test_theme_create_no_template(itm_nc, capsys, tmp_path, mocker):
     assert "copying theme template" in err
     new_theme_path = tmp_path / f"{theme_name}.toml"
     assert new_theme_path.is_file()
+
+
+def test_theme_delete(itm_nc, capsys, tmp_path, mocker):
+    theme_name = "mynewtheme"
+    # patch the user theme dir
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    # write a theme with the name into the user theme dir
+    new_theme_path = tmp_path / f"{theme_name}.toml"
+    open(new_theme_path, "w")
+    # mock up standard input for the "are you sure?" prompt
+    mock_input = mocker.patch("builtins.input")
+    mock_input.return_value = "yes"
+
+    itm_nc.onecmd_plus_hooks(f"theme delete {theme_name}")
+    out, err = capsys.readouterr()
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+    assert "theme deleted" in err
+    assert not out
+    assert not new_theme_path.is_file()
+
+
+def test_theme_delete_no_confirm(itm_nc, capsys, tmp_path, mocker):
+    theme_name = "mynewtheme"
+    # patch the user theme dir
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    # write a theme with the name into the user theme dir
+    new_theme_path = tmp_path / f"{theme_name}.toml"
+    open(new_theme_path, "w")
+    # mock up standard input for the "are you sure?" prompt
+    mock_input = mocker.patch("builtins.input")
+    mock_input.return_value = "no"
+
+    itm_nc.onecmd_plus_hooks(f"theme delete {theme_name}")
+    out, err = capsys.readouterr()
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert "no confirmation" in err
+    assert not out
+    assert new_theme_path.is_file()
+
+
+def test_theme_delete_force(itm_nc, capsys, tmp_path, mocker):
+    theme_name = "mynewtheme"
+    # patch the user theme dir
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    # write a theme with the name into the user theme dir
+    new_theme_path = tmp_path / f"{theme_name}.toml"
+    open(new_theme_path, "w")
+
+    itm_nc.onecmd_plus_hooks(f"theme delete -f {theme_name}")
+    out, err = capsys.readouterr()
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+    assert "theme deleted" in err
+    assert not out
+    assert not new_theme_path.is_file()
+
+
+def test_theme_delete_unknown(itm_nc, capsys, tmp_path, mocker):
+    theme_name = "mynewtheme"
+    # patch the user theme dir
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+
+    itm_nc.onecmd_plus_hooks(f"theme delete {theme_name}")
+    out, err = capsys.readouterr()
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert "unknown theme" in err
+    assert not out
 
 
 ###
