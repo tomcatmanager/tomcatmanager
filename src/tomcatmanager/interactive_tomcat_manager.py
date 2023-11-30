@@ -1261,13 +1261,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def do_theme(self, cmdline: cmd2.Statement):
         """manage themes"""
         args = self.parse_args(self.theme_parser, cmdline.argv)
-        # TODO I don't think we need these next 3 lines, argparse
-        # will bomb and print usage if they choose an invalid command
-        #
-        # if not args.func:
-        #    self.help_theme()
-        #    self.exit_code = self.EXIT_ERROR
-        # call the function for the subcommand, which was set on the argparser
         args.func(args)
 
     def theme_dir(self, args: argparse.Namespace):
@@ -1275,12 +1268,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.poutput(self.user_theme_dir)
         self.exit_code = self.EXIT_SUCCESS
 
+    # pylint: disable=too-many-branches,
     def theme_list(self, args: argparse.Namespace):
         """list all available themes"""
-        # gallery themes
-        # TODO add progress and feedback and error checking
-        # TODO make command line options to only display gallery, or built-in, or user themes
-        # default is all
         gallery_themes = []
         with self._progressfactory("retrieving themes from gallery"):
             response = requests.get(
@@ -1412,7 +1402,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         # the online theme gallery can override the built-in themes, so check
         # there first
-        # TODO add progress display and status information and error checking
         theme_str = None
         with self._progressfactory("retrieving themes from gallery"):
             response = requests.get(
@@ -1422,7 +1411,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if response.status_code == 200:
             theme_str = response.text
         else:
-            # some error messaging
             self.pfeedback(f"theme '{args.name}' not found in gallery")
 
         if not theme_str:
@@ -2781,7 +2769,6 @@ def _deploy_parser(
     contextfunc: Callable,
 ) -> argparse.ArgumentParser:
     """Construct a argument parser for the deploy or redeploy commands."""
-    # TODO make this all work like _do_help_theme and _build_theme_parsers
     deploy_parser = argparse.ArgumentParser(
         prog=name,
         description=desc,

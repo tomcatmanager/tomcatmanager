@@ -34,7 +34,6 @@ except AttributeError:  # pragma: nocover
     # pylint: disable=import-error
     import importlib_resources  # type: ignore
 
-import io
 import pathlib
 import textwrap
 from unittest import mock
@@ -1145,7 +1144,8 @@ def test_theme_list_open_err(itm_nc, tmp_path, mocker):
     mock_theme_dir.return_value = tmp_path
     user_theme_file = tmp_path / "usertheme.toml"
     # write an empty user theme file
-    open(user_theme_file, "w")
+    with open(user_theme_file, "w", encoding="utf-8"):
+        pass
 
     # generate errors when opening files
     mock_open = mocker.patch("pathlib.Path.open")
@@ -1168,7 +1168,8 @@ def test_theme_list_toml_err(itm_nc, tmp_path, mocker, capsys):
     mock_theme_dir.return_value = tmp_path
     user_theme_file = tmp_path / "usertheme.toml"
     # write an empty user theme file
-    open(user_theme_file, "w")
+    with open(user_theme_file, "w", encoding="utf-8"):
+        pass
 
     # generate errors when loading theme files
     mock_load = mocker.patch("tomlkit.load")
@@ -1384,7 +1385,8 @@ def test_theme_clone_wont_overwrite(itm_nc, capsys, tmp_path, mocker, response_w
     theme_dir_mock.return_value = tmp_path
     # write a theme with the name into the user theme dir
     new_theme_path = tmp_path / f"{theme_name}.toml"
-    open(new_theme_path, "w")
+    with open(new_theme_path, "w", encoding="utf-8"):
+        pass
 
     itm_nc.onecmd_plus_hooks(f"theme clone {theme_name}")
     out, err = capsys.readouterr()
@@ -1422,7 +1424,8 @@ def test_theme_create_already_exist(itm_nc, capsys, tmp_path, mocker):
     theme_dir_mock.return_value = tmp_path
     # write a theme with the name into the user theme dir
     new_theme_path = tmp_path / f"{theme_name}.toml"
-    open(new_theme_path, "w")
+    with open(new_theme_path, "w", encoding="utf-8"):
+        pass
 
     itm_nc.onecmd_plus_hooks(f"theme create {theme_name}")
     out, err = capsys.readouterr()
@@ -1462,7 +1465,8 @@ def test_theme_delete(itm_nc, capsys, tmp_path, mocker):
     theme_dir_mock.return_value = tmp_path
     # write a theme with the name into the user theme dir
     new_theme_path = tmp_path / f"{theme_name}.toml"
-    open(new_theme_path, "w")
+    with open(new_theme_path, "w", encoding="utf-8"):
+        pass
     # mock up standard input for the "are you sure?" prompt
     mock_input = mocker.patch("builtins.input")
     mock_input.return_value = "yes"
@@ -1485,7 +1489,8 @@ def test_theme_delete_no_confirm(itm_nc, capsys, tmp_path, mocker):
     theme_dir_mock.return_value = tmp_path
     # write a theme with the name into the user theme dir
     new_theme_path = tmp_path / f"{theme_name}.toml"
-    open(new_theme_path, "w")
+    with open(new_theme_path, "w", encoding="utf-8"):
+        pass
     # mock up standard input for the "are you sure?" prompt
     mock_input = mocker.patch("builtins.input")
     mock_input.return_value = "no"
@@ -1508,7 +1513,8 @@ def test_theme_delete_force(itm_nc, capsys, tmp_path, mocker):
     theme_dir_mock.return_value = tmp_path
     # write a theme with the name into the user theme dir
     new_theme_path = tmp_path / f"{theme_name}.toml"
-    open(new_theme_path, "w")
+    with open(new_theme_path, "w", encoding="utf-8"):
+        pass
 
     itm_nc.onecmd_plus_hooks(f"theme delete -f {theme_name}")
     out, err = capsys.readouterr()
