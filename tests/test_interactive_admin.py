@@ -1465,6 +1465,17 @@ def test_license(itm_nc, capsys):
 
 ###
 #
+# test Theme model from InteractiveTomcatManager
+#
+###
+def test_theme_empty():
+    thm = tm.interactive_tomcat_manager.Theme()
+    assert not thm.file
+    assert not thm.name
+
+
+###
+#
 # other tests
 #
 ###
