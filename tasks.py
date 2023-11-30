@@ -99,10 +99,13 @@ def format_check(context):
 namespace_check.add_task(format_check)
 
 
-@invoke.task
+@invoke.task()
 def format(context):
     """Format code using ruff"""
     context.run("ruff format *.py tests src docs", echo=True)
+
+
+namespace.add_task(format)
 
 
 #####
