@@ -1523,13 +1523,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
             return
 
         try:
-            with importlib_resources.path(
-                "tomcatmanager.templates", "theme.toml"
-            ) as template_path:
-                self.pfeedback(f"copying theme template to '{name}'")
-                self.ensure_user_theme_dir()
-                shutil.copy(template_path, new_path)
-                self.exit_code = self.EXIT_SUCCESS
+            template_path = importlib_resources.files(
+                "tomcatmanager.templates"
+            ).joinpath("theme.toml")
+            self.pfeedback(f"copying theme template to '{name}'")
+            self.ensure_user_theme_dir()
+            shutil.copy(template_path, new_path)
+            self.exit_code = self.EXIT_SUCCESS
         except FileNotFoundError:
             with open(new_path, "w", encoding="utf-8") as outfile:
                 outfile.write("#\n# tomcat-manager theme\n")

@@ -1393,6 +1393,64 @@ def test_theme_clone_wont_overwrite(itm_nc, capsys, tmp_path, mocker, response_w
     assert "clone aborted" in err
 
 
+def test_theme_create(itm_nc, capsys, tmp_path, mocker):
+    theme_name = "mynewtheme"
+    # patch the user theme dir
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+
+    itm_nc.onecmd_plus_hooks(f"theme create {theme_name}")
+    out, err = capsys.readouterr()
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+    assert not out
+    assert "copying theme template" in err
+    new_theme_path = tmp_path / f"{theme_name}.toml"
+    assert new_theme_path.is_file()
+
+
+def test_theme_create_already_exist(itm_nc, capsys, tmp_path, mocker):
+    theme_name = "mynewtheme"
+    # patch the user theme dir
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    # write a theme with the name into the user theme dir
+    new_theme_path = tmp_path / f"{theme_name}.toml"
+    open(new_theme_path, "w")
+
+    itm_nc.onecmd_plus_hooks(f"theme create {theme_name}")
+    out, err = capsys.readouterr()
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert not out
+    assert "create aborted" in err
+
+
+def test_theme_create_no_template(itm_nc, capsys, tmp_path, mocker):
+    theme_name = "mynewtheme"
+    # patch the user theme dir
+    theme_dir_mock = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    theme_dir_mock.return_value = tmp_path
+    # prevent the theme template from being copied
+    shcopy_mock = mocker.patch("shutil.copy")
+    shcopy_mock.side_effect = FileNotFoundError()
+
+    itm_nc.onecmd_plus_hooks(f"theme create {theme_name}")
+    out, err = capsys.readouterr()
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+    assert not out
+    assert "copying theme template" in err
+    new_theme_path = tmp_path / f"{theme_name}.toml"
+    assert new_theme_path.is_file()
+
+
 ###
 #
 # miscellaneous commands
