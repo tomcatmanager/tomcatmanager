@@ -103,3 +103,4 @@ tomcatmanager = ["py.typed"]
 
 [tool.ruff]
 line-length = 88
+indent-width = 4
