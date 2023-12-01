@@ -28,7 +28,7 @@ Editing
 
 You can edit the file from within ``tomcat-manager`` too. Well, it really just
 launches the editor of your choice, you know, the one specified in the
-``editor`` setting. Do that by typing:
+:ref:`interactive/settings:editor` setting . Do that by typing:
 
 .. code-block:: text
 

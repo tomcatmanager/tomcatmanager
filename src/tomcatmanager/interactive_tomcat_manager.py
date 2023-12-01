@@ -430,12 +430,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
                  the given name, or None, None if no theme file for that
                  name exists
 
-        Checks in the user theme directory first, which is located
+        Checks in the local theme directory first, which is located
         in user configuration directory in a "themes" directory.
         If not found, then it looks in the embedded themes included
         as part of tomcatmanager.
         """
-        # check user theme dir
+        # check local theme dir
         tfile = self.user_theme_dir / f"{name}.toml"
         if tfile.is_file():
             return ThemeLocation.USER, tfile
@@ -1191,8 +1191,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # edit a user theme
         edit_parser = main_subparsers.add_parser(
             "edit",
-            description="edit a user theme",
-            help="edit a user theme",
+            description="edit a local theme",
+            help="edit a local theme",
             formatter_class=main_parser.formatter_class,
         )
         edit_parser.set_defaults(func=self.theme_edit)
@@ -1203,8 +1203,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # create a new user theme
         create_parser = main_subparsers.add_parser(
             "create",
-            description="create a new user theme",
-            help="create a new user theme",
+            description="create a new local theme",
+            help="create a new local theme",
             formatter_class=main_parser.formatter_class,
         )
         create_parser.set_defaults(func=self.theme_create)
@@ -1213,11 +1213,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
             help="name for the new theme",
         )
 
-        # delete a user theme
+        # delete a local theme
         delete_parser = main_subparsers.add_parser(
             "delete",
-            description="delete a user theme",
-            help="delete a user theme",
+            description="delete a local theme",
+            help="delete a local theme",
             formatter_class=main_parser.formatter_class,
         )
         delete_parser.set_defaults(func=self.theme_delete)
@@ -1376,12 +1376,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     rich.text.Text(theme.name, style="tm.theme.name"), theme.description
                 )
         self.console.print("")
-        self.console.print("User Themes", style="tm.theme.category")
+        self.console.print("Local Themes", style="tm.theme.category")
         self.console.print("─" * 72, style="tm.theme.border")
         if user_themes:
             self.console.print(user_table)
         else:
-            self.console.print("No built-in or user themes available.")
+            self.console.print("No built-in or local themes available.")
         if have_builtin:
             self.console.print()
             self.console.print("'*' indicates a read-only built-in theme.")
@@ -1395,7 +1395,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.exit_code = self.EXIT_SUCCESS
 
     def theme_clone(self, args: argparse.Namespace):
-        """clone a gallery theme to the user theme directory"""
+        """clone a gallery theme to the local theme directory"""
         # get the theme we are cloning into a string.
         # since the network request has to fetch the theme
         # to see if it exists, we just do it all in one step.
@@ -1437,12 +1437,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
             new_name = args.name
         new_path = self.user_theme_dir / f"{new_name}.toml"
         if new_path.is_file():
-            self.perror(f"clone aborted: '{new_name}' is already a user theme")
+            self.perror(f"clone aborted: '{new_name}' is already a local theme")
             self.exit_code = self.EXIT_ERROR
             return
 
         # copy theme to user theme dir
-        self.pfeedback(f"cloning '{args.name}' to user theme '{new_name}'")
+        self.pfeedback(f"cloning '{args.name}' to local theme '{new_name}'")
         self.ensure_user_theme_dir()
         with new_path.open("w", encoding="utf-8") as fobj:
             # shutil.copy(from_path, new_path)
@@ -1451,7 +1451,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         return
 
     def theme_edit(self, args: argparse.Namespace):
-        """edit a user theme file"""
+        """edit a local theme file"""
 
         if not self.editor:
             self.perror("no editor: use 'set editor = \"{path}\"' to specify one")
@@ -1475,7 +1475,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if location == ThemeLocation.BUILTIN:
             # this means no user theme with this name exists, but a builtin one does
             self.pfeedback(f"built in theme: '{name}'")
-            self.pfeedback(f'use "theme clone {name}" to make an editable user theme')
+            self.pfeedback(f'use "theme clone {name}" to make an editable local theme')
             self.perror(f"theme is not editable: '{name}'")
             self.exit_code = self.EXIT_ERROR
             return
@@ -1500,13 +1500,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
         return
 
     def theme_create(self, args: argparse.Namespace):
-        """create a user theme file from a template"""
+        """create a local theme file from a template"""
 
         # see if requested new name already exists, error message if it does
         name = args.name
         new_path = self.user_theme_dir / f"{name}.toml"
         if new_path.is_file():
-            self.perror(f"create aborted: '{name}' is already a user theme")
+            self.perror(f"create aborted: '{name}' is already a local theme")
             self.exit_code = self.EXIT_ERROR
             return
 
@@ -1525,7 +1525,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         return
 
     def theme_delete(self, args: argparse.Namespace):
-        """delete a user theme"""
+        """delete a local theme"""
         name = args.name
         path = self.user_theme_dir / f"{name}.toml"
 
@@ -1598,13 +1598,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
     @property
     def user_theme_dir(self) -> pathlib.Path:
         """
-        The directory containing user theme files.
+        The directory containing local theme files.
 
         tomcatmanager includes some themes as embedded resources which are not
         user editable. Putting theme files in this directory allows a user to
         create their own themes or override any of the included themes.
 
-        :return: The full path to the directory containing user theme files.
+        :return: The full path to the directory containing local theme files.
                  This does not ensure the directory exists. Returns None if
                  self.appdirs has not been defined.
         """
@@ -1613,7 +1613,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         return None
 
     def ensure_user_theme_dir(self):
-        """Create the user theme directory if it doesn't exist.
+        """Create the local theme directory if it doesn't exist.
 
         throws an exception if the directory doesn't exist and we can't create it
         """

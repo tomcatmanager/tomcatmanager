@@ -72,7 +72,7 @@ def _build_parser():
     configfile_help = "show the full path to the configuration file and then exit"
     parser.add_argument("--config-file", action="store_true", help=configfile_help)
 
-    themedir_help = "show the full path of the user theme directory and then exit"
+    themedir_help = "show the full path of the local theme directory and then exit"
     parser.add_argument("--theme-dir", action="store_true", help=themedir_help)
 
     version_help = "show the version information and then exit"

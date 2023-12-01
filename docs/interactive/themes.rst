@@ -1,14 +1,14 @@
 Themes
 ======
 
-When a theme is loaded, ``tomcat-manager`` displays certain output using the
+When a theme is set, ``tomcat-manager`` displays colored output using the
 styles defined in theme.
 
 ``tomcat-manager`` comes with several built-in themes which use can use. Built-in
-themes can not be edited or modified. You can create yourown user themes, either
-from scratch or by cloning a built-in theme. If connected to the internet, you
-can view a list of themes available online, and install one or more of them as
-user themes on your computer.
+themes can not be edited or modified. You can create your own themes, either from
+scratch or by cloning a built-in theme. If connected to the internet, you can view a
+gallery of themes available online, and install any of them computer. Once installed,
+they can be applied and modified to your liking.
 
 A theme is defined in a file using the `TOML <https://toml.io/en/>`_ format. The file
 contains a set of scope definitions, and the style to use when rendering each scope.
@@ -42,14 +42,36 @@ to use when rendering the scope. See `Styles`_ for more information
 Listing Themes
 --------------
 
+The following command displays all themes known to ``tomcat-manager``:
 
-Creating a User Theme
----------------------
+.. code-block:: text
 
-clone (built-in or gallery), or create
+    tomcat-manager> theme list
+    Gallery Themes
+    ────────────────────────────────────────────────────────────────────────
+    monokai           monokai theme using color scheme from https://monokai.pro/
+    solarized-dark    dark theme using solarized color scheme from
+                      https://ethanschoonover.com/solarized/
+    solarized-light   light theme using solarized color scheme from
+                      https://ethanschoonover.com/solarized/
+
+    Local Themes
+    ────────────────────────────────────────────────────────────────────────
+    default-light*   tomcat-manager default theme for use on light backgrounds
+    default-dark*    tomcat-manager default theme for use on dark backgrounds
+
+    '*' indicates a read-only built-in theme.
+    Make your own copy of a built-in or gallery theme with 'theme clone'.
+    You can then edit your copy of the theme with 'theme edit'.
+
+The themes are divided into two sections. Gallery themes are retrieved from a
+website and must be installed locally before they can be used. Local themes
+have already been installed and are available for use. Some local themes are
+included with the ``tomcat-manager`` distribution. These themes can be used
+and cloned, but may not be modified.
 
 
-Loading a Theme
+Setting a Theme
 ---------------
 
 By default, no theme is applied; all output is displayed using the default
@@ -58,6 +80,10 @@ style of your terminal emulator. Apply a theme by changing the ``theme``
 to the name of the theme you want to load, and ``tomcat-manager`` will load and
 apply that theme. Any future output will now be generated using the styles specified
 in the loaded theme.
+
+.. code-block:: text
+
+    tomcat-manager> set theme = "default-dark"
 
 If you don't want to use a theme, type:
 
@@ -70,10 +96,46 @@ your own theme with the same name as one of the built-in themes your theme will 
 loaded instead of the built-in theme with the same name.
 
 
+Creating a Local Theme
+----------------------
+
+There are four ways to create a local theme:
+
+- clone a gallery theme
+- clone a built-in theme
+- create a new theme from scratch
+- copy a theme file from another computer
+
+Once you have a local theme, you can freely :ref:`edit <interactive/themes:Editing a
+Theme>` it.
+
+Use the following command to clone a gallery or built-in theme to a local theme:
+
+.. code-block:: text
+
+    tomcat-manager> theme clone solarized-dark
+
+You can use ``theme list`` to verify that the theme has been successfully cloned.
+
+To create a new local theme from scratch, use:
+
+.. code-block:: text
+
+    tomcat-manager> theme create my-new-theme
+
+A new theme file will be created from a template which includes all available scopes.
+You can then :ref:`edit <interactive/themes:Editing a Theme>` the theme, adding
+:ref:`interactive/themes:Styles` to the scopes to achieve the desired color output.
+
+Any local theme file can be copied to another computer. Place it in the :ref:`local
+theme directory <interactive/themes:Location of Theme Files>` to make it avaialble to
+``tomcat-manager``.
+
+
 Location of Theme Files
 -----------------------
 
-User themes are stored in a configuration directory. The location of this
+Local themes are stored in a configuration directory. The location of this
 directory is different depending on the operating system. You can see the exact
 directory for your setup by typing the following from your operating system shell
 prompt:
@@ -90,46 +152,55 @@ You can get the same information from within ``tomcat-manager`` by typing:
     tomcat-manager> theme dir
     /Users/kotfu/Library/Application Support/tomcat-manager/themes
 
+When you clone a theme from the gallery, or create a new theme, it is placed into this
+directory. Any actions you take on files in this directory (deleting, renaming,
+copying, etc) are immediately recognized in the ``tomcat-manager`` tool.
+
+Theme files from this directory can be shared or copied to another computer.
+
 
 Editing a Theme
 ---------------
 
-Built-in themes are read-only. Gallery themes are not available to edit either, but
-you can edit user themes. See :ref:`interactive/themes:Listing Themes` above to learn
-how to display a list of available themes.
+Gallery themes are not available to edit. They can be cloned to your local machine,
+and then freely edited. Built-in themes are local, but they are read-only. See
+:ref:`interactive/themes:Listing Themes` above to learn how to display all available
+themes.
 
-Edit any user theme by:
+Edit a local theme by:
 
 .. code-block:: text
 
     tomcat-manager> theme edit [name]
 
-replacing ``[name]`` with the name of the user theme. The theme file
+replacing ``[name]`` with the name of the local theme. The theme file
 will open in your editor of choice (see :ref:`interactive/settings:editor`
 setting). If you edit the currently loaded theme, it will be reloaded after
 the editor exits.
+
+See :ref:`interactive/themes:Theme Scopes` and :ref:`interactive/themes:Styles` for
+documentation on what to put in a theme file to create the desired output.
 
 
 Deleting a Theme
 ----------------
 
-You can delete any user theme:
+You can delete any local theme (except for the read-only build-in themes):
 
 .. code-block:: text
 
     tomcat-manager> theme delete [name]
 
-replacing ``[name]`` with the name of the user theme you would like to delete. You
+replacing ``[name]`` with the name of the local theme you would like to delete. You
 will be prompted to confirm the deletion unless you provide the ``-f`` option.
 
 
 Theme Scopes
 ------------
 
-Here's a list of all the scopes which ``tomcat-manager`` uses. In
-this example, all scopes are set to a style of ``default``, which
-displays the scope in the default foreground and backgroun color
-of your terminal emulator.
+Here's a list of all the scopes which ``tomcat-manager`` can use when defined in a
+theme. In this example, all scopes are set to a style of ``default``, which displays
+the scope in the default foreground and background color of your terminal emulator.
 
 If a theme contains unknown scopes, they will be ignored.
 
