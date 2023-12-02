@@ -272,7 +272,7 @@ def test_help_theme_edit(itm_nc, capsys):
     cmdline = "help theme edit"
     itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
-    assert "edit a local theme" in out
+    assert "edit a user theme" in out
     assert "name" in out
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
@@ -281,7 +281,7 @@ def test_help_theme_create(itm_nc, capsys):
     cmdline = "help theme create"
     itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
-    assert "create a new local theme" in out
+    assert "create a new user theme" in out
     assert "name" in out
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
@@ -290,7 +290,7 @@ def test_help_theme_delete(itm_nc, capsys):
     cmdline = "help theme delete"
     itm_nc.onecmd_plus_hooks(cmdline)
     out, _ = capsys.readouterr()
-    assert "delete a local theme" in out
+    assert "delete a user theme" in out
     assert "name" in out
     assert "--force" in out
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
@@ -1136,14 +1136,14 @@ def test_theme_list(itm_nc, capsys):
 
 def test_theme_list_open_err(itm_nc, tmp_path, mocker):
     # point the user theme dir to our temporary directory
-    # to make sure there are no local themes
+    # to make sure there are no user themes
     mock_theme_dir = mocker.patch(
         "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
         new_callable=mock.PropertyMock,
     )
     mock_theme_dir.return_value = tmp_path
     user_theme_file = tmp_path / "usertheme.toml"
-    # write an empty local theme file
+    # write an empty user theme file
     with open(user_theme_file, "w", encoding="utf-8"):
         pass
 
@@ -1151,7 +1151,7 @@ def test_theme_list_open_err(itm_nc, tmp_path, mocker):
     mock_open = mocker.patch("pathlib.Path.open")
     mock_open.side_effect = FileNotFoundError()
     itm_nc.onecmd_plus_hooks("theme list")
-    # we have two built-in themes and one local theme
+    # we have two built-in themes and one user theme
     # so the mock should have been called three times
     # and thrown three OSErrors
     assert mock_open.call_count == 3
@@ -1177,7 +1177,7 @@ def test_theme_list_toml_err(itm_nc, tmp_path, mocker, capsys):
     # suppress feedback
     itm_nc.quiet = True
     itm_nc.onecmd_plus_hooks("theme list")
-    # we have two built-in themes, and one local theme,
+    # we have two built-in themes, and one user theme,
     # so the mock should have been called 3 times
     assert mock_load.call_count == 3
     out, err = capsys.readouterr()
@@ -1383,7 +1383,7 @@ def test_theme_clone_wont_overwrite(itm_nc, capsys, tmp_path, mocker, response_w
         new_callable=mock.PropertyMock,
     )
     theme_dir_mock.return_value = tmp_path
-    # write a theme with the name into the local theme dir
+    # write a theme with the name into the user theme dir
     new_theme_path = tmp_path / f"{theme_name}.toml"
     with open(new_theme_path, "w", encoding="utf-8"):
         pass
