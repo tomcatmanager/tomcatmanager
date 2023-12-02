@@ -17,15 +17,7 @@ TODO
 - config edit has a bug where if you comment out a setting, it doesn't change
   that setting back to it's default value when it reloads the config
 
-- figure out out to style the prompt
--
-- maybe have cmd2.Cmd call a pprompt() method when it needs to output a stylized
-  prompt and have cmd.prompt contain the "ascii" rendered version of it
-
 - check display output with debug on, make sure it formats with rich
-
-- cmd2.Cmd has async_alert(), and async_update_prompt(), and set_window_title()
-  which we will need to accommodate, or replace with rich
 
 - switch quiet setting to be called verbose, default is true?
 
@@ -36,13 +28,13 @@ Added
 - Support for Python 3.12
 - Support for themes in ``tomcat-manager``, which can produce styled and colored output
 
-  - New ``theme`` setting to choose which theme to use
-  - New ``theme`` command for users to list, create, edit, and delete themes
-  - Theme gallery which shows themes from an online gallery. Themes can be added
-    and updated in the gallery independent of ``tomcat-manager`` releases.
-  - Two built-in themes, ``default-light``, and ``default-dark``
-  - New command line option ``--theme-dir`` to show the full path to the user
-    theme directory
+    - New ``theme`` setting to choose which theme to use
+    - New ``theme`` command for users to list, create, edit, and delete themes
+    - Theme gallery which shows themes from an online gallery. Themes can be added
+      and updated in the gallery independent of ``tomcat-manager`` releases.
+    - Two built-in themes, ``default-light``, and ``default-dark``
+    - New command line option ``--theme-dir`` to show the full path to the user
+      theme directory
 
 - New command line option ``--noconfig`` to prevent the configuration file from
   being loading on startup
@@ -64,7 +56,7 @@ Changed
 Removed
 ^^^^^^^
 
-- Drop support for Python 3.7, which was EOL 2023-06-27
+- Drop support for Python 3.7 (EOL 27 June 2023)
 - Removed allow_style setting
 - Removed show command; settings does the same thing and is still available
 
@@ -98,7 +90,7 @@ Added
 Changed
 ^^^^^^^
 
-- Change configuration file from .ini format to .toml format. See
+- Change configuration file from ``ini`` format to ``toml`` format. See
   `Configuration File <https://tomcatmanager.readthedocs.io/en/stable/interactive.html#configuration-file>`_
   for more information.
 - ``config_file`` attribute now contains a ``pathlib.Path`` object instead
