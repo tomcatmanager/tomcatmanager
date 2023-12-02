@@ -11,13 +11,13 @@ Commands`. Here's a few examples:
 
 .. code-block:: text
 
-   $ tomcat-manager --user ace --password newenglandclamchowder \
-   http://localhost:8080/manager deploy server /tmp/myfancyapp.war /fancy
+    $ tomcat-manager --user ace --password newenglandclamchowder \
+    http://localhost:8080/manager deploy server /tmp/myfancyapp.war /fancy
 
 .. code-block:: text
 
-   $ tomcat-manager --user ace --password newenglandclamchowder \
-   http://localhost:8080/manager list --state running --by path
+    $ tomcat-manager --user ace --password newenglandclamchowder \
+    http://localhost:8080/manager list --state running --by path
 
 
 
@@ -30,43 +30,43 @@ mode:
 
 .. code-block:: text
 
-   $ tomcat-manager
-   tomcat-manager>connect https://www.example.com/manager ace newenglandclamchowder
-   --connected to https://www.example.com/manager as ace
-   tomcat-manager>list
-   Path                     Status  Sessions Directory
-   ------------------------ ------- -------- ------------------------------------
-   /                        running        0 ROOT
-   /manager                 running        0 manager
-   /shiny                   running       17 shiny##v2.0.6
-   /shiny                   running        6 shiny##v2.0.5
+    $ tomcat-manager
+    tomcat-manager>connect https://www.example.com/manager ace newenglandclamchowder
+    --connected to https://www.example.com/manager as ace
+    tomcat-manager>list
+    Path                     Status  Sessions Directory
+    ------------------------ ------- -------- ------------------------------------
+    /                        running        0 ROOT
+    /manager                 running        0 manager
+    /shiny                   running       17 shiny##v2.0.6
+    /shiny                   running        6 shiny##v2.0.5
 
 If you need to automate a more complex sequence of commands or parse the
 output, you might choose to use ``tomcat-manager`` from within a shell script:
 
 .. code-block:: bash
 
-   #!/usr/bin/env bash
-   #
-   URL=https://www.example.com/manager
-   USERID=ace
-   PASSWD=newenglandclamchowder
-   COMMAND="list --raw"
-   TOMCAT="tomcat-manager --quiet --user=$USERID --password=$PASSWD $URL $COMMAND"
+    #!/usr/bin/env bash
+    #
+    URL=https://www.example.com/manager
+    USERID=ace
+    PASSWD=newenglandclamchowder
+    COMMAND="list --raw"
+    TOMCAT="tomcat-manager --quiet --user=$USERID --password=$PASSWD $URL $COMMAND"
 
-   # get the output of the list into a shell variable
-   LIST=$($TOMCAT)
+    # get the output of the list into a shell variable
+    LIST=$($TOMCAT)
 
-   # if the tomcat command completed successfully
-   TOMCAT_EXIT=$?
-   if [ "$TOMCAT_EXIT" -eq 0 ]; then
-       echo "$LIST" | grep '^/shiny' | awk -F ':' '{ print $4":"$3}' | \
-       sort | head -1 | awk -F ':' '{ print #2 }'
-   else
-       # list has an error message, not the list of tomcat apps
-       echo -n "$LIST"
-       exit $TOMCAT_EXIT
-   fi
+    # if the tomcat command completed successfully
+    TOMCAT_EXIT=$?
+    if [ "$TOMCAT_EXIT" -eq 0 ]; then
+        echo "$LIST" | grep '^/shiny' | awk -F ':' '{ print $4":"$3}' | \
+        sort | head -1 | awk -F ':' '{ print #2 }'
+    else
+        # list has an error message, not the list of tomcat apps
+        echo -n "$LIST"
+        exit $TOMCAT_EXIT
+    fi
 
 Save this script as ``~/bin/oldshiners.sh``, and then run it:
 
@@ -85,11 +85,10 @@ Note how we check the exit code in the shell. ``tomcat-manager`` knows whether
 the command to the tomcat server completed successfully or not, and sets the
 shell exit code appropriately. The exit codes are:
 
-
-  | **0** = command completed succesfully
-  | **1** = command had an error
-  | **2** = incorrect usage
-  | **127** = unknown command
+    | **0** = command completed succesfully
+    | **1** = command had an error
+    | **2** = incorrect usage
+    | **127** = unknown command
 
 
 Timeout
@@ -101,7 +100,7 @@ also override it on the command line.
 
 .. code-block:: text
 
-   $ tomcat-manager --timeout=2.5 http://localhost:8080/manager list
+    $ tomcat-manager --timeout=2.5 http://localhost:8080/manager list
 
 This command line option allows you to override the ``timeout`` :ref:`setting
 <interactive/settings:timeout>`.
@@ -115,17 +114,17 @@ command line:
 
 .. code-block:: text
 
-   $ tomcat-manager --user=ace http://localhost:8080/manager list
-   Password:
+    $ tomcat-manager --user=ace http://localhost:8080/manager list
+    Password:
 
 and you will be prompted for the password. You can also specify the password on
 the command line, but this is not secure:
 
 .. code-block:: text
 
-   $ tomcat-manager --user=ace --password=newenglandclamchowder \
-   http://localhost:8080/manager list
-   Password:
+    $ tomcat-manager --user=ace --password=newenglandclamchowder \
+    http://localhost:8080/manager list
+    Password:
 
 See :doc:`authentication` for complete details of all supported authentication
 mechanisms.
@@ -142,24 +141,24 @@ with or without commands:
 
 .. code-block:: text
 
-   $ tomcat-manager localhost
-   --connected to http://localhost:8080/manager as ace
-   tomcat-manager>list
-   Path                     Status  Sessions Directory
-   ------------------------ ------- -------- ------------------------------------
-   /                        running        0 ROOT
-   /manager                 running        0 manager
+    $ tomcat-manager localhost
+    --connected to http://localhost:8080/manager as ace
+    tomcat-manager>list
+    Path                     Status  Sessions Directory
+    ------------------------ ------- -------- ------------------------------------
+    /                        running        0 ROOT
+    /manager                 running        0 manager
 
 Or:
 
 .. code-block:: text
 
-   $ tomcat-manager localhost list
-   --connected to http://localhost:8080/manager as ace
-   Path                     Status  Sessions Directory
-   ------------------------ ------- -------- ------------------------------------
-   /                        running        0 ROOT
-   /manager                 running        0 manager
+    $ tomcat-manager localhost list
+    --connected to http://localhost:8080/manager as ace
+    Path                     Status  Sessions Directory
+    ------------------------ ------- -------- ------------------------------------
+    /                        running        0 ROOT
+    /manager                 running        0 manager
 
 This mechanism allows you to keep all authentication credentials out of your
 scripts. Simply create server definitions with credentials for the server(s) you want
@@ -167,22 +166,22 @@ to manage, and reference the definitions in your scripts. Instead of this:
 
 .. code-block:: bash
 
-   TOMCAT="tomcat-manager --user=$USERID --password=$PASSWD $URL $COMMAND"
+    TOMCAT="tomcat-manager --user=$USERID --password=$PASSWD $URL $COMMAND"
 
 you might use this:
 
 .. code-block:: bash
 
-   TOMCAT="tomcat-manager example $COMMAND"
+    TOMCAT="tomcat-manager example $COMMAND"
 
 with the following in your configuration file:
 
 .. code-block:: toml
 
-   [example]
-   url = "https://www.example.com"
-   user = "ace"
-   password = "newenglandclamchowder"
+    [example]
+    url = "https://www.example.com"
+    user = "ace"
+    password = "newenglandclamchowder"
 
 
 Piped Input
@@ -214,7 +213,7 @@ them into a single stream:
 
 .. code-block:: text
 
-   $ tomcat-manager localhost list > myapps.txt 2>&1
+    $ tomcat-manager localhost list > myapps.txt 2>&1
 
 In addition to redirecting with the shell, there are several command line switches
 that change what's included in the output. These options correspond to :ref:`Setting
@@ -251,16 +250,16 @@ suppress status messages.
 
 .. code-block:: text
 
-   $ tomcat-manager localhost list 2>/dev/null
-   Path                     Status  Sessions Directory
-   ------------------------ ------- -------- ------------------------------------
-   /                        running        0 ROOT
-   /manager                 running        0 manager
-   $ tomcat-manager --quiet localhost list 2>/dev/null
-   Path                     Status  Sessions Directory
-   ------------------------ ------- -------- ------------------------------------
-   /                        running        0 ROOT
-   /manager                 running        0 manager
+    $ tomcat-manager localhost list 2>/dev/null
+    Path                     Status  Sessions Directory
+    ------------------------ ------- -------- ------------------------------------
+    /                        running        0 ROOT
+    /manager                 running        0 manager
+    $ tomcat-manager --quiet localhost list 2>/dev/null
+    Path                     Status  Sessions Directory
+    ------------------------ ------- -------- ------------------------------------
+    /                        running        0 ROOT
+    /manager                 running        0 manager
 
 If you pipe commands into ``tomcat-manager`` instead of providing them as
 arguments, the ``--echo`` command line switch can be included which will print
@@ -268,13 +267,13 @@ the prompt and command to the output:
 
 .. code-block:: text
 
-   $ echo list | tomcat-manager --echo localhost
-   --connected to https://home.kotfu.net/manager as ace
-   tomcat-manager> list
-   Path                     Status  Sessions Directory
-   ------------------------ ------- -------- ------------------------------------
-   /                        running        0 ROOT
-   /manager                 running        0 manager
+    $ echo list | tomcat-manager --echo localhost
+    --connected to https://home.kotfu.net/manager as ace
+    tomcat-manager> list
+    Path                     Status  Sessions Directory
+    ------------------------ ------- -------- ------------------------------------
+    /                        running        0 ROOT
+    /manager                 running        0 manager
 
 For most common errors, like failed authorization, connection timeouts, and DNS
 lookup failures, ``tomcat-manager`` catches the exceptions raised by those
@@ -284,8 +283,8 @@ other reason, you will see something like this:
 
 .. code-block:: text
 
-   $ tomcat-manager vm list
-   connection error
+    $ tomcat-manager vm list
+    connection error
 
 If you want all the gory detail, give the ``--debug`` command line switch or
 set ``debug=True``. Then you'll see something like this (stack trace truncated
@@ -293,14 +292,14 @@ with '...'):
 
 .. code-block:: text
 
-   $ tm --debug vm list
-   Traceback (most recent call last):
-     File "/Users/kotfu/.pyenv/versions/3.6.2/envs/tomcatmanager-3.6/lib/python3.6/site-packages/urllib3/connection.py", line 141, in _new_conn
-       (self.host, self.port), self.timeout, **extra_kw)
-     File "/Users/kotfu/.pyenv/versions/3.6.2/envs/tomcatmanager-3.6/lib/python3.6/site-packages/urllib3/util/connection.py", line 83, in create_connection
-       raise err
-     File "/Users/kotfu/.pyenv/versions/3.6.2/envs/tomcatmanager-3.6/lib/python3.6/site-packages/urllib3/util/connection.py", line 73, in create_connection
-       sock.connect(sa)
-   socket.timeout: timed out
-  ...
-   requests.exceptions.ConnectTimeout: HTTPConnectionPool(host='192.168.13.66', port=8080): Max retries exceeded with url: /manager/text/serverinfo (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x103180a20>, 'Connection to 192.168.13.66 timed out. (connect timeout=2)'))
+    $ tm --debug vm list
+    Traceback (most recent call last):
+        File "/Users/kotfu/.pyenv/versions/3.6.2/envs/tomcatmanager-3.6/lib/python3.6/site-packages/urllib3/connection.py", line 141, in _new_conn
+        (self.host, self.port), self.timeout, **extra_kw)
+        File "/Users/kotfu/.pyenv/versions/3.6.2/envs/tomcatmanager-3.6/lib/python3.6/site-packages/urllib3/util/connection.py", line 83, in create_connection
+        raise err
+        File "/Users/kotfu/.pyenv/versions/3.6.2/envs/tomcatmanager-3.6/lib/python3.6/site-packages/urllib3/util/connection.py", line 73, in create_connection
+        sock.connect(sa)
+    socket.timeout: timed out
+    ...
+    requests.exceptions.ConnectTimeout: HTTPConnectionPool(host='192.168.13.66', port=8080): Max retries exceeded with url: /manager/text/serverinfo (Caused by ConnectTimeoutError(<urllib3.connection.HTTPConnection object at 0x103180a20>, 'Connection to 192.168.13.66 timed out. (connect timeout=2)'))

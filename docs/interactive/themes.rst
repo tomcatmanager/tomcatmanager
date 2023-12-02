@@ -51,9 +51,9 @@ The following command displays all themes known to ``tomcat-manager``:
     ────────────────────────────────────────────────────────────────────────
     monokai           monokai theme using color scheme from https://monokai.pro/
     solarized-dark    dark theme using solarized color scheme from
-                      https://ethanschoonover.com/solarized/
+                        https://ethanschoonover.com/solarized/
     solarized-light   light theme using solarized color scheme from
-                      https://ethanschoonover.com/solarized/
+                        https://ethanschoonover.com/solarized/
 
     Local Themes
     ────────────────────────────────────────────────────────────────────────
@@ -297,7 +297,6 @@ If a theme contains unknown scopes, they will be ignored.
     border = "default"
 
 
-
 Styles
 ------
 
@@ -314,19 +313,19 @@ monochrome, really old terminals could display 16 colors, old terminals can disp
 Specify a color using any of the following:
 
 .. list-table::
-    :widths: 40 60
-    :header-rows: 1
+  :widths: 40 60
+  :header-rows: 1
 
-    * - Color Specification
-      - Description
-    * - ``#8700af``
-      - CSS-style hex notation
-    * - ``rgb(135,0,175)``
-      - RGB form using three integers
-    * - ``dark_magenta``
-      - color names
-    * - ``color(91)``
-      - color numbers
+  * - Color Specification
+    - Description
+  * - ``#8700af``
+    - CSS-style hex notation
+  * - ``rgb(135,0,175)``
+    - RGB form using three integers
+  * - ``dark_magenta``
+    - color names
+  * - ``color(91)``
+    - color numbers
 
 Color names and numbers are shown at
 https://rich.readthedocs.io/en/stable/appendix/colors.html
@@ -356,19 +355,19 @@ Specify additional text attributes by adding additional words to the style:
 The most useful text attributes are:
 
 .. list-table::
-    :widths: 40 60
-    :header-rows: 1
+  :widths: 40 60
+  :header-rows: 1
 
-    * - Attribute
-      - Description
-    * - ``bold``
-      - bold or heavy text
-    * - ``italic``
-      - italic text (not supported on Windows)
-    * - ``strike``
-      - text with a strikethrough line
-    * - ``underline``
-      - underlined text
+  * - Attribute
+    - Description
+  * - ``bold``
+    - bold or heavy text
+  * - ``italic``
+    - italic text (not supported on Windows)
+  * - ``strike``
+    - text with a strikethrough line
+  * - ``underline``
+    - underlined text
 
 For more examples and additional documentation on styles, see
 https://rich.readthedocs.io/en/stable/style.html

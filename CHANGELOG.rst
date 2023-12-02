@@ -37,8 +37,10 @@ Added
 - Support for themes in ``tomcat-manager``, which can produce styled and colored output
 
   - New ``theme`` setting to choose which theme to use
-  - New ``theme`` command for users to list, create, and edit themes
-  - Two built-in themes, ``light``, and ``dark``
+  - New ``theme`` command for users to list, create, edit, and delete themes
+  - Theme gallery which shows themes from an online gallery. Themes can be added
+    and updated in the gallery independent of ``tomcat-manager`` releases.
+  - Two built-in themes, ``default-light``, and ``default-dark``
   - New command line option ``--theme-dir`` to show the full path to the user
     theme directory
 
@@ -55,7 +57,7 @@ Changed
 
 - Output from the ``settings`` command now matches the TOML format of the
   configuration file
-- ``settings`` command now uses TOML syntax
+- ``settings`` command now accepts input using TOML syntax
 - Server shortcuts have been renamed to server definitions. There is no change to
   the functionality, only a change to the name.
 

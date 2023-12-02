@@ -9,20 +9,20 @@ of ``tomcat-manager``:
 
 .. code-block:: text
 
-  tomcat-manager> settings
-  debug = false                        # show stack trace for exceptions
-  echo = false                         # for piped input, echo command to output
-  editor = "/opt/homebrew/bin/emacs"   # program used to edit files
-  prompt = "tm> "                      # displays before accepting user input
-  quiet = false                        # suppress all feedback and status output
-  status_prefix = "--"                 # string to prepend to all feedback output
-  status_animation = "bouncingBar"     # style of activity spinner from rich.spinner
-  status_suffix = "..."                # suffix to append to status messages
-  status_to_stdout = false             # status information to stdout instead of stderr
-  syntax_theme = "monokai"             # pygments syntax highlighing theme
-  theme = "default-dark"               # color scheme
-  timeout = 10.0                       # seconds to wait for HTTP connections
-  timing = false                       # report execution time upon command completion
+    tomcat-manager> settings
+    debug = false                        # show stack trace for exceptions
+    echo = false                         # for piped input, echo command to output
+    editor = "/opt/homebrew/bin/emacs"   # program used to edit files
+    prompt = "tm> "                      # displays before accepting user input
+    quiet = false                        # suppress all feedback and status output
+    status_prefix = "--"                 # string to prepend to all feedback output
+    status_animation = "bouncingBar"     # style of activity spinner from rich.spinner
+    status_suffix = "..."                # suffix to append to status messages
+    status_to_stdout = false             # status information to stdout instead of stderr
+    syntax_theme = "monokai"             # pygments syntax highlighing theme
+    theme = "default-dark"               # color scheme
+    timeout = 10.0                       # seconds to wait for HTTP connections
+    timing = false                       # report execution time upon command completion
 
 
 Change a Setting
@@ -32,11 +32,10 @@ You can change any of these settings using the ``set`` command:
 
 .. code-block:: text
 
-  tomcat-manager> set prompt = "tm> "
-  tm> set timeout = 3
+    tomcat-manager> set prompt = "tm> "
+    tm> set timeout = 3
 
 You can also change settings using the :doc:`configfile`.
-
 
 The syntax of the ``set`` command is simple. The first argument is the name of the
 setting. You can see all by typing ``settings``, or by scrolling down.
@@ -103,19 +102,19 @@ displays:
 
 .. code-block:: text
 
-  tomcat-manager> connect http://localhost:8080/manager ace newenglandclamchowder
-  --connecting... [=== ]
-  --connected to http://localhost/manager as ace
-  --tomcat version: [Apache Tomcat/10.1.0]
-  tomcat-manager>
+    tomcat-manager> connect http://localhost:8080/manager ace newenglandclamchowder
+    --connecting... [=== ]
+    --connected to http://localhost/manager as ace
+    --tomcat version: [Apache Tomcat/10.1.0]
+    tomcat-manager>
 
 If you set ``quiet`` to ``true``, no feedback information is displayed
 
 .. code-block:: text
 
-  tomcat-manager> set quiet = true
-  tomcat-manager> connect http://localhost:8080/manager ace newenglandclamchowder
-  tomcat-manager>
+    tomcat-manager> set quiet = true
+    tomcat-manager> connect http://localhost:8080/manager ace newenglandclamchowder
+    tomcat-manager>
 
 
 status_prefix
@@ -126,7 +125,7 @@ eliminate the prefix value by setting ``status_prefix``. You might change it to:
 
 .. code-block:: text
 
-  tomcat-manager> set status_prefix = ">>"
+    tomcat-manager> set status_prefix = ">>"
 
 Set ``status_prefix`` to an empty string to display the status messages with no prefix.
 
@@ -143,7 +142,7 @@ You can view all the animation styles by:
 
 .. code-block:: bash
 
-  $ python -m rich.spinner
+    $ python -m rich.spinner
 
 Press ``Control-C`` to exit the demo.
 
@@ -151,7 +150,7 @@ To disable the animated progress display:
 
 .. code-block:: text
 
-  tomcat-manager> set status_animation = ""
+    tomcat-manager> set status_animation = ""
 
 
 status_suffix
@@ -178,6 +177,8 @@ syntax_theme
 theme
 -----
 
+The theme to use to apply colors to output. See :ref:`interactive/themes:Themes` for
+more information.
 
 
 timeout
@@ -189,7 +190,7 @@ seconds are allowed, for example, you could:
 
 .. code-block:: text
 
-  tomcat-manager> set timeout = 3.5
+    tomcat-manager> set timeout = 3.5
 
 The default value is ``10``.
 
