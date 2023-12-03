@@ -440,10 +440,10 @@ following:
 
 5. Push the **develop** branch to github.
 
-6. Create a pull request on github to merge the **develop** branch into
-   **main**. Wait for the checks to pass.
+6. Tag the **develop** branch with the new version number and push the tag
 
-7. Tag the **develop** branch with the new version number and push the tag
+7. Create a pull request on github to merge the **develop** branch into
+   **main**. Wait for the checks to pass.
 
 8. Merge the **develop** branch into the **main** branch and close the pull
    request.

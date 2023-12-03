@@ -14,7 +14,8 @@ Unreleased
 Fixed
 ^^^^^
 
-- updated triggers for building documentation automatically on readthedocs.io
+- fix triggers and other errors to ensure documentation builds automatically on
+  readthedocs.io
 
 
 7.0.0 (2023-12-02)
