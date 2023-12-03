@@ -443,12 +443,14 @@ following:
 6. Create a pull request on github to merge the **develop** branch into
    **main**. Wait for the checks to pass.
 
-7. Tag the **develop** branch with the new version number, and push the tag.
-
-8. Merge the **develop** branch into the **main** branch and close the pull
+7. Merge the **develop** branch into the **main** branch and close the pull
    request.
 
-9. Create a new release on Github.
+8. Change to the **main** branch, tag it with the new version number, and push the tag.
+
+9. Create a new release on Github summarizing the changelog
+
+10. Install the released version by `pip install -e .[dev]`
 
 10. Build source distribution, wheel distribution, and upload them to testpypi::
 
