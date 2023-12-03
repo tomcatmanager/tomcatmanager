@@ -19,6 +19,9 @@ tomcatmanager
 .. image:: https://img.shields.io/codecov/c/github/tomcatmanager/tomcatmanager/main?token=3YbxJ1PKwJ
       :target: https://codecov.io/gh/tomcatmanager/tomcatmanager
       :alt: code coverage
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+      :target: https://github.com/astral-sh/ruff
+      :alt: Ruff
 .. image:: https://img.shields.io/badge/code%20style-black-000000
       :target: https://github.com/psf/black
       :alt: code style black
@@ -137,7 +140,7 @@ coming up in the next release.
 Installation
 ------------
 
-You'll need Python >= 3.7. Install using pip:
+You'll need Python >= 3.8. Install using pip:
 
 .. code-block:: text
 

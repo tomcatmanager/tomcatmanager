@@ -6,7 +6,56 @@ All notable changes to `tomcatmanager
 
 This project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_ and the
 format of this file follows recommendations from `Keep a Changelog
-<http://keepachangelog.com/en/1.0.0/>`_.
+<http://keepachangelog.com/en/1.1.0/>`_.
+
+7.0.0 (2023-12-02)
+------------------
+
+Added
+^^^^^
+
+- Support for Python 3.12
+- Support for themes in ``tomcat-manager``, which can produce styled and colored output
+
+    - New ``theme`` setting to choose which theme to use
+    - New command line option ``--theme`` to set theme from command line
+    - New environment variable ``TOMCATMANAGER_THEME`` to set theme from environment
+    - New ``theme`` command for users to list, create, edit, and delete themes
+    - Theme gallery which shows themes from an online gallery. Themes can be added
+      and updated in the gallery independent of ``tomcat-manager`` releases.
+    - Two built-in themes, ``default-light``, and ``default-dark``
+    - New command line option ``--theme-dir`` to show the full path to the user
+      theme directory
+
+- New command line option ``--noconfig`` to prevent the configuration file from
+  being loading on startup
+- New command line option ``--config-file`` to show the full path to the
+  configuration file
+- New command ``disconnect`` to disconnect from a Tomcat server
+- New method `TomcatManager.disconnect()
+  <https://tomcatmanager.readthedocs.io/en/stable/api/TomcatManager.html#tomcatmanager.tomcat_manager.TomcatManager.disconnect>`__
+
+Changed
+^^^^^^^
+
+- Output from the ``settings`` command now matches the TOML format of the
+  configuration file
+- ``settings`` command now accepts input using TOML syntax
+- Server shortcuts have been renamed to server definitions. There is no change to
+  the functionality, only a change to the name.
+
+Removed
+^^^^^^^
+
+- Drop support for Python 3.7 (EOL 27 June 2023)
+- Removed allow_style setting
+- Removed show command; settings does the same thing and is still available
+
+Fixed
+^^^^^
+
+- ``config edit`` command now sets default values before reloading configuration
+
 
 6.0.1 (2022-11-15)
 ------------------
@@ -37,7 +86,7 @@ Added
 Changed
 ^^^^^^^
 
-- Change configuration file from .ini format to .toml format. See
+- Change configuration file from ``ini`` format to ``toml`` format. See
   `Configuration File <https://tomcatmanager.readthedocs.io/en/stable/interactive.html#configuration-file>`_
   for more information.
 - ``config_file`` attribute now contains a ``pathlib.Path`` object instead

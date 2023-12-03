@@ -25,15 +25,18 @@
 Entry point for 'tomcat-manager' command line program.
 """
 import argparse
+import os
 import sys
 
 import tomcatmanager as tm
 
 
+# pylint: disable=too-many-locals
 def _build_parser():
     """Build the argument parser"""
     parser = argparse.ArgumentParser(
-        description="Manage a tomcat server from the command line or an interactive shell"
+        description="Manage a tomcat server from the command line or an interactive shell",
+        add_help=False,
     )
     user_help = "user to use for authentication with the tomcat manager web application"
     parser.add_argument("-u", "--user", help=user_help)
@@ -60,7 +63,19 @@ def _build_parser():
     debug_help = "show additional debugging information while processing commands"
     parser.add_argument("-d", "--debug", action="store_true", help=debug_help)
 
-    version_help = "show the version information and exit"
+    noconfig_help = "don't load the configuration file on startup"
+    parser.add_argument("-n", "--noconfig", action="store_true", help=noconfig_help)
+
+    theme_help = "load a theme on startup, overriding the theme setting"
+    parser.add_argument("-m", "--theme", help=theme_help)
+
+    configfile_help = "show the full path to the configuration file and then exit"
+    parser.add_argument("--config-file", action="store_true", help=configfile_help)
+
+    themedir_help = "show the full path of the user theme directory and then exit"
+    parser.add_argument("--theme-dir", action="store_true", help=themedir_help)
+
+    version_help = "show the version information and then exit"
     parser.add_argument(
         "-v",
         "--version",
@@ -68,6 +83,9 @@ def _build_parser():
         version=tm.VERSION_STRING,
         help=version_help,
     )
+
+    help_help = "show this help message and then exit"
+    parser.add_argument("-h", "--help", action="help", help=help_help)
 
     url_help = "url of the tomcat manager web application"
     parser.add_argument("manager_url", nargs="?", help=url_help)
@@ -100,7 +118,20 @@ def main(argv=None):
         print("--argv=" + str(argv), file=sys.stderr)
         print("--args=" + str(args), file=sys.stderr)
 
-    itm = tm.InteractiveTomcatManager()
+    loadconfig = True
+    if args.noconfig:
+        # our command line option is to skip loading the config, so we have
+        # to reverse the bool
+        loadconfig = not args.noconfig
+    itm = tm.InteractiveTomcatManager(loadconfig=loadconfig)
+
+    # process our args that just exit
+    if args.config_file:
+        print(itm.config_file)
+        return itm.EXIT_SUCCESS
+    if args.theme_dir:
+        print(itm.user_theme_dir)
+        return itm.EXIT_SUCCESS
 
     # if we have command line switches, set those values
     # these override any user settings loaded from a config file
@@ -116,6 +147,18 @@ def main(argv=None):
     # to false, and in this case 0 is a valid timeout that we want to set
     if args.timeout is not None:
         itm.timeout = args.timeout
+    # check for command line and environment variable theme specification
+    if args.theme is not None:
+        itm.theme = args.theme
+    else:
+        try:
+            env_theme = os.environ["TOMCATMANAGER_THEME"]
+            # even though the value could be empty, that's a signal
+            # for us to load no theme
+            itm.theme = env_theme
+        except KeyError:
+            # no environment variable, so do nothing
+            pass
 
     if args.manager_url:
         # try and connect

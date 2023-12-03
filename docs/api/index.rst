@@ -23,3 +23,4 @@ Python API documentation for tomcatmanager |release|
    migrating4
    migrating5
    migrating6
+   migrating7

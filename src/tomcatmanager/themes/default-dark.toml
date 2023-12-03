@@ -1,0 +1,51 @@
+# dark theme for tomcat-manager
+# intended for use on dark colored terminal backgrounds
+# works on 256 color terminals
+# see https://rich.readthedocs.io/en/stable/appendix/colors.html#appendix-colors
+# for supported list of color names
+
+# theme metadata
+description = "tomcat-manager default theme for use on dark backgrounds"
+
+[tm]
+error =  "red3"
+status =  "deep_sky_blue1"
+animation = "cyan1"
+
+[tm.help]
+category =  "gold1"
+border = "gold1"
+command =  "magenta3"
+args = "cyan"
+
+[tm.usage]
+prog =  "magenta3"
+groups =  "gold1"
+args =  "cyan"
+metavar =  "dark_cyan"
+help =  "default"
+text =  "default"
+syntax =  "bold"
+
+[tm.list]
+header =  "bold deep_sky_blue1"
+border =  "bold deep_sky_blue1"
+
+[tm.app]
+running =  "green1"
+stopped =  "red3"
+sessions =  "cyan1"
+
+[tm.setting]
+name =  "dark_orange3"
+equals =  "orchid1"
+comment =  "pale_turquoise4"
+string =  "green1"
+bool =  "purple"
+int =  "cyan1"
+float =  "cyan1"
+
+[tm.theme]
+category = "gold1"
+border = "gold1"
+name = "magenta3"

@@ -28,20 +28,22 @@ classifiers = [
     "Intended Audience :: System Administrators",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 keywords = ["java", "tomcat", "command line"]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
-    "cmd2>=2,<3",
+    "cmd2>=2.4.3,<3",
     "requests>=2,<3",
     "appdirs",
-    "importlib_metadata>=1.6.0; python_version<'3.8'",
+    "importlib_resources>=5.0; python_version<'3.9'",
     "tomlkit",
+    "rich",
+    "rich_argparse",
 ]
 dynamic = ["version"]
 
@@ -67,27 +69,27 @@ dev = [
     "tox",
     "codecov",
     "pytest-cov",
+    "ruff",
     "pylint",
-    "black",
     "setuptools_scm",
     "wheel",
     "twine",
     "rope",
     "invoke",
-    "sphinx",
+    "sphinx<7",
     "sphinx-autobuild",
-    "sphinx_rtd_theme",
+    "sphinx_rtd_theme>1",
     "autodocsumm",
-    "doc8<=0.11",
-    "docutils<0.17",
+    "doc8",
+    "docutils",
 ]
 docs = [
     "sphinx",
     "sphinx-autobuild",
     "sphinx_rtd_theme",
     "autodocsumm",
-    "doc8<=0.11",
-    "docutils<0.17",
+    "doc8",
+    "docutils",
 ]
 
 
@@ -97,3 +99,8 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 tomcatmanager = ["py.typed"]
+
+
+[tool.ruff]
+line-length = 88
+indent-width = 4

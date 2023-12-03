@@ -27,21 +27,21 @@ creation of these environments.
 If you prefer to create these virtual envs by hand, do the following::
 
    $ cd tomcatmanager
-   $ pyenv install 3.11.0
-   $ pyenv virtualenv -p python3.11 3.11.0 tomcatmanager-3.11
-   $ pyenv install 3.10.7
-   $ pyenv virtualenv -p python3.10 3.10.0 tomcatmanager-3.10
-   $ pyenv install 3.9.14
-   $ pyenv virtualenv -p python3.9 3.9.7 tomcatmanager-3.9
-   $ pyenv install 3.8.14
-   $ pyenv virtualenv -p python3.8 3.8.12 tomcatmanager-3.8
-   $ pyenv install 3.7.14
-   $ pyenv virtualenv -p python3.7 3.7.12 tomcatmanager-3.7
+   $ pyenv install 3.12.0
+   $ pyenv virtualenv -p python3.12 3.12.0 tomcatmanager-3.12
+   $ pyenv install 3.11.5
+   $ pyenv virtualenv -p python3.11 3.11.5 tomcatmanager-3.11
+   $ pyenv install 3.10.13
+   $ pyenv virtualenv -p python3.10 3.10.13 tomcatmanager-3.10
+   $ pyenv install 3.9.18
+   $ pyenv virtualenv -p python3.9 3.9.18 tomcatmanager-3.9
+   $ pyenv install 3.8.18
+   $ pyenv virtualenv -p python3.8 3.8.18 tomcatmanager-3.8
 
 
 Now set pyenv to make all five of those available at the same time::
 
-   $ pyenv local tomcatmanager-3.11 tomcatmanager-3.10 tomcatmanager-3.9 tomcatmanager-3.8 tomcatmanager-3.7
+   $ pyenv local tomcatmanager-3.12 tomcatmanager-3.11 tomcatmanager-3.10 tomcatmanager-3.9 tomcatmanager-3.8
 
 Whether you ran the script, or did it by hand, you now have isolated virtualenvs for
 each of the minor python versions. This table shows various python commands, the
@@ -50,20 +50,19 @@ version of python which will be executed, and the virtualenv it will utilize.
 ==============  =======  ==================
 Command         python   virtualenv
 ==============  =======  ==================
-``python``      3.11.0   tomcatmanager-3.11
-``python3``     3.11.0   tomcatmanager-3.11
-``python3.11``  3.11.0   tomcatmanager-3.11
-``python3.10``  3.10.7   tomcatmanager-3.10
-``python3.9``   3.9.14   tomcatmanager-3.9
-``python3.8``   3.8.14   tomcatmanager-3.8
-``python3.7``   3.7.14   tomcatmanager-3.7
-``pip``         3.11.0   tomcatmanager-3.11
-``pip3``        3.11.0   tomcatmanager-3.11
-``pip3.11``     3.11.0   tomcatmanager-3.11
-``pip3.10``     3.10.7   tomcatmanager-3.10
-``pip3.9``      3.9.14   tomcatmanager-3.9
-``pip3.8``      3.8.14   tomcatmanager-3.8
-``pip3.7``      3.7.14   tomcatmanager-3.7
+``python``       3.12.0  tomcatmanager-3.12
+``python3``      3.12.0  tomcatmanager-3.12
+``python3.12``   3.12.0  tomcatmanager-3.12
+``python3.11``   3.11.5  tomcatmanager-3.11
+``python3.10``  3.10.13  tomcatmanager-3.10
+``python3.9``    3.9.18  tomcatmanager-3.9
+``python3.8``    3.8.18  tomcatmanager-3.8
+``pip``          3.11.5  tomcatmanager-3.11
+``pip3``         3.11.5  tomcatmanager-3.11
+``pip3.11``      3.11.5  tomcatmanager-3.11
+``pip3.10``     3.10.13  tomcatmanager-3.10
+``pip3.9``       3.9.18  tomcatmanager-3.9
+``pip3.8``       3.8.18  tomcatmanager-3.8
 ==============  =======  ==================
 
 
@@ -77,11 +76,11 @@ Now install all the development dependencies::
 This installs the tomcatmanager package "in-place", so the package points to the
 source code instead of copying files to the python ``site-packages`` folder.
 
-All the dependencies now have been installed in the ``tomcatmanager-3.11`` virtualenv.
+All the dependencies now have been installed in the ``tomcatmanager-3.12`` virtualenv.
 If you want to work in other virtualenvs, you'll need to manually select it, and
 install again::
 
-   $ pyenv shell tomcatmanager-3.9
+   $ pyenv shell tomcatmanager-3.10
    $ pip install -e .[dev]
 
 
@@ -314,22 +313,57 @@ the code, but pull requests containing these directives will be carefully scruti
 Code Formatting
 ---------------
 
-Use `black <https://black.readthedocs.io/en/stable/index.html>`_ to format your code.
+Use `ruff <https://docs.astral.sh/ruff/>`_ to format your code.
 We use the default configuration, including a line length of 88 characters.
 
-To format all the code in the project using ``black``, do::
+To format all the code in the project using ``ruff``, do::
 
-   $ black *.py tests src docs
+   $ ruff format *.py tests src docs
 
-You can check whether ``black`` would make any changes to the source code by::
+You can check whether ``ruff`` would make any formatting changes to the source code by::
 
-   $ black --check *.py tests src docs
+   $ ruff format --check *.py tests src docs
 
-Black integrates with many common editors and IDE's, that's the easiest way to ensure
+Ruff integrates with many common editors and IDE's, that's the easiest way to ensure
 that your code is always formatted.
 
-Please format the code in your PR using ``black`` before submitting it, this project
-is configured to not allow merges if ``black`` would change anything.
+Please format the code in your PR using ``ruff`` before submitting it, this project
+is configured to not allow merges if ``ruff format`` would change anything.
+
+
+Punctuation and Capitalization for Users
+----------------------------------------
+
+Messages generated by ``InteractiveTomcatManager`` are intended for consumption
+by users, rather than developers.
+
+Usage messages for individual commands are in all lower case letters with no periods.
+If the help for a particular option contains multiple phrases, separate them with
+a semi-colon. This matches the style of ``argparse.ArgumentParser``. For example the
+message generated for the ``-h`` option is an uncapitalized phrase with no period.
+``ArgumentParser`` epilogs should be sentences with capitalized first letters.
+
+Error messages are in all lower case letters with no periods. This matches the style
+of the errors generated by ``argparse.ArgumentParser``.
+
+Command descriptions as shown by the ``help`` command come from the docstring for
+the associated method. For example the description shown for the ``deploy`` command
+comes from the the docstring for ``do_deploy``. The code assumes these docstrings
+are a single line. These command descriptions are all lower case letters with no
+periods. ``ArgumentParser`` objects should get the first line of the docstring to
+use for the description, so that ``connect -h`` always shows the same description
+as ``help``.
+
+Documentation in ``/docs`` is written in sentences with capitalized first letters.
+
+
+Punctuation and Capitalization for Developers
+---------------------------------------------
+
+Docstrings in ``TomcatManager`` and other associated classes are written in
+sentences with capitalized first letters. This matches the style that Sphinx
+uses to render the documentation and ensures that all html documentation
+(user and api) follows the same style.
 
 
 Documentation
@@ -344,6 +378,8 @@ docstrings <https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html
 We encourage references to other methods and classes in docstrings, and choose to
 optimize docstrings for clarity and usefulness in the rendered output rather than ease
 of reading in the source code.
+
+The documentation is indented using four spaces, the same as the python code.
 
 The code includes type hints as a convenience, but does not provide stub files nor do
 we use mypy to check for proper static typing. Our philosophy is that the dynamic

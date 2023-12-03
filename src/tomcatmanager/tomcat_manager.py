@@ -45,6 +45,7 @@ from .models import (
     TomcatNotConnected,
 )
 
+
 # pylint: disable=too-many-public-methods
 class TomcatManager:
     """
@@ -77,6 +78,7 @@ class TomcatManager:
            print("not connected")
     """
 
+    # pylint: disable=invalid-name, too-few-public-methods, inconsistent-return-statements
     class _implemented_by:
         """Decorator to show which versions of tomcat implement this method.
 
@@ -104,8 +106,6 @@ class TomcatManager:
                 ...
 
         """
-
-        # pylint: disable=invalid-name, too-few-public-methods, inconsistent-return-statements
 
         matrix = {}
 
@@ -342,6 +342,7 @@ class TomcatManager:
         """
         return (self._url is not None) and (self._tomcat_major_minor is not None)
 
+    # pylint: disable=too-many-arguments
     def connect(
         self,
         url: str,
@@ -518,6 +519,16 @@ class TomcatManager:
             self._clear_server_attrs()
             raise exc
 
+    def disconnect(self):
+        """Disconnect from the manager application running in a Tomcat server.
+
+        :return:         always returns True
+
+        .. versionadded:: 7.0.0
+        """
+        self._clear_server_attrs()
+        return True
+
     ###
     # managing applications
     ###
@@ -613,6 +624,7 @@ class TomcatManager:
         r = self._get("deploy", params)
         return r
 
+    # pylint: disable=too-many-arguments
     @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def deploy_servercontext(
         self,
@@ -641,7 +653,6 @@ class TomcatManager:
         :return:             :class:`.TomcatManagerResponse` object
         :raises ValueError:  if no path is given or if no contextfile is given
         """
-        # pylint: disable=too-many-arguments
 
         params = {}
         if path:
@@ -1112,7 +1123,7 @@ class TomcatManager:
         """
         Clear the private attributes describing the server.
 
-        Intended to be called from connect() and is_connected()
+        Intended to be called from connect() and disconnect()
         """
         self._user = None
         self._password = None

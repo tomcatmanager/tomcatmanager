@@ -5,6 +5,9 @@
 
 import pathlib
 import pytest
+from unittest import mock
+
+import requests
 
 import tomcatmanager as tm
 
@@ -16,11 +19,11 @@ from tests.mock_server_8_5 import start_mock_server_8_5
 
 ###
 #
-# helper class
+# helper classes
 #
 ###
+# pylint: disable=too-few-public-methods
 class TomcatServer:
-    # pylint: disable=too-few-public-methods
     def __init__(self):
         self.url = None
         self.user = None
@@ -92,6 +95,7 @@ def pytest_addoption(parser):
 #
 ###
 
+
 # use a fixture to return a class with a bunch
 # of assertion helper methods
 @pytest.fixture
@@ -123,11 +127,6 @@ def assert_tomcatresponse():
     return AssertResponse()
 
 
-###
-#
-# fixtures for testing TomcatManager()
-#
-###
 @pytest.fixture(scope="session")
 def tomcat_manager_server(request):
     """start a local http server which provides a similar interface to a
@@ -186,6 +185,86 @@ def tomcat(tomcat_manager_server):
 
 
 @pytest.fixture
+def itm_nc():
+    """InteractiveTomcatManager with no config file loaded
+    and not connected to a server
+
+    nc = not connected
+    nc = no config
+
+    Unless we have a good reason to do otherwise, we never want
+    our tests to load whatever config file the person running
+    the tests happens to have
+    """
+    return tm.InteractiveTomcatManager(loadconfig=False)
+
+
+@pytest.fixture
+def itm(itm_nc, tomcat_manager_server):
+    """InteractiveTomcatManager instance with no config file loaded
+    and connected to a tomcat server
+
+    This has the shortest name because it's the test fixture used
+    most frequently
+    """
+    itm_nc.onecmd_plus_hooks(tomcat_manager_server.connect_command)
+    return itm_nc
+
+
+@pytest.fixture
+def itm_with_config(mocker, tmp_path):
+    # make this fixture return a function we can call
+    # the config string may need to be dynamically created in a test
+    # so we can't use @pytest.mark to attach the data to the test
+    #
+    # use it like this:
+    #
+    # def test_mytest(itm_with_config):
+    #     config_string = f"""
+    #         [settings]
+    #         prompt = "$ "
+    #         """
+    #     itm = itm_with_config(config_string)
+    #
+    # itm will now contain an InteractiveTomcatManager instance that has loaded
+    # the configuration in `config_string`
+    #
+    def func(config_string):
+        # prevent notification of conversion from old to new format
+        mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file_old",
+            new_callable=mock.PropertyMock,
+            return_value=None,
+        )
+
+        # create an interactive tomcat manager object
+        itm = tm.InteractiveTomcatManager(loadconfig=False)
+        # write the passed string to a temp file
+        configfile = tmp_path / "tomcat-manager.toml"
+        with open(configfile, "w", encoding="utf-8") as fobj:
+            fobj.write(config_string)
+
+        # itm aleady tried to load a config file, which it may or may not
+        # have found, depending on if you have one or not
+        # we are now going to patch up the config_file to point to
+        # a known file, and the reload the config from that
+        mocker.patch(
+            "tomcatmanager.InteractiveTomcatManager.config_file",
+            new_callable=mock.PropertyMock,
+            return_value=configfile,
+        )
+        # this has to be inside the context manager for tmpdir because
+        # the config file will get deleted when the context manager is
+        # no longer in scope
+        itm.load_config()
+        # this just verifies that our patch worked
+        assert itm.config_file == configfile
+        return itm
+
+    return func
+
+
+@pytest.fixture
 def localwar_file():
     """return the path to a valid war file"""
     projdir = pathlib.Path(__file__).parent
@@ -194,16 +273,34 @@ def localwar_file():
 
 @pytest.fixture
 def safe_path():
-    """a safe path we can deploy apps to"""
+    """a safe path we can deploy apps to in a tomcat server"""
     return "/tomcat-manager-test-app"
 
 
 @pytest.fixture
-def server_info():
-    return """Tomcat Version: Apache Tomcat/8.5.82 (Ubuntu)
-OS Name: Linux
-OS Version: 4.4.0-89-generic
-OS Architecture: amd64
-JVM Version: 1.8.0_131-8u131-b11-2ubuntu1.16.04.3-b11
-JVM Vendor: Oracle Corporation
-"""
+def response_with():
+    # make this fixture return a function we can call to create
+    # a requests.Response object suitable for returning from
+    # mocked requests.get() calls
+    #
+    # use it like this:
+    #
+    # def test_mytest(response_with):
+    #     response_str = f"""
+    #         [settings]
+    #         prompt = "$ "
+    #         """
+    #     response = response_with(200, response_string)
+    #
+    # response will now contain a requests.Response() instance that has
+    # a status_code of 200 and a .text attribute containing response_string
+    #
+    def func(status_code, response_str):
+        """make a requests.Response object containing the passed string content"""
+        resp = requests.Response()
+        resp.status_code = status_code
+        resp.encoding = "utf-8"
+        resp._content = bytes(response_str, resp.encoding)
+        return resp
+
+    return func

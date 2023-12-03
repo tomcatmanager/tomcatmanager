@@ -25,27 +25,27 @@ replaced with any supported command. Here are examples from the command line,
 
 .. code-block:: text
 
-   $ tomcat-manager --user=ace --password=newenglandclamchowder \
-   https://www.example.com/manager list
+    $ tomcat-manager --user=ace --password=newenglandclamchowder \
+    https://www.example.com/manager list
 
 interactive mode,
 
 .. code-block:: text
 
-   $ tomcat-manager
-   tomcat-manager>connect https://www.example.com/manager ace newenglandclamchowder
-   --connected to https://www.example.com/manager as ace
+    $ tomcat-manager
+    tomcat-manager>connect https://www.example.com/manager ace newenglandclamchowder
+    --connected to https://www.example.com/manager as ace
 
 
 and from Python:
 
 .. code-block:: python
 
-   url = 'https://www.example.com/manager'
-   user = 'ace'
-   password = 'newenglandclamchowder'
-   tomcat = tm.TomcatManager()
-   r = tomcat.connect(url, user, password)
+    url = 'https://www.example.com/manager'
+    user = 'ace'
+    password = 'newenglandclamchowder'
+    tomcat = tm.TomcatManager()
+    r = tomcat.connect(url, user, password)
 
 Tomcatmanager uses the `requests
 <https://requests.readthedocs.io/en/latest/>`_ library for network
@@ -71,25 +71,26 @@ certificate authority bundle file, or the path to a directory containing
 certificates of trusted certificate authorities.
 
 .. note::
-   If you use a directory, you must process the files in that directory using
-   the `c_rehash <https://www.openssl.org/docs/man1.1.0/man1/c_rehash.html>`_
-   tool supplied with OpenSSL.
+
+    If you use a directory, you must process the files in that directory using
+    the `c_rehash <https://www.openssl.org/docs/man1.1.0/man1/c_rehash.html>`_
+    tool supplied with OpenSSL.
 
 Use the ``--cacert`` option from the command line. The ``list`` command shown here can
 be replaced with any supported command.
 
 .. code-block:: text
 
-   $ tomcat-manager --user=ace --password=newenglandclamchowder \
-   --cacert=/etc/ssl/mycertbundle https://www.example.com/manager list
+    $ tomcat-manager --user=ace --password=newenglandclamchowder \
+    --cacert=/etc/ssl/mycertbundle https://www.example.com/manager list
 
 Interactive mode is similar:
 
 .. code-block:: text
 
-   $ tomcat-manager
-   tomcat-manager>connect --cacert=/etc/ssl/mycertbundle https://www.example.com/manager ace newenglandclamchowder
-   --connected to https://www.example.com/manager as ace
+    $ tomcat-manager
+    tomcat-manager>connect --cacert=/etc/ssl/mycertbundle https://www.example.com/manager ace newenglandclamchowder
+    --connected to https://www.example.com/manager as ace
 
 From Python use the :attr:`~.TomcatManager.verify` parameter to the
 :meth:`.TomcatManager.connect` method:
@@ -113,23 +114,23 @@ production server.
 
 .. warning::
 
-   With client verification disabled, a malicious actor can intercept
-   communications from the client to the server without the user knowing.
+    With client verification disabled, a malicious actor can intercept
+    communications from the client to the server without the user knowing.
 
 Use the ``--noverify`` option from the command line:
 
 .. code-block:: text
 
-   $ tomcat-manager --user=ace --password=newenglandclamchowder \
-   --noverify https://www.example.com/manager list
+    $ tomcat-manager --user=ace --password=newenglandclamchowder \
+    --noverify https://www.example.com/manager list
 
 from interactive mode:
 
 .. code-block:: text
 
-   $ tomcat-manager
-   tomcat-manager>connect --noverify https://www.example.com/manager ace newenglandclamchowder
-   --connected to https://www.example.com/manager as ace
+    $ tomcat-manager
+    tomcat-manager>connect --noverify https://www.example.com/manager ace newenglandclamchowder
+    --connected to https://www.example.com/manager as ace
 
 or pass ``False`` in the :attr:`~.TomcatManager.verify` parameter of the
 :meth:`.TomcatManager.connect` method:
@@ -189,11 +190,11 @@ or they can be combined into a single file.
 
 .. warning::
 
-   When creating a private key you can protect it with a passphrase, which encrypts
-   the private key. To use the key you must enter the passphrase. In order to work
-   with tomcatmanager, the private key for your local certificate must be unencrypted.
-   The Requests library used for network communication does not support using
-   encrypted keys.
+    When creating a private key you can protect it with a passphrase, which encrypts
+    the private key. To use the key you must enter the passphrase. In order to work
+    with tomcatmanager, the private key for your local certificate must be unencrypted.
+    The Requests library used for network communication does not support using
+    encrypted keys.
 
 Use the ``--key`` and ``--cert`` options from the command line to specify the private
 key and associated certificate used to respond to the authentication requests from the
@@ -202,17 +203,17 @@ server. If you have the key and the certificate in a single file, then omit the
 
 .. code-block:: text
 
-   $ tomcat-manager --key /etc/ssl/mykey --cert /etc/ssl/mycert \
-   https://www.example.com/manager list
+    $ tomcat-manager --key /etc/ssl/mykey --cert /etc/ssl/mycert \
+    https://www.example.com/manager list
 
 Interactive mode works simiarly, this example shows how to use a combined key and
 certificate file:
 
 .. code-block:: text
 
-   $ tomcat-manager
-   tomcat-manager>connect --cert /etc/ssl/mycertandkey https://www.example.com/manager
-   --connected to https://www.example.com/manager authenticated by /etc/ssl/mycertandkey
+    $ tomcat-manager
+    tomcat-manager>connect --cert /etc/ssl/mycertandkey https://www.example.com/manager
+    --connected to https://www.example.com/manager authenticated by /etc/ssl/mycertandkey
 
 The :meth:`.TomcatManager.connect` method accepts a ``cert`` keyword-only parameter.
 If your key and certificate are in the same file, pass the filename in that parameter.

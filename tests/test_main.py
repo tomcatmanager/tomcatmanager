@@ -33,6 +33,42 @@ import tomcatmanager as tm
 from tomcatmanager.__main__ import main
 
 
+def test_main_config_file(mocker, capsys):
+    mock_cmdloop = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.cmdloop", autospec=True
+    )
+
+    cmdline = "--config-file"
+    argv = cmdline.split(" ")
+    exit_code = main(argv)
+    out, _ = capsys.readouterr()
+    out = out.splitlines()
+    assert exit_code == 0
+    # we aren't going to test what is output, that's tested elsewhere
+    # we just need to make sure we got something, and we didn't enter
+    # the command loop
+    assert out[0]
+    assert mock_cmdloop.call_count == 0
+
+
+def test_main_theme_dir(mocker, capsys):
+    mock_cmdloop = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.cmdloop", autospec=True
+    )
+
+    cmdline = "--theme-dir"
+    argv = cmdline.split(" ")
+    exit_code = main(argv)
+    out, _ = capsys.readouterr()
+    out = out.splitlines()
+    assert exit_code == 0
+    # we aren't going to test what is output, that's tested elsewhere
+    # we just need to make sure we got something, and we didn't enter
+    # the command loop
+    assert out[0]
+    assert mock_cmdloop.call_count == 0
+
+
 def test_main_noargs(mocker):
     mock_cmdloop = mocker.patch(
         "tomcatmanager.InteractiveTomcatManager.cmdloop", autospec=True
@@ -42,11 +78,16 @@ def test_main_noargs(mocker):
     assert mock_cmdloop.call_count == 1
 
 
-def test_main_sys_argv(tomcat_manager_server, capsys, monkeypatch):
+def test_main_sys_argv(tomcat_manager_server, capsys, mocker, monkeypatch):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+
+    # hack up sys.argv
     monkeypatch.setattr(
         "sys.argv",
         [
             "tomcat-manager",
+            "--noconfig",
             "-u",
             tomcat_manager_server.user,
             "-p",
@@ -58,15 +99,19 @@ def test_main_sys_argv(tomcat_manager_server, capsys, monkeypatch):
 
     exit_code = main()
     out, err = capsys.readouterr()
-    out = out.splitlines()
-    err = err.splitlines()
+    out = out.strip().splitlines()
     assert exit_code == 0
     assert "Path" in out[0]
     assert "Sessions" in out[0]
-    assert "connected to" in err[0]
+    assert "connected to" in err
 
 
-def test_main_user_password_url_command(tomcat_manager_server, capsys):
+def test_main_user_password_url_command(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    loader = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.load_config", autospec=True
+    )
+
     cmdline = (
         f"-u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
@@ -75,14 +120,19 @@ def test_main_user_password_url_command(tomcat_manager_server, capsys):
     exit_code = main(argv)
     out, err = capsys.readouterr()
     out = out.splitlines()
-    err = err.splitlines()
+
+    # make sure it tried to load the config file
+    assert loader.called
     assert exit_code == 0
     assert "Path" in out[0]
     assert "Sessions" in out[0]
-    assert "connected to" in err[0]
+    assert "connected to" in err
 
 
-def test_main_quiet(tomcat_manager_server, capsys):
+def test_main_quiet(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+
     cmdline = (
         f"-q -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
@@ -93,7 +143,7 @@ def test_main_quiet(tomcat_manager_server, capsys):
     out = out.splitlines()
     assert exit_code == 0
     assert "Path" in out[0]
-    assert not err
+    assert not err.strip()
 
 
 def test_main_help(capsys):
@@ -116,7 +166,42 @@ def test_main_version(capsys):
     assert not err
 
 
-def test_main_debug(tomcat_manager_server, capsys):
+def test_main_noconfig(tomcat_manager_server, capsys, mocker, monkeypatch):
+    # mock the config loader so we can check if it was called
+    loader = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.load_config", autospec=True
+    )
+
+    # hack up sys.argv
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "tomcat-manager",
+            "--noconfig",
+            "-u",
+            tomcat_manager_server.user,
+            "-p",
+            tomcat_manager_server.password,
+            tomcat_manager_server.url,
+            "list",
+        ],
+    )
+
+    exit_code = main()
+    out, err = capsys.readouterr()
+    out = out.splitlines()
+
+    assert not loader.called
+    assert exit_code == 0
+    assert "Path" in out[0]
+    assert "Sessions" in out[0]
+    assert "connected to" in err
+
+
+def test_main_debug(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+
     cmdline = (
         f"-d -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
@@ -131,7 +216,10 @@ def test_main_debug(tomcat_manager_server, capsys):
     assert "Sessions" in out[0]
 
 
-def test_main_version_with_others(tomcat_manager_server, capsys):
+def test_main_version_with_others(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+
     cmdline = (
         f"-v -q -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url} list"
@@ -146,7 +234,10 @@ def test_main_version_with_others(tomcat_manager_server, capsys):
     assert not err
 
 
-def test_main_stdin(tomcat_manager_server, capsys):
+def test_main_stdin(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+
     inio = io.StringIO("list\n")
     stdin = sys.stdin
     cmdline = (
@@ -162,14 +253,16 @@ def test_main_stdin(tomcat_manager_server, capsys):
 
     out, err = capsys.readouterr()
     out = out.splitlines()
-    err = err.splitlines()
     assert exit_code == 0
     assert "Path" in out[0]
     assert "Sessions" in out[0]
-    assert "connected to" in err[0]
+    assert "connected to" in err
 
 
-def test_main_echo(tomcat_manager_server, capsys):
+def test_main_echo(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+
     inio = io.StringIO("list\n")
     stdin = sys.stdin
     cmdline = (
@@ -185,15 +278,17 @@ def test_main_echo(tomcat_manager_server, capsys):
 
     out, err = capsys.readouterr()
     out = out.splitlines()
-    err = err.splitlines()
     assert exit_code == 0
     assert " list" in out[0]
     assert "Path" in out[1]
     assert "Sessions" in out[1]
-    assert "connected to" in err[0]
+    assert "connected to" in err
 
 
-def test_main_status_to_stdout(tomcat_manager_server, capsys):
+def test_main_status_to_stdout(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+
     cmdline = (
         f"-s -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
@@ -204,13 +299,19 @@ def test_main_status_to_stdout(tomcat_manager_server, capsys):
     out, _ = capsys.readouterr()
     out = out.splitlines()
     assert exit_code == 0
-    assert "connected to" in out[0]
-    assert "tomcat version" in out[1]
-    assert "Path" in out[2]
-    assert "Sessions" in out[2]
+    assert "connecting" in out[0]
+    assert "connected to" in out[1]
+    assert "tomcat version" in out[2]
+    assert "listing" in out[3]
+    # out[4] is a status message from the server
+    assert "Path" in out[5]
+    assert "Sessions" in out[5]
 
 
-def test_main_timeout(tomcat_manager_server, capsys):
+def test_main_timeout(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+
     cmdline = (
         f"-t 7.8 -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
@@ -221,10 +322,13 @@ def test_main_timeout(tomcat_manager_server, capsys):
     out, _ = capsys.readouterr()
     out = out.splitlines()
     assert exit_code == 0
-    assert "timeout=7.8" in out[0]
+    assert "timeout = 7.8" in out[0]
 
 
-def test_main_timeout_zero(tomcat_manager_server, capsys):
+def test_main_timeout_zero(tomcat_manager_server, mocker, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+
     cmdline = (
         f"-t 0 -u {tomcat_manager_server.user}"
         f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
@@ -235,4 +339,43 @@ def test_main_timeout_zero(tomcat_manager_server, capsys):
     out, _ = capsys.readouterr()
     out = out.splitlines()
     assert exit_code == 0
-    assert "timeout=0.0" in out[0]
+    assert "timeout = 0.0" in out[0]
+
+
+def test_main_theme_command_line(tomcat_manager_server, mocker, monkeypatch, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+    # make sure there is an environment variable, which the command line should
+    # override
+    monkeypatch.setenv("TOMCATMANAGER_THEME", "default-dark")
+
+    cmdline = (
+        f"-m default-light -u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
+        f" settings theme"
+    )
+    argv = cmdline.split(" ")
+    exit_code = main(argv)
+    out, _ = capsys.readouterr()
+    out = out.splitlines()
+    assert exit_code == 0
+    assert 'theme = "default-light"' in out[0]
+
+
+def test_main_theme_env(tomcat_manager_server, mocker, monkeypatch, capsys):
+    # don't let it load a config file
+    mocker.patch("tomcatmanager.InteractiveTomcatManager.load_config", autospec=True)
+    # set our desired theme in the environment variable
+    monkeypatch.setenv("TOMCATMANAGER_THEME", "default-dark")
+
+    cmdline = (
+        f"-u {tomcat_manager_server.user}"
+        f" -p {tomcat_manager_server.password} {tomcat_manager_server.url}"
+        f" settings theme"
+    )
+    argv = cmdline.split(" ")
+    exit_code = main(argv)
+    out, _ = capsys.readouterr()
+    out = out.splitlines()
+    assert exit_code == 0
+    assert 'theme = "default-dark"' in out[0]

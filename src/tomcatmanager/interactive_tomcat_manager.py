@@ -29,109 +29,42 @@ Classes and functions for the 'tomcat-manager' command line program.
 import argparse
 import ast
 import configparser
+import contextlib
+import enum
 import getpass
 import http.client
+
+import importlib.resources as importlib_resources
+
+try:
+    _ = importlib_resources.files
+except AttributeError:  # pragma: nocover
+    # python < 3.8 doesn't have .files in the standard library importlib.resources
+    # we'll go get the one from pypi, which has it
+    # pylint: disable=import-error
+    import importlib_resources  # type: ignore
+
 import os
 import pathlib
+import shutil
 import sys
+import textwrap
 import traceback
 import xml.dom.minidom
-from typing import Callable, Any, List
+from typing import Callable, Any, List, Dict
 
 import appdirs
 import cmd2
 import requests
+import rich
+import rich.console
+import rich.spinner
+import rich.syntax
+import rich.progress
+from rich_argparse import RichHelpFormatter, RawDescriptionRichHelpFormatter
 import tomlkit
 
 import tomcatmanager as tm
-
-
-def requires_connection(func: Callable) -> Callable:
-    """Decorator for interactive methods which require a connection."""
-
-    def _requires_connection(self, *args, **kwargs):
-        if self.tomcat and self.tomcat.is_connected:
-            func(self, *args, **kwargs)
-        else:
-            # print the message
-            self.exit_code = self.EXIT_ERROR
-            self.perror("not connected")
-
-    _requires_connection.__doc__ = func.__doc__
-    return _requires_connection
-
-
-def _path_version_parser(cmdname: str, helpmsg: str) -> argparse.ArgumentParser:
-    """Construct an argparser using the given parameters"""
-    parser = argparse.ArgumentParser(prog=cmdname, description=helpmsg)
-    parser.add_argument(
-        "-v",
-        "--version",
-        help=(
-            f"Optional version string of the application to"
-            f" {cmdname}. If the application was deployed with"
-            f" a version string, it must be specified in order to"
-            f" {cmdname} the application."
-        ),
-    )
-    path_help = "The path part of the URL where the application is deployed."
-    parser.add_argument("path", help=path_help)
-    return parser
-
-
-def _deploy_parser(
-    name: str,
-    desc: str,
-    localfunc: Callable,
-    serverfunc: Callable,
-    contextfunc: Callable,
-) -> argparse.ArgumentParser:
-    """Construct a argument parser for the deploy or redeploy commands."""
-    deploy_parser = argparse.ArgumentParser(
-        prog=name,
-        description=desc,
-    )
-    deploy_subparsers = deploy_parser.add_subparsers(title="methods", dest="method")
-    # local subparser
-    deploy_local_parser = deploy_subparsers.add_parser(
-        "local",
-        description="transmit a locally available warfile to the server",
-        help="transmit a locally available warfile to the server",
-    )
-    deploy_local_parser.add_argument(
-        "-v", "--version", help="version string to associate with this deployment"
-    )
-    deploy_local_parser.add_argument("warfile")
-    deploy_local_parser.add_argument("path")
-    deploy_local_parser.set_defaults(func=localfunc)
-    # server subparser
-    deploy_server_parser = deploy_subparsers.add_parser(
-        "server",
-        description="deploy a warfile already on the server",
-        help="deploy a warfile already on the server",
-    )
-    deploy_server_parser.add_argument(
-        "-v", "--version", help="version string to associate with this deployment"
-    )
-    deploy_server_parser.add_argument("warfile")
-    deploy_server_parser.add_argument("path")
-    deploy_server_parser.set_defaults(func=serverfunc)
-    # context subparser
-    deploy_context_parser = deploy_subparsers.add_parser(
-        "context",
-        description="deploy a contextfile already on the server",
-        help="deploy a contextfile already on the server",
-    )
-    deploy_context_parser.add_argument(
-        "-v",
-        "--version",
-        help="version string to associate with this deployment",
-    )
-    deploy_context_parser.add_argument("contextfile")
-    deploy_context_parser.add_argument("warfile", nargs="?")
-    deploy_context_parser.add_argument("path")
-    deploy_context_parser.set_defaults(func=contextfunc)
-    return deploy_parser
 
 
 # pylint: disable=too-many-public-methods, too-many-instance-attributes
@@ -172,6 +105,41 @@ class InteractiveTomcatManager(cmd2.Cmd):
         "off": False,
     }
 
+    # list of known scopes that themes can apply color to
+    THEME_SCOPES = [
+        "tm.error",
+        "tm.status",
+        "tm.animation",
+        "tm.help.category",
+        "tm.help.border",
+        "tm.help.command",
+        "tm.help.args",
+        "tm.usage.prog",
+        "tm.usage.groups",
+        "tm.usage.args",
+        "tm.usage.metavar",
+        "tm.usage.help",
+        "tm.usage.text",
+        "tm.usage.syntax",
+        "tm.list.header",
+        "tm.list.border",
+        "tm.app.running",
+        "tm.app.stopped",
+        "tm.app.sessions",
+        "tm.setting.name",
+        "tm.setting.equals",
+        "tm.setting.comment",
+        "tm.setting.string",
+        "tm.setting.bool",
+        "tm.setting.int",
+        "tm.setting.float",
+        "tm.theme.category",
+        "tm.theme.border",
+        "tm.theme.name",
+    ]
+
+    THEME_URL = "https://raw.githubusercontent.com/tomcatmanager/themes/main"
+
     # for configuration
     app_name = "tomcat-manager"
     app_author = "tomcatmanager"
@@ -197,7 +165,55 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """Proxy property for timeout"""
         self.tomcat.timeout = value
 
-    def __init__(self):
+    @property
+    def status_animation(self) -> str:
+        """Validating property for activity animation type"""
+        return self._status_animation
+
+    @status_animation.setter
+    def status_animation(self, value: str):
+        """Validating property for activity animation type"""
+        if value:
+            try:
+                _ = rich.spinner.Spinner(value)
+            except KeyError as err:
+                # the spinner doesn't exist, rich throws a KeyError for this,
+                # we need a ValueError. KeyError puts the message in single quotes
+                # err.args[0] gets the message without the quotes
+                raise ValueError(err.args[0]) from err
+            self._status_animation = value
+        else:
+            # use empty string instead of None because TOML doesn't nave None or Nil
+            self._status_animation = ""
+
+    @property
+    def theme(self) -> str:
+        """Validating property for theme specification"""
+        return self._theme
+
+    @theme.setter
+    def theme(self, value: str):
+        """Validating property for theme specification"""
+        if self._apply_theme(value):
+            self._theme = value
+
+    def _set_defaults(self):
+        """Set default values for all settings"""
+        self.prompt = f"{self.app_name}> "
+        self.debug = False
+        self.timeout = 10.0
+        self.status_prefix = "--"
+        self.echo = False
+        self.quiet = False
+        self.status_suffix = "..."
+        self.status_animation = "bouncingBar"
+        self.theme = ""
+        # go apply the empty theme, which sets
+        # self.console and self.error_console
+        self._apply_theme(self.theme)
+
+    # pylint: disable=too-many-statements
+    def __init__(self, loadconfig=True):
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
         shortcuts = {"?": "help", "!": "shell", "$?": "exit_code"}
 
@@ -216,10 +232,12 @@ class InteractiveTomcatManager(cmd2.Cmd):
         to_remove = [
             "max_completion_items",
             "always_show_hint",
+            "allow_style",
+            "feedback_to_output",
+            "quiet",
             "debug",
             "echo",
             "editor",
-            "feedback_to_output",
             "prompt",
         ]
         for setting in to_remove:
@@ -230,73 +248,238 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         self.add_settable(
             cmd2.Settable(
-                "echo",
-                self.convert_to_boolean,
-                "For piped input, echo command to output",
+                "quiet",
+                _to_bool,
+                "suppress all feedback and status output",
                 self,
-            )
-        )
-        self.add_settable(
-            cmd2.Settable(
-                "status_to_stdout",
-                self.convert_to_boolean,
-                "Status information to stdout instead of stderr",
-                self,
-            )
-        )
-        self.add_settable(
-            cmd2.Settable(
-                "status_prefix", str, "String to prepend to all status output", self
-            )
-        )
-        self.add_settable(
-            cmd2.Settable("editor", str, "Program used to edit files", self)
-        )
-        self.add_settable(
-            cmd2.Settable(
-                "timeout", float, "Seconds to wait for HTTP connections", self
-            )
-        )
-        self.add_settable(
-            cmd2.Settable(
-                "prompt", str, "The prompt displayed before accepting user input", self
             )
         )
         self.add_settable(
             cmd2.Settable(
                 "debug",
-                self.convert_to_boolean,
-                "Show stack trace for exceptions",
+                _to_bool,
+                "show stack trace for exceptions",
                 self,
             )
         )
+        self.add_settable(
+            cmd2.Settable(
+                "echo",
+                _to_bool,
+                "for piped input, echo command to output",
+                self,
+            )
+        )
+        self.add_settable(
+            cmd2.Settable("editor", str, "program used to edit files", self)
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "status_to_stdout",
+                bool,
+                "status information to stdout instead of stderr",
+                self,
+            )
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "status_prefix", str, "string to prepend to all status output", self
+            )
+        )
+        self.add_settable(
+            cmd2.Settable("prompt", str, "displays before accepting user input", self)
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "timing",
+                _to_bool,
+                "report execution time upon command completion",
+                self,
+            )
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "timeout", float, "seconds to wait for HTTP connections", self
+            )
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "status_suffix", str, "suffix to append to status messages", self
+            )
+        )
+        self.add_settable(
+            cmd2.Settable(
+                "status_animation",
+                str,
+                "style of activity animation from rich.spinner",
+                self,
+            )
+        )
+        self.add_settable(cmd2.Settable("theme", str, "color scheme", self))
 
         self.tomcat = tm.TomcatManager()
 
         # set default values
-        self.prompt = f"{self.app_name}> "
-        self.debug = False
-        self.timeout = 10
-        self.status_prefix = "--"
-        self.echo = False
+        self._set_defaults()
 
         # load config file if it exists
-        self.load_config()
+        if loadconfig:
+            self.load_config()
+        else:
+            self.pfeedback("skipping load of configuration file")
+
         # give a friendly message if there is an old config file but not a
         # new one
-        if (
-            not self.config_file.exists() and self.config_file_old.exists()
-        ):  # pragma: nocover
-            self.pfeedback(
-                "In version 6.0.0 the configuration file format changed from INI to TOML."
-            )
-            self.pfeedback(
-                "You have a configuration file in the old format. Type 'config convert' to"
-            )
-            self.pfeedback("migrate your old configuration to the new format.")
+        if self.config_file and not self.config_file.exists():  # pragma: nocover
+            if (
+                self.config_file_old and self.config_file_old.exists()
+            ):  # pragma: nocover
+                self.pfeedback(
+                    "In version 6.0.0 the configuration file format changed from INI to TOML."
+                )
+                self.pfeedback(
+                    "You have a configuration file in the old format. Type 'config convert' to"
+                )
+                self.pfeedback("migrate your old configuration to the new format.")
 
         # initialize command exit code
         self.exit_code = None
+
+    ###
+    #
+    # Theme and rendering helpers
+    #
+    ###
+    def _apply_theme(self, theme: str) -> bool:
+        """Apply a given theme
+
+        :returns: True of the theme could be applied, False if not
+        """
+        # the scopes have to be present in the theme, or else it generates
+        # errors. Create a theme with all the scopes set to 'none', which
+        # tells rich.style to apply no styling
+        tvalues = {}
+        for scope in self.THEME_SCOPES:
+            tvalues[scope] = "none"
+        # if we have a theme name given
+        if theme:
+            # find the ThemeLocation and path, we discard the former
+            # here, because we don't care
+            _, tfile = self._resolve_theme(theme)
+            if not tfile:
+                self.perror(f"unknown theme: '{theme}'")
+                return False
+
+            try:
+                with open(tfile, encoding="utf-8") as file_var:
+                    newvalues = tomlkit.load(file_var)
+            except (tomlkit.exceptions.TOMLKitError, OSError) as err:
+                self.perror(f"error loading theme: {err}")
+                return False
+
+            # apply the new values from the theme to tvalues
+            for scope in self.THEME_SCOPES:
+                parts = scope.split(".")
+                style = ""
+                try:
+                    if len(parts) == 2:
+                        style = newvalues[parts[0]][parts[1]]
+                    elif len(parts) == 3:
+                        style = newvalues[parts[0]][parts[1]][parts[2]]
+                except tomlkit.exceptions.NonExistentKey:
+                    # the theme file doesn't define that scope
+                    pass
+                if style:
+                    tvalues[scope] = style
+        # copy the usage styles to the RichHelpFormatter class
+        for style in ["prog", "groups", "args", "metavar", "help", "text", "syntax"]:
+            RichHelpFormatter.styles[f"argparse.{style}"] = tvalues[f"tm.usage.{style}"]
+        # set other RichHelpFormatter settings
+        RichHelpFormatter.usage_markup = True
+        # default is str.title, which shows the groups in title case
+        # this shows the groups in all lower case
+        RichHelpFormatter.group_name_formatter = str.lower
+
+        # recreate our console objects using the new theme
+        try:
+            self.console = rich.console.Console(
+                theme=rich.theme.Theme(tvalues),
+                markup=False,
+                emoji=False,
+                highlight=False,
+            )
+            self.error_console = rich.console.Console(
+                stderr=True,
+                theme=rich.theme.Theme(tvalues),
+                markup=False,
+                emoji=False,
+                highlight=False,
+            )
+        except (rich.errors.StyleError, rich.errors.ConsoleError) as err:
+            self.perror(f"error loading theme: {err}")
+            return False
+        return True
+
+    def _resolve_theme(self, name: str) -> pathlib.Path:
+        """
+        Find the path of the theme file for a given name.
+
+        :return: a tuple of ThemeLocation, and the path of the theme file for
+                 the given name, or None, None if no theme file for that
+                 name exists
+
+        Checks in the user theme directory first, which is located
+        in user configuration directory in a "themes" directory.
+        If not found, then it looks in the embedded themes included
+        as part of tomcatmanager.
+        """
+        # check user theme dir
+        tfile = self.user_theme_dir / f"{name}.toml"
+        if tfile.is_file():
+            return ThemeLocation.USER, tfile
+        # check included themes
+        for path in importlib_resources.files("tomcatmanager.themes").iterdir():
+            if path.name == f"{name}.toml":
+                return ThemeLocation.BUILTIN, path
+        # couldn't find it
+        return None, None
+
+    def _progressfactory(self, message: str) -> rich.progress.Progress:
+        """generate a progress object"""
+        if self.quiet or not message:
+            # return a no-op context manager (that means we won't get any output)
+            return contextlib.nullcontext()
+
+        if self.feedback_to_output:
+            cons = self.console
+        else:
+            cons = self.error_console
+
+        # create a custom status/progress display
+        msg = rich.text.Text(
+            f"{self.status_prefix}{message}{self.status_suffix}",
+            style="tm.status",
+        )
+        text_column = rich.progress.RenderableColumn(msg)
+        if self.status_animation:
+            spinner_column = rich.progress.SpinnerColumn(
+                spinner_name=self.status_animation,
+                style="tm.animation",
+            )
+            progress = rich.progress.Progress(text_column, spinner_column, console=cons)
+        else:
+            progress = rich.progress.Progress(text_column, console=cons)
+        # gotta have a task in order for the status spinner to render,
+        # but the name we use here doesn't matter
+        progress.add_task("notshown")
+        return progress
+
+    def _apptag(self, path: str, version: str) -> str:
+        """Render an message with an app tag"""
+        apptag = path
+        if version:
+            apptag += f"##{version}"
+        return apptag
 
     ###
     #
@@ -317,17 +500,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
         :param end: str - string appended after the end of the message if
                           not already present, default a newline
         """
-        if msg is not None:
-            try:
-                msg_str = f"{msg}"
-                self.stdout.write(msg_str)
-                if not msg_str.endswith(end):
-                    self.stdout.write(end)
-            except BrokenPipeError:  # pragma: nocover
-                # This occurs if a command's output is being piped to another
-                # process and that process closes before the command is
-                # finished.
-                pass
+        try:
+            self.console.print(msg, end=end)
+        except BrokenPipeError:  # pragma: nocover
+            # This occurs if a command's output is being piped to another
+            # process and that process closes before the command is
+            # finished.
+            pass
 
     # pylint: disable=unused-argument
     def perror(self, msg: Any = "", *, end: str = "\n", apply_style=False) -> None:
@@ -344,7 +523,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         exception.
         """
         if msg:
-            sys.stderr.write(f"{msg}{end}")
+            ##sys.stderr.write(f"{msg}{end}")
+            self.error_console.print(f"{msg}", end=end, style="tm.error")
         else:
             _type, _exception, _traceback = sys.exc_info()
             if _exception:
@@ -353,7 +533,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 # else:
                 #    output = ''.join(traceback.format_exception_only(_type, _exception))
                 output = "".join(traceback.format_exception_only(_type, _exception))
-                sys.stderr.write(output)
+                ##sys.stderr.write(output)
+                self.error_console.print(output, end=end)
 
     def pfeedback(self, msg: Any, *, end: str = "\n") -> None:
         """
@@ -364,11 +545,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         will be sent to sys.stderr.
         """
         if not self.quiet:
-            formatted_msg = f"{self.status_prefix}{msg}{end}"
+            formatted_msg = f"{self.status_prefix}{msg}"
             if self.feedback_to_output:
-                self.poutput(formatted_msg)
+                self.console.print(formatted_msg, end=end, style="tm.status")
             else:
-                sys.stderr.write(formatted_msg)
+                self.error_console.print(formatted_msg, end=end, style="tm.status")
 
     def emptyline(self):
         """Do nothing on an empty line"""
@@ -383,7 +564,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     # Convenience and shared methods.
     #
     ###
-    def docmd(self, func: Callable, *args, **kwargs) -> Any:
+    def docmd(self, statustxt: str, func: Callable, *args, **kwargs) -> Any:
         """Call a function and return, printing any exceptions that occur
 
         Sets exit_code to 0 and calls {func}. If func throws a TomcatError,
@@ -391,9 +572,13 @@ class InteractiveTomcatManager(cmd2.Cmd):
         """
         self.exit_code = self.EXIT_ERROR
         try:
-            r = func(*args, **kwargs)
+            with self._progressfactory(statustxt):
+                r = func(*args, **kwargs)
             r.raise_for_status()
             self.exit_code = self.EXIT_SUCCESS
+            if r.status_message and r.status_message != tm.StatusCode.OK.value:
+                # don't print the status message if it's just "OK"
+                self.pfeedback(r.status_message)
             return r
         except tm.TomcatNotImplementedError:
             self.perror("command not implemented by server")
@@ -405,7 +590,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def show_help_from(self, argparser: argparse.ArgumentParser):
         """Set exit code and output help from an argparser."""
         self.exit_code = self.EXIT_SUCCESS
-        self.poutput(argparser.format_help())
+        # we don't use self.console because this already has ansi color codes in
+        self.ppaged(argparser.format_help())
 
     def parse_args(
         self, parser: argparse.ArgumentParser, argv: List
@@ -426,6 +612,17 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # no usage error, assume success
         self.exit_code = self.EXIT_SUCCESS
         return args
+
+    def raise_if_not_connected(self):
+        """Print an error and throw an exception if we are not connected"""
+        if self.tomcat and self.tomcat.is_connected:
+            return
+        # we aren't connected, so make a fuss
+        self.exit_code = self.EXIT_ERROR
+        self.perror("not connected")
+        # this exception tells cmd2 to skip the post command hooks and
+        # just prompt for more input
+        raise cmd2.Cmd2ArgparseError
 
     def _which_server(self):
         """
@@ -448,111 +645,223 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         return out
 
-    def do_help(self, args: str):
-        """Show available commands, or help on a specific command."""
-        # pylint: disable=too-many-statements
+    def _help_section(self, title: str):
+        """Start a new help section and return a table for commands in that section"""
+        self.console.print("")
+        self.console.print(title, style="tm.help.category")
+        self.console.print("─" * 72, style="tm.help.border")
+        cmds = rich.table.Table(
+            show_edge=False,
+            box=None,
+            padding=(0, 3, 0, 0),
+            show_header=False,
+        )
+        return cmds
+
+    def _help_command(self, table, command, desc):
+        """Add a new command to a help table"""
+        table.add_row(rich.text.Text(command, style="tm.help.command"), desc)
+
+    # pylint: disable=too-many-statements
+    def do_help(self, args: cmd2.Statement):
+        """show available commands, or help on a specific command"""
         if args:
-            # they want help on a specific command, use cmd2 for that
-            super().do_help(args)
+            # cmd2 doesn't handle help for subparsers very well
+            # I want "help deploy local" to work. so....
+            if args.arg_list[0] in ["deploy", "redeploy"]:
+                self._do_help_deploy(args)
+            elif args.arg_list[0] == "theme":
+                self._do_help_theme(args)
+            else:
+                # use cmd2 for commands without subparsers
+                super().do_help(args)
+                if self.last_result:
+                    self.exit_code = self.EXIT_SUCCESS
+                else:
+                    self.exit_code = self.EXIT_ERROR
         else:
-            # show a custom list of commands, organized by category
-            help_ = []
-            help_.append(
-                "tomcat-manager is a command line tool for managing a Tomcat server"
-            )
+            with self.console.pager(styles=True):
+                self.console.print("tomcat-manager", style="tm.help.command", end="")
+                self.console.print(
+                    " is a command line tool for managing a Tomcat server"
+                )
+                self.console.print()
+                helpcmd = rich.text.Text("Type '")
+                helpcmd.append("help", style="tm.help.command")
+                helpcmd.append(" ")
+                helpcmd.append("[command]", style="tm.help.args")
+                helpcmd.append("' for help on any command.")
+                self.console.print(helpcmd)
+                self.console.print()
+                self.console.print(
+                    "Here's a categorized list of all available commands:"
+                )
 
-            help_ = self._help_add_header(help_, "Connecting to a Tomcat server")
-            help_.append(f"connect   {self.do_connect.__doc__}")
-            help_.append(f"which     {self.do_which.__doc__}")
+                cmds = self._help_section("Connecting to a Tomcat server")
+                self._help_command(cmds, "connect", self.do_connect.__doc__)
+                self._help_command(cmds, "which", self.do_which.__doc__)
+                self._help_command(cmds, "disconnect", self.do_disconnect.__doc__)
+                self.console.print(cmds)
 
-            help_ = self._help_add_header(help_, "Managing applications")
-            help_.append(f"list      {self.do_list.__doc__}")
-            help_.append(f"deploy    {self.do_deploy.__doc__}")
-            help_.append(f"redeploy  {self.do_redeploy.__doc__}")
-            help_.append(f"undeploy  {self.do_undeploy.__doc__}")
-            help_.append(f"start     {self.do_start.__doc__}")
-            help_.append(f"stop      {self.do_stop.__doc__}")
-            help_.append(f"restart   {self.do_restart.__doc__}")
-            help_.append("  reload  Synonym for 'restart'.")
-            help_.append(f"sessions  {self.do_sessions.__doc__}")
-            help_.append(f"expire    {self.do_expire.__doc__}")
+                cmds = self._help_section("Managing applications")
+                self._help_command(cmds, "list", self.do_list.__doc__)
+                self._help_command(cmds, "deploy", self.do_deploy.__doc__)
+                self._help_command(cmds, "redeploy", self.do_redeploy.__doc__)
+                self._help_command(cmds, "undeploy", self.do_undeploy.__doc__)
+                self._help_command(cmds, "start", self.do_start.__doc__)
+                self._help_command(cmds, "stop", self.do_stop.__doc__)
+                self._help_command(cmds, "restart", self.do_restart.__doc__)
+                self._help_command(cmds, "  reload", "synonym for 'restart'")
+                self._help_command(cmds, "sessions", self.do_sessions.__doc__)
+                self._help_command(cmds, "expire", self.do_expire.__doc__)
+                self.console.print(cmds)
 
-            help_ = self._help_add_header(help_, "Server information")
-            help_.append(f"findleakers          {self.do_findleakers.__doc__}")
-            help_.append(f"resources            {self.do_resources.__doc__}")
-            help_.append(f"serverinfo           {self.do_serverinfo.__doc__}")
-            help_.append(f"status               {self.do_status.__doc__}")
-            help_.append(f"threaddump           {self.do_threaddump.__doc__}")
-            help_.append(f"vminfo               {self.do_vminfo.__doc__}")
+                cmds = self._help_section("Server information")
+                self._help_command(cmds, "findleakers", self.do_findleakers.__doc__)
+                self._help_command(cmds, "resources", self.do_resources.__doc__)
+                self._help_command(cmds, "serverinfo", self.do_serverinfo.__doc__)
+                self._help_command(cmds, "status", self.do_status.__doc__)
+                self._help_command(cmds, "threaddump", self.do_threaddump.__doc__)
+                self._help_command(cmds, "vminfo", self.do_vminfo.__doc__)
+                self.console.print(cmds)
 
-            help_ = self._help_add_header(help_, "TLS configuration")
-            help_.append(
-                f"sslconnectorciphers       {self.do_sslconnectorciphers.__doc__}"
-            )
-            help_.append(
-                f"sslconnectorcerts         {self.do_sslconnectorcerts.__doc__}"
-            )
-            help_.append(
-                f"sslconnectortrustedcerts  {self.do_sslconnectortrustedcerts.__doc__}"
-            )
-            help_.append(f"sslreload                 {self.do_sslreload.__doc__}")
+                cmds = self._help_section("TLS configuration")
+                self._help_command(
+                    cmds, "sslconnectorciphers", self.do_sslconnectorciphers.__doc__
+                )
+                self._help_command(
+                    cmds, "sslconnectorcerts", self.do_sslconnectorcerts.__doc__
+                )
+                self._help_command(
+                    cmds,
+                    "sslconnectortrustedcerts",
+                    self.do_sslconnectortrustedcerts.__doc__,
+                )
+                self._help_command(cmds, "sslreload", self.do_sslreload.__doc__)
+                self.console.print(cmds)
 
-            help_ = self._help_add_header(help_, "Settings, configuration, and tools")
-            help_.append(f"config        {self.do_config.__doc__}")
-            help_.append("edit          Edit a file in the preferred text editor.")
-            help_.append(f"exit_code     {self.do_exit_code.__doc__}")
-            help_.append(
-                "history       View, run, edit, and save previously entered commands."
-            )
-            help_.append("py            Run an interactive python shell.")
-            help_.append("run_pyscript  Run a file containing a python script.")
-            help_.append(f"set           {self.do_set.__doc__}")
-            help_.append(f"show          {self.do_show.__doc__}")
-            help_.append("  settings    Synonym for 'show'.")
-            help_.append(
-                "shell         Execute a command in the operating system shell."
-            )
-            help_.append("shortcuts     Show shortcuts for other commands.")
+                cmds = self._help_section("Settings, configuration, and tools")
+                self._help_command(cmds, "settings", self.do_settings.__doc__)
+                self._help_command(cmds, "set", self.do_set.__doc__)
+                self._help_command(cmds, "config", self.do_config.__doc__)
+                self._help_command(cmds, "theme", self.do_theme.__doc__)
+                self._help_command(
+                    cmds, "edit", "edit a file in the preferred text editor"
+                )
+                self._help_command(cmds, "exit_code", self.do_exit_code.__doc__)
+                self._help_command(
+                    cmds,
+                    "history",
+                    "view, run, edit, and save previously entered commands",
+                )
+                self._help_command(cmds, "py", "run an interactive python shell")
+                self._help_command(
+                    cmds, "run_pyscript", "run a file containing a python script"
+                )
+                self._help_command(
+                    cmds, "shell", "execute a command in the operating system shell"
+                )
+                self._help_command(
+                    cmds, "shortcuts", "show shortcuts for other commands"
+                )
+                self.console.print(cmds)
 
-            help_ = self._help_add_header(help_, "Other")
-            help_.append("exit     Exit this program.")
-            help_.append("  quit   Synonym for 'exit'.")
-            help_.append(f"help     {self.do_help.__doc__}")
-            help_.append(f"version  {self.do_version.__doc__}")
-            help_.append(f"license  {self.do_license.__doc__}")
+                cmds = self._help_section("Other")
+                self._help_command(cmds, "exit", self.do_exit.__doc__)
+                self._help_command(cmds, "  quit", self.do_quit.__doc__)
+                self._help_command(cmds, "help", self.do_help.__doc__)
+                self._help_command(cmds, "version", self.do_version.__doc__)
+                self._help_command(cmds, "license", self.do_license.__doc__)
+                self.console.print(cmds)
 
-            for line in help_:
-                self.poutput(line)
             self.exit_code = self.EXIT_SUCCESS
 
-    @staticmethod
-    def _help_add_header(help_: List, header: str) -> List:
-        help_.append("")
-        help_.append(header)
-        help_.append("=" * 60)
-        return help_
+    def _do_help_deploy(self, args: cmd2.Statement):
+        """do help for the deploy and redeploy commands"""
+        # if we get here we know args.arg_list[0] is deploy or redeploy
+        command = args.arg_list[0]
+        (parser, local_parser, server_parser, context_parser) = _deploy_parser(
+            command,
+            self.do_deploy.__doc__,
+            self.deploy_local,
+            self.deploy_server,
+            self.deploy_context,
+        )
+        if len(args.arg_list) == 2:
+            # help deploy local
+            subcommand = args.arg_list[1]
+            if subcommand in ["local", "server", "context"]:
+                # format help from subparser
+                (_, local_parser, server_parser, context_parser) = _deploy_parser(
+                    "deploy",
+                    self.do_deploy.__doc__,
+                    self.deploy_local,
+                    self.deploy_server,
+                    self.deploy_context,
+                )
+                # this output is already formatted and knows about the length of
+                # the non-printing ascii color sequences. don't write it to
+                # our console or it will get wrapped inappropriately
+                if subcommand == "local":
+                    self.console.print(local_parser.format_help())
+                elif subcommand == "server":
+                    self.console.print(server_parser.format_help())
+                elif subcommand == "context":
+                    self.console.print(context_parser.format_help())
+                self.exit_code = self.EXIT_SUCCESS
+            else:
+                # they typed 'help deploy invalidcommand'
+                self.console.print(parser.format_help())
+                self.exit_code = self.EXIT_SUCCESS
+        else:
+            # we have some wacko arguments, so just do help for deploy/redeploy
+            self.console.print(parser.format_help())
+            self.exit_code = self.EXIT_SUCCESS
+
+    def _do_help_theme(self, args: cmd2.Statement):
+        """do help for the theme command"""
+        # if we get here we know args.arg_list[0] is 'theme'
+        parsers = self._build_theme_parsers()
+        if len(args.arg_list) == 2:
+            subcommand = args.arg_list[1]
+            if subcommand in parsers:
+                self.console.print(parsers[subcommand].format_help())
+                self.exit_code = self.EXIT_SUCCESS
+            else:
+                # they typed 'help theme invalidaction'
+                self.console.print(parsers["theme"].format_help())
+                self.exit_code = self.EXIT_SUCCESS
+        else:
+            # we have some wacko arguments, so just do help for the main command
+            self.console.print(parsers["theme"].format_help())
+            self.exit_code = self.EXIT_SUCCESS
 
     ###
     #
     # user accessable commands for configuration and settings
     #
     ###
-    config_parser = argparse.ArgumentParser(
-        prog="config",
-        description="Edit or show the location of the user configuration file.",
-    )
-    config_parser.add_argument(
-        "action",
-        choices=["edit", "file", "convert"],
-        help="""'file' shows the name of the configuration
-             file. 'edit' edits the configuration file
-             in your preferred editor. 'convert' writes a new .toml
+    @property
+    def config_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the config command."""
+        parser = argparse.ArgumentParser(
+            prog="config",
+            description=self.do_config.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "action",
+            choices=["edit", "file", "convert"],
+            help="""'file' shows the name of the configuration
+             file; 'edit' edits the configuration file
+             in your preferred editor; 'convert' writes a new .toml
              configuration file with the same settings as the old
-             .ini configuration file.""",
-    )
+             .ini configuration file""",
+        )
+        return parser
 
     def do_config(self, cmdline: cmd2.Statement):
-        """Edit or show the location of the user configuration file."""
+        """edit or show the location of the user configuration file"""
         args = self.parse_args(self.config_parser, cmdline.argv)
 
         if args.action == "file":
@@ -564,7 +873,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self._config_convert()
 
     def help_config(self):
-        """Show help for the 'config' command."""
+        """Show help for the 'config' command"""
         self.show_help_from(self.config_parser)
 
     def _config_edit(self):
@@ -573,24 +882,28 @@ class InteractiveTomcatManager(cmd2.Cmd):
         editor exits.
         """
         if not self.editor:
-            self.perror("no editor: use 'set editor={path}' to specify one")
+            self.perror("no editor: use 'set editor = \"{path}\"' to specify one")
             self.exit_code = self.EXIT_ERROR
             return
 
-        # ensure the configuration directory exists
-        configdir = self.config_file.parent
-        if not configdir.exists():  # pragma: nocover
-            configdir.mkdir(parents=True, exist_ok=True)
+        if self.config_file:
+            # ensure the configuration directory exists
+            configdir = self.config_file.parent
+            if not configdir.exists():  # pragma: nocover
+                configdir.mkdir(parents=True, exist_ok=True)
 
-        # go edit the file
-        cmd = f'"{self.editor}" "{self.config_file}"'
-        self.pfeedback(f"executing {cmd}")
-        os.system(cmd)
+            # go edit the file
+            cmd = f'"{self.editor}" "{self.config_file}"'
+            self.pfeedback(f"executing {cmd}")
+            os.system(cmd)
 
-        # read it back in and apply it
-        self.pfeedback("reloading configuration")
-        self.load_config()
-        self.exit_code = self.EXIT_SUCCESS
+            # read it back in and apply it
+            self.pfeedback("reloading configuration file")
+            self.load_config()
+            self.exit_code = self.EXIT_SUCCESS
+        else:
+            self.perror("could not figure out where configuration file should be")
+            self.exit_code = self.EXIT_ERROR
 
     def _config_convert(self):
         """
@@ -600,14 +913,14 @@ class InteractiveTomcatManager(cmd2.Cmd):
         The .ini file _must_ exist and the .toml file _must not_ exist in order
         for this to do anything.
         """
-        if self.config_file.exists():
+        if self.config_file and self.config_file.exists():
             self.pfeedback(
                 "configuration file exists: cowardly refusing to overwrite it"
             )
             self.exit_code = self.EXIT_ERROR
             return
 
-        if not self.config_file_old.exists():
+        if self.config_file_old and not self.config_file_old.exists():
             self.pfeedback("old configuration file does not exist: nothing to convert")
             self.exit_code = self.EXIT_ERROR
             return
@@ -663,107 +976,577 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.load_config()
         self.exit_code = self.EXIT_SUCCESS
 
-    show_parser = argparse.ArgumentParser(
-        prog="show",
-        description="Show all settings or a specific setting.",
-    )
-    show_parser.add_argument(
-        "setting",
-        nargs="?",
-        help="""Name of the setting to show the value for.
-             If omitted show the values of all settings.""",
-    )
-
     def do_show(self, cmdline: cmd2.Statement):
-        """Show all settings or a specific setting."""
-        args = self.parse_args(self.show_parser, cmdline.argv)
+        """Override cmd2 builtin show command to be invalid"""
+        self.default(cmdline)
 
-        result = {}
-        maxlen = 0
-        for setting in self.settables:
-            if (not args.setting) or (setting == args.setting):
-                val = str(getattr(self, setting))
-                result[setting] = f"{setting}={self._pythonize(val)}"
-                maxlen = max(maxlen, len(result[setting]))
-        # make a little extra space
-        maxlen += 1
-        if result:
-            for setting in sorted(result):
-                self.poutput(
-                    (
-                        f"{result[setting].ljust(maxlen)}"
-                        f"  # {self.settables[setting].description}"
-                    )
-                )
-            self.exit_code = self.EXIT_SUCCESS
-        else:
-            self.perror(f"unknown setting: '{args.setting}'")
-            self.exit_code = self.EXIT_ERROR
-
-    def help_show(self):
-        """Show help for the 'show' command."""
-        self.show_help_from(self.show_parser)
-
-    settings_parser = argparse.ArgumentParser(
-        prog="settings",
-        description="Show all settings or a specific setting. Synonym for 'show'.",
-    )
-    settings_parser.add_argument(
-        "setting",
-        nargs="?",
-        help="""Name of the setting to show the value for.
-             If omitted show the values of all settings.""",
-    )
+    @property
+    def settings_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the settings command."""
+        parser = argparse.ArgumentParser(
+            prog="settings",
+            description=self.do_settings.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "setting",
+            nargs="?",
+            help="""name of the setting to show the value for;
+             if omitted show the values of all settings""",
+        )
+        return parser
 
     def do_settings(self, cmdline: cmd2.Statement):
-        """Synonym for 'show' command."""
-        self.do_show(cmdline)
+        """display program settings"""
+        args = self.parse_args(self.settings_parser, cmdline.argv)
+
+        if args.setting and args.setting not in self.settables:
+            self.perror(f"unknown setting: '{args.setting}'")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        # create a table with the desired output, we use this so the
+        # comments line up nicely
+        otable = rich.table.Table(
+            show_edge=False,
+            box=None,
+            padding=(0, 3, 0, 0),
+            show_header=False,
+        )
+        # for the setting and it's value
+        otable.add_column(no_wrap=True)
+        # for the comment which contains the description of the setting
+        otable.add_column(no_wrap=True)
+
+        for setting in sorted(self.settables):
+            if (not args.setting) or (setting == args.setting):
+                styled_setting = rich.text.Text(setting, style="tm.setting.name")
+                styled_setting += " "
+                styled_setting += rich.text.Text("=", style="tm.setting.equals")
+                styled_setting += " "
+
+                # create a tomlkit table so we can have tomlkit worry about
+                # how render our python setting values as valid toml
+                ttable = tomlkit.table()
+                ttable.add(setting, getattr(self, setting))
+                # now dump the table and peel off everything after
+                # the first equal sign for the value
+                # this breaks on quoted keys that contain and equals sign
+                # but that shouldn't happen much
+                value = tomlkit.dumps(ttable).split("=", 1)[1].strip()
+
+                typ = type(getattr(self, setting))
+                styled_value = value
+                if typ == bool:
+                    styled_value = rich.text.Text(value, style="tm.setting.bool")
+                elif typ == str:
+                    styled_value = rich.text.Text(value, style="tm.setting.string")
+                elif typ == float:
+                    styled_value = rich.text.Text(value, style="tm.setting.float")
+                # we have no integer settings, so no way to test this, but it's
+                # here for the future
+                # elif typ == int:
+                #    styled_value = rich.text.Text(value, style="tm.setting.int")
+
+                styled_setting += styled_value
+                styled_comment = rich.text.Text(
+                    f"# {self.settables[setting].description}",
+                    style="tm.setting.comment",
+                )
+                otable.add_row(
+                    styled_setting,
+                    styled_comment,
+                )
+
+        self.console.print(otable)
+        self.exit_code = self.EXIT_SUCCESS
 
     def help_settings(self):
-        """Show help for the 'settings' command."""
+        """Show help for the 'settings' command"""
         self.show_help_from(self.settings_parser)
 
+    @property
+    def set_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the set command."""
+        # we don't actually parse input with this argument parser
+        # because it strips quotes off of the value, which we need
+        # to remain in place so they will be valid toml syntax
+        # we do use this argument parser to render help
+        desc = """\
+            change a program setting
+
+            The syntax must be valid TOML, just like the config file. Here's some
+            examples:
+
+              tomcat-manager> set theme = "default-dark"
+              tomcat-manager> set timing = true
+              tomcat-manager> set timeout = 5.0
+              tomcat-manager> set prompt = "tm> "
+            """
+        parser = argparse.ArgumentParser(
+            prog="set",
+            description=textwrap.dedent(desc),
+            formatter_class=RawDescriptionRichHelpFormatter,
+        )
+        parser.add_argument(
+            "setting",
+            help="the name of the setting",
+        )
+        parser.add_argument(
+            "equals",
+            help="assignment operator",
+            metavar="=",
+        )
+        parser.add_argument(
+            "value",
+            help="the value for the setting ",
+        )
+        return parser
+
     def do_set(self, args: cmd2.Statement):
-        """Change program settings."""
+        """change a program setting"""
+        # we don't parse the input with self.set_parser() because
+        # argparse.ArgumentParser.parse_args() swallows the quotes around
+        # quoted arguments and we need those quotes to make valid TOML.
         if args:
-            config = EvaluatingConfigParser()
-            setting_string = f"[settings]\n{args}"
-            try:
-                config.read_string(setting_string)
-            except configparser.ParsingError:
-                self.perror("invalid syntax: try 'set {setting} = {value}'")
-                self.exit_code = self.EXIT_ERROR
+            # so we have to check manually for help flags
+            if args.arg_list[0] == "-h" or args.arg_list[0] == "--help":
+                self.help_set()
                 return
-            for param_name in config["settings"]:
-                if param_name in self.settables:
-                    try:
+
+            try:
+                # we need to use args.raw because args and arg.arg_list
+                # have had all the quotation marks processed, which can
+                # mess with our input -> TOML processing.
+                # so we use args.raw and get rid of the "set " at the
+                # beginning. TOML is tolerant of whitespace, so the
+                # rest should be fine
+                tomlstr = args.raw.replace("set ", "", 1)
+                setting_string = f"[settings]\n{tomlstr}"
+                config = tomlkit.loads(setting_string)
+
+                for param_name in config["settings"]:
+                    if param_name in self.settables:
                         self._change_setting(param_name, config["settings"][param_name])
                         self.exit_code = self.EXIT_SUCCESS
-                    except ValueError as err:
-                        if self.debug:
-                            self.perror(None)
-                        else:
-                            self.perror(err)
+                    else:
+                        self.perror(f"unknown setting: '{param_name}'")
                         self.exit_code = self.EXIT_ERROR
+            except tomlkit.exceptions.TOMLKitError:
+                self.perror(
+                    "invalid syntax: use 'help set' to view syntax and examples"
+                )
+                self.exit_code = self.EXIT_ERROR
+            except ValueError as err:
+                # this could be thrown by self._change_setting if we try to set a string
+                # value to a boolean parameter
+                if self.debug:
+                    self.perror(None)
                 else:
-                    self.perror(f"unknown setting: '{param_name}'")
-                    self.exit_code = self.EXIT_ERROR
+                    self.perror(str(err))
+                self.exit_code = self.EXIT_ERROR
         else:
-            self.do_show(args)
+            self.do_settings(args)
 
     def help_set(self):
-        """Show help for the 'set' command."""
-        self.exit_code = self.EXIT_SUCCESS
-        self.poutput(
-            """usage: set {setting}={value}
+        """Show help for the 'set' command"""
+        self.show_help_from(self.set_parser)
 
-change the value of one of this program's settings
-
-  setting  Name of the setting to modify. Use the 'show' command to see a
-           list of valid settings.
-  value    the value for the setting
-"""
+    def _build_theme_parsers(self) -> Dict:
+        """Construct all the argument parsers for the theme command."""
+        main_parser = argparse.ArgumentParser(
+            prog="theme",
+            description="manage themes",
+            formatter_class=RichHelpFormatter,
         )
+        main_subparsers = main_parser.add_subparsers(
+            dest="action",
+            required=True,
+            metavar="action",
+        )
+
+        # list available themes
+        list_parser = main_subparsers.add_parser(
+            "list",
+            description="list all themes",
+            help="list all themes",
+            formatter_class=main_parser.formatter_class,
+        )
+        list_parser.set_defaults(func=self.theme_list)
+
+        # clone a built-in theme
+        clone_parser = main_subparsers.add_parser(
+            "clone",
+            description="clone a theme from the gallery or from one of the built-in themes",
+            help="clone a theme from the gallery or from one of the built-in themes",
+            formatter_class=main_parser.formatter_class,
+        )
+        clone_parser.set_defaults(func=self.theme_clone)
+        clone_parser.add_argument(
+            "name",
+            help="name of the gallery or built-in theme to clone to user theme directory",
+        )
+        clone_parser.add_argument(
+            "new_name", nargs="?", default="", help="new name of the theme"
+        )
+
+        # edit a user theme
+        edit_parser = main_subparsers.add_parser(
+            "edit",
+            description="edit a user theme",
+            help="edit a user theme",
+            formatter_class=main_parser.formatter_class,
+        )
+        edit_parser.set_defaults(func=self.theme_edit)
+        edit_parser.add_argument(
+            "name", nargs="?", default="", help="name of theme to edit"
+        )
+
+        # create a new user theme
+        create_parser = main_subparsers.add_parser(
+            "create",
+            description="create a new user theme",
+            help="create a new user theme",
+            formatter_class=main_parser.formatter_class,
+        )
+        create_parser.set_defaults(func=self.theme_create)
+        create_parser.add_argument(
+            "name",
+            help="name for the new theme",
+        )
+
+        # delete a user theme
+        delete_parser = main_subparsers.add_parser(
+            "delete",
+            description="delete a user theme",
+            help="delete a user theme",
+            formatter_class=main_parser.formatter_class,
+        )
+        delete_parser.set_defaults(func=self.theme_delete)
+        delete_parser.add_argument(
+            "name",
+            help="name of the theme to delete",
+        )
+        delete_parser.add_argument(
+            "-f",
+            "--force",
+            action="store_true",
+            help="don't prompt for confirmation before deleting",
+        )
+
+        # dir or directory
+        dir_parser = main_subparsers.add_parser(
+            "dir",
+            description="show the theme directory",
+            help="show the theme directory",
+            formatter_class=main_parser.formatter_class,
+        )
+        dir_parser.set_defaults(func=self.theme_dir)
+
+        # package all the parsers into a dictionary
+        parsers = {}
+        parsers["theme"] = main_parser
+        parsers["list"] = list_parser
+        parsers["clone"] = clone_parser
+        parsers["edit"] = edit_parser
+        parsers["create"] = create_parser
+        parsers["delete"] = delete_parser
+        parsers["dir"] = dir_parser
+        return parsers
+
+    @property
+    def theme_parser(self) -> argparse.ArgumentParser:
+        """Get the main argument parser for the theme command."""
+        parsers = self._build_theme_parsers()
+        return parsers["theme"]
+
+    def do_theme(self, cmdline: cmd2.Statement):
+        """manage themes"""
+        args = self.parse_args(self.theme_parser, cmdline.argv)
+        args.func(args)
+
+    def theme_dir(self, args: argparse.Namespace):
+        """show the theme directory"""
+        self.poutput(self.user_theme_dir)
+        self.exit_code = self.EXIT_SUCCESS
+
+    # pylint: disable=too-many-branches,
+    def theme_list(self, args: argparse.Namespace):
+        """list all available themes"""
+        gallery_themes = []
+        with self._progressfactory("retrieving themes from gallery"):
+            response = requests.get(
+                f"{self.THEME_URL}/themes.toml",
+                timeout=self.timeout,
+            )
+        if response.status_code == 200:
+            gallery_dir = tomlkit.loads(response.text)
+            for theme_name in gallery_dir:
+                theme = Theme(
+                    location=ThemeLocation.GALLERY,
+                    file=pathlib.Path(gallery_dir[theme_name]["file"]),
+                    description=gallery_dir[theme_name]["description"],
+                )
+                gallery_themes.append(theme)
+
+        if gallery_themes:
+            gallery_table = rich.table.Table(
+                show_edge=False,
+                box=None,
+                padding=(0, 3, 0, 0),
+                show_header=False,
+            )
+            gallery_table.add_column("Name")
+            gallery_table.add_column("Description")
+            for theme in gallery_themes:
+                gallery_table.add_row(
+                    rich.text.Text(theme.name, style="tm.theme.name"), theme.description
+                )
+            self.console.print("Gallery Themes", style="tm.theme.category")
+            self.console.print("─" * 72, style="tm.theme.border")
+            self.console.print(gallery_table)
+
+        # built-in themes
+        user_themes = {}
+        user_table = rich.table.Table(
+            show_edge=False,
+            box=None,
+            padding=(0, 3, 0, 0),
+            show_header=False,
+        )
+        user_table.add_column("Name")
+        user_table.add_column("Description")
+        # add the built-in themes
+        for path in importlib_resources.files("tomcatmanager.themes").iterdir():
+            if path.suffix == ".toml":
+                # go read the theme in to get the description
+                tdesc = ""
+                try:
+                    with path.open("r", encoding="utf-8") as theme_fobj:
+                        theme_def = tomlkit.load(theme_fobj)
+                        tdesc = theme_def["description"]
+                except OSError:
+                    # this really shouldn't happen so much for the built-in themes
+                    # but if it doesn, don't show it in the list
+                    continue
+                except tomlkit.exceptions.TOMLKitError:
+                    # this really shouldnt' happen either, because we should ship
+                    # valid built-in themes. But if it does, skipt it because
+                    # the user can't load it and they can't edit it
+                    continue
+                theme = Theme(
+                    location=ThemeLocation.BUILTIN,
+                    file=pathlib.Path(path.name),
+                    description=tdesc,
+                )
+                user_themes[theme.name] = theme
+        # add the user themes
+        if self.user_theme_dir.exists():
+            for path in self.user_theme_dir.iterdir():
+                if path.suffix == ".toml":
+                    tdesc = ""
+                    try:
+                        with path.open("r", encoding="utf-8") as theme_fobj:
+                            theme_def = tomlkit.load(theme_fobj)
+                            tdesc = theme_def["description"]
+                    except OSError:
+                        # file couldn't be opened, or an error occured reading
+                        # it. best not show this one in the list, so we skip over it
+                        continue
+                    except tomlkit.exceptions.TOMLKitError:
+                        # badly formed toml, or no description field
+                        # but the file exists, so show it in the list but
+                        # with no description
+                        pass
+                    theme = Theme(
+                        location=ThemeLocation.USER,
+                        file=pathlib.Path(path.name),
+                        description=tdesc,
+                    )
+                    user_themes[theme.name] = theme
+
+        have_builtin = False
+        for theme in list(user_themes.values()):
+            if theme.location == ThemeLocation.BUILTIN:
+                user_table.add_row(
+                    rich.text.Text(f"{theme.name}*", style="tm.theme.name"),
+                    theme.description,
+                )
+                have_builtin = True
+            else:
+                user_table.add_row(
+                    rich.text.Text(theme.name, style="tm.theme.name"), theme.description
+                )
+        self.console.print("")
+        self.console.print("User Themes", style="tm.theme.category")
+        self.console.print("─" * 72, style="tm.theme.border")
+        if user_themes:
+            self.console.print(user_table)
+        else:
+            self.console.print("No built-in or user themes available.")
+        if have_builtin:
+            self.console.print()
+            self.console.print("'*' indicates a read-only built-in theme.")
+            self.console.print(
+                "Make your own copy of a built-in or gallery theme with 'theme clone'."
+            )
+            self.console.print(
+                "You can then edit your copy of the theme with 'theme edit'."
+            )
+
+        self.exit_code = self.EXIT_SUCCESS
+
+    def theme_clone(self, args: argparse.Namespace):
+        """clone a gallery theme to the user theme directory"""
+        # get the theme we are cloning into a string.
+        # since the network request has to fetch the theme
+        # to see if it exists, we just do it all in one step.
+
+        # the online theme gallery can override the built-in themes, so check
+        # there first
+        theme_str = None
+        with self._progressfactory("retrieving themes from gallery"):
+            response = requests.get(
+                f"{self.THEME_URL}/themes/{args.name}.toml",
+                timeout=self.timeout,
+            )
+        if response.status_code == 200:
+            theme_str = response.text
+        else:
+            self.pfeedback(f"theme '{args.name}' not found in gallery")
+
+        if not theme_str:
+            # go see if it's a built-in theme
+            path = importlib_resources.files("tomcatmanager.themes").joinpath(
+                f"{args.name}.toml"
+            )
+            try:
+                with path.open("r", encoding="utf-8") as theme_fobj:
+                    theme_str = theme_fobj.read()
+            except FileNotFoundError:
+                # swallow this error silently
+                # it's neither in the gallery or built-in
+                self.pfeedback(f"theme '{args.name}' is not a built-in theme")
+
+        if not theme_str:
+            self.perror(f"unknown theme: '{args.name}'")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        # see if new theme already exists, error message if it does
+        new_name = args.new_name
+        if new_name == "":
+            new_name = args.name
+        new_path = self.user_theme_dir / f"{new_name}.toml"
+        if new_path.is_file():
+            self.perror(f"clone aborted: '{new_name}' is already a user theme")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        # copy theme to user theme dir
+        self.pfeedback(f"cloning '{args.name}' to user theme '{new_name}'")
+        self.ensure_user_theme_dir()
+        with new_path.open("w", encoding="utf-8") as fobj:
+            # shutil.copy(from_path, new_path)
+            fobj.write(theme_str)
+        self.exit_code = self.EXIT_SUCCESS
+        return
+
+    def theme_edit(self, args: argparse.Namespace):
+        """edit a user theme file"""
+
+        if not self.editor:
+            self.perror("no editor: use 'set editor = \"{path}\"' to specify one")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        # if args.name is empty, try the name of the current theme
+        if args.name:
+            name = args.name
+        else:
+            if self.theme:
+                self.pfeedback(f"no theme given, editing current theme '{self.theme}'")
+                name = self.theme
+            else:
+                self.perror("syntax error: no theme given")
+                self.exit_code = self.EXIT_ERROR
+                return
+
+        # get the file to edit
+        location, theme_file = self._resolve_theme(name)
+        if location == ThemeLocation.BUILTIN:
+            # this means no user theme with this name exists, but a builtin one does
+            self.pfeedback(f"built in theme: '{name}'")
+            self.pfeedback(f'use "theme clone {name}" to make an editable user theme')
+            self.perror(f"theme is not editable: '{name}'")
+            self.exit_code = self.EXIT_ERROR
+            return
+        if location is None:
+            self.perror(f"unknown theme: '{name}'")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        # go edit the file
+        cmd = f'"{self.editor}" "{theme_file}"'
+        self.pfeedback(f"executing {cmd}")
+        os.system(cmd)
+
+        # reapply the theme if necessary
+        if self.theme == name:
+            self.pfeedback(f"reloading theme: '{self.theme}'")
+            if not self._apply_theme(name):
+                self.exit_code = self.EXIT_ERROR
+                return
+
+        self.exit_code = self.EXIT_SUCCESS
+        return
+
+    def theme_create(self, args: argparse.Namespace):
+        """create a user theme file from a template"""
+
+        # see if requested new name already exists, error message if it does
+        name = args.name
+        new_path = self.user_theme_dir / f"{name}.toml"
+        if new_path.is_file():
+            self.perror(f"create aborted: '{name}' is already a user theme")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        try:
+            template_path = importlib_resources.files(
+                "tomcatmanager.templates"
+            ).joinpath("theme.toml")
+            self.pfeedback(f"copying theme template to '{name}'")
+            self.ensure_user_theme_dir()
+            shutil.copy(template_path, new_path)
+            self.exit_code = self.EXIT_SUCCESS
+        except FileNotFoundError:
+            with open(new_path, "w", encoding="utf-8") as outfile:
+                outfile.write("#\n# tomcat-manager theme\n")
+                self.exit_code = self.EXIT_SUCCESS
+        return
+
+    def theme_delete(self, args: argparse.Namespace):
+        """delete a user theme"""
+        name = args.name
+        path = self.user_theme_dir / f"{name}.toml"
+
+        if not path.is_file():
+            self.perror(f"unknown theme: '{name}'")
+            self.exit_code = self.EXIT_ERROR
+            return
+
+        if not args.force:
+            confirm = input(f"Type 'y' or 'yes' to delete theme '{name}': ")
+            if confirm not in ["y", "yes"]:
+                self.perror("no confirmation: theme not deleted")
+                self.exit_code = self.EXIT_ERROR
+                return
+
+        path.unlink(missing_ok=True)
+        self.pfeedback(f"theme deleted: '{name}'")
+        self.exit_code = self.EXIT_SUCCESS
+        return
 
     ###
     #
@@ -807,12 +1590,37 @@ change the value of one of this program's settings
         The location of the command history file.
 
         :return: The full path to the file where command history will be
-                saved and loaded, or None if self.appdirs has not been
-                defined.
+                 saved and loaded, or None if self.appdirs has not been
+                 defined.
         """
         if self.appdirs:
             return pathlib.Path(self.appdirs.user_config_dir).resolve() / "history.txt"
         return None
+
+    @property
+    def user_theme_dir(self) -> pathlib.Path:
+        """
+        The directory containing user theme files.
+
+        tomcatmanager includes some themes as embedded resources which are not
+        user editable. Putting theme files in this directory allows a user to
+        create their own themes or override any of the included themes.
+
+        :return: The full path to the directory containing user theme files.
+                 This does not ensure the directory exists. Returns None if
+                 self.appdirs has not been defined.
+        """
+        if self.appdirs:
+            return pathlib.Path(self.appdirs.user_config_dir).resolve() / "themes"
+        return None
+
+    def ensure_user_theme_dir(self):
+        """Create the user theme directory if it doesn't exist.
+
+        throws an exception if the directory doesn't exist and we can't create it
+        """
+        if not self.user_theme_dir.exists():  # pragma: nocover
+            self.user_theme_dir.mkdir(parents=True, exist_ok=True)
 
     def load_config(self):
         """Open and parse the user config file and set self.config."""
@@ -821,15 +1629,32 @@ change the value of one of this program's settings
             try:
                 with open(self.config_file, "r", encoding="utf-8") as fobj:
                     config = tomlkit.loads(fobj.read())
+            except tomlkit.exceptions.TOMLKitError as err:
+                self.perror(f"error loading configuration file: {err}")
             except FileNotFoundError:
                 pass
+
+        # either we don't have a config file, or we were able to load it
+        # now we can set all settings to their default values
+        self._set_defaults()
+
+        # and go process the settings we found in the config file
+        first_error = True
         try:
             settings = config["settings"]
             for key in settings:
-                self._change_setting(key, settings[key])
-        except KeyError:
-            pass
-        except ValueError:
+                try:
+                    self._change_setting(key, settings[key])
+                except ValueError as err:
+                    # could be the setting name, or the setting value
+                    if first_error:
+                        self.perror(
+                            "while loading the configuration file the following errors occured:"
+                        )
+                        first_error = False
+                    self.perror(err)
+        except tomlkit.exceptions.NonExistentKey:
+            # we don't have a settings section, so there are no settings to load
             pass
         self.config = config
 
@@ -850,8 +1675,10 @@ change the value of one of this program's settings
             settable = self.settables[param_name]
             # calling set_value should fire any on change callbacks
             settable.set_value(value)
-        except KeyError as keyerr:
-            raise ValueError(f"invalid setting: {param_name}") from keyerr
+        except KeyError as err:
+            raise ValueError(f"unknown setting: {param_name}") from err
+        except ValueError as err:
+            raise ValueError(f"error while trying to set {param_name}: {err}") from err
 
     @classmethod
     def convert_to_boolean(cls, value: Any):
@@ -899,62 +1726,83 @@ change the value of one of this program's settings
     # Connecting to Tomcat
     #
     ###
-    connect_parser = argparse.ArgumentParser(
-        prog="connect",
-        description="connect to a tomcat manager instance",
-        usage="%(prog)s [-h] config_name\n       %(prog)s [-h] url [user] [password]",
-        epilog="""If you specify a user and no password, you will be prompted for the
-               password.""",
-    )
-    connect_parser.add_argument(
-        "config_name",
-        nargs="?",
-        help="a section from the config file which contains at least a url",
-    )
-    connect_parser.add_argument(
-        "url",
-        nargs="?",
-        help="the url where the tomcat manager web app is located",
-    )
-    connect_parser.add_argument(
-        "user",
-        nargs="?",
-        help="optional user to use for authentication",
-    )
-    connect_parser.add_argument(
-        "password",
-        nargs="?",
-        help="optional password to use for authentication",
-    )
-    connect_parser.add_argument(
-        "--cert",
-        action="store",
-        help="""path to certificate for client side authentication;
-        file can include private key, in which case --key is unnecessary""",
-    )
-    connect_parser.add_argument(
-        "--key",
-        action="store",
-        help="path to private key for client side authentication",
-    )
-    connect_parser.add_argument(
-        "--cacert",
-        action="store",
-        help="""path to certificate authority bundle or directory used to
-        validate server SSL/TLS certificate""",
-    )
-    connect_parser.add_argument(
-        "--noverify",
-        # store_true makes the default False, aka default is to verify
-        # server certificates
-        action="store_true",
-        help="don't validate server SSL certificates, overrides --cacert",
-    )
+    @property
+    def connect_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the connect command."""
 
+        # yes there are embedded spaces and linefeeds in this string
+        # use markup using RichHelpFormatter native styles, which we keep
+        # updated according to the styles from our current theme
+        # we also have to escape open brackets so they don't get interpreted
+        # as markup by RichHelpFormatter
+        usagestr = (
+            r"%(prog)s [argparse.args]\[-h][/]"
+            "\n"
+            r"       %(prog)s [argparse.args]config_name[/] [argparse.args]\[OPTIONS][/]"
+            "\n"
+            r"       %(prog)s [argparse.args]url[/] [argparse.args]\[user][/]"
+            r" [argparse.args]\[password][/] [argparse.args]\[OPTIONS][/]"
+            "\n"
+        )
+
+        parser = argparse.ArgumentParser(
+            prog="connect",
+            description=self.do_connect.__doc__,
+            usage=usagestr,
+            epilog="""If you specify a user and no password, you will be prompted for the
+                password.""",
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "config_name",
+            nargs="?",
+            help="a section from the config file which contains at least a url",
+        )
+        parser.add_argument(
+            "url",
+            nargs="?",
+            help="the url where the tomcat manager web app is located",
+        )
+        parser.add_argument(
+            "user",
+            nargs="?",
+            help="optional user to use for authentication",
+        )
+        parser.add_argument(
+            "password",
+            nargs="?",
+            help="optional password to use for authentication",
+        )
+        parser.add_argument(
+            "--cert",
+            action="store",
+            help="""path to certificate for client side authentication;
+            file can include private key, in which case --key is unnecessary""",
+        )
+        parser.add_argument(
+            "--key",
+            action="store",
+            help="path to private key for client side authentication",
+        )
+        parser.add_argument(
+            "--cacert",
+            action="store",
+            help="""path to certificate authority bundle or directory used to
+            validate server SSL/TLS certificate""",
+        )
+        parser.add_argument(
+            "--noverify",
+            # store_true makes the default False, aka default is to verify
+            # server certificates
+            action="store_true",
+            help="don't validate server SSL certificates, overrides --cacert",
+        )
+        return parser
+
+    # pylint: disable=too-many-branches, too-many-statements
     def do_connect(self, cmdline: cmd2.Statement):
-        """Connect to a tomcat manager instance."""
-        # pylint: disable=too-many-branches, too-many-statements
-        # define some variables that we will either fill from a server shortcut
+        """connect to a tomcat manager instance"""
+        # define some variables that we will either fill from a server definition
         # or from arguments
         url = None
         user = None
@@ -966,6 +1814,12 @@ change the value of one of this program's settings
 
         args = self.parse_args(self.connect_parser, cmdline.argv)
         server = args.config_name
+
+        if not server:
+            self.help_connect()
+            self.exit_code = self.EXIT_USAGE
+            return
+
         if server in self.config.keys():
             if "url" in self.config[server].keys():
                 url = self.config[server]["url"]
@@ -1025,7 +1879,8 @@ change the value of one of this program's settings
             verify = cacert
 
         try:
-            r = self.tomcat.connect(url, user, password, verify=verify, cert=cert)
+            with self._progressfactory("connecting"):
+                r = self.tomcat.connect(url, user, password, verify=verify, cert=cert)
 
             if r.ok:
                 self.pfeedback(self._which_server())
@@ -1073,23 +1928,48 @@ change the value of one of this program's settings
             self.exit_code = self.EXIT_ERROR
 
     def help_connect(self):
-        """Show help for the connect command."""
+        """Show help for the 'connect' command."""
         self.show_help_from(self.connect_parser)
 
-    which_parser = argparse.ArgumentParser(
-        prog="which",
-        description="show the url of the tomcat server you are connected to",
-    )
+    @property
+    def which_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the which command."""
+        parser = argparse.ArgumentParser(
+            prog="which",
+            description=self.do_which.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        return parser
 
-    @requires_connection
     def do_which(self, cmdline: cmd2.Statement):
-        """Show the url of the tomcat server you are connected to."""
+        """show the url of the tomcat server you are connected to"""
         self.parse_args(self.which_parser, cmdline.argv)
+        self.raise_if_not_connected()
         self.poutput(self._which_server())
 
     def help_which(self):
-        """Show help for the 'which' command."""
+        """Show help for the 'which' command"""
         self.show_help_from(self.which_parser)
+
+    @property
+    def disconnect_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the disconnect command."""
+        parser = argparse.ArgumentParser(
+            prog="disconnect",
+            description=self.do_disconnect.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        return parser
+
+    def do_disconnect(self, cmdline: cmd2.Statement):
+        """disconnect from a tomcat manager instance"""
+        self.parse_args(self.disconnect_parser, cmdline.argv)
+        self.tomcat.disconnect()
+        self.pfeedback("disconnected")
+
+    def help_disconnect(self):
+        """Show help for the 'disconnect' command"""
+        self.show_help_from(self.disconnect_parser)
 
     ###
     #
@@ -1097,11 +1977,16 @@ change the value of one of this program's settings
     #
     ###
     def deploy_local(self, args: argparse.Namespace, update: bool = False):
-        """Deploy a local war file to the tomcat server."""
+        """Deploy a local war file to the tomcat server"""
         warfile = pathlib.Path(args.warfile).expanduser()
         with open(warfile, "rb") as fileobj:
-            self.exit_code = self.EXIT_SUCCESS
+            apptag = self._apptag(args.path, args.version)
+            if update:
+                msg = f"redeploying {apptag}"
+            else:
+                msg = f"deploying {apptag}"
             self.docmd(
+                msg,
                 self.tomcat.deploy_localwar,
                 args.path,
                 fileobj,
@@ -1110,9 +1995,14 @@ change the value of one of this program's settings
             )
 
     def deploy_server(self, args: argparse.Namespace, update: bool = False):
-        """Deploy a war file to the tomcat server."""
-        self.exit_code = self.EXIT_SUCCESS
+        """Deploy a war file to the tomcat server"""
+        apptag = self._apptag(args.path, args.version)
+        if update:
+            msg = f"redeploying {apptag}"
+        else:
+            msg = f"deploying {apptag}"
         self.docmd(
+            msg,
             self.tomcat.deploy_serverwar,
             args.path,
             args.warfile,
@@ -1121,9 +2011,14 @@ change the value of one of this program's settings
         )
 
     def deploy_context(self, args: argparse.Namespace, update: bool = False):
-        """Deploy a context xml file to the tomcat server."""
-        self.exit_code = self.EXIT_SUCCESS
+        """Deploy a context xml file to the tomcat server"""
+        apptag = self._apptag(args.path, args.version)
+        if update:
+            msg = f"redeploying {apptag}"
+        else:
+            msg = f"deploying {apptag}"
         self.docmd(
+            msg,
             self.tomcat.deploy_servercontext,
             args.path,
             args.contextfile,
@@ -1132,214 +2027,255 @@ change the value of one of this program's settings
             update=update,
         )
 
-    deploy_parser = _deploy_parser(
-        "deploy",
-        "deploy an application to the tomcat server",
-        deploy_local,
-        deploy_server,
-        deploy_context,
-    )
+    @property
+    def deploy_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the deploy command."""
+        (parser, _, _, _) = _deploy_parser(
+            "deploy",
+            self.do_deploy.__doc__,
+            self.deploy_local,
+            self.deploy_server,
+            self.deploy_context,
+        )
+        return parser
 
-    @requires_connection
     def do_deploy(self, cmdline: cmd2.Statement):
-        """Deploy an application to the tomcat server."""
+        """deploy an application to the tomcat server"""
         args = self.parse_args(self.deploy_parser, cmdline.argv)
+        self.raise_if_not_connected()
         try:
-            args.func(self, args, update=False)
+            args.func(args, update=False)
         except AttributeError:  # pragma: nocover
             self.help_deploy()
             self.exit_code = self.EXIT_ERROR
 
-    def help_deploy(self):
-        """Show help for the deploy command."""
-        self.show_help_from(self.deploy_parser)
+    # we intercept do_help to display this help using a different approach.
+    # leaving here, but commented out, so that if cmd2 gets
+    # subcommand help support in the future, we can put this
+    # back in.
+    # def help_deploy(self):
+    #     """Show help for the 'deploy' command"""
+    #     self.show_help_from(self.deploy_parser)
 
-    redeploy_parser = _deploy_parser(
-        "redeploy",
-        "deploy an application to the tomcat server, undeploying any application at the given path",
-        deploy_local,
-        deploy_server,
-        deploy_context,
-    )
+    @property
+    def redeploy_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the redeploy command."""
+        (parser, _, _, _) = _deploy_parser(
+            "redeploy",
+            self.do_deploy.__doc__,
+            self.deploy_local,
+            self.deploy_server,
+            self.deploy_context,
+        )
+        return parser
 
-    @requires_connection
     def do_redeploy(self, cmdline: cmd2.Statement):
-        """Redeploy an application to the tomcat server."""
+        """undeploy then deploy an application to the tomcat server"""
         args = self.parse_args(self.redeploy_parser, cmdline.argv)
+        self.raise_if_not_connected()
         try:
-            args.func(self, args, update=True)
+            args.func(args, update=True)
         except AttributeError:  # pragma: nocover
             self.help_redeploy()
             self.exit_code = self.EXIT_ERROR
 
-    def help_redeploy(self):
-        """Show help for the redeploy command."""
-        self.show_help_from(self.redeploy_parser)
+    # we intercept do_help to display this help using a different approach.
+    # leaving here, but commented out, so that if cmd2 gets
+    # subcommand help support in the future, we can put this
+    # back in.
+    # def help_redeploy(self):
+    #     """Show help for the 'redeploy' command"""
+    #     self.show_help_from(self.redeploy_parser)
 
-    undeploy_parser = _path_version_parser(
-        "undeploy", "Remove an application at a given path from the tomcat server."
-    )
+    @property
+    def undeploy_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the undeploy command"""
+        return _path_version_parser("undeploy", self.do_undeploy.__doc__)
 
-    @requires_connection
     def do_undeploy(self, cmdline: cmd2.Statement):
-        """Remove an application from the tomcat server."""
+        """remove an application from the tomcat server"""
         args = self.parse_args(self.undeploy_parser, cmdline.argv)
-        self.docmd(self.tomcat.undeploy, args.path, args.version)
+        self.raise_if_not_connected()
+        apptag = self._apptag(args.path, args.version)
+        self.docmd(
+            f"undeploying {apptag}", self.tomcat.undeploy, args.path, args.version
+        )
 
     def help_undeploy(self):
-        """Help for the 'undeploy' command."""
+        """Show help for the 'undeploy' command"""
         self.show_help_from(self.undeploy_parser)
 
-    start_parser = _path_version_parser(
-        "start", "Start a tomcat application that has been deployed but isn't running."
-    )
+    @property
+    def start_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the start command."""
+        return _path_version_parser("start", self.do_start.__doc__)
 
-    @requires_connection
     def do_start(self, cmdline: cmd2.Statement):
-        """Start a deployed tomcat application that isn't running."""
+        """start a deployed tomcat application that isn't running"""
         args = self.parse_args(self.start_parser, cmdline.argv)
-        self.docmd(self.tomcat.start, args.path, args.version)
+        self.raise_if_not_connected()
+        apptag = self._apptag(args.path, args.version)
+        self.docmd(f"starting {apptag}", self.tomcat.start, args.path, args.version)
 
     def help_start(self):
-        """Help for the 'start' command."""
+        """Show help for the 'start' command"""
         self.show_help_from(self.start_parser)
 
-    stop_parser = _path_version_parser(
-        "stop", "Stop a running tomcat application and leave it deployed on the server."
-    )
+    @property
+    def stop_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the stop command."""
+        return _path_version_parser("stop", self.do_stop.__doc__)
 
-    @requires_connection
     def do_stop(self, cmdline: cmd2.Statement):
-        """Stop a tomcat application and leave it deployed on the server."""
+        """stop a tomcat application and leave it deployed on the server"""
         args = self.parse_args(self.stop_parser, cmdline.argv)
-        self.docmd(self.tomcat.stop, args.path, args.version)
+        self.raise_if_not_connected()
+        apptag = self._apptag(args.path, args.version)
+        self.docmd(f"stopping {apptag}", self.tomcat.stop, args.path, args.version)
 
     def help_stop(self):
-        """Help for the 'stop' command."""
+        """Show help for the 'stop' command"""
         self.show_help_from(self.stop_parser)
 
-    reload_parser = _path_version_parser(
-        "reload",
-        "Stop and start a tomcat application. Synonym for 'restart'.",
-    )
+    @property
+    def reload_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the reload command."""
+        return _path_version_parser("reload", self.do_reload.__doc__)
 
-    @requires_connection
     def do_reload(self, cmdline: cmd2.Statement):
-        """Stop and start a tomcat application."""
+        """stop and start a tomcat application; synonym for restart"""
         args = self.parse_args(self.reload_parser, cmdline.argv)
-        self.docmd(self.tomcat.reload, args.path, args.version)
+        self.raise_if_not_connected()
+        apptag = self._apptag(args.path, args.version)
+        self.docmd(f"reloading {apptag}", self.tomcat.reload, args.path, args.version)
 
     def help_reload(self):
-        """Help for the 'reload' command."""
+        """Show help for the 'reload' command"""
         self.show_help_from(self.reload_parser)
 
-    restart_parser = _path_version_parser(
-        "restart",
-        "Stop and start a tomcat application.",
-    )
+    @property
+    def restart_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the restart command."""
+        return _path_version_parser("restart", self.do_restart.__doc__)
 
-    @requires_connection
     def do_restart(self, cmdline: cmd2.Statement):
-        """Stop and start a tomcat application."""
-        args = self.parse_args(self.reload_parser, cmdline.argv)
-        self.docmd(self.tomcat.reload, args.path, args.version)
+        """stop and start a tomcat application"""
+        self.do_reload(cmdline)
 
     def help_restart(self):
-        """Show help for the 'restart' command."""
+        """Show help for the 'restart' command"""
         self.show_help_from(self.restart_parser)
 
-    sessions_parser = argparse.ArgumentParser(
-        prog="sessions",
-        description="Show active sessions for a tomcat application.",
-    )
-    sessions_parser.add_argument(
-        "path",
-        help="The path part of the URL where the application is deployed.",
-    )
-    sessions_parser.add_argument(
-        "-v",
-        "--version",
-        help="""Optional version string of the application from which to show sessions.
-             If the application was deployed with a version string, it must be specified
-             in order to show sessions.""",
-    )
+    @property
+    def sessions_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the sessions command."""
+        parser = argparse.ArgumentParser(
+            prog="sessions",
+            description=self.do_sessions.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "path",
+            help="the path part of the URL where the application is deployed",
+        )
+        parser.add_argument(
+            "-v",
+            "--version",
+            help=(
+                "optional version string of the application from which to show"
+                " sessions; if the application was deployed with a version string,"
+                " it must be specified in order to show sessions"
+            ),
+        )
+        return parser
 
-    @requires_connection
     def do_sessions(self, cmdline: cmd2.Statement):
-        """Show active sessions for a tomcat application."""
+        """show active sessions for a tomcat application"""
         args = self.parse_args(self.sessions_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.sessions, args.path, args.version)
+        self.raise_if_not_connected()
+        r = self.docmd(None, self.tomcat.sessions, args.path, args.version)
         if r.ok:
             self.poutput(r.sessions)
 
     def help_sessions(self):
-        """Help for the 'sessions' command."""
+        """Show help for the 'sessions' command."""
         self.show_help_from(self.sessions_parser)
 
-    expire_parser = argparse.ArgumentParser(
-        prog="expire",
-        description="expire idle sessions",
-    )
-    expire_parser.add_argument(
-        "-v",
-        "--version",
-        help="""Optional version string of the application from which to expire sessions.
-             If the application was deployed with a version string, it must be specified
-             in order to expire sessions.""",
-    )
-    expire_parser.add_argument(
-        "path",
-        help="The path part of the URL where the application is deployed.",
-    )
-    expire_parser.add_argument(
-        "idle",
-        help="""Expire sessions idle for more than this number of minutes. Use
-             0 to expire all sessions.""",
-    )
+    @property
+    def expire_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the expire command."""
+        parser = argparse.ArgumentParser(
+            prog="expire",
+            description=self.do_expire.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "-v",
+            "--version",
+            help=(
+                "optional version string of the application from which to show"
+                " sessions; if the application was deployed with a version string,"
+                " it must be specified in order to show sessions"
+            ),
+        )
+        parser.add_argument(
+            "path",
+            help="the path part of the URL where the application is deployed",
+        )
+        parser.add_argument(
+            "idle",
+            help="""expire sessions idle for more than this number of minutes; use
+                0 to expire all sessions""",
+        )
+        return parser
 
-    @requires_connection
     def do_expire(self, cmdline: cmd2.Statement):
-        """Expire idle sessions."""
+        """expire idle sessions"""
         args = self.parse_args(self.expire_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.expire, args.path, args.version, args.idle)
+        self.raise_if_not_connected()
+        r = self.docmd(None, self.tomcat.expire, args.path, args.version, args.idle)
         if r.ok:
             self.poutput(r.sessions)
 
     def help_expire(self):
-        """Help for the 'expire' command."""
+        """Show help for the 'expire' command"""
         self.show_help_from(self.expire_parser)
 
-    list_parser = argparse.ArgumentParser(
-        prog="list",
-        description="Show all installed applications",
-        add_help=False,
-    )
-    list_parser.add_argument(
-        "-r",
-        "--raw",
-        action="store_true",
-        help="show apps without formatting",
-    )
-    list_parser.add_argument(
-        "-s",
-        "--state",
-        choices=["running", "stopped"],
-        help="only show apps in a given state",
-    )
-    list_parser.add_argument(
-        "-b",
-        "--by",
-        choices=["state", "path"],
-        default="state",
-        help="sort by state (default), or sort by path",
-    )
+    @property
+    def list_parser(self) -> argparse.ArgumentParser:
+        """Build the argument parser for the list command"""
+        parser = argparse.ArgumentParser(
+            prog="list",
+            description=self.do_list.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "-r",
+            "--raw",
+            action="store_true",
+            help="show apps without formatting",
+        )
+        parser.add_argument(
+            "-s",
+            "--state",
+            choices=["running", "stopped"],
+            help="only show apps in a given state",
+        )
+        parser.add_argument(
+            "-b",
+            "--by",
+            choices=["state", "path"],
+            default="state",
+            help="sort by state (default), or sort by path",
+        )
+        return parser
 
-    @requires_connection
     def do_list(self, cmdline: cmd2.Statement):
-        """Show all installed applications."""
+        """show all installed tomcat applications"""
         args = self.parse_args(self.list_parser, cmdline.argv)
+        self.raise_if_not_connected()
 
-        response = self.docmd(self.tomcat.list)
+        response = self.docmd("listing applications", self.tomcat.list)
         if response.ok:
             apps = self._list_process_apps(response.apps, args)
             self.exit_code = self.EXIT_SUCCESS
@@ -1347,22 +2283,29 @@ change the value of one of this program's settings
                 for app in apps:
                     self.poutput(app)
             else:
-                fmt = "{:24.24} {:7.7} {:>8.8} {:36.36}"
-                dashes = "-" * 80
-                self.poutput(fmt.format("Path", "State", "Sessions", "Directory"))
-                self.poutput(fmt.format(dashes, dashes, dashes, dashes))
+                table = rich.table.Table(
+                    box=rich.box.HORIZONTALS,
+                    show_edge=False,
+                    padding=(0, 2, 0, 0),
+                    header_style="tm.list.header",
+                    border_style="tm.list.border",
+                )
+                table.add_column("Path")
+                table.add_column("State")
+                table.add_column("Sessions", justify="right")
+                table.add_column("Directory")
                 for app in apps:
-                    self.poutput(
-                        fmt.format(
-                            app.path,
-                            app.state.value,
-                            str(app.sessions),
-                            app.directory_and_version,
-                        )
+                    state_style = f"tm.app.{app.state.value}"
+                    table.add_row(
+                        app.path,
+                        rich.text.Text(app.state.value, style=state_style),
+                        rich.text.Text(str(app.sessions), style="tm.app.sessions"),
+                        app.directory_and_version,
                     )
+                self.console.print(table)
 
     def help_list(self):
-        """Show help for the 'list' command."""
+        """Show help for the 'list' command"""
         self.show_help_from(self.list_parser)
 
     @staticmethod
@@ -1398,156 +2341,193 @@ change the value of one of this program's settings
     # information from the server.
     #
     ###
-    serverinfo_parser = argparse.ArgumentParser(
-        prog="serverinfo",
-        description="show information about the tomcat server",
-    )
+    @property
+    def serverinfo_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the serverinfo command."""
+        return argparse.ArgumentParser(
+            prog="serverinfo",
+            description=self.do_serverinfo.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
-    @requires_connection
     def do_serverinfo(self, cmdline: cmd2.Statement):
-        """Show information about the tomcat server."""
+        """show information about the tomcat server"""
         self.parse_args(self.serverinfo_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.server_info)
-        self.poutput(r.result)
+        self.raise_if_not_connected()
+        r = self.docmd("querying server", self.tomcat.server_info)
+        if r.ok:
+            self.poutput(r.result)
 
     def help_serverinfo(self):
-        """Show help for the 'serverinfo' command."""
+        """Show help for the 'serverinfo' command"""
         self.show_help_from(self.serverinfo_parser)
 
-    status_parser = argparse.ArgumentParser(
-        prog="status",
-        description="show server status information in xml format",
-    )
+    @property
+    def status_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the status command."""
+        return argparse.ArgumentParser(
+            prog="status",
+            description=self.do_status.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
-    @requires_connection
     def do_status(self, cmdline: cmd2.Statement):
-        """Show server status information in xml format."""
+        """show server status information in xml format"""
         self.parse_args(self.status_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.status_xml)
+        self.raise_if_not_connected()
+        r = self.docmd("querying server", self.tomcat.status_xml)
         root = xml.dom.minidom.parseString(r.status_xml)
-        self.poutput(root.toprettyxml(indent="   "))
+        self.console.print(root.toprettyxml(indent="   ").strip())
 
     def help_status(self):
-        """Show help for the 'status' command."""
+        """Show help for the 'status' command"""
         self.show_help_from(self.status_parser)
 
-    vminfo_parser = argparse.ArgumentParser(
-        prog="vminfo",
-        description="show diagnostic information about the jvm",
-    )
+    @property
+    def vminfo_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the vminfo command."""
+        return argparse.ArgumentParser(
+            prog="vminfo",
+            description=self.do_vminfo.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
-    @requires_connection
     def do_vminfo(self, cmdline: cmd2.Statement):
-        """Show diagnostic information about the jvm."""
+        """show diagnostic information about the jvm"""
         self.parse_args(self.vminfo_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.vm_info)
+        self.raise_if_not_connected()
+        r = self.docmd("querying server", self.tomcat.vm_info)
         self.poutput(r.vm_info)
 
     def help_vminfo(self):
-        """Show help for the 'vminfo' command."""
+        """Show help for the 'vminfo' command"""
         self.show_help_from(self.vminfo_parser)
 
-    sslconnectorciphers_parser = argparse.ArgumentParser(
-        prog="sslconnectorciphers",
-        description="show SSL/TLS ciphers configured for each connector",
-    )
+    @property
+    def sslconnectorciphers_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the sslconnectorciphers command."""
+        return argparse.ArgumentParser(
+            prog="sslconnectorciphers",
+            description=self.do_sslconnectorciphers.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
-    @requires_connection
     def do_sslconnectorciphers(self, cmdline: cmd2.Statement):
-        """Show SSL/TLS ciphers configured for each connector."""
+        """show SSL/TLS ciphers configured for each connector"""
         self.parse_args(self.sslconnectorciphers_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.ssl_connector_ciphers)
+        self.raise_if_not_connected()
+        r = self.docmd("querying server", self.tomcat.ssl_connector_ciphers)
         self.poutput(r.ssl_connector_ciphers)
 
     def help_sslconnectorciphers(self):
-        """Show help for the 'sslconnectorciphers' command."""
+        """Show help for the 'sslconnectorciphers' command"""
         self.show_help_from(self.sslconnectorciphers_parser)
 
-    sslconnectorcerts_parser = argparse.ArgumentParser(
-        prog="sslconnectorcerts",
-        description="show SSL/TLS certificate chain for each connector",
-    )
+    @property
+    def sslconnectorcerts_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the sslconnectorcerts command."""
+        return argparse.ArgumentParser(
+            prog="sslconnectorcerts",
+            description=self.do_sslconnectorcerts.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
-    @requires_connection
     def do_sslconnectorcerts(self, cmdline: cmd2.Statement):
-        """Show SSL/TLS certificate chain for each connector."""
+        """show SSL/TLS certificate chain for each connector"""
         self.parse_args(self.sslconnectorcerts_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.ssl_connector_certs)
+        self.raise_if_not_connected()
+        r = self.docmd("querying server", self.tomcat.ssl_connector_certs)
         self.poutput(r.ssl_connector_certs)
 
     def help_sslconnectorcerts(self):
-        """Show help for the 'sslconnectorcerts' command."""
+        """Show help for the 'sslconnectorcerts' command"""
         self.show_help_from(self.sslconnectorcerts_parser)
 
-    sslconnectortrustedcerts_parser = argparse.ArgumentParser(
-        prog="sslconnectortrustedcerts",
-        description="show SSL/TLS trusted certificates for each connector",
-    )
+    @property
+    def sslconnectortrustedcerts_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the sslconnectortrustedcerts command."""
+        return argparse.ArgumentParser(
+            prog="sslconnectortrustedcerts",
+            description=self.do_sslconnectortrustedcerts.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
-    @requires_connection
     def do_sslconnectortrustedcerts(self, cmdline: cmd2.Statement):
-        """Show SSL/TLS trusted certificates for each connector."""
+        """show SSL/TLS trusted certificates for each connector"""
         self.parse_args(self.sslconnectortrustedcerts_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.ssl_connector_trusted_certs)
+        self.raise_if_not_connected()
+        r = self.docmd("querying server", self.tomcat.ssl_connector_trusted_certs)
         self.poutput(r.ssl_connector_trusted_certs)
 
     def help_sslconnectortrustedcerts(self):
-        """Show help for the 'sslconnectortrustedcerts' command."""
+        """Show help for the 'sslconnectortrustedcerts' command"""
         self.show_help_from(self.sslconnectortrustedcerts_parser)
 
-    sslreload_parser = argparse.ArgumentParser(
-        prog="sslreload",
-        description="reload SSL/TLS certificates and keys",
-    )
-    sslreload_parser.add_argument(
-        "host_name",
-        nargs="?",
-        help="Optional host name to reload SSL/TLS certificates and keys for.",
-    )
+    @property
+    def sslreload_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the sslreload command."""
+        parser = argparse.ArgumentParser(
+            prog="sslreload",
+            description=self.do_sslreload.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "host_name",
+            nargs="?",
+            help="Optional host name to reload SSL/TLS certificates and keys for.",
+        )
+        return parser
 
-    @requires_connection
     def do_sslreload(self, cmdline: cmd2.Statement):
-        """Reload SSL/TLS certificates and keys."""
+        """reload SSL/TLS certificates and keys"""
         args = self.parse_args(self.sslreload_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.ssl_reload, args.host_name)
-        if r and r.ok:
-            self.pfeedback(r.status_message)
+        self.raise_if_not_connected()
+        self.docmd("reloading SSL/TLS", self.tomcat.ssl_reload, args.host_name)
 
     def help_sslreload(self):
-        """Show help for the 'resources' command."""
+        """Show help for the 'sslreload' command"""
         self.show_help_from(self.sslreload_parser)
 
-    threaddump_parser = argparse.ArgumentParser(
-        prog="threaddump",
-        description="show a jvm thread dump",
-    )
+    @property
+    def threaddump_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the threaddump command"""
+        return argparse.ArgumentParser(
+            prog="threaddump",
+            description=self.do_threaddump.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
 
-    @requires_connection
     def do_threaddump(self, cmdline: cmd2.Statement):
-        """Show a jvm thread dump."""
+        """show a jvm thread dump"""
         self.parse_args(self.threaddump_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.thread_dump)
+        self.raise_if_not_connected()
+        r = self.docmd("querying server", self.tomcat.thread_dump)
         self.poutput(r.thread_dump)
 
     def help_threaddump(self):
-        """Show help for the 'threaddump' command."""
+        """Show help for the 'threaddump' command"""
         self.show_help_from(self.threaddump_parser)
 
-    resources_parser = argparse.ArgumentParser(
-        prog="resources",
-        description="show global JNDI resources configured in tomcat",
-    )
-    resources_parser.add_argument(
-        "class_name",
-        nargs="?",
-        help="Optional fully qualified java class name of the resource type to show.",
-    )
+    @property
+    def resources_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the resources command"""
+        parser = argparse.ArgumentParser(
+            prog="resources",
+            description=self.do_resources.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        parser.add_argument(
+            "class_name",
+            nargs="?",
+            help="optional fully qualified java class name of the resource type to show",
+        )
+        return parser
 
-    @requires_connection
     def do_resources(self, cmdline: cmd2.Statement):
-        """Show global JNDI resources configured in Tomcat."""
+        """show global JNDI resources configured in tomcat"""
         args = self.parse_args(self.resources_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.resources, args.class_name)
+        self.raise_if_not_connected()
+        r = self.docmd("querying server", self.tomcat.resources, args.class_name)
         if r.resources:
             for resource, classname in iter(sorted(r.resources.items())):
                 self.poutput(f"{resource}: {classname}")
@@ -1555,26 +2535,30 @@ change the value of one of this program's settings
             self.exit_code = self.EXIT_ERROR
 
     def help_resources(self):
-        """Show help for the 'resources' command."""
+        """Show help for the 'resources' command"""
         self.show_help_from(self.resources_parser)
 
-    findleakers_parser = argparse.ArgumentParser(
-        prog="findleakers",
-        description="show tomcat applications that leak memory",
-        epilog="""WARNING: this triggers a full garbage collection on the server.
+    @property
+    def findleakers_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the findleakers command."""
+        return argparse.ArgumentParser(
+            prog="findleakers",
+            description=self.do_findleakers.__doc__,
+            epilog="""WARNING: this triggers a full garbage collection on the server.
                Use with extreme caution on production systems.""",
-    )
+            formatter_class=RichHelpFormatter,
+        )
 
-    @requires_connection
     def do_findleakers(self, cmdline: cmd2.Statement):
-        """Show tomcat applications that leak memory."""
+        """show tomcat applications that leak memory"""
         self.parse_args(self.findleakers_parser, cmdline.argv)
-        r = self.docmd(self.tomcat.find_leakers)
+        self.raise_if_not_connected()
+        r = self.docmd("finding memory leaks", self.tomcat.find_leakers)
         for leaker in r.leakers:
             self.poutput(leaker)
 
     def help_findleakers(self):
-        """Show help for the 'findleakers' command."""
+        """Show help for the 'findleakers' command"""
         self.show_help_from(self.findleakers_parser)
 
     ###
@@ -1583,46 +2567,54 @@ change the value of one of this program's settings
     #
     ###
     def do_exit(self, _):
-        """Exit the interactive command prompt."""
+        """exit the interactive command prompt"""
         self.exit_code = self.EXIT_SUCCESS
         return True
 
     def do_quit(self, cmdline: cmd2.Statement):
-        """Synonym for the 'exit' command."""
+        """synonym for the 'exit' command"""
         return self.do_exit(cmdline)
 
     def do_eof(self, cmdline: cmd2.Statement):
-        """Exit on the end-of-file character."""
+        """exit on the end-of-file character"""
         return self.do_exit(cmdline)
 
-    version_parser = argparse.ArgumentParser(
-        prog="version",
-        description="show the version number of this program",
-    )
+    @property
+    def version_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the version command."""
+        parser = argparse.ArgumentParser(
+            prog="version",
+            description=self.do_version.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        return parser
 
     def do_version(self, cmdline: cmd2.Statement):
-        """Show the version number of this program."""
+        """show the version number of this program"""
         self.parse_args(self.version_parser, cmdline.argv)
         self.poutput(tm.VERSION_STRING)
 
     def help_version(self):
-        """Show help for the 'version' command."""
+        """Show help for the 'version' command"""
         self.show_help_from(self.version_parser)
 
-    exit_code_epilog = []
-    exit_code_epilog.append("The codes have the following meanings:")
-    for number, name in EXIT_CODES.items():
-        exit_code_epilog.append(f"    {number:3}  {name}")
+    @property
+    def exit_code_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the exit_code command."""
+        exit_code_epilog = []
+        exit_code_epilog.append("The codes have the following meanings:")
+        for number, name in self.EXIT_CODES.items():
+            exit_code_epilog.append(f"    {number:3}  {name}")
 
-    exit_code_parser = argparse.ArgumentParser(
-        prog="exit_code",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="show a number indicating the status of the previous command",
-        epilog="\n".join(exit_code_epilog),
-    )
+        return argparse.ArgumentParser(
+            prog="exit_code",
+            formatter_class=RawDescriptionRichHelpFormatter,
+            description=self.do_exit_code.__doc__,
+            epilog="\n".join(exit_code_epilog),
+        )
 
     def do_exit_code(self, _):
-        """Show a number indicating the status of the previous command."""
+        """show a number indicating the status of the previous command"""
         # we don't use exit_code_parser here because we don't want to generate
         # spurrious exit codes, i.e. if they have incorrect usage on the
         # exit_code command
@@ -1631,50 +2623,89 @@ change the value of one of this program's settings
         self.poutput(self.exit_code)
 
     def help_exit_code(self):
-        """Show help for the 'exit_code' command."""
+        """Show help for the 'exit_code' command"""
         self.show_help_from(self.exit_code_parser)
 
-    license_parser = argparse.ArgumentParser(
-        prog="license",
-        description="show the software license for this program",
-    )
+    @property
+    def license_parser(self) -> argparse.ArgumentParser:
+        """Build an argument parser for the license command."""
+        parser = argparse.ArgumentParser(
+            prog="license",
+            description=self.do_license.__doc__,
+            formatter_class=RichHelpFormatter,
+        )
+        return parser
 
     def do_license(self, cmdline: cmd2.Statement):
-        """Show the software license for this program."""
+        """show the software license for this program"""
         self.parse_args(self.license_parser, cmdline.argv)
-        self.poutput(
+        mitlicense = textwrap.dedent(
+            """\
+            Copyright 2007 Jared Crapo
+
+            Permission is hereby granted, free of charge, to any person obtaining a
+            copy of this software and associated documentation files (the "Software"),
+            to deal in the Software without restriction, including without limitation
+            the rights to use, copy, modify, merge, publish, distribute, sublicense,
+            and/or sell copies of the Software, and to permit persons to whom the
+            Software is furnished to do so, subject to the following conditions:
+
+            The above copyright notice and this permission notice shall be included in
+            all copies or substantial portions of the Software.
+
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+            IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+            FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+            AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+            LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+            FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+            DEALINGS IN THE SOFTWARE.
             """
-Copyright 2007 Jared Crapo
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-"""
         )
+        self.poutput(mitlicense)
 
     def help_license(self):
-        """Show help for the 'license' command."""
+        """Show help for the 'license' command"""
         self.show_help_from(self.license_parser)
+
+
+class ThemeLocation(enum.Enum):
+    """An enumeration of the types of theme locations"""
+
+    BUILTIN = "built-in"
+    USER = "user"
+    GALLERY = "gallery"
+
+
+# pylint: disable=too-few-public-methods
+class Theme:
+    """Store information about a theme."""
+
+    def __init__(self, **kwargs):
+        """
+        Initialize from the plain text response from a Tomcat server.
+
+        :param result: the plain text from the server, minus the first
+        line with the status info
+        """
+        self.file = kwargs.pop("file", None)
+        self.description = kwargs.pop("description", None)
+        self.location = kwargs.pop("location", None)
+
+    @property
+    def name(self):
+        """name of the theme"""
+        if self.file:
+            return self.file.stem
+        return None
 
 
 # pylint: disable=too-many-ancestors
 class EvaluatingConfigParser(configparser.ConfigParser):
     """Subclass of configparser.ConfigParser which evaluates values on get()."""
 
+    # we need this as long as we have the ability to convert the old config
+    # file format
     # pylint: disable=arguments-differ
     def get(self, section, option, **kwargs):
         val = super().get(section, option, **kwargs)
@@ -1684,3 +2715,167 @@ class EvaluatingConfigParser(configparser.ConfigParser):
             except ValueError:  # pragma: nocover
                 pass
         return val
+
+
+def _to_bool(val: Any) -> bool:
+    """Converts anything to a boolean based on its value.
+
+    :param val: value being converted
+    :return: boolean value expressed in the passed in value
+    :raises: ValueError if the string can not be cast to a boolen
+
+    This has to be able to accommodate TOML-style bools, as well as
+    ini-style bools. That's why we lowercase the input before testing.
+    """
+    if isinstance(val, str):
+        if val.lower() == "true":
+            return True
+        if val.lower() == "false":
+            return False
+        raise ValueError("syntax error: must be 'true' or 'false'")
+
+    if isinstance(val, bool):
+        return val
+
+    return bool(val)
+
+
+def _path_version_parser(cmdname: str, helpmsg: str) -> argparse.ArgumentParser:
+    """Construct an argparser using the given parameters"""
+    parser = argparse.ArgumentParser(
+        prog=cmdname,
+        description=helpmsg,
+        formatter_class=RichHelpFormatter,
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        help=(
+            f"optional version string of the application to"
+            f" {cmdname}; if the application was deployed with"
+            f" a version string, it must be specified in order to"
+            f" {cmdname} the application"
+        ),
+    )
+    path_help = "the path part of the URL where the application is deployed"
+    parser.add_argument("path", help=path_help)
+    return parser
+
+
+def _deploy_parser(
+    name: str,
+    desc: str,
+    localfunc: Callable,
+    serverfunc: Callable,
+    contextfunc: Callable,
+) -> argparse.ArgumentParser:
+    """Construct a argument parser for the deploy or redeploy commands."""
+    deploy_parser = argparse.ArgumentParser(
+        prog=name,
+        description=desc,
+        formatter_class=RichHelpFormatter,
+        epilog=f"type '{name} \\[deployment_method] -h' for more help",
+    )
+    deploy_subparsers = deploy_parser.add_subparsers(
+        dest="method",
+        required=True,
+        metavar="deployment_method",
+    )
+    # local subparser
+    deploy_local_parser = deploy_subparsers.add_parser(
+        "local",
+        description="transmit a war file from the local file system to the server",
+        help="transmit a war file from the local file system to the server",
+        formatter_class=deploy_parser.formatter_class,
+    )
+    deploy_local_parser.add_argument(
+        "-v",
+        "--version",
+        help="version string to associate with this deployment",
+    )
+    deploy_local_parser.add_argument(
+        "warfile",
+        help=(
+            "path on the local file system of a war file which will be"
+            " transmitted to the server and deployed"
+        ),
+    )
+    deploy_local_parser.add_argument(
+        "path",
+        help=(
+            "context path, including the leading slash, on the server"
+            " where the application will be available"
+        ),
+    )
+    deploy_local_parser.set_defaults(func=localfunc)
+    # server subparser
+    deploy_server_parser = deploy_subparsers.add_parser(
+        "server",
+        description="deploy a war file from the server file system",
+        help="deploy a war file from the server file system",
+        formatter_class=deploy_parser.formatter_class,
+    )
+    deploy_server_parser.add_argument(
+        "-v", "--version", help="version string to associate with this deployment"
+    )
+    deploy_server_parser.add_argument(
+        "warfile",
+        help=(
+            "the java-style path (use slashes not backslashes) to the"
+            " war file on the server file system; don't include 'file:'"
+            " at the beginning"
+        ),
+    )
+    deploy_server_parser.add_argument(
+        "path",
+        help=(
+            "context path, including the leading slash, on the server"
+            " where the application will be available"
+        ),
+    )
+    deploy_server_parser.set_defaults(func=serverfunc)
+    # context subparser
+    deploy_context_parser = deploy_subparsers.add_parser(
+        "context",
+        description="deploy a context file from the server file system",
+        help="deploy a context file from the server file system",
+        formatter_class=deploy_parser.formatter_class,
+    )
+    deploy_context_parser.add_argument(
+        "-v",
+        "--version",
+        help="version string to associate with this deployment",
+    )
+    deploy_context_parser.add_argument(
+        "contextfile",
+        help=(
+            "the java-style path (use slashes not backslashes) to the"
+            " war file on the server file system; don't include 'file:'"
+            " at the beginning"
+        ),
+    )
+    deploy_context_parser.add_argument(
+        "warfile",
+        nargs="?",
+        help=(
+            "the java-style path (use slashes not backslashes) to the"
+            " war file on the server file system; don't include 'file:'"
+            " at the beginning; overrides 'docBase' specified in the"
+            " 'contextfile'"
+        ),
+    )
+    deploy_context_parser.add_argument(
+        "path",
+        help=(
+            "context path, including the leading slash, on the server where"
+            " the warfile will be available; overrides the context path in"
+            " 'contextfile'."
+        ),
+    )
+    deploy_context_parser.set_defaults(func=contextfunc)
+    return (
+        deploy_parser,
+        deploy_local_parser,
+        deploy_server_parser,
+        deploy_context_parser,
+    )

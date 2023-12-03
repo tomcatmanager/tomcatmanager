@@ -30,6 +30,7 @@ import tomcatmanager as tm
 
 VERSION_VALUES = [None, "42"]
 
+
 ###
 #
 # deploy localwar

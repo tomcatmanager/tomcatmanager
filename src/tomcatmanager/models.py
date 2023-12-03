@@ -29,6 +29,7 @@ This module contains the data objects created and used by tomcatmanager.
 """
 
 import enum
+import html
 import re
 from typing import List
 
@@ -217,7 +218,8 @@ class TomcatManagerResponse:
                 codestr = statusline.split(" ", 1)[0]
                 code = StatusCode.parse(codestr)
                 self.status_code = code
-                self.status_message = statusline.split(" ", 1)[1][2:]
+                msg = statusline.split(" ", 1)[1][2:]
+                self.status_message = html.unescape(msg)
                 if len(lines) > 1:
                     self.result = "\n".join(lines[1:])
             except (IndexError, ValueError):
