@@ -440,31 +440,35 @@ following:
 
 5. Push the **develop** branch to github.
 
-6. Tag the **develop** branch with the new version number and push the tag
-
-7. Create a pull request on github to merge the **develop** branch into
+6. Create a pull request on github to merge the **develop** branch into
    **main**. Wait for the checks to pass.
 
-8. Merge the **develop** branch into the **main** branch and close the pull
+7. Merge the **develop** branch into the **main** branch and close the pull
    request.
 
-9. Create a new release on Github summarizing the changelog
+6. Tag the **main** branch with the new version number and push the tag
 
-10. Change to the **main** branch.
+8. Switch to the **develop** branch and merge the **main** branch into it. This
+   ensures that the tag exists on both branches, which we need in order for the
+   version numbers to work properly.
 
-11. Install the released version by ``pip install -e .[dev]``
+9. Change to the **main** branch.
 
-12. Build source distribution, wheel distribution, and upload them to testpypi::
+10. Install the released version by ``pip install -e .[dev]``
+
+11. Build source distribution, wheel distribution, and upload them to testpypi::
 
        $ invoke testpypi
 
-13. Build source distribution, wheel distribution, and upload them to pypi::
+12. Build source distribution, wheel distribution, and upload them to pypi::
 
        $ invoke pypi
 
-14. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
+13. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
     Make sure they look good. Add a "Version" in readthedocs which points to the tag
     you just created. Prune old versions as necessary.
+
+14.  Create a new release on Github summarizing the changelog
 
 15. Switch back to the **develop** branch.
 
