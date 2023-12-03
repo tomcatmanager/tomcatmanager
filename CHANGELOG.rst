@@ -11,13 +11,6 @@ format of this file follows recommendations from `Keep a Changelog
 Unreleased
 ----------
 
-TODO
-^^^^
-
-- check display output with debug on, make sure it formats with rich
-- remove syntax_theme
-
-
 Added
 ^^^^^
 
@@ -25,6 +18,8 @@ Added
 - Support for themes in ``tomcat-manager``, which can produce styled and colored output
 
     - New ``theme`` setting to choose which theme to use
+    - New command line option ``--theme`` to set theme from command line
+    - New environment variable ``TOMCATMANAGER_THEME`` to set theme from environment
     - New ``theme`` command for users to list, create, edit, and delete themes
     - Theme gallery which shows themes from an online gallery. Themes can be added
       and updated in the gallery independent of ``tomcat-manager`` releases.
