@@ -440,29 +440,33 @@ following:
 
 5. Push the **develop** branch to github.
 
-6. Create a pull request on github to merge the **develop** branch into
-   **main**. Wait for the checks to pass.
+6. Tag the **develop** branch with the new version number and push the tag
 
-7. Tag the **develop** branch with the new version number, and push the tag.
+7. Create a pull request on github to merge the **develop** branch into
+   **main**. Wait for the checks to pass.
 
 8. Merge the **develop** branch into the **main** branch and close the pull
    request.
 
-9. Create a new release on Github.
+9. Create a new release on Github summarizing the changelog
 
-10. Build source distribution, wheel distribution, and upload them to testpypi::
+10. Change to the **main** branch.
+
+11. Install the released version by ``pip install -e .[dev]``
+
+12. Build source distribution, wheel distribution, and upload them to testpypi::
 
        $ invoke testpypi
 
-11. Build source distribution, wheel distribution, and upload them to pypi::
+13. Build source distribution, wheel distribution, and upload them to pypi::
 
        $ invoke pypi
 
-12. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
+14. Docs are automatically deployed to http://tomcatmanager.readthedocs.io/en/stable/.
     Make sure they look good. Add a "Version" in readthedocs which points to the tag
     you just created. Prune old versions as necessary.
 
-13. Switch back to the **develop** branch.
+15. Switch back to the **develop** branch.
 
-14. Add an **Unreleased** section to the top of ``CHANGELOG.rst``. Push the
+16. Add an **Unreleased** section to the top of ``CHANGELOG.rst``. Push the
     change to github.

@@ -8,6 +8,16 @@ This project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_ an
 format of this file follows recommendations from `Keep a Changelog
 <http://keepachangelog.com/en/1.1.0/>`_.
 
+7.0.1 (2023-12-02)
+------------------
+
+Fixed
+^^^^^
+
+- fix triggers and other errors to ensure documentation builds automatically on
+  readthedocs.io
+
+
 7.0.0 (2023-12-02)
 ------------------
 
