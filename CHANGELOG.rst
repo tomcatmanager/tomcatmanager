@@ -6,10 +6,10 @@ All notable changes to `tomcatmanager
 
 This project uses `Semantic Versioning <http://semver.org/spec/v2.0.0.html>`_ and the
 format of this file follows recommendations from `Keep a Changelog
-<http://keepachangelog.com/en/1.0.0/>`_.
+<http://keepachangelog.com/en/1.1.0/>`_.
 
-Unreleased
-----------
+7.0.0 (2023-12-02)
+------------------
 
 Added
 ^^^^^
