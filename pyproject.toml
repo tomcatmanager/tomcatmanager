@@ -84,9 +84,9 @@ dev = [
     "docutils",
 ]
 docs = [
-    "sphinx<7",
+    "sphinx",
     "sphinx-autobuild",
-    "sphinx_rtd_theme>1",
+    "sphinx_rtd_theme",
     "autodocsumm",
     "doc8",
     "docutils",
