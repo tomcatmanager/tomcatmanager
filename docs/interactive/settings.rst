@@ -19,7 +19,6 @@ of ``tomcat-manager``:
     status_animation = "bouncingBar"     # style of activity spinner from rich.spinner
     status_suffix = "..."                # suffix to append to status messages
     status_to_stdout = false             # status information to stdout instead of stderr
-    syntax_theme = "monokai"             # pygments syntax highlighing theme
     theme = "default-dark"               # color scheme
     timeout = 10.0                       # seconds to wait for HTTP connections
     timing = false                       # report execution time upon command completion
@@ -168,10 +167,6 @@ status_to_stdout
 
 By default, status and feedback messages are sent to the standard error file descriptor.
 Set ``status_to_stdout`` to ``true`` to send those messages to standard output.
-
-
-syntax_theme
-------------
 
 
 theme

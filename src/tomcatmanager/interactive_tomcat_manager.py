@@ -207,7 +207,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.quiet = False
         self.status_suffix = "..."
         self.status_animation = "bouncingBar"
-        self.syntax_theme = "monokai"
         self.theme = ""
         # go apply the empty theme, which sets
         # self.console and self.error_console
@@ -314,11 +313,6 @@ class InteractiveTomcatManager(cmd2.Cmd):
                 str,
                 "style of activity animation from rich.spinner",
                 self,
-            )
-        )
-        self.add_settable(
-            cmd2.Settable(
-                "syntax_theme", str, "pygments syntax highlighing theme", self
             )
         )
         self.add_settable(cmd2.Settable("theme", str, "color scheme", self))
@@ -2383,13 +2377,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.raise_if_not_connected()
         r = self.docmd("querying server", self.tomcat.status_xml)
         root = xml.dom.minidom.parseString(r.status_xml)
-        syntax = rich.syntax.Syntax(
-            root.toprettyxml(indent="   ").strip(),
-            "xml",
-            theme=self.syntax_theme,
-            background_color="default",
-        )
-        self.console.print(syntax)
+        self.console.print(root.toprettyxml(indent="   ").strip())
 
     def help_status(self):
         """Show help for the 'status' command"""
