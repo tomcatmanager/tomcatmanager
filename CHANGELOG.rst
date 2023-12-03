@@ -14,12 +14,8 @@ Unreleased
 TODO
 ^^^^
 
-- config edit has a bug where if you comment out a setting, it doesn't change
-  that setting back to it's default value when it reloads the config
-
 - check display output with debug on, make sure it formats with rich
-
-- switch quiet setting to be called verbose, default is true?
+- remove syntax_theme
 
 
 Added
@@ -59,6 +55,11 @@ Removed
 - Drop support for Python 3.7 (EOL 27 June 2023)
 - Removed allow_style setting
 - Removed show command; settings does the same thing and is still available
+
+Fixed
+^^^^^
+
+- ``config edit`` command now sets default values before reloading configuration
 
 
 6.0.1 (2022-11-15)

@@ -443,6 +443,43 @@ def test_config_edit_no_editor(itm_nc, capsys):
     assert err.startswith("no editor: ")
 
 
+def test_config_edit_sets_defaults(itm_nc, tmp_path, mocker):
+    fname = pathlib.Path(tmp_path / "someconfig.toml")
+    config_file = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+    )
+    config_file.return_value = fname
+    itm_nc.prompt = "typehere> "
+    # we need an editor set
+    itm_nc.editor = "fooedit"
+    # but we prevent the editor from executing
+    mock_os_system = mocker.patch("os.system")
+
+    itm_nc.onecmd_plus_hooks("config edit")
+    assert mock_os_system.call_count == 1
+    assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
+    assert itm_nc.prompt == "tomcat-manager> "
+
+
+def test_config_edit_no_configfile(itm_nc, mocker, capsys):
+    config_file = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.config_file",
+        new_callable=mock.PropertyMock,
+    )
+    config_file.return_value = None
+    # we need an editor set
+    itm_nc.editor = "fooedit"
+    # but we prevent the editor from executing
+    mock_os_system = mocker.patch("os.system")
+
+    itm_nc.onecmd_plus_hooks("config edit")
+    _, err = capsys.readouterr()
+    assert mock_os_system.call_count == 0
+    assert itm_nc.exit_code == itm_nc.EXIT_ERROR
+    assert "could not figure out where configuration" in err
+
+
 def test_config_invalid_action(itm_nc, capsys):
     itm_nc.onecmd_plus_hooks("config bogus")
     out, err = capsys.readouterr()
@@ -452,12 +489,12 @@ def test_config_invalid_action(itm_nc, capsys):
 
 
 def test_config_file_command(itm_nc, mocker, capsys):
-    fname = pathlib.Path("/tmp/someconfig.ini")
+    fname = pathlib.Path("/tmp/someconfig.toml")
     config_file = mocker.patch(
         "tomcatmanager.InteractiveTomcatManager.config_file",
         new_callable=mock.PropertyMock,
     )
-    config_file.return_value = str(fname)
+    config_file.return_value = fname
 
     itm_nc.onecmd_plus_hooks("config file")
     out, _ = capsys.readouterr()

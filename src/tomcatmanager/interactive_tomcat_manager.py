@@ -197,6 +197,22 @@ class InteractiveTomcatManager(cmd2.Cmd):
         if self._apply_theme(value):
             self._theme = value
 
+    def _set_defaults(self):
+        """Set default values for all settings"""
+        self.prompt = f"{self.app_name}> "
+        self.debug = False
+        self.timeout = 10.0
+        self.status_prefix = "--"
+        self.echo = False
+        self.quiet = False
+        self.status_suffix = "..."
+        self.status_animation = "bouncingBar"
+        self.syntax_theme = "monokai"
+        self.theme = ""
+        # go apply the empty theme, which sets
+        # self.console and self.error_console
+        self._apply_theme(self.theme)
+
     # pylint: disable=too-many-statements
     def __init__(self, loadconfig=True):
         self.appdirs = appdirs.AppDirs(self.app_name, self.app_author)
@@ -310,19 +326,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.tomcat = tm.TomcatManager()
 
         # set default values
-        self.prompt = f"{self.app_name}> "
-        self.debug = False
-        self.timeout = 10.0
-        self.status_prefix = "--"
-        self.echo = False
-        self.quiet = False
-        self.status_suffix = "..."
-        self.status_animation = "bouncingBar"
-        self.syntax_theme = "monokai"
-        self.theme = ""
-        # go apply the empty theme, which sets
-        # self.console and self.error_console
-        self._apply_theme(self.theme)
+        self._set_defaults()
 
         # load config file if it exists
         if loadconfig:
@@ -888,20 +892,24 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.exit_code = self.EXIT_ERROR
             return
 
-        # ensure the configuration directory exists
-        configdir = self.config_file.parent
-        if not configdir.exists():  # pragma: nocover
-            configdir.mkdir(parents=True, exist_ok=True)
+        if self.config_file:
+            # ensure the configuration directory exists
+            configdir = self.config_file.parent
+            if not configdir.exists():  # pragma: nocover
+                configdir.mkdir(parents=True, exist_ok=True)
 
-        # go edit the file
-        cmd = f'"{self.editor}" "{self.config_file}"'
-        self.pfeedback(f"executing {cmd}")
-        os.system(cmd)
+            # go edit the file
+            cmd = f'"{self.editor}" "{self.config_file}"'
+            self.pfeedback(f"executing {cmd}")
+            os.system(cmd)
 
-        # read it back in and apply it
-        self.pfeedback("reloading configuration file")
-        self.load_config()
-        self.exit_code = self.EXIT_SUCCESS
+            # read it back in and apply it
+            self.pfeedback("reloading configuration file")
+            self.load_config()
+            self.exit_code = self.EXIT_SUCCESS
+        else:
+            self.perror("could not figure out where configuration file should be")
+            self.exit_code = self.EXIT_ERROR
 
     def _config_convert(self):
         """
@@ -1632,6 +1640,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
             except FileNotFoundError:
                 pass
 
+        # either we don't have a config file, or we were able to load it
+        # now we can set all settings to their default values
+        self._set_defaults()
+
+        # and go process the settings we found in the config file
         first_error = True
         try:
             settings = config["settings"]
