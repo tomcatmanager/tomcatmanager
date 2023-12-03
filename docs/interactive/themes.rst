@@ -1,8 +1,10 @@
 Themes
 ======
 
-When a theme is set, ``tomcat-manager`` displays colored output using the
-styles defined in theme.
+When a theme is set, ``tomcat-manager`` displays colored output using the styles
+defined in theme. By default, no theme is applied; all output is displayed using the
+default style of your terminal emulator. See https://no-color.org for an explanation
+of why this is the best approach.
 
 ``tomcat-manager`` comes with several built-in themes which use can use. Built-in
 themes can not be edited or modified. You can create your own themes, either from
@@ -76,12 +78,37 @@ disappear and you will be able to edit the theme.
 Setting a Theme
 ---------------
 
-By default, no theme is applied; all output is displayed using the default
-style of your terminal emulator. Apply a theme by changing the ``theme``
-:doc:`setting <settings>` using the ``set`` command. Set the ``theme`` setting
-to the name of the theme you want to load, and ``tomcat-manager`` will load and
-apply that theme. Any future output will now be generated using the styles specified
-in the loaded theme.
+When ``tomcat-manager`` is launched, it checks the following items in the order given
+until it finds a theme setting. If no theme is set by any of these items, then no
+theme is applied.
+
+- ``--theme`` command line option
+- ``TOMCATMANAGER_THEME`` environment variable
+- the ``theme`` setting in the :doc:`configuration file <configfile>`
+
+If you have a setting in your config file to set the theme:
+
+.. code-block:: toml
+
+    [settings]
+    theme = "default-light"
+
+And you invoke ``tomcat-manager`` using the following:
+
+.. code-block:: bash
+
+    $ tomcat-manager --theme default-dark
+
+The theme will be set to ``default-dark``, because the command line option is checked
+first, and if found, all other mechanisms to set the theme are ignored.
+
+This approach has been implemented because it offers great flexibility and makes
+integration with other shell tools and environments easy.
+
+Once ``tomcat-manager`` is running, you can apply a new theme by by changing the
+:ref:`theme setting <interactive/settings:theme>` to the name of the theme you want to
+load. Any future output will now be generated using the styles specified in the loaded
+theme.
 
 .. code-block:: text
 
