@@ -11,6 +11,11 @@ format of this file follows recommendations from `Keep a Changelog
 Unreleased
 ----------
 
+Fixed
+^^^^^
+
+- updated triggers for building documentation automatically on readthedocs.io
+
 
 7.0.0 (2023-12-02)
 ------------------
