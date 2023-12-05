@@ -238,7 +238,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             "prompt",
         ]
         for setting in to_remove:
-            with contextlib.supress(KeyError):
+            with contextlib.suppress(KeyError):
                 self.remove_settable(setting)
 
         self.add_settable(
@@ -315,6 +315,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         self.tomcat = tm.TomcatManager()
 
         # set default values
+        self.console = None
+        self.error_console = None
         self._set_defaults()
 
         # load config file if it exists
@@ -327,7 +329,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         # new one
         if (  # noqa: SIM102
             self.config_file and not self.config_file.exists()
-            ):  # pragma: nocover
+        ):  # pragma: nocover
             if (
                 self.config_file_old and self.config_file_old.exists()
             ):  # pragma: nocover
@@ -1718,7 +1720,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
             pvalue = f"'{value}'"
         elif single_quote in value:
             pvalue = f'"{value}"'
-        elif double_quote in value or "" in value:
+        elif double_quote in value:  # noqa: SIM114
+            pvalue = f"'{value}'"
+        elif " " in value:
             pvalue = f"'{value}'"
         return pvalue
 
@@ -1739,7 +1743,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
         usagestr = (
             r"%(prog)s [argparse.args]\[-h][/]"
             "\n"
-            r"       %(prog)s [argparse.args]config_name[/] [argparse.args]\[OPTIONS][/]"  # noqa: E501
+            r"       %(prog)s [argparse.args]config_name[/]"
+            r" [argparse.args]\[OPTIONS][/]"
             "\n"
             r"       %(prog)s [argparse.args]url[/] [argparse.args]\[user][/]"
             r" [argparse.args]\[password][/] [argparse.args]\[OPTIONS][/]"

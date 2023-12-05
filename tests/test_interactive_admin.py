@@ -21,6 +21,10 @@
 #
 # pylint: disable=protected-access, missing-function-docstring, too-many-lines
 # pylint: disable=missing-module-docstring, unused-variable, redefined-outer-name
+# pylint: disable=wrong-import-order
+#
+# there is a conflict about the desired import order between pylint and ruff
+# we are going with ruff
 
 import importlib.resources as importlib_resources
 
