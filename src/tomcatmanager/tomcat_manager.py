@@ -1105,7 +1105,7 @@ class TomcatManager:
         if text:
             for line in text.splitlines():
                 # don't add duplicates
-                if not line in leakers:
+                if line not in leakers:
                     leakers.append(line)
         return leakers
 

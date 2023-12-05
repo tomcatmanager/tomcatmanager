@@ -36,6 +36,7 @@ line program uses the API documented here, but it not considered part of
 the published API.
 """
 
+# ruff: noqa: F401 [import but not used]
 try:
     # for python 3.8+
     import importlib.metadata as importlib_metadata

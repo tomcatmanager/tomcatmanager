@@ -106,28 +106,28 @@ def test_implemented_by_decorations8_0(mocker):
     with pytest.raises(ValueError):
         tomcat.expire(None)
     with pytest.raises(requests.HTTPError):
-        response = tomcat.list()
+        _ = tomcat.list()
     assert gmock.call_count == 1
     with pytest.raises(requests.HTTPError):
-        response = tomcat.ssl_connector_ciphers()
+        _ = tomcat.ssl_connector_ciphers()
     assert gmock.call_count == 2
     with pytest.raises(requests.HTTPError):
-        response = tomcat.server_info()
+        _ = tomcat.server_info()
     assert gmock.call_count == 3
     with pytest.raises(requests.HTTPError):
-        response = tomcat.status_xml()
+        _ = tomcat.status_xml()
     assert gmock.call_count == 4
     with pytest.raises(requests.HTTPError):
-        response = tomcat.vm_info()
+        _ = tomcat.vm_info()
     assert gmock.call_count == 5
     with pytest.raises(requests.HTTPError):
-        response = tomcat.thread_dump()
+        _ = tomcat.thread_dump()
     assert gmock.call_count == 6
     with pytest.raises(requests.HTTPError):
-        response = tomcat.resources()
+        _ = tomcat.resources()
     assert gmock.call_count == 7
     with pytest.raises(requests.HTTPError):
-        response = tomcat.find_leakers()
+        _ = tomcat.find_leakers()
     assert gmock.call_count == 8
 
 

@@ -62,7 +62,7 @@ def test_connect_no_url():
     tomcat = tm.TomcatManager()
     assert tomcat.is_connected is False
     with pytest.raises(requests.exceptions.MissingSchema):
-        r = tomcat.connect("")
+        _ = tomcat.connect("")
 
 
 def test_connect_noauth(tomcat_manager_server):
@@ -99,7 +99,7 @@ def test_connect_certauth(tomcat_manager_server, mocker):
     tomcat = tm.TomcatManager()
     assert tomcat.is_connected is False
     assert not tomcat.tomcat_major_minor
-    r = tomcat.connect(
+    _ = tomcat.connect(
         tomcat_manager_server.url,
         "",
         "",
@@ -121,7 +121,7 @@ def test_connect_certkeyauth(tomcat_manager_server, mocker):
     tomcat = tm.TomcatManager()
     assert tomcat.is_connected is False
     assert not tomcat.tomcat_major_minor
-    r = tomcat.connect(
+    _ = tomcat.connect(
         tomcat_manager_server.url,
         "",
         "",
@@ -143,7 +143,7 @@ def test_connect_verifybundle(tomcat_manager_server, mocker):
     tomcat = tm.TomcatManager()
     assert tomcat.is_connected is False
     assert not tomcat.tomcat_major_minor
-    r = tomcat.connect(
+    _ = tomcat.connect(
         tomcat_manager_server.url,
         "",
         "",
@@ -165,7 +165,7 @@ def test_connect_noverify(tomcat_manager_server, mocker):
     tomcat = tm.TomcatManager()
     assert tomcat.is_connected is False
     assert not tomcat.tomcat_major_minor
-    r = tomcat.connect(
+    _ = tomcat.connect(
         tomcat_manager_server.url,
         tomcat_manager_server.user,
         tomcat_manager_server.password,
@@ -189,7 +189,7 @@ def test_connect_connection_error(tomcat_manager_server, mocker):
     assert tomcat.is_connected is False
     assert not tomcat.tomcat_major_minor
     with pytest.raises(requests.exceptions.ConnectionError):
-        r = tomcat.connect(
+        _ = tomcat.connect(
             tomcat_manager_server.url,
             tomcat_manager_server.user,
             tomcat_manager_server.password,
@@ -211,7 +211,7 @@ def test_connect_timeout(tomcat_manager_server, mocker):
     assert tomcat.is_connected is False
     assert not tomcat.tomcat_major_minor
     with pytest.raises(requests.exceptions.Timeout):
-        r = tomcat.connect(
+        _ = tomcat.connect(
             tomcat_manager_server.url,
             tomcat_manager_server.user,
             tomcat_manager_server.password,

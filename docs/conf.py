@@ -32,7 +32,7 @@ except ImportError:  # pragma: nocover
 release = importlib_metadata.version("tomcatmanager")
 version = ".".join(release.split(".")[:2])
 
-import sphinx_rtd_theme
+import sphinx_rtd_theme  # noqa
 
 # links to external documentation
 intersphinx_mapping = {

@@ -90,6 +90,15 @@ def pylint(context):
 namespace_check.add_task(pylint)
 
 
+@invoke.task(name="ruff")
+def ruff_lint(context):
+    "Check code quality using ruff"
+    context.run("ruff check *.py tests src docs", echo=True)
+
+
+namespace_check.add_task(ruff_lint)
+
+
 @invoke.task(name="format")
 def format_check(context):
     """Check if code is properly formatted using ruff"""
