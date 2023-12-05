@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,19 +27,19 @@ tomcatmanager
 A python wrapper for interacting with the Tomcat Manager web application.
 """
 
-import functools
 import collections
+import functools
 import re
 from typing import Any, Callable, List, Tuple, Union
 
 import requests
 
 from .models import (
-    TomcatManagerResponse,
-    StatusCode,
     ServerInfo,
+    StatusCode,
     TomcatApplication,
     TomcatMajorMinor,
+    TomcatManagerResponse,
     TomcatNotConnected,
 )
 
@@ -125,29 +123,28 @@ class TomcatManager:
                 # this is the function wrapper around the decorated method
                 # celff is the instance of TomcatManager
                 # these are the arguments passed to the decorated function
-                if celff.is_connected:
-                    if celff.tomcat_major_minor in self.tomcats:
-                        return method(celff, *args, **kwargs)
-                    # as of version 6.0.0, all python methods work with all
-                    # supported versions of Tomcat. Therefore, this code is
-                    # not needed. It's commented out because I couldn't
-                    # figure out a way to test it effectively. I chose
-                    # not to remove it from the source to make it easier
-                    # to re-enable in the future if necessary.
-                    #
-                    # I also added a pylint pragma above to disable
-                    # inconsistent-return-statements errors. This should
-                    # be removed if this code is re-enabled.
-                    #
-                    # the code to test all of this is commented out in
-                    # test_manager_implemented.py test_implemented_by_invalid()
-                    #
-                    # raise TomcatNotImplementedError(
-                    #     (
-                    #         f"'{method.__name__}' not implemented on"
-                    #         f" Tomcat {celff.tomcat_major_minor.value}"
-                    #     )
-                    # )
+                if celff.is_connected and celff.tomcat_major_minor in self.tomcats:
+                    return method(celff, *args, **kwargs)
+                # as of version 6.0.0, all python methods work with all
+                # supported versions of Tomcat. Therefore, this code is
+                # not needed. It's commented out because I couldn't
+                # figure out a way to test it effectively. I chose
+                # not to remove it from the source to make it easier
+                # to re-enable in the future if necessary.
+                #
+                # I also added a pylint pragma above to disable
+                # inconsistent-return-statements errors. This should
+                # be removed if this code is re-enabled.
+                #
+                # the code to test all of this is commented out in
+                # test_manager_implemented.py test_implemented_by_invalid()
+                #
+                # raise TomcatNotImplementedError(
+                #     (
+                #         f"'{method.__name__}' not implemented on"
+                #         f" Tomcat {celff.tomcat_major_minor.value}"
+                #     )
+                # )
                 # this line is indented at the level of 'if celff.is_connected'
                 # it's not in an else clause because pylint, but it is part
                 # of the code tested by test_implmemented_by_invalid()
@@ -286,10 +283,7 @@ class TomcatManager:
 
         .. versionadded:: 3.0.0
         """
-        if callable(method):
-            mname = method.__name__
-        else:
-            mname = method
+        mname = method.__name__ if callable(method) else method
         if self.is_connected:
             try:
                 return self.tomcat_major_minor in self._implemented_by.matrix[mname]
@@ -321,10 +315,7 @@ class TomcatManager:
 
         .. versionadded:: 3.0.0
         """
-        if callable(method):
-            mname = method.__name__
-        else:
-            mname = method
+        mname = method.__name__ if callable(method) else method
         try:
             return tomcat_major_minor in cls._implemented_by.matrix[mname]
         except KeyError:
@@ -848,7 +839,7 @@ class TomcatManager:
             >>> r = tomcat.list()
             >>> if r.ok:
             ...     running = filter(lambda app: app.state == tm.ApplicationState.RUNNING, r.apps)
-        """
+        """  # noqa: E501 (line too long)
         r = self._get("list")
         apps = []
         for line in r.result.splitlines():
@@ -1016,8 +1007,8 @@ class TomcatManager:
 
         The Tomcat Manager documentation says the server can return duplicates in this
         list if the app has been reloaded and was leaking both before and after the
-        reload. The list returned by the ``leakers`` attribute will have no duplicates in
-        it.
+        reload. The list returned by the ``leakers`` attribute will have no duplicates
+        in it.
 
         Usage::
 
@@ -1076,9 +1067,10 @@ class TomcatManager:
     @_implemented_by(TomcatMajorMinor.supported() + [TomcatMajorMinor.VNEXT])
     def ssl_reload(self, host: str = None) -> TomcatManagerResponse:
         """
-        Reload TLS certificates and keys (but not server.xml) for a specified or all virtual hosts
+        Reload TLS certificates and keys for a specified or all virtual hosts
 
-        :param host: (optional) Host name to reload, if omitted, reload all virtual hosts
+        :param host: (optional) Host name to reload, if omitted, reload
+                     all virtual hosts
 
         :return: :class:`.TomcatManagerResponse` object
         """
@@ -1144,10 +1136,7 @@ class TomcatManager:
         base = self._url or ""
         # if we have no url, don't add other stuff to it because it makes
         # the exceptions hard to understand
-        if base:
-            url = base + "/text/" + cmd
-        else:
-            url = ""
+        url = base + "/text/" + cmd if base else ""
         authinfo = None
         if self._user and self._password:
             authinfo = (self._user, self._password)

@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,12 +22,11 @@
 # pylint: disable=protected-access, missing-function-docstring, too-many-lines
 # pylint: disable=missing-module-docstring, unused-variable, redefined-outer-name
 
-from unittest import mock
 import uuid
+from unittest import mock
 
 import pytest
 import requests
-
 import tomcatmanager as tm
 
 

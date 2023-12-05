@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,11 +24,9 @@
 
 from unittest import mock
 
-import pytest
 import cmd2
-
+import pytest
 import tomcatmanager as tm
-
 
 VERSION_STRINGS = ["", "-v 42"]
 
@@ -118,10 +114,8 @@ def test_redeploy_context(itm, tomcat_manager_server, safe_path, version):
 @pytest.mark.parametrize("version", VERSION_STRINGS)
 def test_deploy_context_warfile(itm, tomcat_manager_server, safe_path, version):
     itm.onecmd_plus_hooks(
-        (
-            f"deploy context {version} {tomcat_manager_server.contextfile}"
-            f" {tomcat_manager_server.warfile} {safe_path}"
-        )
+        f"deploy context {version} {tomcat_manager_server.contextfile}"
+        f" {tomcat_manager_server.warfile} {safe_path}"
     )
     assert itm.exit_code == itm.EXIT_SUCCESS
 
@@ -132,18 +126,14 @@ def test_deploy_context_warfile(itm, tomcat_manager_server, safe_path, version):
 @pytest.mark.parametrize("version", VERSION_STRINGS)
 def test_redeploy_context_warfile(itm, tomcat_manager_server, safe_path, version):
     itm.onecmd_plus_hooks(
-        (
-            f"deploy context {version} {tomcat_manager_server.contextfile}"
-            f" {tomcat_manager_server.warfile} {safe_path}"
-        )
+        f"deploy context {version} {tomcat_manager_server.contextfile}"
+        f" {tomcat_manager_server.warfile} {safe_path}"
     )
     assert itm.exit_code == itm.EXIT_SUCCESS
 
     itm.onecmd_plus_hooks(
-        (
-            f"redeploy context {version} {tomcat_manager_server.contextfile}"
-            f" {tomcat_manager_server.warfile} {safe_path}"
-        )
+        f"redeploy context {version} {tomcat_manager_server.contextfile}"
+        f" {tomcat_manager_server.warfile} {safe_path}"
     )
     assert itm.exit_code == itm.EXIT_SUCCESS
 

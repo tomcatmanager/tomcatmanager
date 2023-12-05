@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,13 +34,12 @@ except AttributeError:  # pragma: nocover
 
 import pathlib
 import textwrap
-from unittest import mock
 import uuid
+from unittest import mock
 
 import pytest
-import tomlkit
-
 import tomcatmanager as tm
+import tomlkit
 
 
 ###
@@ -591,7 +588,7 @@ verify = false
     assert "reloading configuration" in err
     assert itm_nc.exit_code == itm_nc.EXIT_SUCCESS
 
-    with open(tomlfile, "r", encoding="utf-8") as tomlobj:
+    with open(tomlfile, encoding="utf-8") as tomlobj:
         test_tomlconfig = tomlobj.read()
         assert test_tomlconfig == tomlconfig
 

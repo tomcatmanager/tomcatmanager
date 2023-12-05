@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,6 +20,7 @@
 # THE SOFTWARE.
 #
 # pylint: disable=too-many-lines, too-many-public-methods
+# ruff: noqa: E501
 
 """
 Mock up a Tomcat Manager application that behaves like tomcat version 8.5+
@@ -29,11 +28,10 @@ Mock up a Tomcat Manager application that behaves like tomcat version 8.5+
 This has all the SSL commands
 """
 
-import re
 import base64
-from urllib.parse import urlparse
-from urllib.parse import parse_qs
+import re
 from http.server import BaseHTTPRequestHandler
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
@@ -53,7 +51,7 @@ class MockRequestHandlerSSL(BaseHTTPRequestHandler):
 
     USER = "admin"
     PASSWORD = "admin"
-    AUTH_KEY = base64.b64encode(f"{USER}:{PASSWORD}".encode("utf-8")).decode("utf-8")
+    AUTH_KEY = base64.b64encode(f"{USER}:{PASSWORD}".encode("utf-8")).decode("utf-8")  # noqa: UP012
     TEXT_PATTERN = re.compile(r"^/manager/text/?$")
     # info commands
     LIST_PATTERN = re.compile(r"^/manager/text/list($|\?.*$)")
@@ -939,9 +937,8 @@ UserDatabase:org.apache.catalina.users.MemoryUserDatabase"""
         url = urlparse(self.path)
         query_string = parse_qs(url.query)
         status = ""
-        if "statusLine" in query_string:
-            if query_string["statusLine"] == ["true"]:
-                status = "OK - Memory leaks found\n"
+        if "statusLine" in query_string and query_string["statusLine"] == ["true"]:
+            status = "OK - Memory leaks found\n"
         self.send_text(
             status
             + """/leaker1

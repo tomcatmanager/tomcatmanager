@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,7 +33,9 @@ import tomcatmanager as tm
 def _build_parser():
     """Build the argument parser"""
     parser = argparse.ArgumentParser(
-        description="Manage a tomcat server from the command line or an interactive shell",
+        description=(
+            "Manage a tomcat server from the command line or an interactive shell"
+        ),
         add_help=False,
     )
     user_help = "user to use for authentication with the tomcat manager web application"

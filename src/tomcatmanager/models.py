@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -448,7 +446,7 @@ class TomcatMajorMinor(enum.Enum):
             # shouldn't ever throw exceptions because of the regex
             major_ver = int(match.group(1))
             minor_ver = int(match.group(2))
-            if major_ver < 8:
+            if major_ver < 8:  # noqa: SIM114
                 ver = TomcatMajorMinor.UNSUPPORTED
             elif major_ver == 8 and minor_ver == 0:
                 ver = TomcatMajorMinor.UNSUPPORTED
@@ -460,7 +458,7 @@ class TomcatMajorMinor(enum.Enum):
                 ver = TomcatMajorMinor.V10_0
             elif major_ver == 10 and minor_ver == 1:
                 ver = TomcatMajorMinor.V10_1
-            elif major_ver == 10 and minor_ver > 0:
+            elif major_ver == 10 and minor_ver > 0:  # noqa: SIM114
                 ver = TomcatMajorMinor.VNEXT
             elif major_ver > 10:
                 ver = TomcatMajorMinor.VNEXT

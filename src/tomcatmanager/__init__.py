@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -44,16 +42,16 @@ except ImportError:  # pragma: nocover
     # for python < 3.8
     import importlib_metadata
 
-from .tomcat_manager import TomcatManager
+from .interactive_tomcat_manager import InteractiveTomcatManager
 from .models import (
+    ApplicationState,
+    StatusCode,
     TomcatError,
+    TomcatMajorMinor,
     TomcatNotConnected,
     TomcatNotImplementedError,
-    StatusCode,
-    ApplicationState,
-    TomcatMajorMinor,
 )
-from .interactive_tomcat_manager import InteractiveTomcatManager
+from .tomcat_manager import TomcatManager
 
 try:
     __version__ = importlib_metadata.version(__name__)

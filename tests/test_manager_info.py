@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -80,7 +78,7 @@ def test_resources_named_class(tomcat, mocker, assert_tomcatresponse):
     )
     # pylint: disable= line-too-long
     mock_result.return_value = """OK - Listed global resources of type [org.apache.catalina.users.MemoryUserDatabase]
-UserDatabase:org.apache.catalina.users.MemoryUserDatabase"""
+UserDatabase:org.apache.catalina.users.MemoryUserDatabase"""  # noqa: E501
     r = tomcat.resources("org.apache.catalina.users.MemoryUserDatabase")
     assert_tomcatresponse.info(r)
     assert isinstance(r.resources, dict)

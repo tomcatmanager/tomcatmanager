@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,7 +23,6 @@
 # pylint: disable=missing-module-docstring, unused-variable
 
 import pytest
-
 import tomcatmanager as tm
 
 VERSION_VALUES = [None, "42"]

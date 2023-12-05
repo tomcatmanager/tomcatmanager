@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,7 +31,6 @@ import contextlib
 import enum
 import getpass
 import http.client
-
 import importlib.resources as importlib_resources
 
 try:
@@ -51,18 +48,18 @@ import sys
 import textwrap
 import traceback
 import xml.dom.minidom
-from typing import Callable, Any, List, Dict
+from typing import Any, Callable, Dict, List
 
 import appdirs
 import cmd2
 import requests
 import rich
 import rich.console
+import rich.progress
 import rich.spinner
 import rich.syntax
-import rich.progress
-from rich_argparse import RichHelpFormatter, RawDescriptionRichHelpFormatter
 import tomlkit
+from rich_argparse import RawDescriptionRichHelpFormatter, RichHelpFormatter
 
 import tomcatmanager as tm
 
@@ -241,10 +238,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
             "prompt",
         ]
         for setting in to_remove:
-            try:
+            with contextlib.supress(KeyError):
                 self.remove_settable(setting)
-            except KeyError:
-                pass
 
         self.add_settable(
             cmd2.Settable(
@@ -330,15 +325,19 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         # give a friendly message if there is an old config file but not a
         # new one
-        if self.config_file and not self.config_file.exists():  # pragma: nocover
+        if (  # noqa: SIM102
+            self.config_file and not self.config_file.exists()
+            ):  # pragma: nocover
             if (
                 self.config_file_old and self.config_file_old.exists()
             ):  # pragma: nocover
                 self.pfeedback(
-                    "In version 6.0.0 the configuration file format changed from INI to TOML."
+                    "In version 6.0.0 the configuration file format changed"
+                    " from INI to TOML."
                 )
                 self.pfeedback(
-                    "You have a configuration file in the old format. Type 'config convert' to"
+                    "You have a configuration file in the old format."
+                    " Type 'config convert' to"
                 )
                 self.pfeedback("migrate your old configuration to the new format.")
 
@@ -450,10 +449,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             # return a no-op context manager (that means we won't get any output)
             return contextlib.nullcontext()
 
-        if self.feedback_to_output:
-            cons = self.console
-        else:
-            cons = self.error_console
+        cons = self.console if self.feedback_to_output else self.error_console
 
         # create a custom status/progress display
         msg = rich.text.Text(
@@ -500,13 +496,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
         :param end: str - string appended after the end of the message if
                           not already present, default a newline
         """
-        try:
-            self.console.print(msg, end=end)
-        except BrokenPipeError:  # pragma: nocover
+        with contextlib.suppress(BrokenPipeError):
             # This occurs if a command's output is being piped to another
             # process and that process closes before the command is
             # finished.
-            pass
+            self.console.print(msg, end=end)
 
     # pylint: disable=unused-argument
     def perror(self, msg: Any = "", *, end: str = "\n", apply_style=False) -> None:
@@ -529,9 +523,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
             _type, _exception, _traceback = sys.exc_info()
             if _exception:
                 # if self.debug:
-                #    output = ''.join(traceback.format_exception(_type, _exception, _traceback))
+                #    output = ''.join(traceback.format_exception\
+                #             (_type, _exception, _traceback))
                 # else:
-                #    output = ''.join(traceback.format_exception_only(_type, _exception))
+                #    output = ''.join(traceback.format_exception_only\
+                #             (_type, _exception))
                 output = "".join(traceback.format_exception_only(_type, _exception))
                 ##sys.stderr.write(output)
                 self.error_console.print(output, end=end)
@@ -927,11 +923,11 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
         self.pfeedback("converting old configuration file to new format")
         iniconfig = EvaluatingConfigParser()
-        with open(self.config_file_old, "r", encoding="utf-8") as fobj:
+        with open(self.config_file_old, encoding="utf-8") as fobj:
             iniconfig.read_file(fobj)
             # convert it to a new toml file
             toml = tomlkit.document()
-            for section in dict(iniconfig).keys():
+            for section in dict(iniconfig):
                 if section == "DEFAULT":
                     pass
                 elif section == "settings":
@@ -950,7 +946,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
                             # we found a setting in the file that isn't a valid
                             # setting for this program, bail out
                             self.pfeedback(
-                                f"conversion failed: '{param_name}' is not a valid setting"
+                                f"conversion failed: '{param_name}' is not"
+                                " a valid setting"
                             )
                             self.exit_code = self.EXIT_ERROR
                             return
@@ -1175,16 +1172,20 @@ class InteractiveTomcatManager(cmd2.Cmd):
         list_parser.set_defaults(func=self.theme_list)
 
         # clone a built-in theme
+        helpdesc = "clone a theme from the gallery or from one of the built-in themes"
         clone_parser = main_subparsers.add_parser(
             "clone",
-            description="clone a theme from the gallery or from one of the built-in themes",
-            help="clone a theme from the gallery or from one of the built-in themes",
+            description=helpdesc,
+            help=helpdesc,
             formatter_class=main_parser.formatter_class,
         )
         clone_parser.set_defaults(func=self.theme_clone)
         clone_parser.add_argument(
             "name",
-            help="name of the gallery or built-in theme to clone to user theme directory",
+            help=(
+                "name of the gallery or built-in theme to clone to"
+                " user theme directory"
+            ),
         )
         clone_parser.add_argument(
             "new_name", nargs="?", default="", help="new name of the theme"
@@ -1627,7 +1628,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         config = tomlkit.loads("")
         if self.config_file is not None:
             try:
-                with open(self.config_file, "r", encoding="utf-8") as fobj:
+                with open(self.config_file, encoding="utf-8") as fobj:
                     config = tomlkit.loads(fobj.read())
             except tomlkit.exceptions.TOMLKitError as err:
                 self.perror(f"error loading configuration file: {err}")
@@ -1649,7 +1650,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
                     # could be the setting name, or the setting value
                     if first_error:
                         self.perror(
-                            "while loading the configuration file the following errors occured:"
+                            "while loading the configuration file the"
+                            "following errors occured:"
                         )
                         first_error = False
                     self.perror(err)
@@ -1701,7 +1703,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
 
             value = ast.literal_eval(pvalue)
 
-        This isn't quite true, because if there are no spaces or quote marks in value, then
+        This isn't quite true, because if there are no spaces or quote marks
+        in value, then
 
             pvalue = value
         """
@@ -1715,9 +1718,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
             pvalue = f"'{value}'"
         elif single_quote in value:
             pvalue = f'"{value}"'
-        elif double_quote in value:
-            pvalue = f"'{value}'"
-        elif " " in value:
+        elif double_quote in value or "" in value:
             pvalue = f"'{value}'"
         return pvalue
 
@@ -1738,7 +1739,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         usagestr = (
             r"%(prog)s [argparse.args]\[-h][/]"
             "\n"
-            r"       %(prog)s [argparse.args]config_name[/] [argparse.args]\[OPTIONS][/]"
+            r"       %(prog)s [argparse.args]config_name[/] [argparse.args]\[OPTIONS][/]"  # noqa: E501
             "\n"
             r"       %(prog)s [argparse.args]url[/] [argparse.args]\[user][/]"
             r" [argparse.args]\[password][/] [argparse.args]\[OPTIONS][/]"
@@ -1749,8 +1750,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
             prog="connect",
             description=self.do_connect.__doc__,
             usage=usagestr,
-            epilog="""If you specify a user and no password, you will be prompted for the
-                password.""",
+            epilog="""If you specify a user and no password, you will be prompted for
+                      the password.""",
             formatter_class=RichHelpFormatter,
         )
         parser.add_argument(
@@ -1820,20 +1821,20 @@ class InteractiveTomcatManager(cmd2.Cmd):
             self.exit_code = self.EXIT_USAGE
             return
 
-        if server in self.config.keys():
-            if "url" in self.config[server].keys():
+        if server in self.config:
+            if "url" in self.config[server]:
                 url = self.config[server]["url"]
-            if "user" in self.config[server].keys():
+            if "user" in self.config[server]:
                 user = self.config[server]["user"]
-            if "password" in self.config[server].keys():
+            if "password" in self.config[server]:
                 password = self.config[server]["password"]
-            if "cert" in self.config[server].keys():
+            if "cert" in self.config[server]:
                 cert = self.config[server]["cert"]
-            if "key" in self.config[server].keys():
+            if "key" in self.config[server]:
                 key = self.config[server]["key"]
-            if "cacert" in self.config[server].keys():
+            if "cacert" in self.config[server]:
                 cacert = self.config[server]["cacert"]
-            if "verify" in self.config[server].keys():
+            if "verify" in self.config[server]:
                 verify = self.config[server]["verify"]
         else:
             # This is an ugly hack required to get argparse to show the help properly.
@@ -1908,10 +1909,8 @@ class InteractiveTomcatManager(cmd2.Cmd):
                         self.perror(f"tomcat manager not found at {url}")
                     else:
                         self.perror(
-                            (
-                                f"http error: {r.response.status_code}"
-                                f" {http.client.responses[r.response.status_code]}"
-                            )
+                            f"http error: {r.response.status_code}"
+                            f" {http.client.responses[r.response.status_code]}"
                         )
                     self.exit_code = self.EXIT_ERROR
         except requests.exceptions.ConnectionError:
@@ -1981,10 +1980,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
         warfile = pathlib.Path(args.warfile).expanduser()
         with open(warfile, "rb") as fileobj:
             apptag = self._apptag(args.path, args.version)
-            if update:
-                msg = f"redeploying {apptag}"
-            else:
-                msg = f"deploying {apptag}"
+            msg = f"redeploying {apptag}" if update else f"deploying {apptag}"
             self.docmd(
                 msg,
                 self.tomcat.deploy_localwar,
@@ -1997,10 +1993,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def deploy_server(self, args: argparse.Namespace, update: bool = False):
         """Deploy a war file to the tomcat server"""
         apptag = self._apptag(args.path, args.version)
-        if update:
-            msg = f"redeploying {apptag}"
-        else:
-            msg = f"deploying {apptag}"
+        msg = f"redeploying {apptag}" if update else f"deploying {apptag}"
         self.docmd(
             msg,
             self.tomcat.deploy_serverwar,
@@ -2013,10 +2006,7 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def deploy_context(self, args: argparse.Namespace, update: bool = False):
         """Deploy a context xml file to the tomcat server"""
         apptag = self._apptag(args.path, args.version)
-        if update:
-            msg = f"redeploying {apptag}"
-        else:
-            msg = f"deploying {apptag}"
+        msg = f"redeploying {apptag}" if update else f"deploying {apptag}"
         self.docmd(
             msg,
             self.tomcat.deploy_servercontext,
@@ -2519,7 +2509,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
         parser.add_argument(
             "class_name",
             nargs="?",
-            help="optional fully qualified java class name of the resource type to show",
+            help=(
+                "optional fully qualified java class name of the resource type to show"
+            ),
         )
         return parser
 
@@ -2710,10 +2702,8 @@ class EvaluatingConfigParser(configparser.ConfigParser):
     def get(self, section, option, **kwargs):
         val = super().get(section, option, **kwargs)
         if "'" in val or '"' in val:
-            try:
+            with contextlib.suppress(ValueError):
                 val = ast.literal_eval(val)
-            except ValueError:  # pragma: nocover
-                pass
         return val
 
 

@@ -1,14 +1,13 @@
 #
-# -*- coding: utf-8 -*-
+#
+# make it easy on ourselves, the context argument is often unused
+# pylint: disable=unused-argument
 """Development related tasks to be run with 'invoke'"""
 
+import contextlib
 import os
 import pathlib
 import shutil
-
-# make it easy on ourselves, the context argument is often unused
-# pylint: disable=unused-argument
-
 
 import invoke
 
@@ -16,7 +15,7 @@ import invoke
 # shared function
 def rmrf(items, verbose=True):
     "Silently remove a list of directories or files"
-    if isinstance(items, str) or isinstance(items, pathlib.PosixPath):
+    if isinstance(items, (str, pathlib.PosixPath)):
         items = [items]
 
     for item in items:
@@ -24,10 +23,8 @@ def rmrf(items, verbose=True):
             print(f"Removing {item}")
         shutil.rmtree(item, ignore_errors=True)
         # rmtree doesn't remove bare files
-        try:
+        with contextlib.suppress(FileNotFoundError):
             os.remove(item)
-        except FileNotFoundError:
-            pass
 
 
 # create namespaces

@@ -1,20 +1,18 @@
 #
-# -*- coding: utf-8 -*-
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # pylint: disable=missing-class-docstring, redefined-outer-name
 
 import pathlib
-import pytest
 from unittest import mock
 
+import pytest
 import requests
-
 import tomcatmanager as tm
 
-from tests.mock_server_10_1 import start_mock_server_10_1
-from tests.mock_server_10_0 import start_mock_server_10_0
-from tests.mock_server_9_0 import start_mock_server_9_0
 from tests.mock_server_8_5 import start_mock_server_8_5
+from tests.mock_server_9_0 import start_mock_server_9_0
+from tests.mock_server_10_0 import start_mock_server_10_0
+from tests.mock_server_10_1 import start_mock_server_10_1
 
 
 ###
@@ -106,7 +104,7 @@ def assert_tomcatresponse():
 
     class AssertResponse:
         def success(self, r):
-            """Assertions on TomcatResponse for calls that should be successful."""
+            """Assertions on TomcatResponse for calls that should succeed."""
             assert (
                 r.status_code == tm.StatusCode.OK
             ), f'message from server: "{r.status_message}"'
@@ -120,7 +118,7 @@ def assert_tomcatresponse():
                 r.raise_for_status()
 
         def info(self, r):
-            """Assertions on TomcatResponse for info-type commands that should be successful."""
+            """Assertions on TomcatResponse for info commands that should succeed."""
             self.success(r)
             assert r.result
 

@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,7 +25,6 @@
 from unittest import mock
 
 import pytest
-
 import tomcatmanager as tm
 
 

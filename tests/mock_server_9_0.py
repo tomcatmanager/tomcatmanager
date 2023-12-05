@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,9 +25,9 @@
 Mock up a Tomcat Manager application that behaves like tomcat version 9.0.x
 """
 
-from http.server import HTTPServer
 import socket
 import threading
+from http.server import HTTPServer
 
 from tests.mock_server_ssl import MockRequestHandlerSSL
 

@@ -1,6 +1,4 @@
 #
-# -*- coding: utf-8 -*-
-#
 # Copyright (c) 2007 Jared Crapo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,7 +26,6 @@ import io
 import sys
 
 import pytest
-
 import tomcatmanager as tm
 from tomcatmanager.__main__ import main
 
