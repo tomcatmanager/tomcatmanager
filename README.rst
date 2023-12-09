@@ -59,6 +59,11 @@ easily scriptable using your favorite shell:
    0
 
 There is also an interactive mode:
+.. image:: https://asciinema.org/a/n7Zb0Pu8kKVkOz8dnGwuBgOF1.png?speed=2
+      :target: https://asciinema.org/a/n7Zb0Pu8kKVkOz8dnGwuBgOF1
+      :alt: demo of tomcat-manager interactive mode
+
+There is also an interactive mode:
 
 .. code-block:: text
 
