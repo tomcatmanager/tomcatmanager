@@ -60,8 +60,8 @@ easily scriptable using your favorite shell:
 
 There is also an interactive mode:
 
-.. image:: https://asciinema.org/a/n7Zb0Pu8kKVkOz8dnGwuBgOF1.png?speed=2
-      :target: https://asciinema.org/a/n7Zb0Pu8kKVkOz8dnGwuBgOF1
+.. image:: https://asciinema.org/a/n7Zb0Pu8kKVkOz8dnGwuBgOF1.png?speed=2&autoplay=1&loop=1
+      :target: https://asciinema.org/a/n7Zb0Pu8kKVkOz8dnGwuBgOF1?speed=2&autoplay=1&loop=1
       :alt: demo of tomcat-manager interactive mode
 
 There is also an interactive mode:
