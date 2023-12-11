@@ -38,6 +38,21 @@ namespace.add_collection(namespace_check, "check")
 
 #####
 #
+# demos
+#
+#####
+@invoke.task
+def demos(context):
+    "Render demos using 'vhs'"
+    TOUR_FILE = DOCS_SRCDIR / "demos" / "tour.gif"
+    context.run(f"vhs demos/tour.tape -o {TOUR_FILE}", echo=True)
+
+
+namespace.add_task(demos)
+
+
+#####
+#
 # pytest, tox, pylint, and codecov
 #
 #####
