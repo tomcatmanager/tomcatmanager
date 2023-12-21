@@ -44,8 +44,10 @@ namespace.add_collection(namespace_check, "check")
 @invoke.task
 def demos(context):
     "Render demos using 'vhs'"
-    TOUR_FILE = DOCS_SRCDIR / "demos" / "interactive-tour.gif"
-    context.run(f"vhs demos/interactive-tour.tape -o {TOUR_FILE}", echo=True)
+    INTERACTIVE_FILE = DOCS_SRCDIR / "demos" / "interactive-tour.gif"
+    context.run(f"vhs demos/interactive-tour.tape -o {INTERACTIVE_FILE}", echo=True)
+    PACKAGE_FILE = DOCS_SRCDIR / "demos" / "package.gif"
+    context.run(f"vhs demos/package.tape -o {PACKAGE_FILE}", echo=True)
 
 
 namespace.add_task(demos)

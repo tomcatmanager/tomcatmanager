@@ -2,10 +2,10 @@
 # This is a .tape file for vhs, which will turn it into a gif
 # run it like:
 #
-# $ vhs tour.tape
+# $ vhs interactive-tour.tape
 #
 
-Output tour.gif
+Output interactive-tour.gif
 
 Set Framerate 15
 

@@ -65,19 +65,8 @@ There is also an interactive mode:
 
 And for the ultimate in flexibility, you can use the python package directly:
 
-.. code-block:: python
-
-   >>> import tomcatmanager as tm
-   >>> tomcat = tm.TomcatManager()
-   >>> r = tomcat.connect(url="http://localhost:8080/manager",
-   ... user="ace", password="newenglandclamchowder")
-   >>> tomcat.is_connected
-   True
-   >>> r = tomcat.stop("/someapp")
-   >>> r.ok
-   False
-   >>> r.status_message
-   'No context exists named /someapp'
+.. image:: docs/demos/package.gif
+    :alt: demo of tomat-manager python package
 
 
 What Can It Do?
