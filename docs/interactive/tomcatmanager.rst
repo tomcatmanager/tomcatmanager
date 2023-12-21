@@ -62,7 +62,7 @@ The interactive shell has a built-in list of all available commands:
     start      start a deployed tomcat application that isn't running
     stop       stop a tomcat application and leave it deployed on the server
     restart    stop and start a tomcat application
-        reload   synonym for 'restart'
+      reload   synonym for 'restart'
     sessions   show active sessions for a tomcat application
     expire     expire idle sessions
 
@@ -84,22 +84,22 @@ The interactive shell has a built-in list of all available commands:
 
     Settings, configuration, and tools
     ────────────────────────────────────────────────────────────────────────
+    settings       display program settings
+    set            change a program setting
     config         edit or show the location of the user configuration file
+    theme          manage themes
     edit           edit a file in the preferred text editor
     exit_code      show a number indicating the status of the previous command
     history        view, run, edit, and save previously entered commands
     py             run an interactive python shell
     run_pyscript   run a file containing a python script
-    settings       display program settings
-    set            change a program setting
     shell          execute a command in the operating system shell
     shortcuts      show shortcuts for other commands
-    theme          manage themes
 
     Other
     ────────────────────────────────────────────────────────────────────────
     exit      exit the interactive command prompt
-        quit    synonym for the 'exit' command
+      quit    synonym for the 'exit' command
     help      show available commands, or help on a specific command
     version   show the version number of this program
     license   show the software license for this program
