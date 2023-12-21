@@ -48,6 +48,8 @@ def demos(context):
     context.run(f"vhs demos/interactive-tour.tape -o {INTERACTIVE_FILE}", echo=True)
     PACKAGE_FILE = DOCS_SRCDIR / "demos" / "package.gif"
     context.run(f"vhs demos/package.tape -o {PACKAGE_FILE}", echo=True)
+    CMDLINE_FILE = DOCS_SRCDIR / "demos" / "commandline.gif"
+    context.run(f"vhs demos/commandline.tape -o {CMDLINE_FILE}", echo=True)
 
 
 namespace.add_task(demos)

@@ -51,12 +51,8 @@ How Do I Use It?
 This package installs a command line utility called ``tomcat-manager``. It's
 easily scriptable using your favorite shell:
 
-.. code-block:: text
-
-   $ tomcat-manager --user=ace --password=newenglandclamchowder \
-   http://localhost:8080/manager deploy local sample.war /sampleapp
-   $ echo $?
-   0
+.. image:: demos/commandline.gif
+    :alt: demo of tomcat-manager from shell command line
 
 There is also an interactive mode:
 
