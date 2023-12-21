@@ -60,25 +60,8 @@ easily scriptable using your favorite shell:
 
 There is also an interactive mode:
 
-.. image:: docs/demos/tour.gif
+.. image:: docs/demos/interactive-tour.gif
       :alt: demo of tomcat-manager interactive mode
-
-There is also an interactive mode:
-
-.. code-block:: text
-
-   $ tomcat-manager
-   tomcat-manager>connect http://localhost:8080/manager ace
-   Password:
-   --connected to http://localhost:8080/manager as ace
-   tomcat-manager>list
-   Path                     Status  Sessions Directory
-   ------------------------ ------- -------- ------------------------------------
-   /                        running        0 ROOT
-   /sampleapp               stopped        0 sampleapp##9
-   /sampleapp               running        0 sampleapp##8
-   /host-manager            running        0 /usr/share/tomcat8-admin/host-manage
-   /manager                 running        0 /usr/share/tomcat8-admin/manager
 
 And for the ultimate in flexibility, you can use the python package directly:
 

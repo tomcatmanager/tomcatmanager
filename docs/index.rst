@@ -19,7 +19,7 @@ easily scriptable using your favorite shell:
 
 There is also an interactive mode:
 
-.. image:: demos/tour.gif
+.. image:: demos/interactive-tour.gif
       :alt: demo of tomcat-manager interactive mode
 
 And for the ultimate in flexibility, you can use the python package directly:
