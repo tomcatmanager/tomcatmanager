@@ -33,13 +33,15 @@ Sleep 1s
 Type@60ms 'r = tomcat.connect(url="http://localhost:8080/manager", user="ace", password="newenglandclamchowder")' Sleep 190ms Enter
 Sleep 1.8s
 
-Type 'tomcat.is_connected' Sleep 160ms Enter
+Type 'tomcat.is' Sleep 1s Tab Sleep .5s Enter
 Sleep 2s
 
-Type 'r = tomcat.stop("/someapp")' Sleep 190ms Enter
+Type 'r = tomcat.stop(' Sleep 1.5s
+Type '"/someapp")' Sleep 190ms Enter
 Sleep 2s
 
-Type 'r.status_code == tm.StatusCode.OK' Sleep 200ms Enter
+Type 'r.status_code == tm.StatusCode.' Sleep 1.5s
+Type 'OK' Sleep 200ms Enter
 Sleep 2s
 
 Type 'r.status_message' Sleep 180ms Enter
