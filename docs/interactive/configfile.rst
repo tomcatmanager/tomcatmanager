@@ -53,7 +53,7 @@ format:
     quiet = false
     status_prefix = "--"
 
-    [tcl]
+    [local]
     url = "http://localhost:8080/manager"
     user = "ace"
     password = "newenglandclamchowder"
