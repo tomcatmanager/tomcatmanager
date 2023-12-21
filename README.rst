@@ -51,7 +51,7 @@ How Do I Use It?
 This package installs a command line utility called ``tomcat-manager``. It's
 easily scriptable using your favorite shell:
 
-.. image:: demos/commandline.gif
+.. image:: docs/demos/commandline.gif
     :alt: demo of tomcat-manager from shell command line
 
 There is also an interactive mode:
