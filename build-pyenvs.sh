@@ -12,7 +12,8 @@
 # version numbers are: major.minor.patch
 #
 # this script will delete and recreate existing virtualenvs named
-# tomcatmanager-3.8, etc. It will also create a .python-version
+# tomcatmanager-3.12, etc. It will also create a .python-version
+# file with all the virtualenvs listed in it
 #
 # Prerequisites:
 #   - *nix-ish environment like macOS or Linux
@@ -27,7 +28,7 @@
 # virtualenvs will be added to '.python-version'. Feel free to modify
 # this list, but note that this script intentionally won't install
 # dev, rc, or beta python releases
-declare -a pythons=("3.12" "3.11" "3.10" "3.9" "3.8")
+declare -a pythons=("3.13" "3.12" "3.11" "3.10" "3.9")
 
 # function to find the latest patch of a minor version of python
 function find_latest_version {

@@ -7,8 +7,8 @@ from unittest import mock
 
 import pytest
 import requests
-import tomcatmanager as tm
 
+import tomcatmanager as tm
 from tests.mock_server_8_5 import start_mock_server_8_5
 from tests.mock_server_9_0 import start_mock_server_9_0
 from tests.mock_server_10_0 import start_mock_server_10_0

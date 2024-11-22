@@ -27,21 +27,21 @@ creation of these environments.
 If you prefer to create these virtual envs by hand, do the following::
 
    $ cd tomcatmanager
-   $ pyenv install 3.12.0
-   $ pyenv virtualenv -p python3.12 3.12.0 tomcatmanager-3.12
+   $ pyenv install 3.13.0
+   $ pyenv virtualenv -p python3.13 3.13.0 tomcatmanager-3.13
+   $ pyenv install 3.12.7
+   $ pyenv virtualenv -p python3.12 3.12.7 tomcatmanager-3.12
    $ pyenv install 3.11.5
    $ pyenv virtualenv -p python3.11 3.11.5 tomcatmanager-3.11
    $ pyenv install 3.10.13
    $ pyenv virtualenv -p python3.10 3.10.13 tomcatmanager-3.10
    $ pyenv install 3.9.18
    $ pyenv virtualenv -p python3.9 3.9.18 tomcatmanager-3.9
-   $ pyenv install 3.8.18
-   $ pyenv virtualenv -p python3.8 3.8.18 tomcatmanager-3.8
 
 
 Now set pyenv to make all five of those available at the same time::
 
-   $ pyenv local tomcatmanager-3.12 tomcatmanager-3.11 tomcatmanager-3.10 tomcatmanager-3.9 tomcatmanager-3.8
+   $ pyenv local tomcatmanager-3.13 tomcatmanager-3.12 tomcatmanager-3.11 tomcatmanager-3.10 tomcatmanager-3.9
 
 Whether you ran the script, or did it by hand, you now have isolated virtualenvs for
 each of the minor python versions. This table shows various python commands, the
@@ -50,19 +50,20 @@ version of python which will be executed, and the virtualenv it will utilize.
 ==============  =======  ==================
 Command         python   virtualenv
 ==============  =======  ==================
-``python``       3.12.0  tomcatmanager-3.12
-``python3``      3.12.0  tomcatmanager-3.12
-``python3.12``   3.12.0  tomcatmanager-3.12
+``python``       3.13.0  tomcatmanager-3.13
+``python3``      3.13.0  tomcatmanager-3.13
+``python3.13``   3.13.0  tomcatmanager-3.13
+``python3.12``   3.12.7  tomcatmanager-3.12
 ``python3.11``   3.11.5  tomcatmanager-3.11
 ``python3.10``  3.10.13  tomcatmanager-3.10
 ``python3.9``    3.9.18  tomcatmanager-3.9
-``python3.8``    3.8.18  tomcatmanager-3.8
 ``pip``          3.11.5  tomcatmanager-3.11
 ``pip3``         3.11.5  tomcatmanager-3.11
+``pip3.13``      3.13.0  tomcatmanager-3.13
+``pip3.11``      3.12.7  tomcatmanager-3.12
 ``pip3.11``      3.11.5  tomcatmanager-3.11
 ``pip3.10``     3.10.13  tomcatmanager-3.10
 ``pip3.9``       3.9.18  tomcatmanager-3.9
-``pip3.8``       3.8.18  tomcatmanager-3.8
 ==============  =======  ==================
 
 

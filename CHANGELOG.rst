@@ -11,6 +11,16 @@ format of this file follows recommendations from `Keep a Changelog
 Unreleased
 ----------
 
+Added
+^^^^^
+
+- Support for Python 3.13
+
+Removed
+^^^^^^^
+
+- Drop support for Python 3.8 (EOL 7 Oct 2024)
+
 
 7.0.1 (2023-12-02)
 ------------------

@@ -22,6 +22,7 @@
 """
 Entry point for 'tomcat-manager' command line program.
 """
+
 import argparse
 import os
 import sys
