@@ -1164,11 +1164,27 @@ def test_theme_dir(itm_nc, capsys):
     assert not err
 
 
-def test_theme_list(itm_nc, capsys):
+def test_theme_list(itm_nc, tmp_path, mocker, response_with, capsys):
     # turn off the status output
     itm_nc.quiet = True
+    # mock the network request to the gallery so we don't do any network IO
+    # during the test suite
+    response = response_with(404, "")
+    mocker.patch("requests.get", return_value=response)
+    # mock up a user theme
+    mock_theme_dir = mocker.patch(
+        "tomcatmanager.InteractiveTomcatManager.user_theme_dir",
+        new_callable=mock.PropertyMock,
+    )
+    mock_theme_dir.return_value = tmp_path
+    user_theme_file = tmp_path / "usertheme.toml"
+    # write a basic theme file
+    with open(user_theme_file, "w", encoding="utf-8") as theme_fobj:
+        print("description = 'my test description'", file=theme_fobj)
+
     itm_nc.onecmd_plus_hooks("theme list")
     out, err = capsys.readouterr()
+    assert "my test description" in out
     assert not err
 
 
