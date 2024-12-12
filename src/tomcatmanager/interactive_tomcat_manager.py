@@ -588,8 +588,9 @@ class InteractiveTomcatManager(cmd2.Cmd):
     def show_help_from(self, argparser: argparse.ArgumentParser):
         """Set exit code and output help from an argparser."""
         self.exit_code = self.EXIT_SUCCESS
-        # we don't use self.console because this already has ansi color codes in
-        self.ppaged(argparser.format_help())
+        # prefer rich pager to cmd2 ppaged()
+        with self.console.pager():
+            self.console.print(argparser.format_help())
 
     def parse_args(
         self, parser: argparse.ArgumentParser, argv: List
